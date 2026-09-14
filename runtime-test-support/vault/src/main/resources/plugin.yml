@@ -2,6 +2,7 @@ name: PiriRuntimeVault
 version: '${version}'
 main: jp.pirijuggler.runtime.vault.TestVaultPlugin
 api-version: '1.21'
+depend: [Vault]
 loadbefore: [PiriJuggler]
 description: Test-only Vault Economy provider for Piri Juggler runtime acceptance
 commands:
