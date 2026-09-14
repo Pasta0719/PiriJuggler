@@ -1,0 +1,32 @@
+{
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "stage": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\phase05-v4",
+  "authorization": "Complete Phase05 only after all build/runtime/artifact gates passed, including user-approved public state mapping and reversed reel directions. Phase06 remains NOT_STARTED. Hash-check and back up every overwritten file.",
+  "changes": [
+    {
+      "path": "IMPLEMENTATION_STATUS.md",
+      "before": "94e9d5061dc8daa41ade3a39bb834b565d7a3db8b5e561dff8b76689d563d99a",
+      "after": "429ac19b9d95a31a4334a47d225287d3c2bf14a01644ab6d05d7883ae15531e2"
+    },
+    {
+      "path": "runtime-evidence/PHASE_05/REPORT.md",
+      "before": "7614104255caa24ecfe65126a728bd4ae539ba0e4bdd5137533092a63951840d",
+      "after": "af761d8e4a95b20c6ed00ce0ed9888fbcac19de0c00c662c8cafe17fa4e49d70"
+    },
+    {
+      "path": "runtime-evidence/PHASE_05/simulator-10m.json",
+      "before": null,
+      "after": "ddeb489e4d1c33fd2fd5932cfb9285f3f4a6c9ea041d4ebc719dedece11e6a98"
+    },
+    {
+      "path": "runtime-evidence/PHASE_05_PHASE01_REGRESSION/REPORT.md",
+      "before": null,
+      "after": "a7b20e5c341336d2ef08e8f71dde79c61f87456430c9830ce1cdb4b4c100e7f4"
+    },
+    {
+      "path": "runtime-evidence/PHASE_05_REEL_REGRESSION/REPORT.md",
+      "before": null,
+      "after": "a8b2056e9dc5195c6c8097de61537824c19a981321247ff85f303c9de178a6e4"
+    }
+  ]
+}

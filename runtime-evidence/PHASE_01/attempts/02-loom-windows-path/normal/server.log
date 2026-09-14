@@ -1,0 +1,76 @@
+Starting org.bukkit.craftbukkit.Main
+*** Warning, you've not updated in a while! ***
+*** Please download a new build as per instructions from https://papermc.io/downloads/paper ***
+WARN StatusConsoleListener Advanced terminal features are not available in this environment
+[12:28:42 INFO]: [bootstrap] Running Java 21 (OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS; Eclipse Adoptium Temurin-21.0.12.1+1) on Windows 11 10.0 (amd64)
+[12:28:42 INFO]: [bootstrap] Loading Paper 1.21-130-master@b1b5d4c (2024-08-10T10:02:42Z) for Minecraft 1.21
+[12:28:42 WARN]: [oshi.driver.windows.perfmon.PerfmonDisabled] Invalid registry value type detected for PerfOS counters. Should be REG_DWORD. Ignoring: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\PerfOS\Performance\Disable Performance Counters.
+[12:28:43 INFO]: [PluginInitializerManager] Initializing plugins...
+[12:28:44 INFO]: [PluginInitializerManager] Initialized 2 plugins
+[12:28:44 INFO]: [PluginInitializerManager] Bukkit plugins (2):
+ - PiriJuggler (1.0.0), PiriRuntimeAcceptance (1.0.0)
+[12:28:49 INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[12:28:52 INFO]: Loaded 1290 recipes
+[12:28:52 INFO]: Loaded 1399 advancements
+[12:28:52 INFO]: Starting minecraft server version 1.21
+[12:28:52 INFO]: Loading properties
+[12:28:52 INFO]: This server is running Paper version 1.21-130-master@b1b5d4c (2024-08-10T10:02:42Z) (Implementing API version 1.21-R0.1-SNAPSHOT)
+[12:28:53 INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
+[12:28:53 INFO]: Server Ping Player Sample Count: 12
+[12:28:53 INFO]: Using 4 threads for Netty based IO
+[12:28:54 INFO]: [ChunkTaskScheduler] Chunk system is using 1 I/O threads, 4 worker threads, and population gen parallelism of 4 threads
+[12:28:54 INFO]: Default game type: SURVIVAL
+[12:28:54 INFO]: Generating keypair
+[12:28:54 INFO]: Starting Minecraft server on 127.0.0.1:25585
+[12:28:54 INFO]: Using default channel type
+[12:28:54 INFO]: Paper: Using Java compression from Velocity.
+[12:28:54 INFO]: Paper: Using Java cipher from Velocity.
+[12:28:54 INFO]: [PiriJuggler] Loading server plugin PiriJuggler v1.0.0
+[12:28:54 INFO]: [PiriRuntimeAcceptance] Loading server plugin PiriRuntimeAcceptance v1.0.0
+[12:28:54 INFO]: Server permissions file permissions.yml is empty, ignoring it
+[12:28:54 WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[12:28:54 WARN]: The server will make no attempt to authenticate usernames. Beware.
+[12:28:54 WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[12:28:54 WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[12:28:54 INFO]: Preparing level "world"
+[12:28:55 INFO]: Preparing start region for dimension minecraft:overworld
+[12:28:55 INFO]: Time elapsed: 365 ms
+[12:28:55 INFO]: Preparing start region for dimension minecraft:the_nether
+[12:28:56 INFO]: Time elapsed: 624 ms
+[12:28:56 INFO]: Preparing start region for dimension minecraft:the_end
+[12:28:56 INFO]: Time elapsed: 89 ms
+[12:28:56 INFO]: [PiriJuggler] Enabling PiriJuggler v1.0.0
+[12:28:56 INFO]: [PiriJuggler] Protocol 1; configuration valid
+[12:28:56 INFO]: [PiriRuntimeAcceptance] Enabling PiriRuntimeAcceptance v1.0.0
+[12:28:56 INFO]: [PiriRuntimeAcceptance] PIRI_RUNTIME_OBSERVER_READY 1.21-130-b1b5d4c (MC: 1.21)
+[12:28:56 INFO]: [spark] Starting background profiler...
+[12:28:56 INFO]: [spark] The async-profiler engine is not supported for your os/arch (windows11/amd64), so the built-in Java engine will be used instead.
+[12:28:56 INFO]: Done preparing level "world" (1.715s)
+[12:28:56 INFO]: Running delayed init tasks
+[12:28:56 INFO]: Done (14.953s)! For help, type "help"
+[12:28:56 INFO]: Timings Reset
+[12:29:33 INFO]: Stopping the server
+[12:29:33 INFO]: Stopping server
+[12:29:33 INFO]: [PiriRuntimeAcceptance] Disabling PiriRuntimeAcceptance v1.0.0
+[12:29:33 INFO]: [PiriJuggler] Disabling PiriJuggler v1.0.0
+[12:29:33 INFO]: Saving players
+[12:29:33 INFO]: Saving worlds
+[12:29:33 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:29:33 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world'
+[12:29:33 INFO]: [ChunkHolderManager] Halted chunk system for world 'world'
+[12:29:33 INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world'
+[12:29:33 INFO]: [ChunkHolderManager] Saved 49 block chunks, 49 entity chunks, 0 poi chunks in world 'world' in 0.11s
+[12:29:33 INFO]: Saving chunks for level 'ServerLevel[world_nether]'/minecraft:the_nether
+[12:29:33 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_nether'
+[12:29:33 INFO]: [ChunkHolderManager] Halted chunk system for world 'world_nether'
+[12:29:33 INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_nether'
+[12:29:33 INFO]: [ChunkHolderManager] Saved 49 block chunks, 49 entity chunks, 0 poi chunks in world 'world_nether' in 0.10s
+[12:29:33 INFO]: Saving chunks for level 'ServerLevel[world_the_end]'/minecraft:the_end
+[12:29:33 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_the_end'
+[12:29:33 INFO]: [ChunkHolderManager] Halted chunk system for world 'world_the_end'
+[12:29:33 INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_the_end'
+[12:29:33 INFO]: [ChunkHolderManager] Saved 49 block chunks, 49 entity chunks, 0 poi chunks in world 'world_the_end' in 0.07s
+[12:29:33 INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:29:33 INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:29:33 INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:29:33 INFO]: ThreadedAnvilChunkStorage: All dimensions are saved

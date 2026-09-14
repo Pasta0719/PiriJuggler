@@ -1,0 +1,11 @@
+{
+  "role": "GRAPE",
+  "premiumF": false,
+  "profile": "RESUME_NORMAL",
+  "order": [
+    "CENTER",
+    "LEFT",
+    "RIGHT"
+  ],
+  "label": "grape-clr"
+}

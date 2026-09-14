@@ -1,0 +1,90 @@
+{
+  "server": {
+    "serverVersion": "1.21-130-b1b5d4c (MC: 1.21)",
+    "enabled": true,
+    "ready": true,
+    "period": "3698459e-96f3-4cb9-a855-fe6c2d92b5b5",
+    "machines": [
+      {
+        "id": 1,
+        "location": {
+          "world": "58320f27-0535-40a0-b3e1-76c106face0c",
+          "worldName": "world",
+          "x": 0,
+          "y": 66,
+          "z": 0,
+          "facing": "SOUTH"
+        },
+        "setting": 1,
+        "enabled": true,
+        "autoSetting": true,
+        "deleted": false,
+        "left": 0,
+        "center": 0,
+        "right": 0,
+        "createdAt": 1789190320286,
+        "updatedAt": 1789190320286
+      }
+    ],
+    "sessions": [],
+    "commands": [
+      {
+        "player": "PiriRuntimeTest",
+        "command": "/piri machine create",
+        "rayTarget": "STONE_BUTTON:0"
+      }
+    ],
+    "clicks": [],
+    "buttons": [
+      {
+        "x": 0,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 2,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 3,
+        "type": "STONE_BUTTON",
+        "powered": false
+      }
+    ]
+  },
+  "clients": {
+    "phase02-create": {
+      "completed": 2,
+      "connected": true,
+      "handshake": true,
+      "failure": null,
+      "packets": [
+        {
+          "type": "HELLO_ACK",
+          "payload": {
+            "protocol": 1,
+            "serverVersion": "1.0.0"
+          }
+        }
+      ],
+      "messages": [
+        "PiriRuntimeTest joined the game",
+        "MACHINE_CREATED 1"
+      ],
+      "actions": [
+        {
+          "id": 1,
+          "kind": "aim",
+          "x": 0
+        },
+        {
+          "id": 2,
+          "kind": "command",
+          "text": "piri machine create"
+        }
+      ],
+      "productionSession": null
+    }
+  }
+}

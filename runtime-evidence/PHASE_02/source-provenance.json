@@ -1,0 +1,43 @@
+{
+  "baseline": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\v4-migration",
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "deleted": [],
+  "added": {
+    "fabric/src/main/java/jp/pirijuggler/fabric/network/ClientSession.java": "d6b3cc990f00940cb13f56d1bf11bbf84d2a910be5bb6fa3723f0da9e0079b29",
+    "fabric/src/test/java/jp/pirijuggler/fabric/network/ClientSessionTest.java": "d647a6eb87755516f945e151f315c93313a977d99edfcf58f32113d94b506cb0",
+    "paper/src/main/java/jp/pirijuggler/paper/database/PiriDatabase.java": "9246dacde56956f45ead289408db25e2ed4df6750e5850ff27d9d8dcd07e134d",
+    "paper/src/main/java/jp/pirijuggler/paper/database/StartupProfile.java": "180c61e6ce07bd5481ac9ffb6bdb299c2c62e1630a16b1d3f0ceea49c20cef9b",
+    "paper/src/main/java/jp/pirijuggler/paper/machine/DomainException.java": "28d0b5fb51dc931ea946c7090f6b72c95b9f02595e40bd2bc916b92fd8d78cb3",
+    "paper/src/main/java/jp/pirijuggler/paper/machine/Machine.java": "07a526035dd9335cb4b4a3bfe07e7e4d72fa37e24bd32731abd62518515a987a",
+    "paper/src/main/java/jp/pirijuggler/paper/machine/MachineService.java": "36a3be112eb7865d849217ad67ef8bf358d9119ab178652f8cec25469e43346b",
+    "paper/src/main/java/jp/pirijuggler/paper/session/AdminSessions.java": "41af7852179ec62b79f0eb604be955aac84e4c8a34d874f86f025039c9d83fab",
+    "paper/src/main/java/jp/pirijuggler/paper/session/Session.java": "8969a158db89e88709e499c2f2b514a5e130de5ed397802e931d169dba3eb6ab",
+    "paper/src/main/resources/schema-v4.sql": "0f215886323f613d7879bed0ac9c99320fa077408de4b834a9c36fe169b1d07c",
+    "paper/src/test/java/jp/pirijuggler/paper/database/PiriDatabaseTest.java": "50066b9bb4b54d6b03ebbca9befd2c8336cec40271acdbc8394c8be5f0aee091",
+    "paper/src/test/java/jp/pirijuggler/paper/database/StartupProfileTest.java": "8dea8ffa0eaace5d33def728d83c8f53907120324e901082ede9ed8bd6488577",
+    "paper/src/test/java/jp/pirijuggler/paper/session/AdminSessionsTest.java": "43f46695892116365563e8920198e64fb6436c403bf5244ddf409b15daab4c44"
+  },
+  "modified": {
+    "fabric/src/main/java/jp/pirijuggler/fabric/PiriJugglerClient.java": {
+      "before": "eedb9a60cc6386b541fbb2d1bdf03be6cc137d4da7b62e5cbec5f5a8c61c7320",
+      "after": "5ed54f047552d718a08c0452ac82ae8b0a9360ccee91caaaa5652afdb9bda1fa"
+    },
+    "paper/build.gradle.kts": {
+      "before": "d8c8b506df5fc7f7d2b8c3e2c0c23de35e8a967e58dc6d140c88b3c129d55e64",
+      "after": "71e4ee11be605cba2b05fd8fbb0dae8bdf9e7da8f26a6a635e7733444863d3d6"
+    },
+    "paper/src/main/java/jp/pirijuggler/paper/PiriJugglerPlugin.java": {
+      "before": "97f41d00fc5f4990bb226c9d1ad6eec671738ac438384738fc15db1f9dec9825",
+      "after": "9eb1b8341470b437c4b0869cbf09b096bd29ad4a824f35e44675ad7896af184b"
+    },
+    "paper/src/main/java/jp/pirijuggler/paper/threading/TaskExecutors.java": {
+      "before": "5490deba3bb177463d033fb9b1f780a2ec2c2f43bee9ebed73a30a83d2b7c386",
+      "after": "bc91eb0fb6274d0bbd9177e2a2d9447559352396a826464b46d8645bcb67518f"
+    },
+    "paper/src/main/resources/plugin.yml": {
+      "before": "38de3c90e14b3fa7a91dcea0f4d69e93dff4f2eb1ceb842784d3ba0832dc31e1",
+      "after": "73d1881c87581c274e5129457eb9014304c37cc29f7bb2085c536b78e51bc18d"
+    }
+  },
+  "unchangedCount": 32
+}

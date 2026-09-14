@@ -1,0 +1,42 @@
+{
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "stage": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\phase05-v4",
+  "authorization": "Complete Phase05 only after all build/runtime/artifact gates passed, including user-approved public state mapping, reversed reel directions, and BAR confirmation rules. Phase06 remains NOT_STARTED. Hash-check and back up every overwritten file.",
+  "changes": [
+    {
+      "path": "IMPLEMENTATION_STATUS.md",
+      "before": "77c1b239f6830378261017ef41f860748c07dcba049457e1a61fb821baccc78c",
+      "after": "b47649b1b4d921ebbeb9accef03994f9b9dc54eaf8db76c5a7038bc93e315e13"
+    },
+    {
+      "path": "runtime-evidence/PHASE_05/REPORT.md",
+      "before": "af761d8e4a95b20c6ed00ce0ed9888fbcac19de0c00c662c8cafe17fa4e49d70",
+      "after": "292a3a0c754167a1138e82e44f39736ff326075a9f33697e8d7ed13669188ba4"
+    },
+    {
+      "path": "runtime-evidence/PHASE_05/simulator-10m.json",
+      "before": "ddeb489e4d1c33fd2fd5932cfb9285f3f4a6c9ea041d4ebc719dedece11e6a98",
+      "after": "ddeb489e4d1c33fd2fd5932cfb9285f3f4a6c9ea041d4ebc719dedece11e6a98"
+    },
+    {
+      "path": "runtime-evidence/PHASE_05_PHASE01_REGRESSION/REPORT.md",
+      "before": "a7b20e5c341336d2ef08e8f71dde79c61f87456430c9830ce1cdb4b4c100e7f4",
+      "after": "5fa3b07c5962036e89bcb9d902757d0c40ab63b50530bdf87381e1e62a496bad"
+    },
+    {
+      "path": "runtime-evidence/PHASE_05_REEL_REGRESSION/REPORT.md",
+      "before": "a8b2056e9dc5195c6c8097de61537824c19a981321247ff85f303c9de178a6e4",
+      "after": "544f7957670b10828e6bd5e81042a7505bbd3381451a921a87d6b2f695a6d6f1"
+    },
+    {
+      "path": "runtime-evidence/PHASE_05_BAR_BIG/REPORT.md",
+      "before": null,
+      "after": "9755ea8618c9c0a74eeee99f19735ede83b7918c52148d917113a1f4c0c81461"
+    },
+    {
+      "path": "runtime-evidence/PHASE_05_BAR_REG/REPORT.md",
+      "before": null,
+      "after": "7e0c23f469417497ee19650a41d5c57f6db3649f66853e2ae72f1f8437ff5529"
+    }
+  ]
+}

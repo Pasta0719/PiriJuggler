@@ -1,0 +1,9 @@
+{
+  "type": "NOTICE",
+  "payload": {
+    "spinId": "00000000-0000-0000-0000-000000000003",
+    "lamp": "ON",
+    "pattern": "FAST_BLINK_1S",
+    "sound": "NOTICE_X5"
+  }
+}

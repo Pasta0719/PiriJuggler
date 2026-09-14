@@ -1,0 +1,209 @@
+{
+  "server": {
+    "serverVersion": "1.21-130-b1b5d4c (MC: 1.21)",
+    "enabled": true,
+    "ready": true,
+    "period": "a46f5739-9c0f-4212-8d74-8cbf2f1e15cb",
+    "machines": [
+      {
+        "id": 1,
+        "location": {
+          "world": "b76c7a2d-c730-4121-9034-89e47850d444",
+          "worldName": "world",
+          "x": 0,
+          "y": 66,
+          "z": 0,
+          "facing": "SOUTH"
+        },
+        "setting": 1,
+        "enabled": true,
+        "autoSetting": true,
+        "deleted": false,
+        "left": 0,
+        "center": 0,
+        "right": 0,
+        "createdAt": 1789221850707,
+        "updatedAt": 1789221850707
+      },
+      {
+        "id": 2,
+        "location": {
+          "world": "b76c7a2d-c730-4121-9034-89e47850d444",
+          "worldName": "world",
+          "x": 2,
+          "y": 66,
+          "z": 0,
+          "facing": "SOUTH"
+        },
+        "setting": 1,
+        "enabled": true,
+        "autoSetting": true,
+        "deleted": false,
+        "left": 0,
+        "center": 0,
+        "right": 0,
+        "createdAt": 1789221852531,
+        "updatedAt": 1789221852531
+      }
+    ],
+    "sessions": [
+      {
+        "session_id": "53ed3b4e-6cf8-4b37-8399-74e71021b4b6",
+        "player_uuid": "2b9a0e28-4a8f-3fe1-a65b-c41ad05e8077",
+        "machine_id": 1,
+        "source_business_period_id": "a46f5739-9c0f-4212-8d74-8cbf2f1e15cb",
+        "game_state": "SEATED_READY",
+        "lifecycle": "ACTIVE",
+        "credit": 0,
+        "held_medals": 0,
+        "notice_state": "NONE",
+        "lamp_on": 0,
+        "bonus_payout_count": 0,
+        "current_bet": 0,
+        "pay_display": 0,
+        "display_left_stop": 0,
+        "display_center_stop": 0,
+        "display_right_stop": 0,
+        "stopped_mask": 0,
+        "phase_left": 0.0,
+        "phase_center": 0.0,
+        "phase_right": 0.0,
+        "last_client_sequence": 0,
+        "last_activity": 1789221853293
+      }
+    ],
+    "commands": [
+      {
+        "player": "PiriRuntimeTest",
+        "command": "/piri machine create",
+        "rayTarget": "STONE_BUTTON:0"
+      },
+      {
+        "player": "PiriRuntimeTest",
+        "command": "/piri machine create",
+        "rayTarget": "STONE_BUTTON:0"
+      },
+      {
+        "player": "PiriRuntimeTest",
+        "command": "/piri machine create",
+        "rayTarget": "STONE_BUTTON:2"
+      }
+    ],
+    "clicks": [
+      {
+        "player": "PiriRuntimeTest",
+        "x": 0,
+        "action": "RIGHT_CLICK_BLOCK",
+        "denied": true
+      }
+    ],
+    "buttons": [
+      {
+        "x": 0,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 2,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 3,
+        "type": "STONE_BUTTON",
+        "powered": false
+      }
+    ]
+  },
+  "clients": {
+    "phase02-create": {
+      "completed": 7,
+      "connected": true,
+      "handshake": true,
+      "failure": null,
+      "packets": [
+        {
+          "type": "HELLO_ACK",
+          "payload": {
+            "protocol": 1,
+            "serverVersion": "1.0.0"
+          }
+        },
+        {
+          "type": "OPEN_MACHINE",
+          "payload": {
+            "sessionId": "53ed3b4e-6cf8-4b37-8399-74e71021b4b6",
+            "machineId": 1,
+            "expectedNextClientSequence": 1
+          }
+        },
+        {
+          "type": "PUBLIC_STATE",
+          "payload": {
+            "sessionId": "53ed3b4e-6cf8-4b37-8399-74e71021b4b6",
+            "machineId": 1,
+            "expectedNextClientSequence": 1,
+            "gameState": "SEATED_READY",
+            "lifecycle": "ACTIVE",
+            "credit": 0,
+            "heldMedals": 0,
+            "bet": 0,
+            "pay": 0,
+            "bonusCount": 0,
+            "lampOn": false,
+            "displayStops": {
+              "left": 0,
+              "center": 0,
+              "right": 0
+            },
+            "stoppedMask": 0
+          }
+        }
+      ],
+      "messages": [
+        "PiriRuntimeTest joined the game",
+        "MACHINE_CREATED 1",
+        "LOCATION_ALREADY_REGISTERED",
+        "MACHINE_CREATED 2"
+      ],
+      "actions": [
+        {
+          "id": 1,
+          "kind": "aim",
+          "x": 0
+        },
+        {
+          "id": 2,
+          "kind": "command",
+          "text": "piri machine create"
+        },
+        {
+          "id": 3,
+          "kind": "command",
+          "text": "piri machine create"
+        },
+        {
+          "id": 4,
+          "kind": "aim",
+          "x": 2
+        },
+        {
+          "id": 5,
+          "kind": "command",
+          "text": "piri machine create"
+        },
+        {
+          "id": 6,
+          "kind": "aim",
+          "x": 0
+        },
+        {
+          "id": 7,
+          "kind": "click",
+          "x": 0
+        }
+      ],
+      "productionSession": "53ed3b4e-6cf8-4b37-8399-74e71021b4b6"
+    }
+  }
+}

@@ -1,0 +1,5671 @@
+{
+  "startedAt": "2026-09-13T12:13:27.441992+00:00",
+  "run": "20260913T121327Z",
+  "passed": false,
+  "versions": {
+    "minecraft": "1.21",
+    "paper": "1.21-130",
+    "fabricLoader": "0.16.14",
+    "fabricApi": "0.102.0+1.21",
+    "yarn": "1.21+build.9",
+    "java": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE"
+  },
+  "buildHashes": {
+    "common": "6fb82ca6eff8b196e5bbe78b05773f25da4f18db832b935c0153119ec96b582a",
+    "paper": "3500fbae015f04fe810b137a121ab79ee4ae565da547659de0c73c5eed7a02f9",
+    "fabric": "3fdfb300ec84ca7df620926707260e81dc45b2e1f692a4bff434dd6216e0ccbf"
+  },
+  "helperHashes": {
+    "paper": "fc23c388e4926a09caa46f99da640839334ce050d55ca5d6b14f2d877ce42220",
+    "client": "e479575a75191276841360c9d49ce17f86cc7a61d32f9a010c1360808eeee377"
+  },
+  "assertions": [
+    {
+      "name": "production session and HUD",
+      "passed": true,
+      "at": "2026-09-13T12:14:39.250063+00:00",
+      "evidence": "attempts\\20260913T121327Z\\open-snapshot.json"
+    },
+    {
+      "name": "startup verifies 9261 candidates and exhaustive solver",
+      "passed": true,
+      "at": "2026-09-13T12:14:39.251065+00:00",
+      "evidence": {
+        "counts": {
+          "MISS": 5250,
+          "PREMIUM_B": 782,
+          "BIG_ENTRY": 10,
+          "BELL": 50,
+          "REG_ENTRY": 10,
+          "GRAPE": 750,
+          "CHERRY": 1514,
+          "PIERO": 20,
+          "REPLAY": 525
+        },
+        "allSequences": 500094,
+        "premiumFSecondChecks": 7938,
+        "premiumFSequences": 166698
+      }
+    },
+    {
+      "name": "actual client rotation direction: NORMAL",
+      "passed": true,
+      "at": "2026-09-13T12:14:41.056068+00:00",
+      "evidence": {
+        "spinId": "c8ba19ee-ce12-4c17-9c9d-4b428188e9f6",
+        "earlyDeltas": [
+          -0.11456477312811586,
+          -0.11456972982000124,
+          -0.11457031517202765,
+          -0.406340116566426,
+          -0.40637976878571536,
+          -0.4063846069275421,
+          -0.28833009176777225,
+          -0.2883459000846855,
+          -0.28834649617243,
+          -0.7436846228914291,
+          -0.7436948916497137,
+          -0.7436937506412846,
+          -0.46113224455414326,
+          -0.4611382761581986,
+          -0.46114060040434524
+        ],
+        "lateDeltas": [
+          -0.5996682000000018,
+          -0.5996772000000004,
+          -0.5996772000000004,
+          -1.2026825999999975,
+          -1.2026844000000025,
+          -1.2026843999999972,
+          -0.6028055999999999,
+          -0.6027983999999993,
+          -0.6027984000000028,
+          -1.199748600000003,
+          -1.1997413999999988,
+          -1.1997413999999988,
+          -0.6039161999999969,
+          -0.6039396000000021,
+          -0.6039395999999986,
+          -1.2160908,
+          -1.2163067999999964,
+          -1.2163086000000032,
+          -0.5997150000000016,
+          -0.5994575999999991,
+          -0.5994503999999985
+        ],
+        "trace": [
+          {
+            "elapsed": 0.0013967,
+            "phases": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "elapsed": 0.0339068,
+            "phases": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "elapsed": 0.1008097,
+            "phases": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "elapsed": 0.1342104,
+            "phases": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "elapsed": 0.2010933,
+            "phases": [
+              20.932962304774286,
+              20.932943922274287,
+              20.93294234651417
+            ]
+          },
+          {
+            "elapsed": 0.2340789,
+            "phases": [
+              20.81839753164617,
+              20.818374192454286,
+              20.818372031342143
+            ]
+          },
+          {
+            "elapsed": 0.3012494,
+            "phases": [
+              20.412057415079744,
+              20.41199442366857,
+              20.4119874244146
+            ]
+          },
+          {
+            "elapsed": 0.3346195,
+            "phases": [
+              20.12372732331197,
+              20.123648523583885,
+              20.12364092824217
+            ]
+          },
+          {
+            "elapsed": 0.401034,
+            "phases": [
+              19.380042700420542,
+              19.37995363193417,
+              19.379947177600886
+            ]
+          },
+          {
+            "elapsed": 0.4345265,
+            "phases": [
+              18.9189104558664,
+              18.918815355775973,
+              18.91880657719654
+            ]
+          },
+          {
+            "elapsed": 0.5013065,
+            "phases": [
+              17.8272372,
+              17.827127400000002,
+              17.8271184
+            ]
+          },
+          {
+            "elapsed": 0.5343823,
+            "phases": [
+              17.231872799999998,
+              17.2317612,
+              17.231752200000003
+            ]
+          },
+          {
+            "elapsed": 0.6011576,
+            "phases": [
+              16.0299174,
+              16.029807599999998,
+              16.0298004
+            ]
+          },
+          {
+            "elapsed": 0.6342676,
+            "phases": [
+              15.433930199999999,
+              15.4338312,
+              15.433822200000002
+            ]
+          },
+          {
+            "elapsed": 0.7011948,
+            "phases": [
+              14.2292406,
+              14.2291434,
+              14.2291344
+            ]
+          },
+          {
+            "elapsed": 0.7347607,
+            "phases": [
+              13.625058,
+              13.624937399999999,
+              13.624926599999998
+            ]
+          },
+          {
+            "elapsed": 0.8014287,
+            "phases": [
+              12.4250358,
+              12.4249278,
+              12.4249206
+            ]
+          },
+          {
+            "elapsed": 0.8345085,
+            "phases": [
+              11.829603,
+              11.829502199999999,
+              11.8294932
+            ]
+          },
+          {
+            "elapsed": 0.901944,
+            "phases": [
+              10.6157424,
+              10.615634400000001,
+              10.615625399999999
+            ]
+          },
+          {
+            "elapsed": 0.9352597,
+            "phases": [
+              10.016074199999998,
+              10.0159572,
+              10.015948199999999
+            ]
+          },
+          {
+            "elapsed": 1.0020757,
+            "phases": [
+              8.813391600000001,
+              8.813272799999998,
+              8.813263800000001
+            ]
+          },
+          {
+            "elapsed": 1.035564,
+            "phases": [
+              8.210586000000001,
+              8.210474399999999,
+              8.210465399999999
+            ]
+          },
+          {
+            "elapsed": 1.1022173,
+            "phases": [
+              7.010837399999998,
+              7.010733,
+              7.010724
+            ]
+          },
+          {
+            "elapsed": 1.1357672,
+            "phases": [
+              6.406921200000001,
+              6.406793399999998,
+              6.406784400000001
+            ]
+          },
+          {
+            "elapsed": 1.2033205,
+            "phases": [
+              5.190830400000001,
+              5.190486600000002,
+              5.190475799999998
+            ]
+          },
+          {
+            "elapsed": 1.2366473,
+            "phases": [
+              4.5911154,
+              4.5910290000000025,
+              4.5910253999999995
+            ]
+          },
+          {
+            "elapsed": 1.30334,
+            "phases": [
+              3.3906468000000025,
+              3.3905531999999994,
+              3.3905478000000002
+            ]
+          },
+          {
+            "elapsed": 1.3366579,
+            "phases": [
+              2.7909299999999995,
+              2.7908472000000017,
+              2.7908435999999988
+            ]
+          },
+          {
+            "elapsed": 1.4034474,
+            "phases": [
+              1.588706400000003,
+              1.588616400000003,
+              1.5886110000000038
+            ]
+          },
+          {
+            "elapsed": 1.4367028,
+            "phases": [
+              0.9901110000000024,
+              0.9900318000000006,
+              0.9900282000000047
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: grape-lcr",
+      "passed": true,
+      "at": "2026-09-13T12:14:42.625935+00:00",
+      "evidence": {
+        "server": {
+          "role": "GRAPE",
+          "premiumF": false,
+          "profile": "NORMAL",
+          "order": [
+            "LEFT",
+            "CENTER",
+            "RIGHT"
+          ],
+          "label": "grape-lcr",
+          "spinId": "c8ba19ee-ce12-4c17-9c9d-4b428188e9f6",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 1
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 1,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "c8ba19ee-ce12-4c17-9c9d-4b428188e9f6",
+                    "reel": "LEFT",
+                    "pressedIndex": 15,
+                    "stopIndex": 15,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 2
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": true,
+              "actualTenpaiLines": 1,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 2,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "c8ba19ee-ce12-4c17-9c9d-4b428188e9f6",
+                    "reel": "CENTER",
+                    "pressedIndex": 6,
+                    "stopIndex": 4,
+                    "slip": 2,
+                    "durationMs": 180
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 3
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 3,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "c8ba19ee-ce12-4c17-9c9d-4b428188e9f6",
+                    "reel": "RIGHT",
+                    "pressedIndex": 18,
+                    "stopIndex": 16,
+                    "slip": 2,
+                    "durationMs": 180
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 15,
+            "center": 4,
+            "right": 16
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          15.0,
+          4.0,
+          16.0
+        ]
+      }
+    },
+    {
+      "name": "actual screenshot contains all three reel symbol columns: grape-lcr",
+      "passed": true,
+      "at": "2026-09-13T12:14:43.472869+00:00",
+      "evidence": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_05_REEL_REGRESSION\\work\\client-phase04-reels\\screenshots\\phase04-grape-lcr.png"
+    },
+    {
+      "name": "actual client rotation direction: REVERSE_500MS",
+      "passed": true,
+      "at": "2026-09-13T12:14:45.032227+00:00",
+      "evidence": {
+        "spinId": "d8f9abe9-aac5-46d1-8bac-f35c68487355",
+        "earlyDeltas": [
+          0.39950639999999993,
+          0.39951839999999805,
+          0.39951839999999805,
+          0.7982639999999961,
+          0.798255600000001,
+          0.7982544000000047,
+          0.39936480000000074,
+          0.39936360000000093,
+          0.39936600000000055,
+          0.8055828000000034,
+          0.8055804000000002,
+          0.8055791999999968
+        ],
+        "lateDeltas": [
+          -1.2072330000000022,
+          -1.2072438000000005,
+          -1.2072438000000005,
+          -0.6154829999999976,
+          -0.6154685999999998,
+          -0.6154668000000001,
+          -1.2008808000000073,
+          -1.200895199999998,
+          -1.2008970000000048,
+          -0.6118235999999939,
+          -0.6118200000000016,
+          -0.6118181999999948,
+          -1.199856600000004,
+          -1.1998547999999971,
+          -1.1998565999999968,
+          -0.6035760000000039,
+          -0.603565200000002,
+          -0.6035633999999988,
+          -1.1979737999999927,
+          -1.1979846000000016,
+          -1.197986400000005
+        ],
+        "trace": [
+          {
+            "elapsed": 0.0343264,
+            "phases": [
+              15.4118268,
+              4.4118628000000015,
+              16.4118652
+            ]
+          },
+          {
+            "elapsed": 0.0678391,
+            "phases": [
+              15.813961200000001,
+              4.814003200000002,
+              16.8140044
+            ]
+          },
+          {
+            "elapsed": 0.1352813,
+            "phases": [
+              16.6233048,
+              5.623379200000002,
+              17.623381600000002
+            ]
+          },
+          {
+            "elapsed": 0.1682942,
+            "phases": [
+              17.019428399999995,
+              6.019475200000002,
+              18.019477600000002
+            ]
+          },
+          {
+            "elapsed": 0.234975,
+            "phases": [
+              17.819592,
+              6.8196376,
+              18.81964
+            ]
+          },
+          {
+            "elapsed": 0.2682657,
+            "phases": [
+              18.2190984,
+              7.219155999999998,
+              19.219158399999998
+            ]
+          },
+          {
+            "elapsed": 0.3347893,
+            "phases": [
+              19.017362399999996,
+              8.017411599999999,
+              20.017412800000002
+            ]
+          },
+          {
+            "elapsed": 0.3680686,
+            "phases": [
+              19.416727199999997,
+              8.4167752,
+              20.416778800000003
+            ]
+          },
+          {
+            "elapsed": 0.4352012,
+            "phases": [
+              20.22231,
+              9.2223556,
+              0.22235799999999983
+            ]
+          },
+          {
+            "elapsed": 0.4685163,
+            "phases": [
+              20.6220888,
+              9.6221332,
+              0.6221356
+            ]
+          },
+          {
+            "elapsed": 0.5351934,
+            "phases": [
+              20.9628570954132,
+              9.962848439005299,
+              0.96284780557
+            ]
+          },
+          {
+            "elapsed": 0.5684575,
+            "phases": [
+              20.859446138880003,
+              9.859432585849298,
+              0.8594321751412011
+            ]
+          },
+          {
+            "elapsed": 0.6358129,
+            "phases": [
+              20.446717392695703,
+              9.446692947687701,
+              0.4466921328447988
+            ]
+          },
+          {
+            "elapsed": 0.6691514,
+            "phases": [
+              20.1417203813877,
+              9.141682831253199,
+              0.14168080149280016
+            ]
+          },
+          {
+            "elapsed": 0.7358581,
+            "phases": [
+              19.33125747597,
+              8.3312037019648,
+              20.3312022868477
+            ]
+          },
+          {
+            "elapsed": 0.7693515,
+            "phases": [
+              18.8236433789748,
+              7.823586816745298,
+              19.823583584595696
+            ]
+          },
+          {
+            "elapsed": 0.8360658,
+            "phases": [
+              17.650981200000004,
+              6.650930800000001,
+              18.650927199999998
+            ]
+          },
+          {
+            "elapsed": 0.8694703,
+            "phases": [
+              17.049693000000005,
+              6.0496318,
+              18.0496282
+            ]
+          },
+          {
+            "elapsed": 0.9365378,
+            "phases": [
+              15.842460000000003,
+              4.842388,
+              16.8423844
+            ]
+          },
+          {
+            "elapsed": 0.9707323,
+            "phases": [
+              15.226977000000005,
+              4.2269194,
+              16.2269176
+            ]
+          },
+          {
+            "elapsed": 1.0374481,
+            "phases": [
+              14.026096199999998,
+              3.026024200000002,
+              15.026020599999995
+            ]
+          },
+          {
+            "elapsed": 1.0714389,
+            "phases": [
+              13.414272600000004,
+              2.4142042000000004,
+              14.4142024
+            ]
+          },
+          {
+            "elapsed": 1.1380966,
+            "phases": [
+              12.214416,
+              1.2143494000000032,
+              13.214345800000004
+            ]
+          },
+          {
+            "elapsed": 1.1716289,
+            "phases": [
+              11.610839999999996,
+              0.6107842000000012,
+              12.610782400000005
+            ]
+          },
+          {
+            "elapsed": 1.238183,
+            "phases": [
+              10.412866200000003,
+              20.4127996,
+              11.412796
+            ]
+          },
+          {
+            "elapsed": 1.2715223,
+            "phases": [
+              9.8127642,
+              19.812697600000003,
+              10.812694
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: grape-lrc",
+      "passed": true,
+      "at": "2026-09-13T12:14:46.862219+00:00",
+      "evidence": {
+        "server": {
+          "role": "GRAPE",
+          "premiumF": false,
+          "profile": "REVERSE_500MS",
+          "order": [
+            "LEFT",
+            "RIGHT",
+            "CENTER"
+          ],
+          "label": "grape-lrc",
+          "spinId": "d8f9abe9-aac5-46d1-8bac-f35c68487355",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 4
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 4,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "d8f9abe9-aac5-46d1-8bac-f35c68487355",
+                    "reel": "LEFT",
+                    "pressedIndex": 4,
+                    "stopIndex": 4,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 5
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 5,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "d8f9abe9-aac5-46d1-8bac-f35c68487355",
+                    "reel": "RIGHT",
+                    "pressedIndex": 8,
+                    "stopIndex": 8,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 6
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 6,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "d8f9abe9-aac5-46d1-8bac-f35c68487355",
+                    "reel": "CENTER",
+                    "pressedIndex": 8,
+                    "stopIndex": 8,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 4,
+            "center": 8,
+            "right": 8
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          4.0,
+          8.0,
+          8.0
+        ]
+      }
+    },
+    {
+      "name": "actual client rotation direction: RESUME_NORMAL",
+      "passed": true,
+      "at": "2026-09-13T12:14:48.417887+00:00",
+      "evidence": {
+        "spinId": "cdd30302-2400-4516-a4a2-3c17082e8294",
+        "earlyDeltas": [
+          -0.6124283999999989,
+          -0.6124320000000019,
+          -0.6124319999999983,
+          -1.1939741999999995,
+          -1.1939759999999993,
+          -1.1939741999999995,
+          -0.6068268000000003,
+          -0.6068178000000017,
+          -0.6068196000000015,
+          -1.2066588000000031,
+          -1.2066713999999976,
+          -1.2066713999999976
+        ],
+        "lateDeltas": [
+          -1.2031451999999998,
+          -1.2031523999999987,
+          -1.2031541999999984,
+          -0.5976683999999999,
+          -0.5976792000000017,
+          -0.597677400000002,
+          -1.1988036000000015,
+          -1.198780199999998,
+          -1.1987820000000013,
+          -0.6035849999999989,
+          -0.6035976000000005,
+          -0.6035957999999972,
+          -1.2152250000000002,
+          -1.2152250000000002,
+          -1.2152250000000002,
+          -0.6028938000000004,
+          -0.6028865999999979,
+          -0.6028866000000015,
+          -0.5984136000000042,
+          -0.5984100000000048,
+          -0.5984099999999977
+        ],
+        "trace": [
+          {
+            "elapsed": 0.0339677,
+            "phases": [
+              3.3886246,
+              7.388565200000002,
+              7.388561599999999
+            ]
+          },
+          {
+            "elapsed": 0.0672033,
+            "phases": [
+              2.7903838000000007,
+              6.7903334000000015,
+              6.790331600000002
+            ]
+          },
+          {
+            "elapsed": 0.1338581,
+            "phases": [
+              1.5905991999999998,
+              5.590538000000002,
+              5.590536199999999
+            ]
+          },
+          {
+            "elapsed": 0.1672487,
+            "phases": [
+              0.989575600000002,
+              4.989518,
+              4.989516200000001
+            ]
+          },
+          {
+            "elapsed": 0.2339312,
+            "phases": [
+              20.7892798,
+              3.789224000000001,
+              3.789220399999998
+            ]
+          },
+          {
+            "elapsed": 0.2679554,
+            "phases": [
+              20.1768514,
+              3.176791999999999,
+              3.1767883999999995
+            ]
+          },
+          {
+            "elapsed": 0.3342868,
+            "phases": [
+              18.9828772,
+              1.9828159999999997,
+              1.9828142
+            ]
+          },
+          {
+            "elapsed": 0.367999,
+            "phases": [
+              18.3760504,
+              1.375998199999998,
+              1.3759945999999985
+            ]
+          },
+          {
+            "elapsed": 0.4350352,
+            "phases": [
+              17.169391599999997,
+              0.16932680000000033,
+              0.1693232000000009
+            ]
+          },
+          {
+            "elapsed": 0.4682815,
+            "phases": [
+              16.570972599999997,
+              20.5709204,
+              20.5709186
+            ]
+          },
+          {
+            "elapsed": 0.5348573,
+            "phases": [
+              15.372619,
+              19.3725632,
+              19.3725596
+            ]
+          },
+          {
+            "elapsed": 0.5682408,
+            "phases": [
+              14.7717106,
+              18.7716566,
+              18.7716548
+            ]
+          },
+          {
+            "elapsed": 0.6350716,
+            "phases": [
+              13.568749,
+              17.5686878,
+              17.5686842
+            ]
+          },
+          {
+            "elapsed": 0.6690016,
+            "phases": [
+              12.958016200000001,
+              16.9579604,
+              16.957956799999998
+            ]
+          },
+          {
+            "elapsed": 0.736058,
+            "phases": [
+              11.7510046,
+              15.7509452,
+              15.750941599999999
+            ]
+          },
+          {
+            "elapsed": 0.7694591,
+            "phases": [
+              11.1497686,
+              15.1497146,
+              15.149711
+            ]
+          },
+          {
+            "elapsed": 0.8362489,
+            "phases": [
+              9.9475378,
+              13.9474658,
+              13.947462199999999
+            ]
+          },
+          {
+            "elapsed": 0.8693735,
+            "phases": [
+              9.351323800000001,
+              13.3512662,
+              13.3512644
+            ]
+          },
+          {
+            "elapsed": 0.9362148,
+            "phases": [
+              8.148178600000001,
+              12.1481138,
+              12.148110200000001
+            ]
+          },
+          {
+            "elapsed": 0.9694183,
+            "phases": [
+              7.5505102000000015,
+              11.550434599999999,
+              11.5504328
+            ]
+          },
+          {
+            "elapsed": 1.0360194,
+            "phases": [
+              6.3517066,
+              10.351654400000001,
+              10.351650799999998
+            ]
+          },
+          {
+            "elapsed": 1.0695511,
+            "phases": [
+              5.748121600000001,
+              9.7480568,
+              9.748055
+            ]
+          },
+          {
+            "elapsed": 1.1370623,
+            "phases": [
+              4.532896600000001,
+              8.5328318,
+              8.53283
+            ]
+          },
+          {
+            "elapsed": 1.1705575,
+            "phases": [
+              3.9300028000000005,
+              7.929945200000002,
+              7.929943399999999
+            ]
+          },
+          {
+            "elapsed": 1.2038028,
+            "phases": [
+              3.3315891999999963,
+              7.331535199999998,
+              7.331533400000001
+            ]
+          },
+          {
+            "elapsed": 1.2709742,
+            "phases": [
+              2.1225075999999987,
+              6.1224518,
+              6.122450000000001
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: grape-clr",
+      "passed": true,
+      "at": "2026-09-13T12:14:50.247194+00:00",
+      "evidence": {
+        "server": {
+          "role": "GRAPE",
+          "premiumF": false,
+          "profile": "RESUME_NORMAL",
+          "order": [
+            "CENTER",
+            "LEFT",
+            "RIGHT"
+          ],
+          "label": "grape-clr",
+          "spinId": "cdd30302-2400-4516-a4a2-3c17082e8294",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 7
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 7,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "cdd30302-2400-4516-a4a2-3c17082e8294",
+                    "reel": "CENTER",
+                    "pressedIndex": 1,
+                    "stopIndex": 0,
+                    "slip": 1,
+                    "durationMs": 130
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 8
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 8,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "cdd30302-2400-4516-a4a2-3c17082e8294",
+                    "reel": "LEFT",
+                    "pressedIndex": 9,
+                    "stopIndex": 6,
+                    "slip": 3,
+                    "durationMs": 230
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 9
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 9,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "cdd30302-2400-4516-a4a2-3c17082e8294",
+                    "reel": "RIGHT",
+                    "pressedIndex": 4,
+                    "stopIndex": 3,
+                    "slip": 1,
+                    "durationMs": 130
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 6,
+            "center": 0,
+            "right": 3
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          6.0,
+          0.0,
+          3.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: grape-crl",
+      "passed": true,
+      "at": "2026-09-13T12:14:53.111179+00:00",
+      "evidence": {
+        "server": {
+          "role": "GRAPE",
+          "premiumF": false,
+          "profile": "NORMAL",
+          "order": [
+            "CENTER",
+            "RIGHT",
+            "LEFT"
+          ],
+          "label": "grape-crl",
+          "spinId": "9928e88e-aa93-46ae-ad45-802baca18544",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 10
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 10,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "9928e88e-aa93-46ae-ad45-802baca18544",
+                    "reel": "CENTER",
+                    "pressedIndex": 12,
+                    "stopIndex": 12,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 11
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 11,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "9928e88e-aa93-46ae-ad45-802baca18544",
+                    "reel": "RIGHT",
+                    "pressedIndex": 18,
+                    "stopIndex": 18,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 12
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 12,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "9928e88e-aa93-46ae-ad45-802baca18544",
+                    "reel": "LEFT",
+                    "pressedIndex": 12,
+                    "stopIndex": 11,
+                    "slip": 1,
+                    "durationMs": 130
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 11,
+            "center": 12,
+            "right": 18
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          11.0,
+          12.000000000000004,
+          18.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: grape-rlc",
+      "passed": true,
+      "at": "2026-09-13T12:14:56.000130+00:00",
+      "evidence": {
+        "server": {
+          "role": "GRAPE",
+          "premiumF": false,
+          "profile": "REVERSE_500MS",
+          "order": [
+            "RIGHT",
+            "LEFT",
+            "CENTER"
+          ],
+          "label": "grape-rlc",
+          "spinId": "e7bc16df-27fc-4c8e-bb65-8cea9974665c",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 13
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 13,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "e7bc16df-27fc-4c8e-bb65-8cea9974665c",
+                    "reel": "RIGHT",
+                    "pressedIndex": 16,
+                    "stopIndex": 16,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 14
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 14,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "e7bc16df-27fc-4c8e-bb65-8cea9974665c",
+                    "reel": "LEFT",
+                    "pressedIndex": 0,
+                    "stopIndex": 17,
+                    "slip": 4,
+                    "durationMs": 280
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 15
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 15,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "e7bc16df-27fc-4c8e-bb65-8cea9974665c",
+                    "reel": "CENTER",
+                    "pressedIndex": 13,
+                    "stopIndex": 13,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 17,
+            "center": 13,
+            "right": 16
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          17.0,
+          13.0,
+          16.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: grape-rcl",
+      "passed": true,
+      "at": "2026-09-13T12:14:58.871220+00:00",
+      "evidence": {
+        "server": {
+          "role": "GRAPE",
+          "premiumF": false,
+          "profile": "RESUME_NORMAL",
+          "order": [
+            "RIGHT",
+            "CENTER",
+            "LEFT"
+          ],
+          "label": "grape-rcl",
+          "spinId": "ec2c89b7-621c-43e5-8bcf-30dc442ae22a",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 16
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 16,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "ec2c89b7-621c-43e5-8bcf-30dc442ae22a",
+                    "reel": "RIGHT",
+                    "pressedIndex": 1,
+                    "stopIndex": 1,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 17
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 17,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "ec2c89b7-621c-43e5-8bcf-30dc442ae22a",
+                    "reel": "CENTER",
+                    "pressedIndex": 5,
+                    "stopIndex": 4,
+                    "slip": 1,
+                    "durationMs": 130
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 18
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 18,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "ec2c89b7-621c-43e5-8bcf-30dc442ae22a",
+                    "reel": "LEFT",
+                    "pressedIndex": 0,
+                    "stopIndex": 17,
+                    "slip": 4,
+                    "durationMs": 280
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 17,
+            "center": 4,
+            "right": 1
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          17.0,
+          4.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: bell-lcr",
+      "passed": true,
+      "at": "2026-09-13T12:15:01.502333+00:00",
+      "evidence": {
+        "server": {
+          "role": "BELL",
+          "premiumF": false,
+          "profile": "NORMAL",
+          "order": [
+            "LEFT",
+            "CENTER",
+            "RIGHT"
+          ],
+          "label": "bell-lcr",
+          "spinId": "5c29a59c-e6cf-467e-9c72-a629454b3b41",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 19
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 19,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "5c29a59c-e6cf-467e-9c72-a629454b3b41",
+                    "reel": "LEFT",
+                    "pressedIndex": 8,
+                    "stopIndex": 14,
+                    "slip": 15,
+                    "durationMs": 830
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 20
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 20,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "5c29a59c-e6cf-467e-9c72-a629454b3b41",
+                    "reel": "CENTER",
+                    "pressedIndex": 7,
+                    "stopIndex": 7,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 21
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 21,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "5c29a59c-e6cf-467e-9c72-a629454b3b41",
+                    "reel": "RIGHT",
+                    "pressedIndex": 16,
+                    "stopIndex": 16,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 14,
+            "center": 7,
+            "right": 16
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          14.0,
+          7.0,
+          16.0
+        ]
+      }
+    },
+    {
+      "name": "actual screenshot contains all three reel symbol columns: bell-lcr",
+      "passed": true,
+      "at": "2026-09-13T12:15:02.316666+00:00",
+      "evidence": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_05_REEL_REGRESSION\\work\\client-phase04-reels\\screenshots\\phase04-bell-lcr.png"
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: bell-lrc",
+      "passed": true,
+      "at": "2026-09-13T12:15:05.744225+00:00",
+      "evidence": {
+        "server": {
+          "role": "BELL",
+          "premiumF": false,
+          "profile": "REVERSE_500MS",
+          "order": [
+            "LEFT",
+            "RIGHT",
+            "CENTER"
+          ],
+          "label": "bell-lrc",
+          "spinId": "975283d6-68a7-4411-be45-3ff7bf5c3252",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 22
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 22,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "975283d6-68a7-4411-be45-3ff7bf5c3252",
+                    "reel": "LEFT",
+                    "pressedIndex": 8,
+                    "stopIndex": 14,
+                    "slip": 15,
+                    "durationMs": 830
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 23
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 23,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "975283d6-68a7-4411-be45-3ff7bf5c3252",
+                    "reel": "RIGHT",
+                    "pressedIndex": 1,
+                    "stopIndex": 1,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 24
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 24,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "975283d6-68a7-4411-be45-3ff7bf5c3252",
+                    "reel": "CENTER",
+                    "pressedIndex": 4,
+                    "stopIndex": 16,
+                    "slip": 9,
+                    "durationMs": 530
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 14,
+            "center": 16,
+            "right": 1
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          14.0,
+          16.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: bell-clr",
+      "passed": true,
+      "at": "2026-09-13T12:15:08.626601+00:00",
+      "evidence": {
+        "server": {
+          "role": "BELL",
+          "premiumF": false,
+          "profile": "RESUME_NORMAL",
+          "order": [
+            "CENTER",
+            "LEFT",
+            "RIGHT"
+          ],
+          "label": "bell-clr",
+          "spinId": "d2a87f28-e15d-4f94-ae21-01e03a86c512",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 25
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 25,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "d2a87f28-e15d-4f94-ae21-01e03a86c512",
+                    "reel": "CENTER",
+                    "pressedIndex": 5,
+                    "stopIndex": 16,
+                    "slip": 10,
+                    "durationMs": 580
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 26
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 26,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "d2a87f28-e15d-4f94-ae21-01e03a86c512",
+                    "reel": "LEFT",
+                    "pressedIndex": 6,
+                    "stopIndex": 14,
+                    "slip": 13,
+                    "durationMs": 730
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 27
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 27,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "d2a87f28-e15d-4f94-ae21-01e03a86c512",
+                    "reel": "RIGHT",
+                    "pressedIndex": 6,
+                    "stopIndex": 6,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 14,
+            "center": 16,
+            "right": 6
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          14.0,
+          16.0,
+          6.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: bell-crl",
+      "passed": true,
+      "at": "2026-09-13T12:15:11.776773+00:00",
+      "evidence": {
+        "server": {
+          "role": "BELL",
+          "premiumF": false,
+          "profile": "NORMAL",
+          "order": [
+            "CENTER",
+            "RIGHT",
+            "LEFT"
+          ],
+          "label": "bell-crl",
+          "spinId": "201f7353-a2bc-450c-801b-5fbc8c6e33e6",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 28
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 28,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "201f7353-a2bc-450c-801b-5fbc8c6e33e6",
+                    "reel": "CENTER",
+                    "pressedIndex": 7,
+                    "stopIndex": 7,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 29
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 29,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "201f7353-a2bc-450c-801b-5fbc8c6e33e6",
+                    "reel": "RIGHT",
+                    "pressedIndex": 9,
+                    "stopIndex": 9,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 30
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 30,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "201f7353-a2bc-450c-801b-5fbc8c6e33e6",
+                    "reel": "LEFT",
+                    "pressedIndex": 8,
+                    "stopIndex": 13,
+                    "slip": 16,
+                    "durationMs": 880
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 13,
+            "center": 7,
+            "right": 9
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          13.0,
+          7.0,
+          9.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: bell-rlc",
+      "passed": true,
+      "at": "2026-09-13T12:15:14.420429+00:00",
+      "evidence": {
+        "server": {
+          "role": "BELL",
+          "premiumF": false,
+          "profile": "REVERSE_500MS",
+          "order": [
+            "RIGHT",
+            "LEFT",
+            "CENTER"
+          ],
+          "label": "bell-rlc",
+          "spinId": "fa76a88d-01d0-49b9-837a-e5d2c9a6824d",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 31
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 31,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "fa76a88d-01d0-49b9-837a-e5d2c9a6824d",
+                    "reel": "RIGHT",
+                    "pressedIndex": 7,
+                    "stopIndex": 6,
+                    "slip": 1,
+                    "durationMs": 130
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 32
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 32,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "fa76a88d-01d0-49b9-837a-e5d2c9a6824d",
+                    "reel": "LEFT",
+                    "pressedIndex": 2,
+                    "stopIndex": 14,
+                    "slip": 9,
+                    "durationMs": 530
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 33
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 33,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "fa76a88d-01d0-49b9-837a-e5d2c9a6824d",
+                    "reel": "CENTER",
+                    "pressedIndex": 8,
+                    "stopIndex": 8,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 14,
+            "center": 8,
+            "right": 6
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          14.0,
+          8.0,
+          6.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: bell-rcl",
+      "passed": true,
+      "at": "2026-09-13T12:15:17.297875+00:00",
+      "evidence": {
+        "server": {
+          "role": "BELL",
+          "premiumF": false,
+          "profile": "RESUME_NORMAL",
+          "order": [
+            "RIGHT",
+            "CENTER",
+            "LEFT"
+          ],
+          "label": "bell-rcl",
+          "spinId": "8646e9c4-46c5-4c26-9139-1e47512f6e21",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 34
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 34,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "8646e9c4-46c5-4c26-9139-1e47512f6e21",
+                    "reel": "RIGHT",
+                    "pressedIndex": 16,
+                    "stopIndex": 16,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 35
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 35,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "8646e9c4-46c5-4c26-9139-1e47512f6e21",
+                    "reel": "CENTER",
+                    "pressedIndex": 9,
+                    "stopIndex": 7,
+                    "slip": 2,
+                    "durationMs": 180
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 36
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 36,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "8646e9c4-46c5-4c26-9139-1e47512f6e21",
+                    "reel": "LEFT",
+                    "pressedIndex": 6,
+                    "stopIndex": 14,
+                    "slip": 13,
+                    "durationMs": 730
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 14,
+            "center": 7,
+            "right": 16
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          14.0,
+          7.0,
+          16.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: piero-lcr",
+      "passed": true,
+      "at": "2026-09-13T12:15:19.677865+00:00",
+      "evidence": {
+        "server": {
+          "role": "PIERO",
+          "premiumF": false,
+          "profile": "NORMAL",
+          "order": [
+            "LEFT",
+            "CENTER",
+            "RIGHT"
+          ],
+          "label": "piero-lcr",
+          "spinId": "75360149-74c2-44fa-8edc-1ff0c17b49c2",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 37
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 37,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "75360149-74c2-44fa-8edc-1ff0c17b49c2",
+                    "reel": "LEFT",
+                    "pressedIndex": 5,
+                    "stopIndex": 5,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 38
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 38,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "75360149-74c2-44fa-8edc-1ff0c17b49c2",
+                    "reel": "CENTER",
+                    "pressedIndex": 10,
+                    "stopIndex": 2,
+                    "slip": 8,
+                    "durationMs": 480
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 39
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 39,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "75360149-74c2-44fa-8edc-1ff0c17b49c2",
+                    "reel": "RIGHT",
+                    "pressedIndex": 10,
+                    "stopIndex": 9,
+                    "slip": 1,
+                    "durationMs": 130
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 5,
+            "center": 2,
+            "right": 9
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          5.0,
+          2.0,
+          9.0
+        ]
+      }
+    },
+    {
+      "name": "actual screenshot contains all three reel symbol columns: piero-lcr",
+      "passed": true,
+      "at": "2026-09-13T12:15:20.487996+00:00",
+      "evidence": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_05_REEL_REGRESSION\\work\\client-phase04-reels\\screenshots\\phase04-piero-lcr.png"
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: piero-lrc",
+      "passed": true,
+      "at": "2026-09-13T12:15:24.442260+00:00",
+      "evidence": {
+        "server": {
+          "role": "PIERO",
+          "premiumF": false,
+          "profile": "REVERSE_500MS",
+          "order": [
+            "LEFT",
+            "RIGHT",
+            "CENTER"
+          ],
+          "label": "piero-lrc",
+          "spinId": "89a4179d-0766-4b2a-93ef-4b0fc43adffe",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 40
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 40,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "89a4179d-0766-4b2a-93ef-4b0fc43adffe",
+                    "reel": "LEFT",
+                    "pressedIndex": 20,
+                    "stopIndex": 5,
+                    "slip": 15,
+                    "durationMs": 830
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 41
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 41,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "89a4179d-0766-4b2a-93ef-4b0fc43adffe",
+                    "reel": "RIGHT",
+                    "pressedIndex": 15,
+                    "stopIndex": 15,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 42
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 42,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "89a4179d-0766-4b2a-93ef-4b0fc43adffe",
+                    "reel": "CENTER",
+                    "pressedIndex": 20,
+                    "stopIndex": 1,
+                    "slip": 19,
+                    "durationMs": 1030
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 5,
+            "center": 1,
+            "right": 15
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          5.0,
+          0.9999999999999964,
+          15.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: piero-clr",
+      "passed": true,
+      "at": "2026-09-13T12:15:26.813187+00:00",
+      "evidence": {
+        "server": {
+          "role": "PIERO",
+          "premiumF": false,
+          "profile": "RESUME_NORMAL",
+          "order": [
+            "CENTER",
+            "LEFT",
+            "RIGHT"
+          ],
+          "label": "piero-clr",
+          "spinId": "1765a419-4c8d-47e8-badf-7bba3d058106",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 43
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 43,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "1765a419-4c8d-47e8-badf-7bba3d058106",
+                    "reel": "CENTER",
+                    "pressedIndex": 11,
+                    "stopIndex": 2,
+                    "slip": 9,
+                    "durationMs": 530
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 44
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 44,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "1765a419-4c8d-47e8-badf-7bba3d058106",
+                    "reel": "LEFT",
+                    "pressedIndex": 6,
+                    "stopIndex": 5,
+                    "slip": 1,
+                    "durationMs": 130
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 45
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 45,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "1765a419-4c8d-47e8-badf-7bba3d058106",
+                    "reel": "RIGHT",
+                    "pressedIndex": 7,
+                    "stopIndex": 0,
+                    "slip": 7,
+                    "durationMs": 430
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 5,
+            "center": 2,
+            "right": 0
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          5.0,
+          2.0000000000000036,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: piero-crl",
+      "passed": true,
+      "at": "2026-09-13T12:15:29.960904+00:00",
+      "evidence": {
+        "server": {
+          "role": "PIERO",
+          "premiumF": false,
+          "profile": "NORMAL",
+          "order": [
+            "CENTER",
+            "RIGHT",
+            "LEFT"
+          ],
+          "label": "piero-crl",
+          "spinId": "6bdd59c0-47df-4e20-bb33-b4e9f8706c07",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 46
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 46,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "6bdd59c0-47df-4e20-bb33-b4e9f8706c07",
+                    "reel": "CENTER",
+                    "pressedIndex": 14,
+                    "stopIndex": 2,
+                    "slip": 12,
+                    "durationMs": 680
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 47
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 47,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "6bdd59c0-47df-4e20-bb33-b4e9f8706c07",
+                    "reel": "RIGHT",
+                    "pressedIndex": 3,
+                    "stopIndex": 0,
+                    "slip": 3,
+                    "durationMs": 230
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 48
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 48,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "6bdd59c0-47df-4e20-bb33-b4e9f8706c07",
+                    "reel": "LEFT",
+                    "pressedIndex": 20,
+                    "stopIndex": 5,
+                    "slip": 15,
+                    "durationMs": 830
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 5,
+            "center": 2,
+            "right": 0
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          4.9999999999999964,
+          1.9999999999999964,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: piero-rlc",
+      "passed": true,
+      "at": "2026-09-13T12:15:33.649846+00:00",
+      "evidence": {
+        "server": {
+          "role": "PIERO",
+          "premiumF": false,
+          "profile": "REVERSE_500MS",
+          "order": [
+            "RIGHT",
+            "LEFT",
+            "CENTER"
+          ],
+          "label": "piero-rlc",
+          "spinId": "f63c72ab-044b-438f-963e-6040b185f61e",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 49
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 49,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "f63c72ab-044b-438f-963e-6040b185f61e",
+                    "reel": "RIGHT",
+                    "pressedIndex": 15,
+                    "stopIndex": 15,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 50
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 50,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "f63c72ab-044b-438f-963e-6040b185f61e",
+                    "reel": "LEFT",
+                    "pressedIndex": 11,
+                    "stopIndex": 5,
+                    "slip": 6,
+                    "durationMs": 380
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 51
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 51,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "f63c72ab-044b-438f-963e-6040b185f61e",
+                    "reel": "CENTER",
+                    "pressedIndex": 20,
+                    "stopIndex": 1,
+                    "slip": 19,
+                    "durationMs": 1030
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 5,
+            "center": 1,
+            "right": 15
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          5.0,
+          0.9999999999999964,
+          15.000000000000004
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: piero-rcl",
+      "passed": true,
+      "at": "2026-09-13T12:15:36.292742+00:00",
+      "evidence": {
+        "server": {
+          "role": "PIERO",
+          "premiumF": false,
+          "profile": "RESUME_NORMAL",
+          "order": [
+            "RIGHT",
+            "CENTER",
+            "LEFT"
+          ],
+          "label": "piero-rcl",
+          "spinId": "3073144c-325e-4aa6-939f-1165dc607b5f",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 52
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 52,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "3073144c-325e-4aa6-939f-1165dc607b5f",
+                    "reel": "RIGHT",
+                    "pressedIndex": 4,
+                    "stopIndex": 0,
+                    "slip": 4,
+                    "durationMs": 280
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 53
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 53,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "3073144c-325e-4aa6-939f-1165dc607b5f",
+                    "reel": "CENTER",
+                    "pressedIndex": 2,
+                    "stopIndex": 2,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 54
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 54,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "3073144c-325e-4aa6-939f-1165dc607b5f",
+                    "reel": "LEFT",
+                    "pressedIndex": 19,
+                    "stopIndex": 5,
+                    "slip": 14,
+                    "durationMs": 780
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 5,
+            "center": 2,
+            "right": 0
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          5.0,
+          2.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: replay-lcr",
+      "passed": true,
+      "at": "2026-09-13T12:15:38.679717+00:00",
+      "evidence": {
+        "server": {
+          "role": "REPLAY",
+          "premiumF": false,
+          "profile": "NORMAL",
+          "order": [
+            "LEFT",
+            "CENTER",
+            "RIGHT"
+          ],
+          "label": "replay-lcr",
+          "spinId": "30259c00-f72d-42f4-a02b-0819d7ce1ce6",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 55
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 55,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "30259c00-f72d-42f4-a02b-0819d7ce1ce6",
+                    "reel": "LEFT",
+                    "pressedIndex": 17,
+                    "stopIndex": 17,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 56
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 56,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "30259c00-f72d-42f4-a02b-0819d7ce1ce6",
+                    "reel": "CENTER",
+                    "pressedIndex": 5,
+                    "stopIndex": 2,
+                    "slip": 3,
+                    "durationMs": 230
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 57
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 57,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "30259c00-f72d-42f4-a02b-0819d7ce1ce6",
+                    "reel": "RIGHT",
+                    "pressedIndex": 15,
+                    "stopIndex": 14,
+                    "slip": 1,
+                    "durationMs": 130
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 17,
+            "center": 2,
+            "right": 14
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          17.0,
+          2.0,
+          14.0
+        ]
+      }
+    },
+    {
+      "name": "actual screenshot contains all three reel symbol columns: replay-lcr",
+      "passed": true,
+      "at": "2026-09-13T12:15:39.512075+00:00",
+      "evidence": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_05_REEL_REGRESSION\\work\\client-phase04-reels\\screenshots\\phase04-replay-lcr.png"
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: replay-lrc",
+      "passed": true,
+      "at": "2026-09-13T12:15:42.447055+00:00",
+      "evidence": {
+        "server": {
+          "role": "REPLAY",
+          "premiumF": false,
+          "profile": "REVERSE_500MS",
+          "order": [
+            "LEFT",
+            "RIGHT",
+            "CENTER"
+          ],
+          "label": "replay-lrc",
+          "spinId": "be0e0629-548c-4958-a097-230da5008d13",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 58
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 58,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "be0e0629-548c-4958-a097-230da5008d13",
+                    "reel": "LEFT",
+                    "pressedIndex": 11,
+                    "stopIndex": 11,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 59
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 59,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "be0e0629-548c-4958-a097-230da5008d13",
+                    "reel": "RIGHT",
+                    "pressedIndex": 20,
+                    "stopIndex": 18,
+                    "slip": 2,
+                    "durationMs": 180
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 60
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 60,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "be0e0629-548c-4958-a097-230da5008d13",
+                    "reel": "CENTER",
+                    "pressedIndex": 20,
+                    "stopIndex": 18,
+                    "slip": 2,
+                    "durationMs": 180
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 11,
+            "center": 18,
+            "right": 18
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          11.0,
+          18.0,
+          18.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: replay-clr",
+      "passed": true,
+      "at": "2026-09-13T12:15:44.827102+00:00",
+      "evidence": {
+        "server": {
+          "role": "REPLAY",
+          "premiumF": false,
+          "profile": "RESUME_NORMAL",
+          "order": [
+            "CENTER",
+            "LEFT",
+            "RIGHT"
+          ],
+          "label": "replay-clr",
+          "spinId": "0f5e0d77-4341-4bc5-90a3-038409d36cd2",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 61
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 61,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "0f5e0d77-4341-4bc5-90a3-038409d36cd2",
+                    "reel": "CENTER",
+                    "pressedIndex": 8,
+                    "stopIndex": 7,
+                    "slip": 1,
+                    "durationMs": 130
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 62
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 62,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "0f5e0d77-4341-4bc5-90a3-038409d36cd2",
+                    "reel": "LEFT",
+                    "pressedIndex": 13,
+                    "stopIndex": 12,
+                    "slip": 1,
+                    "durationMs": 130
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 63
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 63,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "0f5e0d77-4341-4bc5-90a3-038409d36cd2",
+                    "reel": "RIGHT",
+                    "pressedIndex": 6,
+                    "stopIndex": 2,
+                    "slip": 4,
+                    "durationMs": 280
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 12,
+            "center": 7,
+            "right": 2
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          12.0,
+          7.0,
+          2.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: replay-crl",
+      "passed": true,
+      "at": "2026-09-13T12:15:47.478185+00:00",
+      "evidence": {
+        "server": {
+          "role": "REPLAY",
+          "premiumF": false,
+          "profile": "NORMAL",
+          "order": [
+            "CENTER",
+            "RIGHT",
+            "LEFT"
+          ],
+          "label": "replay-crl",
+          "spinId": "ddcb3dc1-6ebd-4627-bdc9-cd4cb9b4bda6",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 64
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 64,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "ddcb3dc1-6ebd-4627-bdc9-cd4cb9b4bda6",
+                    "reel": "CENTER",
+                    "pressedIndex": 19,
+                    "stopIndex": 19,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 65
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 65,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "ddcb3dc1-6ebd-4627-bdc9-cd4cb9b4bda6",
+                    "reel": "RIGHT",
+                    "pressedIndex": 5,
+                    "stopIndex": 2,
+                    "slip": 3,
+                    "durationMs": 230
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 66
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 66,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "ddcb3dc1-6ebd-4627-bdc9-cd4cb9b4bda6",
+                    "reel": "LEFT",
+                    "pressedIndex": 6,
+                    "stopIndex": 2,
+                    "slip": 4,
+                    "durationMs": 280
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 2,
+            "center": 19,
+            "right": 2
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          2.0,
+          19.0,
+          2.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: replay-rlc",
+      "passed": true,
+      "at": "2026-09-13T12:15:50.147184+00:00",
+      "evidence": {
+        "server": {
+          "role": "REPLAY",
+          "premiumF": false,
+          "profile": "REVERSE_500MS",
+          "order": [
+            "RIGHT",
+            "LEFT",
+            "CENTER"
+          ],
+          "label": "replay-rlc",
+          "spinId": "301bb119-79ca-4b57-b253-943ef2103d5d",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 67
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 67,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "301bb119-79ca-4b57-b253-943ef2103d5d",
+                    "reel": "RIGHT",
+                    "pressedIndex": 0,
+                    "stopIndex": 0,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 68
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 68,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "301bb119-79ca-4b57-b253-943ef2103d5d",
+                    "reel": "LEFT",
+                    "pressedIndex": 12,
+                    "stopIndex": 12,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 69
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 69,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "301bb119-79ca-4b57-b253-943ef2103d5d",
+                    "reel": "CENTER",
+                    "pressedIndex": 20,
+                    "stopIndex": 18,
+                    "slip": 2,
+                    "durationMs": 180
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 12,
+            "center": 18,
+            "right": 0
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          12.0,
+          18.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: replay-rcl",
+      "passed": true,
+      "at": "2026-09-13T12:15:52.527432+00:00",
+      "evidence": {
+        "server": {
+          "role": "REPLAY",
+          "premiumF": false,
+          "profile": "RESUME_NORMAL",
+          "order": [
+            "RIGHT",
+            "CENTER",
+            "LEFT"
+          ],
+          "label": "replay-rcl",
+          "spinId": "70efa313-ee97-400f-be17-797b3523bcd1",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 70
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 70,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "70efa313-ee97-400f-be17-797b3523bcd1",
+                    "reel": "RIGHT",
+                    "pressedIndex": 10,
+                    "stopIndex": 10,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 71
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 71,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "70efa313-ee97-400f-be17-797b3523bcd1",
+                    "reel": "CENTER",
+                    "pressedIndex": 19,
+                    "stopIndex": 18,
+                    "slip": 1,
+                    "durationMs": 130
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 72
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 72,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "70efa313-ee97-400f-be17-797b3523bcd1",
+                    "reel": "LEFT",
+                    "pressedIndex": 4,
+                    "stopIndex": 1,
+                    "slip": 3,
+                    "durationMs": 230
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 1,
+            "center": 18,
+            "right": 10
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          1.0,
+          18.0,
+          10.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: cherry-lcr",
+      "passed": true,
+      "at": "2026-09-13T12:15:54.927268+00:00",
+      "evidence": {
+        "server": {
+          "role": "CHERRY",
+          "premiumF": false,
+          "profile": "NORMAL",
+          "order": [
+            "LEFT",
+            "CENTER",
+            "RIGHT"
+          ],
+          "label": "cherry-lcr",
+          "spinId": "fcb5c7ab-c2d5-4436-a1c5-32b031d26f7f",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 73
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 73,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "fcb5c7ab-c2d5-4436-a1c5-32b031d26f7f",
+                    "reel": "LEFT",
+                    "pressedIndex": 13,
+                    "stopIndex": 9,
+                    "slip": 4,
+                    "durationMs": 280
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 74
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 74,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "fcb5c7ab-c2d5-4436-a1c5-32b031d26f7f",
+                    "reel": "CENTER",
+                    "pressedIndex": 0,
+                    "stopIndex": 0,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 75
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 75,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "fcb5c7ab-c2d5-4436-a1c5-32b031d26f7f",
+                    "reel": "RIGHT",
+                    "pressedIndex": 4,
+                    "stopIndex": 4,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 9,
+            "center": 0,
+            "right": 4
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          9.0,
+          0.0,
+          4.0
+        ]
+      }
+    },
+    {
+      "name": "actual screenshot contains all three reel symbol columns: cherry-lcr",
+      "passed": true,
+      "at": "2026-09-13T12:15:55.756329+00:00",
+      "evidence": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_05_REEL_REGRESSION\\work\\client-phase04-reels\\screenshots\\phase04-cherry-lcr.png"
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: cherry-lrc",
+      "passed": true,
+      "at": "2026-09-13T12:15:58.714287+00:00",
+      "evidence": {
+        "server": {
+          "role": "CHERRY",
+          "premiumF": false,
+          "profile": "REVERSE_500MS",
+          "order": [
+            "LEFT",
+            "RIGHT",
+            "CENTER"
+          ],
+          "label": "cherry-lrc",
+          "spinId": "958cf869-df6c-4eb7-9d9f-c1f98f128f4d",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 76
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 76,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "958cf869-df6c-4eb7-9d9f-c1f98f128f4d",
+                    "reel": "LEFT",
+                    "pressedIndex": 3,
+                    "stopIndex": 0,
+                    "slip": 3,
+                    "durationMs": 230
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 77
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 77,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "958cf869-df6c-4eb7-9d9f-c1f98f128f4d",
+                    "reel": "RIGHT",
+                    "pressedIndex": 10,
+                    "stopIndex": 10,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 78
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 78,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "958cf869-df6c-4eb7-9d9f-c1f98f128f4d",
+                    "reel": "CENTER",
+                    "pressedIndex": 18,
+                    "stopIndex": 18,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 0,
+            "center": 18,
+            "right": 10
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          0.0,
+          18.0,
+          10.0
+        ]
+      }
+    },
+    {
+      "name": "real STOP / strict candidate / display agreement: cherry-clr",
+      "passed": true,
+      "at": "2026-09-13T12:16:00.837534+00:00",
+      "evidence": {
+        "server": {
+          "role": "CHERRY",
+          "premiumF": false,
+          "profile": "RESUME_NORMAL",
+          "order": [
+            "CENTER",
+            "LEFT",
+            "RIGHT"
+          ],
+          "label": "cherry-clr",
+          "spinId": "a356614d-e95c-41af-8327-6e7148bbe068",
+          "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+          "stops": [
+            {
+              "packetType": "STOP_CENTER",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 79
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 79,
+                    "action": "STOP_CENTER"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "a356614d-e95c-41af-8327-6e7148bbe068",
+                    "reel": "CENTER",
+                    "pressedIndex": 8,
+                    "stopIndex": 8,
+                    "slip": 0,
+                    "durationMs": 80
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_LEFT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 80
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 80,
+                    "action": "STOP_LEFT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "a356614d-e95c-41af-8327-6e7148bbe068",
+                    "reel": "LEFT",
+                    "pressedIndex": 2,
+                    "stopIndex": 0,
+                    "slip": 2,
+                    "durationMs": 180
+                  }
+                }
+              ]
+            },
+            {
+              "packetType": "STOP_RIGHT",
+              "request": {
+                "sessionId": "157fd8f0-2048-4ffe-9f03-416406541556",
+                "machineId": 1,
+                "clientSequence": 81
+              },
+              "ping": 0,
+              "accepted": true,
+              "tenpaiSound": false,
+              "actualTenpaiLines": 0,
+              "responses": [
+                {
+                  "type": "ACTION_ACCEPTED",
+                  "payload": {
+                    "clientSequence": 81,
+                    "action": "STOP_RIGHT"
+                  }
+                },
+                {
+                  "type": "REEL_STOP",
+                  "payload": {
+                    "spinId": "a356614d-e95c-41af-8327-6e7148bbe068",
+                    "reel": "RIGHT",
+                    "pressedIndex": 19,
+                    "stopIndex": 18,
+                    "slip": 1,
+                    "durationMs": 130
+                  }
+                }
+              ]
+            }
+          ],
+          "complete": true,
+          "finalStops": {
+            "left": 0,
+            "center": 8,
+            "right": 18
+          },
+          "strictValid": true
+        },
+        "clientPhases": [
+          0.0,
+          8.0,
+          18.0
+        ]
+      }
+    }
+  ],
+  "commands": [
+    {
+      "server": "reels",
+      "command": [
+        "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE",
+        "-Xms512M",
+        "-Xmx1536M",
+        "-Dfile.encoding=UTF-8",
+        "-Dpiri.runtime.phase=phase04",
+        "-Dpiri.runtime.serverResult=C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_05_REEL_REGRESSION\\attempts\\20260913T121327Z\\reels\\server-result.json",
+        "-jar",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\downloads\\paper-1.21-130.jar",
+        "nogui"
+      ],
+      "cwd": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_05_REEL_REGRESSION\\work\\server-20260913T121327Z"
+    },
+    {
+      "client": "phase04-reels",
+      "command": [
+        "cmd.exe",
+        "/d",
+        "/c",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\gradlew.bat",
+        "-PruntimeAcceptance=true",
+        "-PruntimeScenario=phase04-reels",
+        "-PruntimeRun=20260913T121327Z",
+        "-PruntimeEvidencePhase=PHASE_05_REEL_REGRESSION",
+        ":runtime-test-client:runClient",
+        "--console=plain"
+      ],
+      "cwd": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED"
+    },
+    {
+      "client": "phase04-reels",
+      "id": 1,
+      "kind": "aim",
+      "x": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 2,
+      "kind": "command",
+      "text": "piri machine create"
+    },
+    {
+      "client": "phase04-reels",
+      "id": 3,
+      "kind": "aim",
+      "x": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 4,
+      "kind": "click",
+      "x": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 5,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 6,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 7,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 8,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 9,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 10,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 11,
+      "kind": "capture",
+      "label": "grape-lcr"
+    },
+    {
+      "client": "phase04-reels",
+      "id": 12,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 13,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 14,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 15,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 16,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 17,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 18,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 19,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 20,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 21,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 22,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 23,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 24,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 25,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 26,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 27,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 28,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 29,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 30,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 31,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 32,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 33,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 34,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 35,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 36,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 37,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 38,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 39,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 40,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 41,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 42,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 43,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 44,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 45,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 46,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 47,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 48,
+      "kind": "capture",
+      "label": "bell-lcr"
+    },
+    {
+      "client": "phase04-reels",
+      "id": 49,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 50,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 51,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 52,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 53,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 54,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 55,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 56,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 57,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 58,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 59,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 60,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 61,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 62,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 63,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 64,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 65,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 66,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 67,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 68,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 69,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 70,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 71,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 72,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 73,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 74,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 75,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 76,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 77,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 78,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 79,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 80,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 81,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 82,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 83,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 84,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 85,
+      "kind": "capture",
+      "label": "piero-lcr"
+    },
+    {
+      "client": "phase04-reels",
+      "id": 86,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 87,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 88,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 89,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 90,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 91,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 92,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 93,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 94,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 95,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 96,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 97,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 98,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 99,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 100,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 101,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 102,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 103,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 104,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 105,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 106,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 107,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 108,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 109,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 110,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 111,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 112,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 113,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 114,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 115,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 116,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 117,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 118,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 119,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 120,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 121,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 122,
+      "kind": "capture",
+      "label": "replay-lcr"
+    },
+    {
+      "client": "phase04-reels",
+      "id": 123,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 124,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 125,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 126,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 127,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 128,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 129,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 130,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 131,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 132,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 133,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 134,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 135,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 136,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 137,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 138,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 139,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 140,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 141,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 142,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 143,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 144,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 145,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 146,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 147,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 148,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 149,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 150,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 151,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 152,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 153,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 154,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 155,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 156,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 157,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 158,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 159,
+      "kind": "capture",
+      "label": "cherry-lcr"
+    },
+    {
+      "client": "phase04-reels",
+      "id": 160,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 161,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 162,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 163,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 164,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 165,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 166,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 167,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 168,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 169,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 170,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 171,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 172,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 173,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 174,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 175,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 176,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase04-reels",
+      "id": 177,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase04-reels",
+      "id": 178,
+      "kind": "exit"
+    }
+  ],
+  "exits": [
+    {
+      "client": "phase04-reels",
+      "exit": 0
+    },
+    {
+      "server": 0
+    }
+  ],
+  "failure": "client final positions cherry-crl",
+  "uncaughtExceptions": [],
+  "finishedAt": "2026-09-13T12:17:35.798415+00:00"
+}

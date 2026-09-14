@@ -1,0 +1,1327 @@
+{
+  "source": "SPEC.md",
+  "protocolVersion": 1,
+  "channel": "piri:main",
+  "magicHex": "50495249",
+  "maxPayloadBytes": 32767,
+  "modVersion": "1.0.0",
+  "serverVersion": "1.0.0",
+  "packetIds": {
+    "HELLO": 1,
+    "RESERVED_2": 2,
+    "SPACE_ACTION": 3,
+    "STOP_LEFT": 4,
+    "STOP_CENTER": 5,
+    "STOP_RIGHT": 6,
+    "LOAN": 7,
+    "INSERT_MEDALS": 8,
+    "CASH_OUT": 9,
+    "CLOSE_REQUEST": 10,
+    "RESERVED_11": 11,
+    "ADMIN_SET_SETTING": 12,
+    "ADMIN_SET_AUTO": 13,
+    "ADMIN_SET_ENABLED": 14,
+    "ADMIN_RESET_DAILY": 15,
+    "HELLO_ACK": 101,
+    "OPEN_MACHINE": 102,
+    "PUBLIC_STATE": 103,
+    "ACTION_ACCEPTED": 104,
+    "ACTION_REJECTED": 105,
+    "SPIN_START": 106,
+    "REEL_STOP": 107,
+    "PAYOUT": 108,
+    "NOTICE": 109,
+    "TENPAI_SOUND": 110,
+    "BONUS_START": 111,
+    "BONUS_END": 112,
+    "DATA_LAMP": 113,
+    "CASHOUT_RESULT": 114,
+    "SESSION_SUSPENDED": 115,
+    "SESSION_END": 116,
+    "ADMIN_STATE": 117,
+    "ERROR": 118
+  },
+  "errorCodes": [
+    "BUSY",
+    "INVALID_STATE",
+    "NOT_ENOUGH_CREDIT",
+    "ECONOMY_UNAVAILABLE",
+    "NOT_ENOUGH_VAULT",
+    "NOT_ENOUGH_MEDALS",
+    "INVENTORY_FULL",
+    "MACHINE_OCCUPIED",
+    "MACHINE_DISABLED",
+    "SESSION_MISMATCH",
+    "SEQUENCE_OLD",
+    "SPIN_MISMATCH",
+    "STOP_TOO_EARLY",
+    "ALREADY_STOPPED",
+    "NOT_OP",
+    "INVALID_ITEM",
+    "TOKEN_REVIEW_REQUIRED",
+    "DB_ERROR",
+    "VAULT_ERROR",
+    "PROTOCOL_MISMATCH"
+  ],
+  "fixedConstants": {
+    "creditMax": 50,
+    "normalBet": 3,
+    "entryBet": 1,
+    "bonusBet": 2,
+    "bigThreshold": 266,
+    "bigPayout": 280,
+    "regThreshold": 98,
+    "regPayout": 112,
+    "maxMedalBundle": 500
+  },
+  "reelArrays": {
+    "LEFT_REEL": [
+      "GRAPE",
+      "REPLAY",
+      "GRAPE",
+      "SEVEN",
+      "PIERO",
+      "GRAPE",
+      "REPLAY",
+      "GRAPE",
+      "CHERRY",
+      "BAR",
+      "GRAPE",
+      "REPLAY",
+      "GRAPE",
+      "BELL",
+      "SEVEN",
+      "REPLAY",
+      "GRAPE",
+      "REPLAY",
+      "GRAPE",
+      "BAR",
+      "CHERRY"
+    ],
+    "CENTER_REEL": [
+      "CHERRY",
+      "PIERO",
+      "REPLAY",
+      "SEVEN",
+      "GRAPE",
+      "CHERRY",
+      "REPLAY",
+      "BELL",
+      "GRAPE",
+      "CHERRY",
+      "REPLAY",
+      "BAR",
+      "GRAPE",
+      "CHERRY",
+      "REPLAY",
+      "BELL",
+      "GRAPE",
+      "CHERRY",
+      "REPLAY",
+      "BAR",
+      "GRAPE"
+    ],
+    "RIGHT_REEL": [
+      "BELL",
+      "REPLAY",
+      "GRAPE",
+      "SEVEN",
+      "BAR",
+      "BELL",
+      "REPLAY",
+      "GRAPE",
+      "PIERO",
+      "BELL",
+      "REPLAY",
+      "GRAPE",
+      "PIERO",
+      "BELL",
+      "REPLAY",
+      "GRAPE",
+      "PIERO",
+      "BELL",
+      "REPLAY",
+      "GRAPE",
+      "PIERO"
+    ]
+  },
+  "paylines": {
+    "L1_CENTER": [
+      "MIDDLE",
+      "MIDDLE",
+      "MIDDLE"
+    ],
+    "L2_TOP": [
+      "TOP",
+      "TOP",
+      "TOP"
+    ],
+    "L3_BOTTOM": [
+      "BOTTOM",
+      "BOTTOM",
+      "BOTTOM"
+    ],
+    "L4_DOWN": [
+      "TOP",
+      "MIDDLE",
+      "BOTTOM"
+    ],
+    "L5_UP": [
+      "BOTTOM",
+      "MIDDLE",
+      "TOP"
+    ]
+  },
+  "payouts": {
+    "GRAPE": 8,
+    "CHERRY": 2,
+    "BELL": 14,
+    "PIERO": 14,
+    "REPLAY": 0,
+    "MISS": 0
+  },
+  "settingWeights": {
+    "1": {
+      "replay": 137023842,
+      "grape": 166599213,
+      "bell": 915525,
+      "cherry": 26532274,
+      "piero": 686643,
+      "big": 2794577,
+      "reg": 1459850,
+      "cherry_big": 849314,
+      "cherry_reg": 694893,
+      "piero_big": 109863,
+      "piero_reg": 119018,
+      "miss": 662214988
+    },
+    "2": {
+      "replay": 137023842,
+      "grape": 166783634,
+      "bell": 915525,
+      "cherry": 26476121,
+      "piero": 686643,
+      "big": 2898373,
+      "reg": 1589789,
+      "cherry_big": 848190,
+      "cherry_reg": 752169,
+      "piero_big": 114441,
+      "piero_reg": 114441,
+      "miss": 661796832
+    },
+    "3": {
+      "replay": 137023842,
+      "grape": 167751292,
+      "bell": 915525,
+      "cherry": 26391892,
+      "piero": 686643,
+      "big": 2928092,
+      "reg": 1796183,
+      "cherry_big": 859140,
+      "cherry_reg": 825449,
+      "piero_big": 119018,
+      "piero_reg": 109863,
+      "miss": 660593061
+    },
+    "4": {
+      "replay": 137023842,
+      "grape": 168647497,
+      "bell": 915525,
+      "cherry": 26307662,
+      "piero": 686643,
+      "big": 3040213,
+      "reg": 2072823,
+      "cherry_big": 849033,
+      "cherry_reg": 919785,
+      "piero_big": 123596,
+      "piero_reg": 105285,
+      "miss": 659308096
+    },
+    "5": {
+      "replay": 137023842,
+      "grape": 170413045,
+      "bell": 915525,
+      "cherry": 26223433,
+      "piero": 686643,
+      "big": 3202886,
+      "reg": 2221245,
+      "cherry_big": 833871,
+      "cherry_reg": 1019176,
+      "piero_big": 128173,
+      "piero_reg": 100708,
+      "miss": 657231453
+    },
+    "6": {
+      "replay": 137023842,
+      "grape": 172701646,
+      "bell": 915525,
+      "cherry": 26111127,
+      "piero": 686643,
+      "big": 3584744,
+      "reg": 2583880,
+      "cherry_big": 825449,
+      "cherry_reg": 1139905,
+      "piero_big": 137329,
+      "piero_reg": 91552,
+      "miss": 654198358
+    }
+  },
+  "uiCoordinates": {
+    "データランプ": {
+      "x": 330,
+      "y": 20,
+      "w": 1260,
+      "h": 185
+    },
+    "筐体": {
+      "x": 290,
+      "y": 205,
+      "w": 1340,
+      "h": 835
+    },
+    "Piri Chance": {
+      "x": 350,
+      "y": 390,
+      "w": 300,
+      "h": 170
+    },
+    "リール窓": {
+      "x": 670,
+      "y": 300,
+      "w": 900,
+      "h": 390
+    },
+    "reel": {
+      "w": 270
+    },
+    "status": {
+      "x": 670,
+      "y": 710,
+      "w": 900,
+      "h": 95
+    },
+    "BET": {
+      "x": 420,
+      "y": 860,
+      "w": 150,
+      "h": 100
+    },
+    "LEVER": {
+      "x": 250,
+      "y": 780,
+      "w": 130,
+      "h": 260
+    },
+    "LEFT STOP": {
+      "x": 720,
+      "y": 865,
+      "w": 180,
+      "h": 110
+    },
+    "CENTER": {
+      "x": 990,
+      "y": 865,
+      "w": 180,
+      "h": 110
+    },
+    "RIGHT": {
+      "x": 1260,
+      "y": 865,
+      "w": 180,
+      "h": 110
+    },
+    "CASH OUT": {
+      "x": 1490,
+      "y": 870,
+      "w": 100,
+      "h": 90
+    },
+    "LOAN": {
+      "x": 1490,
+      "y": 740,
+      "w": 100,
+      "h": 55
+    },
+    "INSERT": {
+      "x": 1490,
+      "y": 805,
+      "w": 100,
+      "h": 55
+    }
+  },
+  "uiCanvas": [
+    1920,
+    1080
+  ],
+  "uiColors": {
+    "SCREEN_OUTSIDE": "#000000",
+    "CABINET_BG": "#5B1016",
+    "CABINET_BG_DARK": "#31070B",
+    "CABINET_EDGE": "#B68A42",
+    "CABINET_EDGE_LIGHT": "#E4C174",
+    "REEL_BG": "#F4F1E8",
+    "REEL_SEPARATOR": "#8A8175",
+    "BUTTON_RED": "#B61E29",
+    "BUTTON_RED_HOVER": "#D72B39",
+    "BUTTON_RED_PRESSED": "#7D1119",
+    "BUTTON_METAL": "#B9BCC2",
+    "BUTTON_METAL_DARK": "#666A72",
+    "DISPLAY_BG": "#090B0E",
+    "DISPLAY_WHITE": "#F2F2F2",
+    "DISPLAY_BIG": "#FF4242",
+    "DISPLAY_REG": "#3A78FF",
+    "DISPLAY_GREEN": "#58E36A",
+    "GRAPH_LINE": "#F4F4F4",
+    "GRAPH_ZERO": "#777777",
+    "PIRI_OFF_BG": "#3A090D",
+    "PIRI_OFF_CHILI": "#6D141B",
+    "PIRI_ON_BG": "#7D0810",
+    "PIRI_ON_CHILI": "#FF2035",
+    "PIRI_ON_EDGE": "#FFF2D1",
+    "TEXT_MAIN": "#F6F1E7",
+    "TEXT_SHADOW": "#190406"
+  },
+  "eventDistributions": {
+    "normal": {
+      "1": 55,
+      "2": 25,
+      "3": 12,
+      "4": 5,
+      "5": 2,
+      "6": 1
+    },
+    "light": {
+      "1": 35,
+      "2": 25,
+      "3": 18,
+      "4": 12,
+      "5": 7,
+      "6": 3
+    },
+    "strong": {
+      "1": 15,
+      "2": 20,
+      "3": 20,
+      "4": 20,
+      "5": 15,
+      "6": 10
+    }
+  },
+  "database": {
+    "schemaVersion": 4,
+    "schemaVersionSource": "SPEC.md chapter 94; Phase 01 performs no schema operations.",
+    "schemas": [
+      "CREATE TABLE metadata (\n  key TEXT PRIMARY KEY,\n  value TEXT NOT NULL\n);\n",
+      "CREATE TABLE business_periods (\n  business_period_id TEXT PRIMARY KEY,\n  local_date TEXT NOT NULL,\n  started_at INTEGER NOT NULL,\n  jvm_start_ms INTEGER NOT NULL,\n  profile_name TEXT NOT NULL,\n  profile_source TEXT NOT NULL\n);\n",
+      "CREATE TABLE machines (\n  machine_id INTEGER PRIMARY KEY,\n  world_uuid TEXT NOT NULL,\n  world_name TEXT NOT NULL,\n  x INTEGER NOT NULL,\n  y INTEGER NOT NULL,\n  z INTEGER NOT NULL,\n  facing TEXT NOT NULL,\n  setting INTEGER NOT NULL CHECK(setting BETWEEN 1 AND 6),\n  enabled INTEGER NOT NULL DEFAULT 1,\n  auto_setting INTEGER NOT NULL DEFAULT 1,\n  deleted INTEGER NOT NULL DEFAULT 0,\n  last_left_stop INTEGER NOT NULL DEFAULT 0 CHECK(last_left_stop BETWEEN 0 AND 20),\n  last_center_stop INTEGER NOT NULL DEFAULT 0 CHECK(last_center_stop BETWEEN 0 AND 20),\n  last_right_stop INTEGER NOT NULL DEFAULT 0 CHECK(last_right_stop BETWEEN 0 AND 20),\n  created_at INTEGER NOT NULL,\n  updated_at INTEGER NOT NULL\n);\nCREATE UNIQUE INDEX ux_machine_location_active\nON machines(world_uuid,x,y,z) WHERE deleted=0;\n",
+      "CREATE TABLE machine_period_stats (\n  machine_id INTEGER NOT NULL,\n  business_period_id TEXT NOT NULL,\n  total_games INTEGER NOT NULL DEFAULT 0,\n  big_count INTEGER NOT NULL DEFAULT 0,\n  reg_count INTEGER NOT NULL DEFAULT 0,\n  current_games INTEGER NOT NULL DEFAULT 0,\n  today_difference INTEGER NOT NULL DEFAULT 0,\n  today_max_difference INTEGER NOT NULL DEFAULT 0,\n  last_bonus_type TEXT,\n  last_bonus_at INTEGER,\n  PRIMARY KEY(machine_id,business_period_id),\n  FOREIGN KEY(machine_id) REFERENCES machines(machine_id),\n  FOREIGN KEY(business_period_id) REFERENCES business_periods(business_period_id)\n);\n",
+      "CREATE TABLE bonus_history (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  machine_id INTEGER NOT NULL,\n  business_period_id TEXT NOT NULL,\n  bonus_type TEXT NOT NULL CHECK(bonus_type IN ('BIG','REG')),\n  games INTEGER NOT NULL,\n  occurred_at INTEGER NOT NULL,\n  FOREIGN KEY(machine_id) REFERENCES machines(machine_id),\n  FOREIGN KEY(business_period_id) REFERENCES business_periods(business_period_id)\n);\n",
+      "CREATE TABLE graph_points (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  machine_id INTEGER NOT NULL,\n  business_period_id TEXT NOT NULL,\n  game INTEGER NOT NULL,\n  difference INTEGER NOT NULL,\n  occurred_at INTEGER NOT NULL,\n  FOREIGN KEY(machine_id) REFERENCES machines(machine_id),\n  FOREIGN KEY(business_period_id) REFERENCES business_periods(business_period_id)\n);\n",
+      "CREATE TABLE setting_history (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  machine_id INTEGER NOT NULL,\n  business_period_id TEXT,\n  changed_at INTEGER NOT NULL,\n  old_setting INTEGER NOT NULL,\n  new_setting INTEGER NOT NULL,\n  reason TEXT NOT NULL,\n  actor_uuid TEXT,\n  profile_name TEXT,\n  FOREIGN KEY(machine_id) REFERENCES machines(machine_id)\n);\n",
+      "CREATE TABLE player_wallet (\n  player_uuid TEXT PRIMARY KEY,\n  pending_medals INTEGER NOT NULL DEFAULT 0 CHECK(pending_medals >= 0),\n  updated_at INTEGER NOT NULL\n);\n",
+      "CREATE TABLE player_sessions (\n  session_id TEXT PRIMARY KEY,\n  player_uuid TEXT NOT NULL UNIQUE,\n  machine_id INTEGER NOT NULL,\n  source_business_period_id TEXT NOT NULL,\n  game_state TEXT NOT NULL,\n  lifecycle TEXT NOT NULL,\n  credit INTEGER NOT NULL CHECK(credit BETWEEN 0 AND 50),\n  held_medals INTEGER NOT NULL CHECK(held_medals >= 0),\n  spin_id TEXT,\n  internal_role TEXT,\n  premium_type TEXT,\n  notice_state TEXT NOT NULL DEFAULT 'NONE',\n  lamp_on INTEGER NOT NULL DEFAULT 0,\n  bonus_type TEXT,\n  bonus_payout_count INTEGER NOT NULL DEFAULT 0,\n  current_bet INTEGER NOT NULL DEFAULT 0,\n  pay_display INTEGER NOT NULL DEFAULT 0,\n  display_left_stop INTEGER NOT NULL DEFAULT 0,\n  display_center_stop INTEGER NOT NULL DEFAULT 0,\n  display_right_stop INTEGER NOT NULL DEFAULT 0,\n  stopped_mask INTEGER NOT NULL DEFAULT 0,\n  phase_left REAL NOT NULL DEFAULT 0,\n  phase_center REAL NOT NULL DEFAULT 0,\n  phase_right REAL NOT NULL DEFAULT 0,\n  motion_profile TEXT,\n  last_client_sequence INTEGER NOT NULL DEFAULT 0,\n  last_activity INTEGER NOT NULL,\n  lock_expires_at INTEGER,\n  FOREIGN KEY(machine_id) REFERENCES machines(machine_id),\n  FOREIGN KEY(source_business_period_id) REFERENCES business_periods(business_period_id)\n);\n",
+      "CREATE TABLE cashout_transactions (\n  transaction_id TEXT PRIMARY KEY,\n  player_uuid TEXT NOT NULL,\n  amount INTEGER NOT NULL CHECK(amount >= 0),\n  delivered_amount INTEGER NOT NULL DEFAULT 0,\n  pending_amount INTEGER NOT NULL DEFAULT 0,\n  status TEXT NOT NULL CHECK(status IN ('PENDING','COMPLETED')),\n  created_at INTEGER NOT NULL,\n  updated_at INTEGER NOT NULL\n);\n",
+      "CREATE TABLE medal_tokens (\n  bundle_id TEXT PRIMARY KEY,\n  amount INTEGER NOT NULL CHECK(amount BETWEEN 1 AND 500),\n  state TEXT NOT NULL CHECK(state IN ('PENDING_DELIVERY','ACTIVE','RETIRED')),\n  source_transaction_id TEXT,\n  created_at INTEGER NOT NULL,\n  updated_at INTEGER NOT NULL\n);\n",
+      "CREATE TABLE medal_inventory_transactions (\n  transaction_id TEXT PRIMARY KEY,\n  player_uuid TEXT NOT NULL,\n  operation TEXT NOT NULL,\n  before_bundle_json TEXT NOT NULL,\n  after_bundle_json TEXT NOT NULL,\n  container_snapshot_json TEXT,\n  status TEXT NOT NULL CHECK(status IN ('PREPARED','LEDGER_COMMITTED','APPLIED','ROLLED_BACK','REVIEW_REQUIRED')),\n  created_at INTEGER NOT NULL,\n  updated_at INTEGER NOT NULL\n);\n",
+      "CREATE TABLE economy_transactions (\n  transaction_id TEXT PRIMARY KEY,\n  player_uuid TEXT NOT NULL,\n  operation TEXT NOT NULL,\n  vault_amount REAL NOT NULL,\n  item_snapshot_json TEXT,\n  balance_before REAL,\n  status TEXT NOT NULL CHECK(status IN ('PREPARED','CALL_STARTED','APPLIED','ROLLED_BACK','REVIEW_REQUIRED')),\n  created_at INTEGER NOT NULL,\n  updated_at INTEGER NOT NULL\n);\n"
+    ]
+  },
+  "defaultConfig": "protocol_version: 1\n\neconomy:\n  vault_per_medal: 20\n\ngame:\n  idle_timeout_seconds: 180\n  disconnect_grace_seconds: 60\n\nsound:\n  notice_volume: 1.0\n  notice_strong_volume: 1.0\n  tenpai_volume: 0.9\n  bet_volume: 0.65\n  lever_volume: 0.75\n  stop_volume: 0.65\n  payout_volume: 0.70\n  error_volume: 0.70\n  bonus_start_volume: 0.90\n  bonus_end_volume: 0.90\n\npremium:\n  big_chance_weight: 50000\n  denominator: 1000000\n  weights:\n    reverse: 1\n    middle_cherry: 1\n    sound_first_peka: 1\n    strong_after_peka: 1\n    five_notice_blink: 1\n    fake_tenpai: 1\n\nprizes:\n  small: {medal_cost: 50, vault_value: 1000}\n  medium: {medal_cost: 200, vault_value: 4000}\n  large: {medal_cost: 450, vault_value: 9000}\n\nevents:\n  timezone: \"Asia/Tokyo\"\n  default_profile: normal\n  weekday:\n    MONDAY: normal\n    TUESDAY: normal\n    WEDNESDAY: normal\n    THURSDAY: normal\n    FRIDAY: normal\n    SATURDAY: normal\n    SUNDAY: normal\n  special_dates: {}\n  profiles:\n    normal:\n      distribution: {1: 55, 2: 25, 3: 12, 4: 5, 5: 2, 6: 1}\n      min_setting_6: 0\n      min_setting_5_plus: 0\n      pattern: {type: NONE}\n    light:\n      distribution: {1: 35, 2: 25, 3: 18, 4: 12, 5: 7, 6: 3}\n      min_setting_6: 0\n      min_setting_5_plus: 1\n      pattern: {type: NONE}\n    strong:\n      distribution: {1: 15, 2: 20, 3: 20, 4: 20, 5: 15, 6: 10}\n      min_setting_6: 1\n      min_setting_5_plus: 2\n      pattern: {type: NONE}\n\nprobabilities:\n  settings:\n    '1':\n      replay: 137023842\n      grape: 166599213\n      bell: 915525\n      cherry: 26532274\n      piero: 686643\n      big: 2794577\n      reg: 1459850\n      cherry_big: 849314\n      cherry_reg: 694893\n      piero_big: 109863\n      piero_reg: 119018\n      miss: 662214988\n    '2':\n      replay: 137023842\n      grape: 166783634\n      bell: 915525\n      cherry: 26476121\n      piero: 686643\n      big: 2898373\n      reg: 1589789\n      cherry_big: 848190\n      cherry_reg: 752169\n      piero_big: 114441\n      piero_reg: 114441\n      miss: 661796832\n    '3':\n      replay: 137023842\n      grape: 167751292\n      bell: 915525\n      cherry: 26391892\n      piero: 686643\n      big: 2928092\n      reg: 1796183\n      cherry_big: 859140\n      cherry_reg: 825449\n      piero_big: 119018\n      piero_reg: 109863\n      miss: 660593061\n    '4':\n      replay: 137023842\n      grape: 168647497\n      bell: 915525\n      cherry: 26307662\n      piero: 686643\n      big: 3040213\n      reg: 2072823\n      cherry_big: 849033\n      cherry_reg: 919785\n      piero_big: 123596\n      piero_reg: 105285\n      miss: 659308096\n    '5':\n      replay: 137023842\n      grape: 170413045\n      bell: 915525\n      cherry: 26223433\n      piero: 686643\n      big: 3202886\n      reg: 2221245\n      cherry_big: 833871\n      cherry_reg: 1019176\n      piero_big: 128173\n      piero_reg: 100708\n      miss: 657231453\n    '6':\n      replay: 137023842\n      grape: 172701646\n      bell: 915525\n      cherry: 26111127\n      piero: 686643\n      big: 3584744\n      reg: 2583880\n      cherry_big: 825449\n      cherry_reg: 1139905\n      piero_big: 137329\n      piero_reg: 91552\n      miss: 654198358\n",
+  "medal": {
+    "item": "minecraft:iron_nugget",
+    "stackCount": 1,
+    "itemVersion": 1,
+    "maxAmount": 500
+  },
+  "prizes": {
+    "small": {
+      "medalCost": 50,
+      "vaultValue": 1000
+    },
+    "medium": {
+      "medalCost": 200,
+      "vaultValue": 4000
+    },
+    "large": {
+      "medalCost": 450,
+      "vaultValue": 9000
+    }
+  },
+  "sectionSha256": {
+    "1": "179b1df7a18190ee300abb8318a867b41854eb869f57130dae09997c55edc85c",
+    "2": "ee12e658addb1b975e0aa6ac0e5016274390cfd87c069445e66a9133ad7795c4",
+    "3": "d9da5e02b735c6569752e15426316d9d4f2d6822faab250ff2f0b2c787885159",
+    "4": "a547cf36af13c092af0294e46a5d72303fca083279def2f465d979f1c2ea9d84",
+    "5": "4cfe6f563c97e745a59106a858933b298d82da80fdb0262f3e46eb667e94d286",
+    "6": "30f2ce9effab81358c00ce4232588e61697efb2f9c672985b2a107061d1a8b2c",
+    "7": "100f7ce63a30e6f02a28877d9522bae06235ce602417b74587e7103d75b5e053",
+    "8": "f6c5219d09971d174d4dfe6689a0c59787e49819953a250f2d328a38c5176681",
+    "9": "fc95b0b3af5287ad25e05c4231aa4b0ad982354cf2f11a5345fb0d661fc60067",
+    "10": "48a5336be799e1df862a68fad5a5f1a3216bc439968d1a22a870ddc74224a347",
+    "11": "d3482ef799b3122ef5b4813678939e2f7327f4062ce503e22faa977b30576704",
+    "12": "9a7409e5751dc757ef203fea3588ced4642d699d4f9ea6650cdb79f2e7861c3a",
+    "13": "ca3253f0b84ac727c44bca5f8e4b034318e0bd20eec56220896ff22d675c200a",
+    "14": "1764c502ef38eb4a8806d8d79c75afe8dce5dc396d17e00d7058deea2199b4df",
+    "15": "64b030497b5df50f45bf70f55ccd8e15c2192c179bc7214176e5fc72fb5919ef",
+    "16": "220ed6de12ad3d76600f9f8806decab47b8d8afe724e79bb6fe9118cf0bb6830",
+    "17": "b024a2dbf599e5f67ed74cd25476e47bcc0a6eef78033b8d4a970f424f5cf94e",
+    "18": "147e86c25998bfac94df612de93bde5f22d60bd8c5f22b5af88bcea84b4f5dea",
+    "19": "2904c0fa891c75e86bdb31236c5b3a022a6efaf02886e280260b5b33408f3079",
+    "20": "dc01db210b8e09e933c0ec03dd1618e238575007e5bab78749e2bfa1b0e6d87b",
+    "21": "10f4573f11579c87388eb859c4b0437c5d9abde5bc4b7d8afd29ae919724c644",
+    "22": "e22bb4f485aaa3e2dd0f39c92d888aca2940ffdeb65674cbf944174cc1c16ee3",
+    "23": "0595b6ae3eb043c46326d28560cea4ab05e533e3e9a58686aa141ed7c8eb7ee9",
+    "24": "45ca5c169cedf167aa6e5afaa3ae2ac387e0fd1820b765d29d2d48f0bdbf0414",
+    "25": "dcedcebca186e461ae62f7b57823b45be103efc987d2c30b46a27521f6822711",
+    "26": "8223725f2d28d1cf4dfec9ee64164484e0b84732d2011444a4ec410fdd34fabb",
+    "30": "9beec9f4fd46f9f59b4093fff5c8036a93964b7d915fda6a6b8adcdab0b6f4a1",
+    "31": "0b92df2b0695184349182231d402a4420aa5d0df3804eb2a8d682dcf60d2ad33",
+    "32": "1675995b70d0a08e6395839bbd57a3cc614d0f89cc47955cc57650c8685a33a1",
+    "33": "f1be7c5dc1def8434a57e3a8c8de605826204ba414ed52d9ca52ae58a84833f0",
+    "34": "63f1b86e569abeeda51d08f4ceb2dd6725f5f63ae61b1ab0d4f2630013051fc1",
+    "37": "58467e8ea2ab08519cdfcfe133081b80bea275ef94df9e4007c954de7249bb02",
+    "38": "deabc06407a63bfa430556c4d609787dc718ab0e2d91af9fab2828f970e72a5b",
+    "40": "f93d2fad1b398ab732e5c873e038455c9f4387f7eb9119b2748dff8dd419fb76",
+    "41": "907a6528bdc7f7a0f5539c4ba8f809dbfc5267c88bd71ee0866f487b2b86634c",
+    "42": "f73e4116c51deaf7cccbe271523a097549f5690f17bb82b159ae11bd79cc7e0f",
+    "43": "ffe0649d82c5c719333e2d665386548a533287f65cbca9539500fb3d87819dae",
+    "46": "92d095c7f6cfca4f3806f9c3b7f8a02ca1b60568e1724958e5f9e7d6547186f3",
+    "48": "1a2c8f241167851f9a482f3125935ea206ab0d72f4bf81fc03cbc18a9c9f5771",
+    "51": "2338c479bb890f5179f5696d73dd98cd2326131ee491c0d54860fa61392f5994",
+    "52": "75fd3d469ce64db9b74c88f5d609abebb22025defe4eb39d1d4b6de023fe3449",
+    "53": "2390591752d834053f4b188cdc076138da92066656cd9434457ac1584781f363",
+    "54": "d1d098ec773ad09f4cdaed4b2d8cca26c62af12029cd2d4e6e68e278546b1c08",
+    "55": "b7197bccb5e918e5b65807ece2ccf6a0bdf052f811b06eeaa6c2571d251e7947",
+    "56": "d9fea80ed70cbb846966b0b20e32ec7352d1b88915a59d43b4187aa43d03e00d",
+    "57": "4dd3c2ef206459e5964706009f9c9cc8fef4fe9cc604e59f2d0d6ae37dd7f372",
+    "59": "8e1d45b215fbba404e42cee3e07779f7368948c5c63a22e50f879659987248a3",
+    "61": "514302a33b6e923f7ef9743dfc230a004a9c4a5b7b60f71b71c25f681b2991a7",
+    "63": "205cde982d239707dd42ea38121adf109ea2e0a472b8f2d1eb7a90deff3dab6a",
+    "64": "2b5ae638d8893d10bc07b58aa199688e1127ba8979a654b7ad6bd6362a176f9c",
+    "65": "75a59b9f24f6464416a7bd749d823856fd058b94a698042d5d542cc0c643f6ee",
+    "66": "1611a86d46a5890f039872cf76b0338047c64ece61a002c2454080b7b7fa3665",
+    "67": "2be5810e9e940e176f496689b1c67552291a151b7b5bb7b15121eca9504b9f5a",
+    "68": "ad5136472455e414b64b36a8cece1c527b00de6bd3e9c0dc8938b13011fb6e04",
+    "69": "0592a7083990c9a5150be06b9ecc3af6a6bc02786f3989e7886299960dcbe701",
+    "70": "5c38d5cf30b4ce7d14c3aec541c9d40acfc108f1cf7f5f345c115bb06202b4d1",
+    "71": "f3508410e94202efdf6a2f5f475f9480ae47ff77519479ca414f3b8d0d59d3f0",
+    "72": "74b49c99faa4b8530663afbcff02b7c1f50de954c0e1cd9230169135f045b48d",
+    "73": "a84b6d3514db0a985539ada7ac7d3e7c864ce874a71a0597209bae6e1d3fa244",
+    "74": "f660ab6dce80a4dbb4697b8335d023000e7e5e17697c704b90389462a65d4323",
+    "75": "2d69c6aab6a4ff2f49df7455c2626c21e7ee5eb86ce5cbb0a54a681be7658a42",
+    "76": "ce9a89f151ac3e2b4809831db1213a8e4c8cc309cc1ecc16c50d99a3a77eb925",
+    "77": "e6b2627703e614d88a950f1960666d071ddbefb4223ac6fb00a59171d728f3b9",
+    "78": "0ae6a23ed5ad7b788d57069db2cdd8e61732ea64809931c62620af3928e78d36",
+    "79": "ba3a20fda373b2b0f94c8e44da3afd7126811616634927557a2282ce07d4ed97",
+    "80": "c491ece6c7d95c8e0db166f2acf61faa38a26ac38bee7c3b8340e13a84bb5deb",
+    "81": "ed34ff95f1af5118dac411e3ae3f729a7a88ccdfc4b888160fc445c5a7de4101",
+    "82": "232537576f6c9f856ecd88dbf556d2ed63caf14d15f14beb5039dd4a674da357",
+    "84": "c7e3409de1168f359d109196af490a048bfa25a444e2f5f81a6112b4ec73ffba",
+    "85": "6536cd945853d61d8bc7c14931db92fc9b9e85f84314cef7f7052b8036d24a7d",
+    "86": "a18c372dcb4064be54cb1d62840a612aca5390c16fc57893ee9f56c38c9c759c",
+    "87": "0a72f935861c31a8acc981a17c956caafe2cc5c95ab32c0398931428fcfc4da0",
+    "88": "6533e543d60c6a2d11392f12ad64108a43b210fad0dfcd5e7182f4d3e0aff7e2",
+    "89": "c37a83518091174303ac1d1fef647e11bbf5a9777b31696e4c2729a7e6e6ca9f",
+    "90": "93dddc991abf96353547120d9a882828d0e080dceb76aa508f4feeef76fa7871",
+    "91": "665276b98af513c0a4ecc1b169a6d63274a70c1306eb14b4f03f25f47919fbd8",
+    "92": "2ca6874862164b3a8e2d9ad1669cf5a1d9039d9bbc3ad6e2c9c529c008709d30",
+    "94": "efdc4fa759732ba2d9ab219ab092d4fea9687e3cb55500d404305307ced7f853",
+    "95": "1dc228b3be55d3614b9ed618a29028f284901a9c8ed8d35ff04bf9c1cd7b0db2",
+    "97": "48852e57ba8f71fa1e67c8e395313037f72fa66f08414a06bbb5e60c3d9876ed",
+    "100": "a66521c0986433e87c61ae148651ec2bbd5c98a70672d5d33052e300eddfb1e6",
+    "101": "c9b839eb07e2fe73fd79f2ae59c10e219a5e6328decd85c136444b6c4d9aac45",
+    "103": "77c0fa13d20968288c729c817849c9b2906b6d4b3705585d3323b7c1bdd53277",
+    "104": "00844f63ae3e9feba5c389eaf6982471a71269fd03a8eaa5e9908ee54827e331",
+    "105": "31d6ab8597fedbd35cb36df9e4785ad8c0cdd73024dbff7a1e4588be0a104f2d",
+    "106": "294e12aa596c8ff01a64d7a8df5dfaea4e72f4da155fe93e86d6493a6972cb49",
+    "109": "97b0aa93c9263563beb8c315d35203a168c85580a79ff44be940276dafd6309e",
+    "112": "73f43929412262ce252b7a13c4110a6fd2b00b057193faf4b97d165901e18067",
+    "113": "6c5264aaa454be1fc32643bb684795a77164eebe3f2e6bdf0720c3c13d055441",
+    "114": "8f88859fd3c9bc14b580e389f9eb11b7aa2f5beb13b37534dab69101c88c429f",
+    "115": "aa8a824fbd334245a45099ab0688b6e1d87a438dd3975a2dc10fb48e4adc06d9",
+    "119": "d57250f992eddda0cd1adbb22bc49352c908c58d8968c401de00a9981debc681",
+    "120": "cd95eb52600c6636d2d3e64d733839c38fc89c6ec1b949ea107ef521dad82166",
+    "121": "487c038eec9a9c3609dd7621026d5f0b8a375392f29508349a14342b40301ca6",
+    "122": "a426b616ffefb875f3bf0af8c989a0448ad36b0e051f787567eaf27082e2b047",
+    "124": "d6577e89a0ea353dabcb111745160ed51bec227f2d03d7fc26cd0ee195d96797",
+    "125": "d9d63399150c6c47597a882b52be6c6bb16042016f14b29c3617eaeebed82d21",
+    "126": "97f0b1203adffa0bbcbc9826359e290e8e108a2d5b4d458f4f24a1bf076388a3",
+    "127": "375f3c95e0376b507cd40c4d359740df0278911194313fd50cd75c39ed03eb01",
+    "128": "bb2c6820b1e6f0cc7b73f5ede8b154502efbc7e7be5bb4602f309b172a0dac70",
+    "129": "8c2bfa15137702ec85b7686792f12585c3190de81a3c37d0d664b6cb52bc1226",
+    "130": "61918dd0e0da81856cdea49dee7f0f5a244bde0ff221719a3274357b1f45d653",
+    "131": "2536c04cff9d871fabbd67afb6f9399ad33859f0e58234522c3e4adb2e382a68",
+    "132": "6e3be1dc1b81874fef4aa5892a2cbf001d5313f2df99d700f43bb21d01f20fa2",
+    "135": "896b0a2005d4ba02b23f061f31f04424c1bb7fefcd8740d2bf9c2b6c2cdbe14d",
+    "137": "be3fc6467a5091dbc528fa5c62bafe5a779b2fa63725b6925848b1c0cfb8d08b",
+    "138": "5e84673130ad82661bc03fefc248c14f12c4f7156e90603edc99422c64e60562"
+  },
+  "symbolShapes": {
+    "source": "v3 SPEC.md §121 (verbatim in docs/v3-section-121.txt); imported by v4 SPEC.md §121",
+    "sourceSha256": "8b778f6ee728dc49f4c832a4633b5304a2f69a19a5c7b16656c2131e0e751db7",
+    "size": [
+      256,
+      256
+    ],
+    "outlineWidth": 8,
+    "subjectBounds": [
+      24,
+      24,
+      232,
+      232
+    ],
+    "shapes": {
+      "seven": [
+        {
+          "kind": "polygon",
+          "coordinates": [
+            [
+              42,
+              55
+            ],
+            [
+              220,
+              55
+            ],
+            [
+              220,
+              91
+            ],
+            [
+              137,
+              211
+            ],
+            [
+              82,
+              211
+            ],
+            [
+              161,
+              99
+            ],
+            [
+              42,
+              99
+            ]
+          ],
+          "fill": "#E92A31",
+          "stroke": "#711016",
+          "width": 8
+        },
+        {
+          "kind": "polygon",
+          "coordinates": [
+            [
+              45,
+              124
+            ],
+            [
+              200,
+              104
+            ],
+            [
+              189,
+              132
+            ],
+            [
+              55,
+              151
+            ]
+          ],
+          "fill": "#F3C743",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "line",
+          "coordinates": [
+            [
+              68,
+              72
+            ],
+            [
+              179,
+              72
+            ]
+          ],
+          "fill": null,
+          "stroke": "#FFFFFF",
+          "width": 7
+        }
+      ],
+      "grape": [
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            79,
+            40,
+            50,
+            50
+          ],
+          "fill": "#6545C7",
+          "stroke": "#30206B",
+          "width": 6
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            112,
+            40,
+            50,
+            50
+          ],
+          "fill": "#6545C7",
+          "stroke": "#30206B",
+          "width": 6
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            59,
+            67,
+            50,
+            50
+          ],
+          "fill": "#6545C7",
+          "stroke": "#30206B",
+          "width": 6
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            93,
+            69,
+            50,
+            50
+          ],
+          "fill": "#6545C7",
+          "stroke": "#30206B",
+          "width": 6
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            128,
+            69,
+            50,
+            50
+          ],
+          "fill": "#6545C7",
+          "stroke": "#30206B",
+          "width": 6
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            47,
+            99,
+            50,
+            50
+          ],
+          "fill": "#6545C7",
+          "stroke": "#30206B",
+          "width": 6
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            81,
+            99,
+            50,
+            50
+          ],
+          "fill": "#6545C7",
+          "stroke": "#30206B",
+          "width": 6
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            116,
+            99,
+            50,
+            50
+          ],
+          "fill": "#6545C7",
+          "stroke": "#30206B",
+          "width": 6
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            66,
+            129,
+            50,
+            50
+          ],
+          "fill": "#6545C7",
+          "stroke": "#30206B",
+          "width": 6
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            101,
+            129,
+            50,
+            50
+          ],
+          "fill": "#6545C7",
+          "stroke": "#30206B",
+          "width": 6
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            83,
+            158,
+            50,
+            50
+          ],
+          "fill": "#6545C7",
+          "stroke": "#30206B",
+          "width": 6
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            144,
+            35,
+            66,
+            38
+          ],
+          "fill": "#39A755",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "line",
+          "coordinates": [
+            [
+              142,
+              60
+            ],
+            [
+              169,
+              40
+            ]
+          ],
+          "fill": null,
+          "stroke": "#35783C",
+          "width": 10
+        }
+      ],
+      "cherry": [
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            49,
+            110,
+            86,
+            86
+          ],
+          "fill": "#E92A31",
+          "stroke": "#77131A",
+          "width": 7
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            116,
+            116,
+            86,
+            86
+          ],
+          "fill": "#E92A31",
+          "stroke": "#77131A",
+          "width": 7
+        },
+        {
+          "kind": "line",
+          "coordinates": [
+            [
+              92,
+              113
+            ],
+            [
+              132,
+              52
+            ]
+          ],
+          "fill": null,
+          "stroke": "#3D963E",
+          "width": 10
+        },
+        {
+          "kind": "line",
+          "coordinates": [
+            [
+              159,
+              116
+            ],
+            [
+              132,
+              52
+            ]
+          ],
+          "fill": null,
+          "stroke": "#3D963E",
+          "width": 10
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            129,
+            42,
+            71,
+            37
+          ],
+          "fill": "#42A94E",
+          "stroke": null,
+          "width": 8
+        }
+      ],
+      "bell": [
+        {
+          "kind": "path",
+          "coordinates": [
+            [
+              "M",
+              75,
+              80
+            ],
+            [
+              "C",
+              75,
+              48,
+              181,
+              48,
+              181,
+              80
+            ],
+            [
+              "L",
+              198,
+              171
+            ],
+            [
+              "C",
+              203,
+              192,
+              53,
+              192,
+              58,
+              171
+            ],
+            [
+              "Z"
+            ]
+          ],
+          "fill": "#F6D33E",
+          "stroke": "#8F6810",
+          "width": 8
+        },
+        {
+          "kind": "line",
+          "coordinates": [
+            [
+              58,
+              173
+            ],
+            [
+              198,
+              173
+            ]
+          ],
+          "fill": null,
+          "stroke": "#8F6810",
+          "width": 8
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            110,
+            179,
+            36,
+            36
+          ],
+          "fill": "#D5A51B",
+          "stroke": null,
+          "width": 8
+        }
+      ],
+      "piero": [
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            56,
+            60,
+            144,
+            144
+          ],
+          "fill": "#F8E8CF",
+          "stroke": "#4B2520",
+          "width": 8
+        },
+        {
+          "kind": "polygon",
+          "coordinates": [
+            [
+              110,
+              30
+            ],
+            [
+              145,
+              30
+            ],
+            [
+              151,
+              86
+            ],
+            [
+              104,
+              86
+            ]
+          ],
+          "fill": "#E53038",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "polygon",
+          "coordinates": [
+            [
+              58,
+              48
+            ],
+            [
+              109,
+              30
+            ],
+            [
+              104,
+              88
+            ],
+            [
+              69,
+              94
+            ]
+          ],
+          "fill": "#F5F5F5",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "polygon",
+          "coordinates": [
+            [
+              145,
+              30
+            ],
+            [
+              198,
+              48
+            ],
+            [
+              187,
+              94
+            ],
+            [
+              151,
+              86
+            ]
+          ],
+          "fill": "#F5F5F5",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            110,
+            121,
+            36,
+            36
+          ],
+          "fill": "#E5353E",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            93,
+            110,
+            16,
+            16
+          ],
+          "fill": "#000000",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            147,
+            110,
+            16,
+            16
+          ],
+          "fill": "#000000",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "arc",
+          "coordinates": [
+            94,
+            135,
+            68,
+            46,
+            200,
+            140
+          ],
+          "fill": null,
+          "stroke": "#7B2027",
+          "width": 7
+        }
+      ],
+      "replay": [
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            67,
+            102,
+            124,
+            82
+          ],
+          "fill": "#E9862E",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            38,
+            60,
+            90,
+            90
+          ],
+          "fill": "#F19A3E",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            45,
+            104,
+            65,
+            42
+          ],
+          "fill": "#F5E1C0",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            70,
+            85,
+            12,
+            12
+          ],
+          "fill": "#000000",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "ellipse",
+          "coordinates": [
+            35,
+            111,
+            16,
+            16
+          ],
+          "fill": "#000000",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "polygon",
+          "coordinates": [
+            [
+              57,
+              68
+            ],
+            [
+              68,
+              28
+            ],
+            [
+              88,
+              73
+            ]
+          ],
+          "fill": "#E9862E",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "polygon",
+          "coordinates": [
+            [
+              87,
+              70
+            ],
+            [
+              111,
+              36
+            ],
+            [
+              116,
+              88
+            ]
+          ],
+          "fill": "#E9862E",
+          "stroke": null,
+          "width": 8
+        },
+        {
+          "kind": "path",
+          "coordinates": [
+            [
+              "M",
+              174,
+              130
+            ],
+            [
+              "C",
+              229,
+              94,
+              230,
+              184,
+              173,
+              176
+            ]
+          ],
+          "fill": null,
+          "stroke": "#E9862E",
+          "width": 32
+        }
+      ]
+    },
+    "pieroCollar": {
+      "y": 195,
+      "fills": [
+        "#E53038",
+        "#F3C743"
+      ],
+      "description": "triangles at y=195, fill alternating; v3 specifies no count or x coordinates"
+    },
+    "replayTailTip": {
+      "stroke": "#F5E1C0",
+      "width": 20,
+      "description": "last segment of the given tail curve; v3 specifies no split parameter"
+    }
+  },
+  "bitmapGlyphs": {
+    "P": [
+      "11110",
+      "10001",
+      "10001",
+      "11110",
+      "10000",
+      "10000",
+      "10000"
+    ],
+    "I": [
+      "11111",
+      "00100",
+      "00100",
+      "00100",
+      "00100",
+      "00100",
+      "11111"
+    ],
+    "R": [
+      "11110",
+      "10001",
+      "10001",
+      "11110",
+      "10100",
+      "10010",
+      "10001"
+    ],
+    "C": [
+      "01111",
+      "10000",
+      "10000",
+      "10000",
+      "10000",
+      "10000",
+      "01111"
+    ],
+    "H": [
+      "10001",
+      "10001",
+      "10001",
+      "11111",
+      "10001",
+      "10001",
+      "10001"
+    ],
+    "A": [
+      "01110",
+      "10001",
+      "10001",
+      "11111",
+      "10001",
+      "10001",
+      "10001"
+    ],
+    "N": [
+      "10001",
+      "11001",
+      "10101",
+      "10011",
+      "10001",
+      "10001",
+      "10001"
+    ],
+    "E": [
+      "11111",
+      "10000",
+      "10000",
+      "11110",
+      "10000",
+      "10000",
+      "11111"
+    ]
+  },
+  "bitmapSpacing": {
+    "letterColumns": 1,
+    "wordColumns": 4,
+    "lampScale": 5,
+    "lampWordPixels": 20
+  },
+  "publicGameStateMapping": {
+    "BONUS_PENDING_BIG": "BONUS_PENDING",
+    "BONUS_PENDING_REG": "BONUS_PENDING",
+    "BONUS_ENTRY_BETTED_BIG": "BONUS_ENTRY_BETTED",
+    "BONUS_ENTRY_BETTED_REG": "BONUS_ENTRY_BETTED",
+    "BONUS_ENTRY_SPINNING_BIG": "BONUS_ENTRY_SPINNING",
+    "BONUS_ENTRY_SPINNING_REG": "BONUS_ENTRY_SPINNING"
+  },
+  "strictCandidateMinimums": {
+    "GRAPE": 750,
+    "BELL": 50,
+    "PIERO": 20,
+    "REPLAY": 525,
+    "CHERRY": 1514,
+    "MISS": 5250,
+    "BIG_ENTRY": 10,
+    "REG_ENTRY": 10,
+    "PREMIUM_B": 1
+  }
+}

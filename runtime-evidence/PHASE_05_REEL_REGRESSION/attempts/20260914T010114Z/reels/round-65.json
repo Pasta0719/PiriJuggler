@@ -1,0 +1,11 @@
+{
+  "role": "BONUS",
+  "premiumF": true,
+  "profile": "REVERSE_500MS",
+  "order": [
+    "RIGHT",
+    "LEFT",
+    "CENTER"
+  ],
+  "label": "premium-f-bonus-rlc"
+}

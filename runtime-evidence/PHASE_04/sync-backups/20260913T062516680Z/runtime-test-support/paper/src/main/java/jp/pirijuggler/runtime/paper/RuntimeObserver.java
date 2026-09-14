@@ -1,0 +1,48 @@
+package jp.pirijuggler.runtime.paper;
+
+import com.google.gson.JsonObject;
+import jp.pirijuggler.common.protocol.EnvelopeCodec;
+import jp.pirijuggler.common.protocol.PacketType;
+import jp.pirijuggler.common.protocol.Protocol;
+import jp.pirijuggler.paper.PiriJugglerPlugin;
+import org.bukkit.plugin.java.JavaPlugin;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Instant;
+
+/** Observes the built production plugin; it does not authorize or simulate a session. */
+public final class RuntimeObserver extends JavaPlugin {
+    @Override public void onEnable() {
+        if ("phase02".equals(System.getProperty("piri.runtime.phase")) || "phase03".equals(System.getProperty("piri.runtime.phase"))) {
+            new Phase02Observer(this); getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase02 " + getServer().getVersion()); return;
+        }
+        getServer().getMessenger().registerIncomingPluginChannel(this, Protocol.CHANNEL, (channel, player, bytes) -> {
+            var envelope = EnvelopeCodec.decode(bytes);
+            if (!player.getName().equals("PiriRuntimeTest") || envelope.packetType() != PacketType.HELLO) return;
+            getServer().getScheduler().runTask(this, () -> {
+                var production = (PiriJugglerPlugin) getServer().getPluginManager().getPlugin("PiriJuggler");
+                if (production == null) throw new IllegalStateException("Production plugin missing");
+                boolean allowed = production.canUseSlot(player.getUniqueId());
+                boolean expected = envelope.protocol() == 1 && envelope.payload().get("protocol").getAsInt() == 1;
+                JsonObject result = new JsonObject();
+                result.addProperty("timestamp", Instant.now().toString());
+                result.addProperty("serverVersion", getServer().getVersion());
+                result.addProperty("minecraftVersion", getServer().getMinecraftVersion());
+                result.addProperty("player", player.getName());
+                result.addProperty("remoteAddress", player.getAddress().getAddress().getHostAddress());
+                result.addProperty("envelopeProtocol", envelope.protocol());
+                result.add("hello", envelope.payload());
+                result.addProperty("productionPluginEnabled", production.isEnabled());
+                result.addProperty("gameplayAllowed", allowed);
+                result.addProperty("passed", production.isEnabled() && allowed == expected);
+                try {
+                    Path destination = Path.of(System.getProperty("piri.runtime.serverResult"));
+                    Files.createDirectories(destination.toAbsolutePath().getParent());
+                    Files.writeString(destination, result.toString());
+                } catch (java.io.IOException exception) { throw new java.io.UncheckedIOException(exception); }
+                getLogger().info("PIRI_RUNTIME_SERVER " + result);
+            });
+        });
+        getLogger().info("PIRI_RUNTIME_OBSERVER_READY " + getServer().getVersion());
+    }
+}

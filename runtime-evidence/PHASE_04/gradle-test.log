@@ -1,0 +1,38 @@
+
+> Configure project :fabric
+Fabric Loom: 1.10.5
+
+> Task :asset-tools:compileJava UP-TO-DATE
+> Task :asset-tools:processResources NO-SOURCE
+> Task :asset-tools:classes UP-TO-DATE
+> Task :asset-tools:compileTestJava UP-TO-DATE
+> Task :asset-tools:processTestResources UP-TO-DATE
+> Task :asset-tools:testClasses UP-TO-DATE
+> Task :asset-tools:test
+> Task :common:compileJava
+> Task :common:processResources NO-SOURCE
+> Task :common:classes
+> Task :common:jar
+> Task :common:compileTestJava
+> Task :common:processTestResources NO-SOURCE
+> Task :common:testClasses
+> Task :common:test
+> Task :fabric:compileJava
+> Task :fabric:processResources UP-TO-DATE
+> Task :fabric:classes
+> Task :paper:compileJava
+> Task :fabric:compileTestJava
+> Task :fabric:processTestResources NO-SOURCE
+> Task :fabric:testClasses
+> Task :paper:processResources UP-TO-DATE
+> Task :paper:classes
+> Task :paper:jar
+> Task :fabric:test
+> Task :paper:compileTestJava
+> Task :paper:processTestResources NO-SOURCE
+> Task :paper:testClasses
+> Task :paper:test
+> Task :test
+
+BUILD SUCCESSFUL in 33s
+17 actionable tasks: 12 executed, 5 up-to-date

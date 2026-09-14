@@ -1,0 +1,80 @@
+# SPEC_CONFLICT — 未解消項目あり
+
+未解消: Phase05のBONUS_TYPE_PUBLIC_STATE（末尾参照）。
+
+単語間隔とユーザー提供音源方式の問題は解消済み。以下のPhase03記録は履歴として保持する。
+
+## Phase03 preflight — 当時のBLOCKED記録
+
+CODEX_START.md、IMPLEMENTATION_STATUS.md、PHASE_03_CLIENT_UI.md、指定SPEC章、RUNTIME_ACCEPTANCE.mdを確認した。Phase01/02はCOMPLETE、次の対象はPhase03。
+
+```text
+CONFLICT
+Section A:
+  SPEC.md 第120章、4094–4096行
+  glyph logical height35px
+  glyph scale5
+  word gap20px
+Section B:
+  SPEC.md 第138章、4882行
+  letter gap=1 logical column、word gap=3 logical columns。
+Technical reason:
+  第120章はPIRI CHANCEを第138章のbitmap glyphで描くことを指定している。
+  scale5では3 logical columnsは15pxとなり、第120章の20pxと一致しない。
+  同一画像の同一単語間隔を15pxと20pxに同時にはできない。
+  第130章はUI数値・asset shapeの変更をCodexの裁量から除外している。
+  優先する値を決める規定は見つからなかった。
+Minimal change required:
+  第120章の20pxを維持する場合、第138章のword gapだけを
+  3 logical columnsから4 logical columnsへ変更する。
+  4 × 5 = 20px。PIRIには単語間がないため、BARのPIRI文字には影響しない。
+```
+
+提案差分は `word-gap.patch` に保存した。SPEC.mdには適用していない。
+
+停止根拠: CODEX_START.mdの「SPEC内の真正面の矛盾を発見した場合だけCONFLICT形式で停止する」、SPEC.md第118章の矛盾報告形式、および第130章のUI数値・asset shapeの裁量禁止。
+
+Phase03の本番実装・アセット生成・test/build・Runtime Acceptanceは未実施。Phase01/02の実装、完了状態、既存証跡は保持した。Phase04には進んでいない。
+
+この指摘はPhase03開始時に検出した矛盾の記録であり、残りの実装が完了したことを示すものではない。仕様の修正方針が確定した後、Phase03を再開する。
+
+## 解消済み — ユーザー承認による修正
+
+第120章の単語間隔20pxを正とするユーザー指示を受け、第138章のword gapを3 logical columnsから4 logical columnsへ修正した。4 columns × 5px = 20pxとなり、第120章と一致する。上記CONFLICTは解消済み。Phase03をIN_PROGRESSへ戻して再開し、次Phaseには進まない。
+## 解消済み — ユーザー指定の音源提供方式へ変更
+
+第32章・第129章の音源生成、波形・周波数・長さ、Vorbis encoder、生成済みOGG commitの要求を削除。実音源はユーザーが提供し、既存SoundEvent ID/ファイル名で読み込み・再生する。今回追加した生成コード・生成タスク・生成済み音源を削除し、音源未配置のbuild/test/runtimeを許容する。Phase03の画像SHAと実画面・入力の受入条件は維持する。
+
+
+## Phase05 preflight — 未解消: BONUS_TYPE_PUBLIC_STATE
+
+CONFLICT
+Section A:
+  SPEC.md 第18章はGameStateを固定し、BONUS_PENDING_BIG/REGと
+  BONUS_ENTRY_BETTED_BIG/REG、BONUS_ENTRY_SPINNING_BIG/REGを定義する。
+  第131章は当選ゲーム完了からこれらへ遷移することを要求する。
+  第92章のPUBLIC_STATEにはgameStateが必須フィールドとして存在する。
+Section B:
+  SPEC.md 第101章はPiri Chance点灯時点でFabricへBIG/REG種類を送ることを禁止し、
+  入賞ゲームの第3停止でBONUS_STARTによって初めて種類を送る。
+Technical reason:
+  現行Session.publicState()はstate().name()を送信する。
+  当選ゲームの次のPUBLIC_STATEにBONUS_PENDING_BIGまたはREGが入るため、
+  internalRole/bonusTypeフィールドを除外してもBIG/REGを識別できる。
+  入賞前のBETTED/SPINNINGでも同じ問題が起きる。
+  公開用状態名と内部状態の対応規則はSPEC全体に定義がない。
+  独自の状態名追加・値の置換・gameState省略は通信仕様の変更になるため、
+  第118/130章に従って独断で実装しない。
+Minimal change required:
+  内部GameStateとDB保存値を維持したまま、第18/92/101章に公開状態の変換を明記する。
+  BONUS_PENDING_BIG/REG -> BONUS_PENDING
+  BONUS_ENTRY_BETTED_BIG/REG -> BONUS_ENTRY_BETTED
+  BONUS_ENTRY_SPINNING_BIG/REG -> BONUS_ENTRY_SPINNING
+  それ以外の公開状態は内部GameState名を使用する。
+  BIG/REGの区別は入賞ゲーム第3停止のBONUS_STARTから公開する。
+
+これは公開状態の外部仕様が不足していることによる停止であり、内部クラス構成などの実装都合による質問ではない。
+第18/92章が公開状態も内部GameStateと完全同一の値域とする意図なら第101章と両立しない。公開専用の値域を認める意図なら、その変換を仕様に追加すれば解消する。
+
+`runtime-evidence/PHASE_05/bonus-public-state.patch` は提案のみ。SPEC.mdへは未適用。
+Phase01–04の実装・完了状態・JAR・証跡は保持。Phase05の製品実装、Gradle test/build、実Minecraft受入は未実施。Phase06は未着手。

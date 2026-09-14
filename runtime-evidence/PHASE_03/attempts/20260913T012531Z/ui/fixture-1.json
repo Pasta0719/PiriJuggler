@@ -1,0 +1,22 @@
+{
+  "type": "PUBLIC_STATE",
+  "payload": {
+    "sessionId": "9a3d3940-6d7e-4809-9e87-6d2740db1788",
+    "machineId": 1,
+    "gameState": "SEATED_READY",
+    "lifecycle": "ACTIVE",
+    "expectedNextClientSequence": 100,
+    "credit": 32,
+    "heldMedals": 442,
+    "bet": 3,
+    "pay": 14,
+    "bonusCount": 0,
+    "lampOn": true,
+    "displayStops": {
+      "left": 3,
+      "center": 3,
+      "right": 3
+    },
+    "stoppedMask": 7
+  }
+}

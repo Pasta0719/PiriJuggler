@@ -1,0 +1,31 @@
+{
+  "name": "normal",
+  "serverCommand": [
+    "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE",
+    "-Xms512M",
+    "-Xmx1536M",
+    "-Dfile.encoding=UTF-8",
+    "-Dpiri.runtime.serverResult=C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\normal\\server-result.json",
+    "-jar",
+    "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\downloads\\paper-1.21-130.jar",
+    "nogui"
+  ],
+  "clientCommand": [
+    "cmd.exe",
+    "/d",
+    "/c",
+    "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\gradlew.bat",
+    "-PruntimeAcceptance=true",
+    "-PruntimeScenario=normal",
+    ":runtime-test-client:runClient",
+    "--console=plain"
+  ],
+  "serverWorkingDirectory": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\server-normal",
+  "clientWorkingDirectory": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "passed": false,
+  "clientExitCode": 1,
+  "failure": "Fabric exited 1: \n> Configure project :fabric\nFabric Loom: 1.10.5\n\n> Configure project :runtime-test-client\nFabric Loom: 1.10.5\n\n> Task :common:compileJava UP-TO-DATE\n> Task :fabric:compileJava UP-TO-DATE\n> Task :fabric:processResources UP-TO-DATE\n> Task :fabric:classes UP-TO-DATE\n> Task :paper:compileJava UP-TO-DATE\n> Task :fabric:compileTestJava UP-TO-DATE\n> Task :common:processResources NO-SOURCE\n> Task :common:classes UP-TO-DATE\n> Task :fabric:jar UP-TO-DATE\n> Task :fabric:processIncludeJars UP-TO-DATE\n> Task :fabric:remapJar UP-TO-DATE\n> Task :runtime-test-client:compileJava UP-TO-DATE\n> Task :runtime-test-client:processResources UP-TO-DATE\n> Task :runtime-test-client:classes UP-TO-DATE\n> Task :runtime-test-client:generateLog4jConfig UP-TO-DATE\n> Task :runtime-test-client:generateRemapClasspath\n> Task :runtime-test-client:generateDLIConfig\n> Task :runtime-test-client:configureLaunch\n> Task :runtime-test-client:downloadAssets FAILED\n\nFAILURE: Build failed with an exception.\n\n* What went wrong:\nExecution failed for task ':runtime-test-client:downloadAssets'.\n> Cannot access output property 'legacyResourcesDirectory' of task ':runtime-test-client:downloadAssets'. Accessing unreadable inputs or outputs is not supported. Declare the task as untracked by using Task.doNotTrackState(). For more information, please refer to https://docs.gradle.org/8.14.3/userguide/incremental_build.html#sec:disable-state-tracking in the Gradle documentation.\n   > Could not stat file C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-test-support\\client\\C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\client-normal\\resources\n\n* Try:\n> Run with --stacktrace option to get the stack trace.\n> Run with --info or --debug option to get more log output.\n> Run with --scan to get full insights.\n> Get more help at https://help.gradle.org.\n\nBUILD FAILED in 35s\n14 actionable tasks: 3 executed, 11 up-to-date\n",
+  "serverExitCode": 0,
+  "uncaughtExceptions": [],
+  "durationSeconds": 53.19
+}

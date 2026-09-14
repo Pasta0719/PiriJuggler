@@ -1,0 +1,9 @@
+name: PiriJuggler
+version: '${version}'
+main: jp.pirijuggler.paper.PiriJugglerPlugin
+api-version: '1.21'
+description: Piri Juggler server-authoritative slot foundation
+commands:
+  piri:
+    description: Piri machine and session management
+    usage: /piri machine create|redefine|remove|list|info or /piri key give

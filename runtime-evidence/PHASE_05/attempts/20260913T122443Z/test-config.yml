@@ -1,0 +1,146 @@
+protocol_version: 1
+
+economy:
+  vault_per_medal: 20
+
+game:
+  idle_timeout_seconds: 180
+  disconnect_grace_seconds: 60
+
+sound:
+  notice_volume: 1.0
+  notice_strong_volume: 1.0
+  tenpai_volume: 0.9
+  bet_volume: 0.65
+  lever_volume: 0.75
+  stop_volume: 0.65
+  payout_volume: 0.70
+  error_volume: 0.70
+  bonus_start_volume: 0.90
+  bonus_end_volume: 0.90
+
+premium:
+  big_chance_weight: 50000
+  denominator: 1000000
+  weights:
+    reverse: 1
+    middle_cherry: 1
+    sound_first_peka: 1
+    strong_after_peka: 1
+    five_notice_blink: 1
+    fake_tenpai: 1
+
+prizes:
+  small: {medal_cost: 50, vault_value: 1000}
+  medium: {medal_cost: 200, vault_value: 4000}
+  large: {medal_cost: 450, vault_value: 9000}
+
+events:
+  timezone: "Asia/Tokyo"
+  default_profile: normal
+  weekday:
+    MONDAY: normal
+    TUESDAY: normal
+    WEDNESDAY: normal
+    THURSDAY: normal
+    FRIDAY: normal
+    SATURDAY: normal
+    SUNDAY: normal
+  special_dates: {}
+  profiles:
+    normal:
+      distribution: {1: 55, 2: 25, 3: 12, 4: 5, 5: 2, 6: 1}
+      min_setting_6: 0
+      min_setting_5_plus: 0
+      pattern: {type: NONE}
+    light:
+      distribution: {1: 35, 2: 25, 3: 18, 4: 12, 5: 7, 6: 3}
+      min_setting_6: 0
+      min_setting_5_plus: 1
+      pattern: {type: NONE}
+    strong:
+      distribution: {1: 15, 2: 20, 3: 20, 4: 20, 5: 15, 6: 10}
+      min_setting_6: 1
+      min_setting_5_plus: 2
+      pattern: {type: NONE}
+
+probabilities:
+  settings:
+    '1':
+      replay: 137023842
+      grape: 166599213
+      bell: 915525
+      cherry: 26532274
+      piero: 686643
+      big: 0
+      reg: 0
+      cherry_big: 0
+      cherry_reg: 0
+      piero_big: 0
+      piero_reg: 0
+      miss: 668242503
+    '2':
+      replay: 0
+      grape: 0
+      bell: 0
+      cherry: 0
+      piero: 0
+      big: 0
+      reg: 0
+      cherry_big: 1000000000
+      cherry_reg: 0
+      piero_big: 0
+      piero_reg: 0
+      miss: 0
+    '3':
+      replay: 137023842
+      grape: 167751292
+      bell: 915525
+      cherry: 26391892
+      piero: 686643
+      big: 2928092
+      reg: 1796183
+      cherry_big: 859140
+      cherry_reg: 825449
+      piero_big: 119018
+      piero_reg: 109863
+      miss: 660593061
+    '4':
+      replay: 137023842
+      grape: 168647497
+      bell: 915525
+      cherry: 26307662
+      piero: 686643
+      big: 3040213
+      reg: 2072823
+      cherry_big: 849033
+      cherry_reg: 919785
+      piero_big: 123596
+      piero_reg: 105285
+      miss: 659308096
+    '5':
+      replay: 137023842
+      grape: 170413045
+      bell: 915525
+      cherry: 26223433
+      piero: 686643
+      big: 3202886
+      reg: 2221245
+      cherry_big: 833871
+      cherry_reg: 1019176
+      piero_big: 128173
+      piero_reg: 100708
+      miss: 657231453
+    '6':
+      replay: 137023842
+      grape: 172701646
+      bell: 915525
+      cherry: 26111127
+      piero: 686643
+      big: 3584744
+      reg: 2583880
+      cherry_big: 825449
+      cherry_reg: 1139905
+      piero_big: 137329
+      piero_reg: 91552
+      miss: 654198358

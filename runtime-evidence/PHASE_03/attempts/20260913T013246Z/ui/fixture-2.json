@@ -1,0 +1,15 @@
+{
+  "type": "DATA_LAMP",
+  "payload": {
+    "machineId": 1,
+    "totalGames": 3500,
+    "bigCount": 14,
+    "regCount": 11,
+    "currentGames": 72,
+    "todayDifference": 320,
+    "todayMaxDifference": 880,
+    "piriChain": true,
+    "history": [],
+    "graph": []
+  }
+}

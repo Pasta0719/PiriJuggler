@@ -1,0 +1,52 @@
+{
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "stage": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\phase05-v4",
+  "authorization": "User explicitly approved the bonus public-state mapping and instructed resuming Phase05 only. Individual before hashes are rechecked and existing files backed up; Phase06 remains NOT_STARTED.",
+  "changes": [
+    {
+      "path": "IMPLEMENTATION_STATUS.md",
+      "before": "429ac19b9d95a31a4334a47d225287d3c2bf14a01644ab6d05d7883ae15531e2",
+      "after": "77c1b239f6830378261017ef41f860748c07dcba049457e1a61fb821baccc78c"
+    },
+    {
+      "path": "SPEC.md",
+      "before": "468d938d45e916e9cf1cc7f9d97a9a30fd959b8de7cb4f096c068c35acdbfbe3",
+      "after": "ef10e9a031dc4b775bad07bb628441fd9672e9f230ab9c626ef5fe56e2936874"
+    },
+    {
+      "path": "docs/spec-lock.json",
+      "before": "8fc3087c3b024ccc63950cbcc3e127973e66ea7455ac8c1e9abc0de194f924e9",
+      "after": "630798f5eb320ea240313be1e1f43ca145b234fc32e51b9b185745b1eceaeb8b"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/DisplayRole.java",
+      "before": "c758bfbfedbe5229204d26d1521dc1f90390dde0638b7f5c4dde8ef2834d4fc3",
+      "after": "2636b274e06fd901669e6f7d2363022f442de2b4525112d3309d2f68acb0ab1b"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/InternalRole.java",
+      "before": "367d5ed485e7d2dd4f5fd63ab196542775d07f56c8a50622004c7c628f6f63d2",
+      "after": "8a9e77a15691ee97909c461a60bcee05a6add8b6f52c04817102066e6668f10d"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/ReelRound.java",
+      "before": "9b599377cd81c16293038915edef923d099f585cfe07e04a7cbba94c5fab7217",
+      "after": "45470f26ecee74ffd55049be70539dbac0e9c4d5009100b43916b9f676155882"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/ReelVerification.java",
+      "before": "826ad9db94ca99faabcc541ea373e74b2923d78f867e3d51abf9f8f0605c97b3",
+      "after": "c5170c91f5ee28e9e42a1923b861444d035b4cf54a411d37878daef9cde7911a"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/StopCatalogue.java",
+      "before": "9b829e5a0a30579d24ed4134174a0e081f423978ac339a28a66e130a604c2e22",
+      "after": "ccef9200b0bfa27b482dd420f5e2f1655a7df984743d9a8e8c86480428ed096d"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/StopSolver.java",
+      "before": "0681f50dcd6889ac88c670c7df803b1edbc60a7034cda49ea1bab7cfa5fe839c",
+      "after": "3cc485fe095bf7f1fa68b07d8610d89bd9b8a70fd23ff193f68e876b879d8add"
+    }
+  ]
+}

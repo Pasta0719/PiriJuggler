@@ -1,0 +1,1 @@
+{"timestamp":"2026-09-12T04:40:04.186637800Z","scenario":"normal","minecraftVersion":"1.21","fabricLoader":"0.16.14","fabricApi":"0.102.0+1.21","packetType":"HELLO_ACK","protocol":1,"payload":{"protocol":1,"serverVersion":"1.0.0"},"gameplayAllowed":true,"passed":true}

@@ -1,0 +1,25 @@
+# STATIC_AUDIT_RESULT.md
+
+- [PASS] sections 1..138 sequential
+- [PASS] no stale source_business_day model
+- [PASS] no stale active_session SSoT model
+- [PASS] suspend asset SSoT conflict removed
+- [PASS] GameState and SessionLifecycle separated
+- [PASS] business period supports same-date repeated restarts
+- [PASS] unresolved machine timeline cannot unlock before force settlement
+- [PASS] premium-B contradiction removed
+- [PASS] premium-F exact filtering/tie-break defined and feasibility checked
+- [PASS] strict reel candidates exclude unintended cherry/payout combinations
+- [PASS] deterministic tie-break exists for line/cherry/miss/premium-B
+- [PASS] Piri asset dimensions are non-conflicting
+- [PASS] packet IDs non-conflicting and admin/game sequence separated
+- [PASS] wallet no CREDIT/held columns
+- [PASS] medal single-item split edge defined
+- [PASS] medal inventory hard-crash journal/reconciliation defined
+- [PASS] runtime acceptance required for every Phase
+- [PASS] Phase references point to valid SPEC sections
+- [PASS] all setting role weights sum exactly 1,000,000,000
+- [PASS] theoretical payout values match targets
+- [PASS] event distributions sum 100
+- [PASS] SQLite schema table names unique
+- [PASS] schema version 4 explicitly declared

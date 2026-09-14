@@ -1,0 +1,5 @@
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -4882 +4882 @@
+-letter gap=1 logical column、word gap=3 logical columns。
++letter gap=1 logical column、word gap=4 logical columns。

@@ -1,0 +1,11 @@
+{
+  "type": "REEL_STOP",
+  "payload": {
+    "spinId": "00000000-0000-0000-0000-000000000003",
+    "reel": "LEFT",
+    "pressedIndex": 8,
+    "stopIndex": 14,
+    "slip": 6,
+    "durationMs": 380
+  }
+}

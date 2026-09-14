@@ -1,0 +1,1 @@
+{"completed":2,"connected":true,"handshake":true,"failure":null,"packets":[{"type":"HELLO_ACK","payload":{"protocol":1,"serverVersion":"1.0.0"}},{"type":"ERROR","payload":{"errorCode":"MACHINE_OCCUPIED"}}],"messages":["PiriRuntimeTest2 joined the game","MACHINE_OCCUPIED"],"actions":[{"id":1,"kind":"aim","x":0},{"id":2,"kind":"click","x":0}],"productionSession":null}

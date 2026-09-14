@@ -1,0 +1,103 @@
+{
+  "startedAt": "2026-09-12T14:07:50.328768+00:00",
+  "run": "20260912T140750Z",
+  "passed": false,
+  "versions": {
+    "minecraft": "1.21",
+    "paper": "1.21-130",
+    "fabricLoader": "0.16.14",
+    "fabricApi": "0.102.0+1.21",
+    "yarn": "1.21+build.9",
+    "java": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE"
+  },
+  "buildHashes": {
+    "common": "bdcf0f21d0964f8e628d97baa16ad9fa2568cfbc730f884bccb92f469d53a2df",
+    "paper": "95f4d8d9975056dcef5e99aa1f3914a1ae0a70a34f209191bb419157e5be8ed5",
+    "fabric": "95c9def1d40db371af04f43e339082ed68644bf334c9bb2fe1621ad134eb1965"
+  },
+  "helperHashes": {
+    "paper": "d41ad585b965beb067693141d8bd8067939c15674d478dad54c4a63ad2fe7ac6",
+    "client": "0034e6a5b094a7f4122b80ea976462f8174383d2187568826c4a03adb66e6837"
+  },
+  "assertions": [
+    {
+      "name": "real world Buttons placed",
+      "passed": true,
+      "at": "2026-09-12T14:09:08.267328+00:00",
+      "evidence": "attempts\\20260912T140750Z\\buttons-snapshot.json"
+    },
+    {
+      "name": "actual player raytrace command registered Button",
+      "passed": true,
+      "at": "2026-09-12T14:09:09.101436+00:00",
+      "evidence": "attempts\\20260912T140750Z\\created-snapshot.json"
+    }
+  ],
+  "commands": [
+    {
+      "server": "before-restart",
+      "command": [
+        "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE",
+        "-Xms512M",
+        "-Xmx1536M",
+        "-Dfile.encoding=UTF-8",
+        "-Dpiri.runtime.phase=phase02",
+        "-Dpiri.runtime.serverResult=C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02\\attempts\\20260912T140750Z\\before-restart\\server-result.json",
+        "-jar",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\downloads\\paper-1.21-130.jar",
+        "nogui"
+      ],
+      "cwd": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02\\work\\server-20260912T140750Z"
+    },
+    {
+      "client": "phase02-create",
+      "command": [
+        "cmd.exe",
+        "/d",
+        "/c",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\gradlew.bat",
+        "-PruntimeAcceptance=true",
+        "-PruntimeScenario=phase02-create",
+        "-PruntimeRun=20260912T140750Z",
+        ":runtime-test-client:runClient",
+        "--console=plain"
+      ],
+      "cwd": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED"
+    },
+    {
+      "client": "phase02-create",
+      "id": 1,
+      "kind": "aim",
+      "x": 0
+    },
+    {
+      "client": "phase02-create",
+      "id": 2,
+      "kind": "command",
+      "text": "piri machine create"
+    },
+    {
+      "client": "phase02-create",
+      "id": 3,
+      "kind": "command",
+      "text": "piri machine create"
+    },
+    {
+      "client": "phase02-create",
+      "id": 4,
+      "kind": "exit"
+    }
+  ],
+  "exits": [
+    {
+      "client": "phase02-create",
+      "exit": 0
+    },
+    {
+      "server": 0
+    }
+  ],
+  "failure": "piri machine create -> LOCATION_ALREADY_REGISTERED",
+  "uncaughtExceptions": [],
+  "finishedAt": "2026-09-12T14:10:42.935066+00:00"
+}

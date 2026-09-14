@@ -1,0 +1,5 @@
+{
+  "id": 508,
+  "kind": "command",
+  "text": "piri simulator 1 100000"
+}

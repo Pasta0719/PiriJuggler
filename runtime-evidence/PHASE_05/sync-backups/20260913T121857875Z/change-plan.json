@@ -1,0 +1,22 @@
+{
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "stage": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\phase05-v4",
+  "authorization": "User explicitly approved the bonus public-state mapping and instructed resuming Phase05 only. Individual before hashes are rechecked and existing files backed up; Phase06 remains NOT_STARTED.",
+  "changes": [
+    {
+      "path": "docs/verify_phase05_artifacts.py",
+      "before": "0deb4867eed5f0935ce6d8fa0e8652e318e6c6d079b9a0993ae7cd1f8626bf46",
+      "after": "4543f3203e1b154072e6bfd6d20a2c221bc379ca2ed07d92eaf5b7699f4d702f"
+    },
+    {
+      "path": "fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotViewState.java",
+      "before": "152beb7da1e2affb8815fdfc3deb1cb8b38a3302ab3f22d12fcc90792d43e405",
+      "after": "4fb7b04e0f0b0cc5898bd7435da3cfaeead5dfaad289cf25f3a14ad1b8fff5fb"
+    },
+    {
+      "path": "fabric/src/test/java/jp/pirijuggler/fabric/ui/SlotViewStateTest.java",
+      "before": "3dc7311f4bbd883be74c2c37fdffbfe19873ff556a7a36bde17a7773aeb702ca",
+      "after": "577991be08e989ad5d4ae99ee8c7ac2aa51826358ca72702a5284626c3ed3e24"
+    }
+  ]
+}

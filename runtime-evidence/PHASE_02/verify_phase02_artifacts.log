@@ -1,0 +1,1 @@
+PASS: 99 tests; 19 actual-runtime assertions; exact build hashes; SQLite/schema packaged only in Paper; no runtime helpers in production.

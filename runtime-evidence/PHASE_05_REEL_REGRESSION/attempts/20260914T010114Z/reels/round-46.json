@@ -1,0 +1,11 @@
+{
+  "role": "BIG_ENTRY",
+  "premiumF": false,
+  "profile": "NORMAL",
+  "order": [
+    "CENTER",
+    "RIGHT",
+    "LEFT"
+  ],
+  "label": "big_entry-crl"
+}

@@ -1,0 +1,85 @@
+# 121. 図柄PNG完全生成仕様
+
+全画像256x256、transparent、Java2D。
+
+共通:
+- black outline width 8px
+- center subject inside x=24..232,y=24..232
+- no text except SEVEN/BAR
+
+SEVEN:
+- polygon points:
+  `(42,55),(220,55),(220,91),(137,211),(82,211),(161,99),(42,99)`
+- fill #E92A31
+- outline #711016
+- gold slash polygon `(45,124),(200,104),(189,132),(55,151)` fill #F3C743
+- white highlight line width 7 from (68,72) to (179,72)
+
+BAR:
+- three rounded rectangles:
+  - x=38,y=65,w=180,h=42
+  - x=38,y=112,w=180,h=42
+  - x=38,y=159,w=180,h=42
+- radius 18
+- fill #171717
+- stroke #070707 6px
+- each displays `PIRI` centered using Minecraft TextRenderer-equivalent raster glyph generation
+- text #F0444C
+- glyph image is generated from the same bundled Minecraft font renderer atlas used by client; if AssetGenerator cannot access it at build time, render plain block letters using Java2D logical font `"SansSerif", Font.BOLD, 22`. This fallback is mandatory and deterministic.
+
+GRAPE:
+- 11 circles radius 25
+- centers:
+  `(104,65),(137,65),(84,92),(118,94),(153,94),(72,124),(106,124),(141,124),(91,154),(126,154),(108,183)`
+- fill #6545C7
+- outline #30206B width 6
+- leaf ellipse x=144,y=35,w=66,h=38 fill #39A755
+- stem line (142,60)->(169,40), width 10, #35783C
+
+CHERRY:
+- circles center (92,153),(159,159), radius 43
+- fill #E92A31
+- outline #77131A width 7
+- stems width 10, #3D963E
+  - (92,113)->(132,52)
+  - (159,116)->(132,52)
+- leaf ellipse x=129,y=42,w=71,h=37 fill #42A94E
+
+BELL:
+- body path:
+  start (75,80)
+  cubic (75,48),(181,48),(181,80)
+  line (198,171)
+  cubic (203,192),(53,192),(58,171)
+  close
+- fill #F6D33E
+- outline #8F6810 width 8
+- bottom line y=173 x=58..198
+- clapper circle center(128,197),radius18, fill #D5A51B
+
+PIERO:
+- face circle center(128,132),radius72 fill #F8E8CF
+- outline #4B2520 width 8
+- hat:
+  - center red vertical polygon `(110,30),(145,30),(151,86),(104,86)` #E53038
+  - left white polygon `(58,48),(109,30),(104,88),(69,94)` #F5F5F5
+  - right white polygon `(145,30),(198,48),(187,94),(151,86)` #F5F5F5
+- nose circle center(128,139),radius18 #E5353E
+- eyes black circles center(101,118),(155,118),radius8
+- mouth arc bounding x=94,y=135,w=68,h=46, start200 extent140, stroke #7B2027 width7
+- collar triangles at y=195, fill alternating #E53038/#F3C743
+
+REPLAY:
+- fox body ellipse x=67,y=102,w=124,h=82 fill #E9862E
+- head circle center(83,105),radius45 fill #F19A3E
+- muzzle ellipse x=45,y=104,w=65,h=42 fill #F5E1C0
+- eye center(76,91),radius6 black
+- nose center(43,119),radius8 black
+- ear triangles `(57,68),(68,28),(88,73)` and `(87,70),(111,36),(116,88)` fill #E9862E
+- tail path from (174,130) cubic to (229,94),(230,184),(173,176), stroke #E9862E width32
+- tail tip stroke #F5E1C0 width20 last segment
+
+AssetGenerator must compare SHA-256 of generated assets against constants stored in test resources after first committed generation. Future unexpected rendering changes fail tests.
+
+---
+

@@ -1,0 +1,13 @@
+{
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "stage": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\phase04-v4",
+  "authorization": "Current user explicitly requested CODEX_START.md workflow after the prior Phase03-only run completed. Normal-run steps 2 and 13 select the smallest NOT_STARTED Phase and stop after it. Authoritative status: Phase03 COMPLETE; Phase04 NOT_STARTED.",
+  "changes": [
+    {
+      "path": "docs/preflight_phase04.py",
+      "before": "9b39228c74e6aca1130b365aacfde59b6c5e10f2ee5d8ccadebb9205ed2b27cb",
+      "after": "9c621f9f57eec6f3d2db2f43d091cae56931d5c394082c3a0e11067729c778e0",
+      "previousPhaseMatches": false
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "stage": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\phase05-v4",
+  "authorization": "User explicitly approved the bonus public-state mapping and instructed resuming Phase05 only. Individual before hashes are rechecked and existing files backed up; Phase06 remains NOT_STARTED.",
+  "changes": [
+    {
+      "path": "runtime-test-support/client/build.gradle.kts",
+      "before": "ea0c1eeded14224ab167d881de164b53d325dba79c20635ed3d2975b0134110a",
+      "after": "d26bff9a35139faffb84e15f873a9662d18ce0478b0377c75e4a6b967451ddc5"
+    }
+  ]
+}

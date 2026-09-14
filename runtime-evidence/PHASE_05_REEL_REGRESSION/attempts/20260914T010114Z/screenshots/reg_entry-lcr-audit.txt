@@ -1,0 +1,3 @@
+reel 0 colored symbol pixels=10059
+reel 1 colored symbol pixels=12037
+reel 2 colored symbol pixels=8384

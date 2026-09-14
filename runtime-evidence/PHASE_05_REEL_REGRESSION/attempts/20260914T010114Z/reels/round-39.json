@@ -1,0 +1,11 @@
+{
+  "role": "BONUS",
+  "premiumF": false,
+  "profile": "RESUME_NORMAL",
+  "order": [
+    "CENTER",
+    "LEFT",
+    "RIGHT"
+  ],
+  "label": "bonus-clr"
+}

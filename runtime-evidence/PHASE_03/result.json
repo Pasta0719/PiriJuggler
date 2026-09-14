@@ -1,0 +1,559 @@
+{
+  "startedAt": "2026-09-13T01:32:46.085269+00:00",
+  "run": "20260913T013246Z",
+  "passed": true,
+  "versions": {
+    "minecraft": "1.21",
+    "paper": "1.21-130",
+    "fabricLoader": "0.16.14",
+    "fabricApi": "0.102.0+1.21",
+    "yarn": "1.21+build.9",
+    "java": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE"
+  },
+  "buildHashes": {
+    "common": "bdcf0f21d0964f8e628d97baa16ad9fa2568cfbc730f884bccb92f469d53a2df",
+    "paper": "95f4d8d9975056dcef5e99aa1f3914a1ae0a70a34f209191bb419157e5be8ed5",
+    "fabric": "29655f0c2de22c828bb8619ba844922912c1fcd236a56d180953804a04d63cc3"
+  },
+  "helperHashes": {
+    "paper": "3ef45865091c7bb5794a59cfcb63e5afc9e15063c33fb8afd28751b0374b914c",
+    "client": "1b852d12d989b66432016b4e8e377137d2905d7e2f029982a95391e21e029d28"
+  },
+  "assertions": [
+    {
+      "name": "actual screenshot contains all three reel symbol columns: open-off",
+      "passed": true,
+      "at": "2026-09-13T01:33:51.527330+00:00",
+      "evidence": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_03\\work\\client-phase03-ui\\screenshots\\phase03-open-off.png"
+    },
+    {
+      "name": "actual production SlotScreen opens from real Button session",
+      "passed": true,
+      "at": "2026-09-13T01:33:51.535839+00:00",
+      "evidence": "attempts\\20260913T013246Z\\open-snapshot.json"
+    },
+    {
+      "name": "HUD hidden and mouse cursor visible",
+      "passed": true,
+      "at": "2026-09-13T01:33:51.542189+00:00",
+      "evidence": "attempts\\20260913T013246Z\\hud-snapshot.json"
+    },
+    {
+      "name": "all 10 SoundEvents registered with user audio absent",
+      "passed": true,
+      "at": "2026-09-13T01:33:51.549694+00:00",
+      "evidence": "attempts\\20260913T013246Z\\optional-audio-snapshot.json"
+    },
+    {
+      "name": "real Keyboard.onKey edge/repeat -> SPACE_ACTION",
+      "passed": true,
+      "at": "2026-09-13T01:33:52.595468+00:00",
+      "evidence": "attempts\\20260913T013246Z\\key-space_action-snapshot.json"
+    },
+    {
+      "name": "real Keyboard.onKey edge/repeat -> STOP_LEFT",
+      "passed": true,
+      "at": "2026-09-13T01:33:53.640169+00:00",
+      "evidence": "attempts\\20260913T013246Z\\key-stop_left-snapshot.json"
+    },
+    {
+      "name": "real Keyboard.onKey edge/repeat -> STOP_CENTER",
+      "passed": true,
+      "at": "2026-09-13T01:33:54.681722+00:00",
+      "evidence": "attempts\\20260913T013246Z\\key-stop_center-snapshot.json"
+    },
+    {
+      "name": "real Keyboard.onKey edge/repeat -> STOP_RIGHT",
+      "passed": true,
+      "at": "2026-09-13T01:33:55.719077+00:00",
+      "evidence": "attempts\\20260913T013246Z\\key-stop_right-snapshot.json"
+    },
+    {
+      "name": "real Keyboard.onKey edge/repeat -> LOAN",
+      "passed": true,
+      "at": "2026-09-13T01:33:56.756903+00:00",
+      "evidence": "attempts\\20260913T013246Z\\key-loan-snapshot.json"
+    },
+    {
+      "name": "real Keyboard.onKey edge/repeat -> INSERT_MEDALS",
+      "passed": true,
+      "at": "2026-09-13T01:33:57.795677+00:00",
+      "evidence": "attempts\\20260913T013246Z\\key-insert_medals-snapshot.json"
+    },
+    {
+      "name": "real Keyboard.onKey edge/repeat -> CASH_OUT",
+      "passed": true,
+      "at": "2026-09-13T01:33:58.837380+00:00",
+      "evidence": "attempts\\20260913T013246Z\\key-cash_out-snapshot.json"
+    },
+    {
+      "name": "Minecraft KeyBinding rebound LEFT to A",
+      "passed": true,
+      "at": "2026-09-13T01:33:59.630359+00:00",
+      "evidence": "attempts\\20260913T013246Z\\rebind-snapshot.json"
+    },
+    {
+      "name": "right mouse button ignored",
+      "passed": true,
+      "at": "2026-09-13T01:34:00.150385+00:00"
+    },
+    {
+      "name": "actual mouse event hits logical stop rectangle",
+      "passed": true,
+      "at": "2026-09-13T01:34:00.417462+00:00",
+      "evidence": "attempts\\20260913T013246Z\\mouse-snapshot.json"
+    },
+    {
+      "name": "T opens chat; chat Escape returns without CLOSE_REQUEST",
+      "passed": true,
+      "at": "2026-09-13T01:34:02.471747+00:00",
+      "evidence": "attempts\\20260913T013246Z\\chat-snapshot.json"
+    },
+    {
+      "name": "actual screenshot contains all three reel symbol columns: on-reels-status",
+      "passed": true,
+      "at": "2026-09-13T01:34:03.752356+00:00",
+      "evidence": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_03\\work\\client-phase03-ui\\screenshots\\phase03-on-reels-status.png"
+    },
+    {
+      "name": "S2C display fixture reaches public model without mutating server assets",
+      "passed": true,
+      "at": "2026-09-13T01:34:03.760038+00:00",
+      "evidence": "attempts\\20260913T013246Z\\public-fixture-snapshot.json"
+    },
+    {
+      "name": "actual screenshot contains all three reel symbol columns: packet-animation",
+      "passed": true,
+      "at": "2026-09-13T01:34:07.643176+00:00",
+      "evidence": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_03\\work\\client-phase03-ui\\screenshots\\phase03-packet-animation.png"
+    },
+    {
+      "name": "SPIN_START REEL_STOP NOTICE and missing-audio replay path stay healthy",
+      "passed": true,
+      "at": "2026-09-13T01:34:07.652691+00:00",
+      "evidence": "attempts\\20260913T013246Z\\animation-snapshot.json"
+    },
+    {
+      "name": "actual screenshot contains all three reel symbol columns: letterbox",
+      "passed": true,
+      "at": "2026-09-13T01:34:08.650462+00:00",
+      "evidence": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_03\\work\\client-phase03-ui\\screenshots\\phase03-letterbox.png"
+    },
+    {
+      "name": "aspect-preserving viewport and mouse mapping after resize",
+      "passed": true,
+      "at": "2026-09-13T01:34:08.922003+00:00",
+      "evidence": "attempts\\20260913T013246Z\\letterbox-snapshot.json"
+    },
+    {
+      "name": "Escape sends one CLOSE_REQUEST and closes on server SESSION_END",
+      "passed": true,
+      "at": "2026-09-13T01:34:09.450635+00:00",
+      "evidence": "attempts\\20260913T013246Z\\close-snapshot.json"
+    },
+    {
+      "name": "every real action has only identity and strictly increasing sequence",
+      "passed": true,
+      "at": "2026-09-13T01:34:09.456210+00:00",
+      "evidence": "attempts\\20260913T013246Z\\wire-contract-snapshot.json"
+    }
+  ],
+  "commands": [
+    {
+      "server": "ui",
+      "command": [
+        "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE",
+        "-Xms512M",
+        "-Xmx1536M",
+        "-Dfile.encoding=UTF-8",
+        "-Dpiri.runtime.phase=phase03",
+        "-Dpiri.runtime.serverResult=C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_03\\attempts\\20260913T013246Z\\ui\\server-result.json",
+        "-jar",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\downloads\\paper-1.21-130.jar",
+        "nogui"
+      ],
+      "cwd": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_03\\work\\server-20260913T013246Z"
+    },
+    {
+      "client": "phase03-ui",
+      "command": [
+        "cmd.exe",
+        "/d",
+        "/c",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\gradlew.bat",
+        "-PruntimeAcceptance=true",
+        "-PruntimeScenario=phase03-ui",
+        "-PruntimeRun=20260913T013246Z",
+        "-PruntimeEvidencePhase=PHASE_03",
+        ":runtime-test-client:runClient",
+        "--console=plain"
+      ],
+      "cwd": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED"
+    },
+    {
+      "client": "phase03-ui",
+      "id": 1,
+      "kind": "aim",
+      "x": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 2,
+      "kind": "command",
+      "text": "piri machine create"
+    },
+    {
+      "client": "phase03-ui",
+      "id": 3,
+      "kind": "aim",
+      "x": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 4,
+      "kind": "click",
+      "x": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 5,
+      "kind": "capture",
+      "label": "open-off"
+    },
+    {
+      "client": "phase03-ui",
+      "id": 6,
+      "kind": "key",
+      "key": 32,
+      "action": 1
+    },
+    {
+      "client": "phase03-ui",
+      "id": 7,
+      "kind": "key",
+      "key": 32,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 8,
+      "kind": "key",
+      "key": 32,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 9,
+      "kind": "key",
+      "key": 32,
+      "action": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 10,
+      "kind": "key",
+      "key": 263,
+      "action": 1
+    },
+    {
+      "client": "phase03-ui",
+      "id": 11,
+      "kind": "key",
+      "key": 263,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 12,
+      "kind": "key",
+      "key": 263,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 13,
+      "kind": "key",
+      "key": 263,
+      "action": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 14,
+      "kind": "key",
+      "key": 264,
+      "action": 1
+    },
+    {
+      "client": "phase03-ui",
+      "id": 15,
+      "kind": "key",
+      "key": 264,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 16,
+      "kind": "key",
+      "key": 264,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 17,
+      "kind": "key",
+      "key": 264,
+      "action": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 18,
+      "kind": "key",
+      "key": 262,
+      "action": 1
+    },
+    {
+      "client": "phase03-ui",
+      "id": 19,
+      "kind": "key",
+      "key": 262,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 20,
+      "kind": "key",
+      "key": 262,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 21,
+      "kind": "key",
+      "key": 262,
+      "action": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 22,
+      "kind": "key",
+      "key": 76,
+      "action": 1
+    },
+    {
+      "client": "phase03-ui",
+      "id": 23,
+      "kind": "key",
+      "key": 76,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 24,
+      "kind": "key",
+      "key": 76,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 25,
+      "kind": "key",
+      "key": 76,
+      "action": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 26,
+      "kind": "key",
+      "key": 73,
+      "action": 1
+    },
+    {
+      "client": "phase03-ui",
+      "id": 27,
+      "kind": "key",
+      "key": 73,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 28,
+      "kind": "key",
+      "key": 73,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 29,
+      "kind": "key",
+      "key": 73,
+      "action": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 30,
+      "kind": "key",
+      "key": 82,
+      "action": 1
+    },
+    {
+      "client": "phase03-ui",
+      "id": 31,
+      "kind": "key",
+      "key": 82,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 32,
+      "kind": "key",
+      "key": 82,
+      "action": 2
+    },
+    {
+      "client": "phase03-ui",
+      "id": 33,
+      "kind": "key",
+      "key": 82,
+      "action": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 34,
+      "kind": "rebind",
+      "key": 65
+    },
+    {
+      "client": "phase03-ui",
+      "id": 35,
+      "kind": "key",
+      "key": 65,
+      "action": 1
+    },
+    {
+      "client": "phase03-ui",
+      "id": 36,
+      "kind": "key",
+      "key": 65,
+      "action": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 37,
+      "kind": "rebind",
+      "key": 263
+    },
+    {
+      "client": "phase03-ui",
+      "id": 38,
+      "kind": "mouse",
+      "x": 1080,
+      "y": 920,
+      "button": 1
+    },
+    {
+      "client": "phase03-ui",
+      "id": 39,
+      "kind": "mouse",
+      "x": 1080,
+      "y": 920,
+      "button": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 40,
+      "kind": "key",
+      "key": 84,
+      "action": 1
+    },
+    {
+      "client": "phase03-ui",
+      "id": 41,
+      "kind": "key",
+      "key": 84,
+      "action": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 42,
+      "kind": "capture",
+      "label": "chat-only-on-t"
+    },
+    {
+      "client": "phase03-ui",
+      "id": 43,
+      "kind": "key",
+      "key": 256,
+      "action": 1
+    },
+    {
+      "client": "phase03-ui",
+      "id": 44,
+      "kind": "key",
+      "key": 256,
+      "action": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 45,
+      "kind": "capture",
+      "label": "on-reels-status"
+    },
+    {
+      "client": "phase03-ui",
+      "id": 46,
+      "kind": "capture",
+      "label": "packet-animation"
+    },
+    {
+      "client": "phase03-ui",
+      "id": 47,
+      "kind": "resize",
+      "width": 1100,
+      "height": 700
+    },
+    {
+      "client": "phase03-ui",
+      "id": 48,
+      "kind": "capture",
+      "label": "letterbox"
+    },
+    {
+      "client": "phase03-ui",
+      "id": 49,
+      "kind": "mouse",
+      "x": 1080,
+      "y": 920,
+      "button": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 50,
+      "kind": "key",
+      "key": 256,
+      "action": 1
+    },
+    {
+      "client": "phase03-ui",
+      "id": 51,
+      "kind": "key",
+      "key": 256,
+      "action": 0
+    },
+    {
+      "client": "phase03-ui",
+      "id": 52,
+      "kind": "exit"
+    }
+  ],
+  "exits": [
+    {
+      "client": "phase03-ui",
+      "exit": 0
+    },
+    {
+      "server": 0
+    }
+  ],
+  "uncaughtExceptions": [],
+  "finishedAt": "2026-09-13T01:34:12.386097+00:00"
+}

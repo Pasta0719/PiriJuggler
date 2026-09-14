@@ -1,0 +1,886 @@
+{
+  "server": {
+    "serverVersion": "1.21-130-b1b5d4c (MC: 1.21)",
+    "enabled": true,
+    "ready": true,
+    "period": "00f4c412-5602-450e-8ed4-c9c6e38c3fe0",
+    "machines": [
+      {
+        "id": 1,
+        "location": {
+          "world": "5b23755d-8a75-4dc4-9058-87a82d5c2a87",
+          "worldName": "world",
+          "x": 0,
+          "y": 66,
+          "z": 0,
+          "facing": "SOUTH"
+        },
+        "setting": 1,
+        "enabled": true,
+        "autoSetting": true,
+        "deleted": false,
+        "left": 0,
+        "center": 0,
+        "right": 0,
+        "createdAt": 1789263229699,
+        "updatedAt": 1789263229699
+      }
+    ],
+    "sessions": [],
+    "commands": [
+      {
+        "player": "PiriRuntimeTest",
+        "command": "/piri machine create",
+        "rayTarget": "STONE_BUTTON:0"
+      }
+    ],
+    "clicks": [
+      {
+        "player": "PiriRuntimeTest",
+        "x": 0,
+        "action": "RIGHT_CLICK_BLOCK",
+        "denied": true
+      }
+    ],
+    "inbound": [
+      {
+        "type": "HELLO",
+        "payload": {
+          "protocol": 1,
+          "modVersion": "1.0.0"
+        },
+        "player": "PiriRuntimeTest"
+      },
+      {
+        "type": "SPACE_ACTION",
+        "payload": {
+          "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+          "machineId": 1,
+          "clientSequence": 1
+        },
+        "player": "PiriRuntimeTest"
+      },
+      {
+        "type": "STOP_LEFT",
+        "payload": {
+          "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+          "machineId": 1,
+          "clientSequence": 2
+        },
+        "player": "PiriRuntimeTest"
+      },
+      {
+        "type": "STOP_CENTER",
+        "payload": {
+          "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+          "machineId": 1,
+          "clientSequence": 3
+        },
+        "player": "PiriRuntimeTest"
+      },
+      {
+        "type": "STOP_RIGHT",
+        "payload": {
+          "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+          "machineId": 1,
+          "clientSequence": 4
+        },
+        "player": "PiriRuntimeTest"
+      },
+      {
+        "type": "LOAN",
+        "payload": {
+          "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+          "machineId": 1,
+          "clientSequence": 5
+        },
+        "player": "PiriRuntimeTest"
+      },
+      {
+        "type": "INSERT_MEDALS",
+        "payload": {
+          "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+          "machineId": 1,
+          "clientSequence": 6
+        },
+        "player": "PiriRuntimeTest"
+      },
+      {
+        "type": "CASH_OUT",
+        "payload": {
+          "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+          "machineId": 1,
+          "clientSequence": 7
+        },
+        "player": "PiriRuntimeTest"
+      },
+      {
+        "type": "STOP_LEFT",
+        "payload": {
+          "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+          "machineId": 1,
+          "clientSequence": 8
+        },
+        "player": "PiriRuntimeTest"
+      },
+      {
+        "type": "STOP_CENTER",
+        "payload": {
+          "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+          "machineId": 1,
+          "clientSequence": 9
+        },
+        "player": "PiriRuntimeTest"
+      },
+      {
+        "type": "STOP_CENTER",
+        "payload": {
+          "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+          "machineId": 1,
+          "clientSequence": 100
+        },
+        "player": "PiriRuntimeTest"
+      },
+      {
+        "type": "CLOSE_REQUEST",
+        "payload": {
+          "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+          "machineId": 1,
+          "clientSequence": 101
+        },
+        "player": "PiriRuntimeTest"
+      }
+    ],
+    "fixtures": [
+      {
+        "type": "PUBLIC_STATE",
+        "payload": {
+          "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+          "machineId": 1,
+          "gameState": "SEATED_READY",
+          "lifecycle": "ACTIVE",
+          "expectedNextClientSequence": 100,
+          "credit": 32,
+          "heldMedals": 442,
+          "bet": 3,
+          "pay": 14,
+          "bonusCount": 0,
+          "lampOn": true,
+          "displayStops": {
+            "left": 3,
+            "center": 3,
+            "right": 3
+          },
+          "stoppedMask": 7
+        }
+      },
+      {
+        "type": "DATA_LAMP",
+        "payload": {
+          "machineId": 1,
+          "totalGames": 3500,
+          "bigCount": 14,
+          "regCount": 11,
+          "currentGames": 72,
+          "todayDifference": 320,
+          "todayMaxDifference": 880,
+          "piriChain": true,
+          "history": [],
+          "graph": []
+        }
+      },
+      {
+        "type": "SPIN_START",
+        "payload": {
+          "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+          "machineId": 1,
+          "spinId": "00000000-0000-0000-0000-000000000003",
+          "mode": "NORMAL",
+          "animation": "REVERSE_500MS",
+          "startPhase": {
+            "left": 8.0,
+            "center": 3.0,
+            "right": 12.0
+          },
+          "stopEnableAfterMs": 400
+        }
+      },
+      {
+        "type": "NOTICE",
+        "payload": {
+          "spinId": "00000000-0000-0000-0000-000000000003",
+          "lamp": "ON",
+          "pattern": "FAST_BLINK_1S",
+          "sound": "NOTICE_X5"
+        }
+      },
+      {
+        "type": "REEL_STOP",
+        "payload": {
+          "spinId": "00000000-0000-0000-0000-000000000003",
+          "reel": "LEFT",
+          "pressedIndex": 8,
+          "stopIndex": 14,
+          "slip": 6,
+          "durationMs": 380
+        }
+      },
+      {
+        "type": "REEL_STOP",
+        "payload": {
+          "spinId": "00000000-0000-0000-0000-000000000003",
+          "reel": "CENTER",
+          "pressedIndex": 8,
+          "stopIndex": 3,
+          "slip": 0,
+          "durationMs": 380
+        }
+      },
+      {
+        "type": "REEL_STOP",
+        "payload": {
+          "spinId": "00000000-0000-0000-0000-000000000003",
+          "reel": "RIGHT",
+          "pressedIndex": 8,
+          "stopIndex": 3,
+          "slip": 0,
+          "durationMs": 380
+        }
+      },
+      {
+        "type": "TENPAI_SOUND",
+        "payload": {
+          "spinId": "00000000-0000-0000-0000-000000000003"
+        }
+      },
+      {
+        "type": "BONUS_START",
+        "payload": {
+          "bonusType": "BIG",
+          "count": 0
+        }
+      },
+      {
+        "type": "BONUS_END",
+        "payload": {
+          "bonusType": "BIG",
+          "finalCount": 280
+        }
+      }
+    ],
+    "fixtureCompleted": 10,
+    "buttons": [
+      {
+        "x": 0,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 2,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 3,
+        "type": "STONE_BUTTON",
+        "powered": false
+      }
+    ]
+  },
+  "clients": {
+    "phase03-ui": {
+      "completed": 51,
+      "connected": true,
+      "handshake": true,
+      "failure": null,
+      "packets": [
+        {
+          "type": "HELLO_ACK",
+          "payload": {
+            "protocol": 1,
+            "serverVersion": "1.0.0"
+          }
+        },
+        {
+          "type": "OPEN_MACHINE",
+          "payload": {
+            "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+            "machineId": 1,
+            "expectedNextClientSequence": 1
+          }
+        },
+        {
+          "type": "PUBLIC_STATE",
+          "payload": {
+            "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+            "machineId": 1,
+            "expectedNextClientSequence": 1,
+            "gameState": "SEATED_READY",
+            "lifecycle": "ACTIVE",
+            "credit": 0,
+            "heldMedals": 0,
+            "bet": 0,
+            "pay": 0,
+            "bonusCount": 0,
+            "lampOn": false,
+            "displayStops": {
+              "left": 0,
+              "center": 0,
+              "right": 0
+            },
+            "stoppedMask": 0
+          }
+        },
+        {
+          "type": "ERROR",
+          "payload": {
+            "errorCode": "INVALID_STATE"
+          }
+        },
+        {
+          "type": "ERROR",
+          "payload": {
+            "errorCode": "INVALID_STATE"
+          }
+        },
+        {
+          "type": "ERROR",
+          "payload": {
+            "errorCode": "INVALID_STATE"
+          }
+        },
+        {
+          "type": "ERROR",
+          "payload": {
+            "errorCode": "INVALID_STATE"
+          }
+        },
+        {
+          "type": "ERROR",
+          "payload": {
+            "errorCode": "INVALID_STATE"
+          }
+        },
+        {
+          "type": "ERROR",
+          "payload": {
+            "errorCode": "INVALID_STATE"
+          }
+        },
+        {
+          "type": "ERROR",
+          "payload": {
+            "errorCode": "INVALID_STATE"
+          }
+        },
+        {
+          "type": "ERROR",
+          "payload": {
+            "errorCode": "INVALID_STATE"
+          }
+        },
+        {
+          "type": "ERROR",
+          "payload": {
+            "errorCode": "INVALID_STATE"
+          }
+        },
+        {
+          "type": "PUBLIC_STATE",
+          "payload": {
+            "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+            "machineId": 1,
+            "gameState": "SEATED_READY",
+            "lifecycle": "ACTIVE",
+            "expectedNextClientSequence": 100,
+            "credit": 32,
+            "heldMedals": 442,
+            "bet": 3,
+            "pay": 14,
+            "bonusCount": 0,
+            "lampOn": true,
+            "displayStops": {
+              "left": 3,
+              "center": 3,
+              "right": 3
+            },
+            "stoppedMask": 7
+          }
+        },
+        {
+          "type": "DATA_LAMP",
+          "payload": {
+            "machineId": 1,
+            "totalGames": 3500,
+            "bigCount": 14,
+            "regCount": 11,
+            "currentGames": 72,
+            "todayDifference": 320,
+            "todayMaxDifference": 880,
+            "piriChain": true,
+            "history": [],
+            "graph": []
+          }
+        },
+        {
+          "type": "SPIN_START",
+          "payload": {
+            "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+            "machineId": 1,
+            "spinId": "00000000-0000-0000-0000-000000000003",
+            "mode": "NORMAL",
+            "animation": "REVERSE_500MS",
+            "startPhase": {
+              "left": 8.0,
+              "center": 3.0,
+              "right": 12.0
+            },
+            "stopEnableAfterMs": 400
+          }
+        },
+        {
+          "type": "NOTICE",
+          "payload": {
+            "spinId": "00000000-0000-0000-0000-000000000003",
+            "lamp": "ON",
+            "pattern": "FAST_BLINK_1S",
+            "sound": "NOTICE_X5"
+          }
+        },
+        {
+          "type": "REEL_STOP",
+          "payload": {
+            "spinId": "00000000-0000-0000-0000-000000000003",
+            "reel": "LEFT",
+            "pressedIndex": 8,
+            "stopIndex": 14,
+            "slip": 6,
+            "durationMs": 380
+          }
+        },
+        {
+          "type": "REEL_STOP",
+          "payload": {
+            "spinId": "00000000-0000-0000-0000-000000000003",
+            "reel": "CENTER",
+            "pressedIndex": 8,
+            "stopIndex": 3,
+            "slip": 0,
+            "durationMs": 380
+          }
+        },
+        {
+          "type": "REEL_STOP",
+          "payload": {
+            "spinId": "00000000-0000-0000-0000-000000000003",
+            "reel": "RIGHT",
+            "pressedIndex": 8,
+            "stopIndex": 3,
+            "slip": 0,
+            "durationMs": 380
+          }
+        },
+        {
+          "type": "TENPAI_SOUND",
+          "payload": {
+            "spinId": "00000000-0000-0000-0000-000000000003"
+          }
+        },
+        {
+          "type": "BONUS_START",
+          "payload": {
+            "bonusType": "BIG",
+            "count": 0
+          }
+        },
+        {
+          "type": "BONUS_END",
+          "payload": {
+            "bonusType": "BIG",
+            "finalCount": 280
+          }
+        },
+        {
+          "type": "ERROR",
+          "payload": {
+            "errorCode": "INVALID_STATE"
+          }
+        },
+        {
+          "type": "SESSION_END",
+          "payload": {
+            "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539"
+          }
+        }
+      ],
+      "messages": [
+        "PiriRuntimeTest joined the game",
+        "MACHINE_CREATED 1",
+        "INVALID_STATE",
+        "INVALID_STATE",
+        "INVALID_STATE",
+        "INVALID_STATE",
+        "INVALID_STATE",
+        "INVALID_STATE",
+        "INVALID_STATE",
+        "INVALID_STATE",
+        "INVALID_STATE",
+        "INVALID_STATE"
+      ],
+      "actions": [
+        {
+          "id": 1,
+          "kind": "aim",
+          "x": 0
+        },
+        {
+          "id": 2,
+          "kind": "command",
+          "text": "piri machine create"
+        },
+        {
+          "id": 3,
+          "kind": "aim",
+          "x": 0
+        },
+        {
+          "id": 4,
+          "kind": "click",
+          "x": 0
+        },
+        {
+          "id": 5,
+          "kind": "capture",
+          "label": "open-off"
+        },
+        {
+          "id": 6,
+          "kind": "key",
+          "key": 32,
+          "action": 1
+        },
+        {
+          "id": 7,
+          "kind": "key",
+          "key": 32,
+          "action": 2
+        },
+        {
+          "id": 8,
+          "kind": "key",
+          "key": 32,
+          "action": 2
+        },
+        {
+          "id": 9,
+          "kind": "key",
+          "key": 32,
+          "action": 0
+        },
+        {
+          "id": 10,
+          "kind": "key",
+          "key": 263,
+          "action": 1
+        },
+        {
+          "id": 11,
+          "kind": "key",
+          "key": 263,
+          "action": 2
+        },
+        {
+          "id": 12,
+          "kind": "key",
+          "key": 263,
+          "action": 2
+        },
+        {
+          "id": 13,
+          "kind": "key",
+          "key": 263,
+          "action": 0
+        },
+        {
+          "id": 14,
+          "kind": "key",
+          "key": 264,
+          "action": 1
+        },
+        {
+          "id": 15,
+          "kind": "key",
+          "key": 264,
+          "action": 2
+        },
+        {
+          "id": 16,
+          "kind": "key",
+          "key": 264,
+          "action": 2
+        },
+        {
+          "id": 17,
+          "kind": "key",
+          "key": 264,
+          "action": 0
+        },
+        {
+          "id": 18,
+          "kind": "key",
+          "key": 262,
+          "action": 1
+        },
+        {
+          "id": 19,
+          "kind": "key",
+          "key": 262,
+          "action": 2
+        },
+        {
+          "id": 20,
+          "kind": "key",
+          "key": 262,
+          "action": 2
+        },
+        {
+          "id": 21,
+          "kind": "key",
+          "key": 262,
+          "action": 0
+        },
+        {
+          "id": 22,
+          "kind": "key",
+          "key": 76,
+          "action": 1
+        },
+        {
+          "id": 23,
+          "kind": "key",
+          "key": 76,
+          "action": 2
+        },
+        {
+          "id": 24,
+          "kind": "key",
+          "key": 76,
+          "action": 2
+        },
+        {
+          "id": 25,
+          "kind": "key",
+          "key": 76,
+          "action": 0
+        },
+        {
+          "id": 26,
+          "kind": "key",
+          "key": 73,
+          "action": 1
+        },
+        {
+          "id": 27,
+          "kind": "key",
+          "key": 73,
+          "action": 2
+        },
+        {
+          "id": 28,
+          "kind": "key",
+          "key": 73,
+          "action": 2
+        },
+        {
+          "id": 29,
+          "kind": "key",
+          "key": 73,
+          "action": 0
+        },
+        {
+          "id": 30,
+          "kind": "key",
+          "key": 82,
+          "action": 1
+        },
+        {
+          "id": 31,
+          "kind": "key",
+          "key": 82,
+          "action": 2
+        },
+        {
+          "id": 32,
+          "kind": "key",
+          "key": 82,
+          "action": 2
+        },
+        {
+          "id": 33,
+          "kind": "key",
+          "key": 82,
+          "action": 0
+        },
+        {
+          "id": 34,
+          "kind": "rebind",
+          "key": 65
+        },
+        {
+          "id": 35,
+          "kind": "key",
+          "key": 65,
+          "action": 1
+        },
+        {
+          "id": 36,
+          "kind": "key",
+          "key": 65,
+          "action": 0
+        },
+        {
+          "id": 37,
+          "kind": "rebind",
+          "key": 263
+        },
+        {
+          "id": 38,
+          "kind": "mouse",
+          "x": 1080,
+          "y": 920,
+          "button": 1
+        },
+        {
+          "id": 39,
+          "kind": "mouse",
+          "x": 1080,
+          "y": 920,
+          "button": 0
+        },
+        {
+          "id": 40,
+          "kind": "key",
+          "key": 84,
+          "action": 1
+        },
+        {
+          "id": 41,
+          "kind": "key",
+          "key": 84,
+          "action": 0
+        },
+        {
+          "id": 42,
+          "kind": "capture",
+          "label": "chat-only-on-t"
+        },
+        {
+          "id": 43,
+          "kind": "key",
+          "key": 256,
+          "action": 1
+        },
+        {
+          "id": 44,
+          "kind": "key",
+          "key": 256,
+          "action": 0
+        },
+        {
+          "id": 45,
+          "kind": "capture",
+          "label": "on-reels-status"
+        },
+        {
+          "id": 46,
+          "kind": "capture",
+          "label": "packet-animation"
+        },
+        {
+          "id": 47,
+          "kind": "resize",
+          "width": 1100,
+          "height": 700
+        },
+        {
+          "id": 48,
+          "kind": "capture",
+          "label": "letterbox"
+        },
+        {
+          "id": 49,
+          "kind": "mouse",
+          "x": 1080,
+          "y": 920,
+          "button": 0
+        },
+        {
+          "id": 50,
+          "kind": "key",
+          "key": 256,
+          "action": 1
+        },
+        {
+          "id": 51,
+          "kind": "key",
+          "key": 256,
+          "action": 0
+        }
+      ],
+      "productionSession": null,
+      "screen": "none",
+      "hudHidden": false,
+      "cursorLocked": false,
+      "hudLeaks": 0,
+      "hudWorldCalls": 228,
+      "width": 1100,
+      "height": 700,
+      "publicState": null,
+      "sounds": {
+        "notice": {
+          "registered": true,
+          "available": false
+        },
+        "notice_strong": {
+          "registered": true,
+          "available": false
+        },
+        "tenpai": {
+          "registered": true,
+          "available": false
+        },
+        "bet": {
+          "registered": true,
+          "available": false
+        },
+        "lever": {
+          "registered": true,
+          "available": false
+        },
+        "stop": {
+          "registered": true,
+          "available": false
+        },
+        "payout": {
+          "registered": true,
+          "available": false
+        },
+        "error": {
+          "registered": true,
+          "available": false
+        },
+        "bonus_start": {
+          "registered": true,
+          "available": false
+        },
+        "bonus_end": {
+          "registered": true,
+          "available": false
+        }
+      },
+      "position": "(0.5, 65.0, 3.5)",
+      "yaw": -180.0,
+      "pitch": 2.021365
+    }
+  }
+}

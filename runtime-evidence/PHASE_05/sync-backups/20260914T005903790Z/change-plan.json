@@ -1,0 +1,32 @@
+{
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "stage": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\phase05-v4",
+  "authorization": "User explicitly approved the bonus public-state mapping and instructed resuming Phase05 only. Individual before hashes are rechecked and existing files backed up; Phase06 remains NOT_STARTED.",
+  "changes": [
+    {
+      "path": "RUNTIME_ACCEPTANCE.md",
+      "before": "667b903a25fba00d7aa7cce0dec8d8f1d4d76e61211f329300719f5013357847",
+      "after": "672554e7c2a96a7cacae0d10bb142161ece369c52728065557abb844fb4f1527"
+    },
+    {
+      "path": "docs/PHASE_04_REELS.md",
+      "before": "e847be1f7949b4005444e390c324ade854510a4aa3263c94f51fcea83f1031b9",
+      "after": "93e342ddd83e9e7cabb4bf7058ec7cc112d3fd8b05b10a0f021277550371a566"
+    },
+    {
+      "path": "docs/PHASE_05_GAME_LOGIC.md",
+      "before": "491996aadef680eed58168b9cf35245ee5d439662086e29fe7c8212348508a52",
+      "after": "c284014a4f1ed5b363fd7d750564e8d790df689855ca3d0027ea9894606635b5"
+    },
+    {
+      "path": "docs/verify_phase05_artifacts.py",
+      "before": "4543f3203e1b154072e6bfd6d20a2c221bc379ca2ed07d92eaf5b7699f4d702f",
+      "after": "c140a0343c43f03e0c2ac3d519f992d2052a894ba90ca5d4c07a156b0bde61f2"
+    },
+    {
+      "path": "runtime-test-support/run_phase05.py",
+      "before": "f9ef749d10e6177962f7d05eaf1e3dc952fcf7b58721d01a0af41c1c10ab7d10",
+      "after": "8cb036c90b2ee6946456136881da1b5fe0425da4fcffb775563d1269d70f2ad5"
+    }
+  ]
+}

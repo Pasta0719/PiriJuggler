@@ -1,0 +1,251 @@
+{
+  "server": {
+    "serverVersion": "1.21-130-b1b5d4c (MC: 1.21)",
+    "enabled": true,
+    "ready": true,
+    "period": "bf9cb437-05d0-411a-8a40-bb5a728d36fa",
+    "machines": [
+      {
+        "id": 1,
+        "location": {
+          "world": "58320f27-0535-40a0-b3e1-76c106face0c",
+          "worldName": "world",
+          "x": 0,
+          "y": 66,
+          "z": 0,
+          "facing": "SOUTH"
+        },
+        "setting": 1,
+        "enabled": true,
+        "autoSetting": true,
+        "deleted": false,
+        "left": 0,
+        "center": 0,
+        "right": 0,
+        "createdAt": 1789190320286,
+        "updatedAt": 1789190338784
+      },
+      {
+        "id": 2,
+        "location": {
+          "world": "58320f27-0535-40a0-b3e1-76c106face0c",
+          "worldName": "world",
+          "x": 2,
+          "y": 66,
+          "z": 0,
+          "facing": "SOUTH"
+        },
+        "setting": 2,
+        "enabled": true,
+        "autoSetting": true,
+        "deleted": false,
+        "left": 0,
+        "center": 0,
+        "right": 0,
+        "createdAt": 1789190321719,
+        "updatedAt": 1789190338784
+      }
+    ],
+    "sessions": [],
+    "commands": [],
+    "clicks": [
+      {
+        "player": "PiriRuntimeTest",
+        "x": 0,
+        "action": "RIGHT_CLICK_BLOCK",
+        "denied": true
+      },
+      {
+        "player": "PiriRuntimeTest2",
+        "x": 0,
+        "action": "RIGHT_CLICK_BLOCK",
+        "denied": true
+      },
+      {
+        "player": "PiriRuntimeTest2",
+        "x": 0,
+        "action": "RIGHT_CLICK_BLOCK",
+        "denied": true
+      }
+    ],
+    "buttons": [
+      {
+        "x": 0,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 2,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 3,
+        "type": "STONE_BUTTON",
+        "powered": false
+      }
+    ]
+  },
+  "clients": {
+    "phase02-owner": {
+      "completed": 3,
+      "connected": true,
+      "handshake": true,
+      "failure": null,
+      "packets": [
+        {
+          "type": "HELLO_ACK",
+          "payload": {
+            "protocol": 1,
+            "serverVersion": "1.0.0"
+          }
+        },
+        {
+          "type": "OPEN_MACHINE",
+          "payload": {
+            "sessionId": "ff47b702-05c5-44ff-addd-4e479333bafe",
+            "machineId": 1,
+            "expectedNextClientSequence": 1
+          }
+        },
+        {
+          "type": "PUBLIC_STATE",
+          "payload": {
+            "sessionId": "ff47b702-05c5-44ff-addd-4e479333bafe",
+            "machineId": 1,
+            "expectedNextClientSequence": 1,
+            "gameState": "SEATED_READY",
+            "lifecycle": "ACTIVE",
+            "credit": 0,
+            "heldMedals": 0,
+            "bet": 0,
+            "pay": 0,
+            "bonusCount": 0,
+            "lampOn": false,
+            "displayStops": {
+              "left": 0,
+              "center": 0,
+              "right": 0
+            },
+            "stoppedMask": 0
+          }
+        },
+        {
+          "type": "SESSION_END",
+          "payload": {
+            "sessionId": "ff47b702-05c5-44ff-addd-4e479333bafe"
+          }
+        }
+      ],
+      "messages": [
+        "PiriRuntimeTest joined the game",
+        "PiriRuntimeTest2 joined the game"
+      ],
+      "actions": [
+        {
+          "id": 1,
+          "kind": "aim",
+          "x": 0
+        },
+        {
+          "id": 2,
+          "kind": "click",
+          "x": 0
+        },
+        {
+          "id": 3,
+          "kind": "close"
+        }
+      ],
+      "productionSession": null
+    },
+    "phase02-other": {
+      "completed": 5,
+      "connected": true,
+      "handshake": true,
+      "failure": null,
+      "packets": [
+        {
+          "type": "HELLO_ACK",
+          "payload": {
+            "protocol": 1,
+            "serverVersion": "1.0.0"
+          }
+        },
+        {
+          "type": "ERROR",
+          "payload": {
+            "errorCode": "MACHINE_OCCUPIED"
+          }
+        },
+        {
+          "type": "OPEN_MACHINE",
+          "payload": {
+            "sessionId": "8c4198db-d44b-40f4-af76-9f12b1184b7d",
+            "machineId": 1,
+            "expectedNextClientSequence": 1
+          }
+        },
+        {
+          "type": "PUBLIC_STATE",
+          "payload": {
+            "sessionId": "8c4198db-d44b-40f4-af76-9f12b1184b7d",
+            "machineId": 1,
+            "expectedNextClientSequence": 1,
+            "gameState": "SEATED_READY",
+            "lifecycle": "ACTIVE",
+            "credit": 0,
+            "heldMedals": 0,
+            "bet": 0,
+            "pay": 0,
+            "bonusCount": 0,
+            "lampOn": false,
+            "displayStops": {
+              "left": 0,
+              "center": 0,
+              "right": 0
+            },
+            "stoppedMask": 0
+          }
+        },
+        {
+          "type": "SESSION_END",
+          "payload": {
+            "sessionId": "8c4198db-d44b-40f4-af76-9f12b1184b7d"
+          }
+        }
+      ],
+      "messages": [
+        "PiriRuntimeTest2 joined the game",
+        "MACHINE_OCCUPIED"
+      ],
+      "actions": [
+        {
+          "id": 1,
+          "kind": "aim",
+          "x": 0
+        },
+        {
+          "id": 2,
+          "kind": "click",
+          "x": 0
+        },
+        {
+          "id": 3,
+          "kind": "aim",
+          "x": 0
+        },
+        {
+          "id": 4,
+          "kind": "click",
+          "x": 0
+        },
+        {
+          "id": 5,
+          "kind": "close"
+        }
+      ],
+      "productionSession": null
+    }
+  }
+}

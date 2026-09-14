@@ -1,0 +1,11 @@
+{
+  "role": "REPLAY",
+  "premiumF": false,
+  "profile": "NORMAL",
+  "order": [
+    "CENTER",
+    "RIGHT",
+    "LEFT"
+  ],
+  "label": "replay-crl"
+}

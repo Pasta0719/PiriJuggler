@@ -1,0 +1,27 @@
+{
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "stage": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\phase05-v4",
+  "authorization": "User explicitly approved the bonus public-state mapping and instructed resuming Phase05 only. Individual before hashes are rechecked and existing files backed up; Phase06 remains NOT_STARTED.",
+  "changes": [
+    {
+      "path": "runtime-test-support/run_phase05_bar.py",
+      "before": null,
+      "after": "6a1b615f07e062bebded3e3b77b310d25f3df9974d47dea18e13c344c8600450"
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/game/BarConfirmationTest.java",
+      "before": "05879671ef99bf96d0ba342cde25ccc412a4d83f478b2e2700a53f81ac817db8",
+      "after": "40d989e65fed4e451cc4f38a3c4661ca932d9cff49837fd6b05f914bc8c59a0e"
+    },
+    {
+      "path": "runtime-test-support/client/build.gradle.kts",
+      "before": "acc5b44c2110d575dc9d1ab24c072e29922a34f27251f21d6a0193a5f4c98017",
+      "after": "ea0c1eeded14224ab167d881de164b53d325dba79c20635ed3d2975b0134110a"
+    },
+    {
+      "path": "runtime-test-support/client/src/main/java/jp/pirijuggler/runtime/client/Phase02Probe.java",
+      "before": "c66fb872c24e8e8c8b5b4dbcc3547f3a3d4abd08bc1d3cbe35168fac4a5ff2a8",
+      "after": "6f8bc8e20a9529df42df2fed0f7fb3d0e65ed170d1fffd0bf00460ea9fadad4c"
+    }
+  ]
+}

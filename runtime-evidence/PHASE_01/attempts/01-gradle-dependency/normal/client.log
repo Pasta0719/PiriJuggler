@@ -1,0 +1,49 @@
+
+> Configure project :fabric
+Fabric Loom: 1.10.5
+
+> Configure project :runtime-test-client
+Fabric Loom: 1.10.5
+
+> Task :common:compileJava UP-TO-DATE
+> Task :fabric:compileJava UP-TO-DATE
+> Task :fabric:processResources UP-TO-DATE
+> Task :fabric:classes UP-TO-DATE
+> Task :paper:compileJava UP-TO-DATE
+> Task :fabric:compileTestJava UP-TO-DATE
+> Task :common:processResources NO-SOURCE
+> Task :common:classes UP-TO-DATE
+> Task :fabric:jar UP-TO-DATE
+> Task :fabric:processIncludeJars UP-TO-DATE
+> Task :runtime-test-client:compileJava UP-TO-DATE
+> Task :runtime-test-client:processResources UP-TO-DATE
+> Task :runtime-test-client:classes UP-TO-DATE
+> Task :runtime-test-client:generateLog4jConfig
+> Task :runtime-test-client:generateRemapClasspath FAILED
+> Task :fabric:remapJar
+
+[Incubating] Problems report is available at: file:///C:/Users/PC_user/Documents/PiriJuggler_Codex_Workflow_v4_AUDITED/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+A problem was found with the configuration of task ':runtime-test-client:generateRemapClasspath' (type 'GenerateRemapClasspathTask').
+  - Gradle detected a problem with the following location: 'C:\Users\PC_user\Documents\PiriJuggler_Codex_Workflow_v4_AUDITED\fabric\build\libs\piri-juggler-fabric-1.0.0.jar'.
+    
+    Reason: Task ':runtime-test-client:generateRemapClasspath' uses this output of task ':fabric:remapJar' without declaring an explicit or implicit dependency. This can lead to incorrect results being produced, depending on what order the tasks are executed.
+    
+    Possible solutions:
+      1. Declare task ':fabric:remapJar' as an input of ':runtime-test-client:generateRemapClasspath'.
+      2. Declare an explicit dependency on ':fabric:remapJar' from ':runtime-test-client:generateRemapClasspath' using Task#dependsOn.
+      3. Declare an explicit dependency on ':fabric:remapJar' from ':runtime-test-client:generateRemapClasspath' using Task#mustRunAfter.
+    
+    For more information, please refer to https://docs.gradle.org/8.14.3/userguide/validation_problems.html#implicit_dependency in the Gradle documentation.
+
+* Try:
+> Declare task ':fabric:remapJar' as an input of ':runtime-test-client:generateRemapClasspath'
+> Declare an explicit dependency on ':fabric:remapJar' from ':runtime-test-client:generateRemapClasspath' using Task#dependsOn
+> Declare an explicit dependency on ':fabric:remapJar' from ':runtime-test-client:generateRemapClasspath' using Task#mustRunAfter
+> Run with --scan to get full insights.
+
+BUILD FAILED in 26s
+12 actionable tasks: 3 executed, 9 up-to-date

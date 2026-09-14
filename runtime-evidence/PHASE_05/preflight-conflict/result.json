@@ -1,0 +1,90 @@
+{
+  "phase": "05",
+  "status": "BLOCKED",
+  "passed": false,
+  "blockedReason": "BONUS_TYPE_PUBLIC_STATE",
+  "recordedAt": "2026-09-13T11:32:04.984991+00:00",
+  "requiredSectionsRead": [
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    33,
+    40,
+    41,
+    51,
+    57,
+    59,
+    61,
+    88,
+    100,
+    103,
+    104,
+    105,
+    106,
+    113,
+    114,
+    128,
+    131,
+    132,
+    137
+  ],
+  "specSha256": "54713fdb73aeb46b12bdc32c4fe211e65b872273b07c41a5edded892ca532482",
+  "source": "paper/src/main/java/jp/pirijuggler/paper/session/Session.java",
+  "sourceSha256": "8969a158db89e88709e499c2f2b514a5e130de5ed397802e931d169dba3eb6ab",
+  "publicStateExamples": [
+    {
+      "serverState": "BONUS_PENDING_BIG",
+      "currentPublicGameState": "BONUS_PENDING_BIG",
+      "disclosedBonusType": "BIG",
+      "proposedPublicGameState": "BONUS_PENDING"
+    },
+    {
+      "serverState": "BONUS_PENDING_REG",
+      "currentPublicGameState": "BONUS_PENDING_REG",
+      "disclosedBonusType": "REG",
+      "proposedPublicGameState": "BONUS_PENDING"
+    },
+    {
+      "serverState": "BONUS_ENTRY_BETTED_BIG",
+      "currentPublicGameState": "BONUS_ENTRY_BETTED_BIG",
+      "disclosedBonusType": "BIG",
+      "proposedPublicGameState": "BONUS_ENTRY_BETTED"
+    },
+    {
+      "serverState": "BONUS_ENTRY_BETTED_REG",
+      "currentPublicGameState": "BONUS_ENTRY_BETTED_REG",
+      "disclosedBonusType": "REG",
+      "proposedPublicGameState": "BONUS_ENTRY_BETTED"
+    },
+    {
+      "serverState": "BONUS_ENTRY_SPINNING_BIG",
+      "currentPublicGameState": "BONUS_ENTRY_SPINNING_BIG",
+      "disclosedBonusType": "BIG",
+      "proposedPublicGameState": "BONUS_ENTRY_SPINNING"
+    },
+    {
+      "serverState": "BONUS_ENTRY_SPINNING_REG",
+      "currentPublicGameState": "BONUS_ENTRY_SPINNING_REG",
+      "disclosedBonusType": "REG",
+      "proposedPublicGameState": "BONUS_ENTRY_SPINNING"
+    }
+  ],
+  "theoreticalPayoutPercent": {
+    "1": 97.8000028096489,
+    "2": 99.4000017757693,
+    "3": 101.00000299085666,
+    "4": 103.40000602191101,
+    "5": 105.99998825417367,
+    "6": 111.40000098688927
+  },
+  "tests": "NOT_RUN",
+  "build": "NOT_RUN",
+  "runtime": "NOT_RUN",
+  "productCodeChanged": false,
+  "specChanged": false,
+  "proposalApplied": false
+}

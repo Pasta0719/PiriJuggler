@@ -1,0 +1,16 @@
+{
+  "type": "SPIN_START",
+  "payload": {
+    "sessionId": "d65f0b88-fa19-4ecc-8723-c401f7df7539",
+    "machineId": 1,
+    "spinId": "00000000-0000-0000-0000-000000000003",
+    "mode": "NORMAL",
+    "animation": "REVERSE_500MS",
+    "startPhase": {
+      "left": 8.0,
+      "center": 3.0,
+      "right": 12.0
+    },
+    "stopEnableAfterMs": 400
+  }
+}

@@ -1,0 +1,229 @@
+{
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "stage": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\phase04-v4",
+  "authorization": "Current user explicitly requested CODEX_START.md workflow after the prior Phase03-only run completed. Normal-run steps 2 and 13 select the smallest NOT_STARTED Phase and stop after it. Authoritative status: Phase03 COMPLETE; Phase04 NOT_STARTED.",
+  "changes": [
+    {
+      "path": "IMPLEMENTATION_STATUS.md",
+      "before": "31a8769e391b3a91039f990ad249b887ad163132a22d6ca8bdf75b25c2da2354",
+      "after": "f295f081dc775a1eda68473f26952b2656807db2447dad0280209055afbfe66a",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "SPEC.md",
+      "before": "0ef52b11b494ab62aa8fc13748496d83df92f71d07fab1f542485d09223b463f",
+      "after": "54713fdb73aeb46b12bdc32c4fe211e65b872273b07c41a5edded892ca532482",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "docs/extract_spec_lock.py",
+      "before": "a7b114c6b9a11959fccbb2e43afc68acfe513cab720582d6cbc75c21f3b3175f",
+      "after": "0aae0315684ccd098aba5ab1c567771c07f8df970c997f9b52149dfd5207bab5",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "docs/PHASE_04_REELS.md",
+      "before": null,
+      "after": "048b7d593f21c6fba474adaee051a26e46984aef44f20999446ccd8043520717",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "docs/preflight_phase04.py",
+      "before": null,
+      "after": "9b39228c74e6aca1130b365aacfde59b6c5e10f2ee5d8ccadebb9205ed2b27cb",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "docs/spec-lock.json",
+      "before": "61b06a5be8824cbef6da19485806ffde8c72e46f401dc5df8c343aa5fe9a5130",
+      "after": "c18d2bc182a99bd5bf6e88fd8e2acd5096878a1e1be4352f92e872e844b17b69",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "runtime-test-support/run_phase01.py",
+      "before": "e543bc1d7d55714b415fc4b030d63c99804bc5276bbaac7e7a9d7a4932eaac60",
+      "after": "7ad2c540a406b2e4c176f79085c7ec3a8e15ce19fb6c74d9430c869fdd8b91ff",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "runtime-test-support/run_phase04.py",
+      "before": null,
+      "after": "9b23342ae27b2eab5fd3de034970f7a4140e549199cd322236e587b20af81513",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "common/src/main/java/jp/pirijuggler/common/reel/FixedReels.java",
+      "before": null,
+      "after": "7d52f127de830d2494aa428083419c32103840bec519eef1df256a001ca72a01",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "common/src/main/java/jp/pirijuggler/common/reel/Reel.java",
+      "before": null,
+      "after": "f9f62724b7bed52933fab915446b0a5651749f718e5cb13fd8bfbd572eaaeb43",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "common/src/main/java/jp/pirijuggler/common/reel/ReelMotion.java",
+      "before": null,
+      "after": "407c9a5646763a358538fe8932900cdb53ca4b8fab7edf0f2573056382859856",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "common/src/main/java/jp/pirijuggler/common/reel/Symbol.java",
+      "before": null,
+      "after": "4bcb0396a060a386474780333abe714439d43afcbb6db7d65e9e28fdef6c41ef",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "common/src/test/java/jp/pirijuggler/common/reel/ReelMotionTest.java",
+      "before": null,
+      "after": "211887cdd514a6fc09566b5886a3660186497fd0d435634b948fc48481096d18",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotInput.java",
+      "before": "78534a0e62f3e1023b5adab21c9572fb89e90ebe746f3a93aa4a597c0034f917",
+      "after": "f1063ad0be312b6233b10f1063ab476234aa672f7b8670f38f1cb84753287bec",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotUi.java",
+      "before": "4f35919628d6f1e7289f7bb46f6eeec34fc58e816470ff7eddb09aa24b75ef84",
+      "after": "a3a9e9b989b86855c78e43ed5f4415c9d12e5836d69021a6616ff6312ec8d1cc",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotViewState.java",
+      "before": "0983b89b974faf4c8dfa98cfa0e4b9b8561b38db99ea60a7bdd87d3da3d9769b",
+      "after": "f42c2c50fae6f3cdfb4d0d6fc02895ceff7f79f3c704eec4581826d7f2423ccc",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "fabric/src/main/java/jp/pirijuggler/fabric/ui/UiConstants.java",
+      "before": "f139331707f174f655562f8aa3c192e3349bad19dee7631bd03eac085570b3eb",
+      "after": "f73676ab1160a5d587d7659d968fd9c930bdb3dcd975866e518164f886e48851",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "fabric/src/test/java/jp/pirijuggler/fabric/ui/SlotViewStateTest.java",
+      "before": "871b03fdf5a3d4a66089c531875660ab003bd613ffcfb00f39d244b1ce466ff6",
+      "after": "b0f0bb2663ccadb5971acd46146588cfac3bca45f9af1fea1bb2339f439866da",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/PiriJugglerPlugin.java",
+      "before": "9eb1b8341470b437c4b0869cbf09b096bd29ad4a824f35e44675ad7896af184b",
+      "after": "2f0bc9919f761d8076d2a3eb0db7bc53d466fe1b60be150bc12a8ef801d508af",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/DisplayRole.java",
+      "before": null,
+      "after": "c758bfbfedbe5229204d26d1521dc1f90390dde0638b7f5c4dde8ef2834d4fc3",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/InternalRole.java",
+      "before": null,
+      "after": "367d5ed485e7d2dd4f5fd63ab196542775d07f56c8a50622004c7c628f6f63d2",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/Payline.java",
+      "before": null,
+      "after": "95048318d24b9a28d0a0779ca301165f92a28e0bd529585193f7d9afb280c22e",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/ReelEngine.java",
+      "before": null,
+      "after": "195d6051241adf36db5ea94411368ee036cdd4bf075745cbf4fdc9f11e9e4878",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/ReelRound.java",
+      "before": null,
+      "after": "9b599377cd81c16293038915edef923d099f585cfe07e04a7cbba94c5fab7217",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/ReelVerification.java",
+      "before": null,
+      "after": "826ad9db94ca99faabcc541ea373e74b2923d78f867e3d51abf9f8f0605c97b3",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/StopCatalogue.java",
+      "before": null,
+      "after": "9b829e5a0a30579d24ed4134174a0e081f423978ac339a28a66e130a604c2e22",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/StopSolver.java",
+      "before": null,
+      "after": "0681f50dcd6889ac88c670c7df803b1edbc60a7034cda49ea1bab7cfa5fe839c",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/reel/StopTriplet.java",
+      "before": null,
+      "after": "82d97969cb173019cd4d1fde8c7c86ec9c9f4b452d9ad87e7a70fe371e061b4b",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/reel/ReelRoundTest.java",
+      "before": null,
+      "after": "7812d2a69dbad408fb087519d75c7a0356f2ff7550b190d116a3ced7fd8ab005",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/reel/StopSolverTest.java",
+      "before": null,
+      "after": "5bc673b87dacabb04651bdc67987cb8a8bb906ec402a99bbaa6b77b1c4bd1ea5",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "runtime-test-support/client/build.gradle.kts",
+      "before": "ded986185b26b2e344b57630017dc409f260e3d022f492170bf1b076e31f9112",
+      "after": "9dabffe301e94ff87d38c98d87970bba06507bfd4300511509e46477207f9044",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "runtime-test-support/client/src/main/resources/piri-runtime.mixins.json",
+      "before": "9a30955b13dd808cb375a9724a9e70aba498a9cc6b705155b4c795971d1d6502",
+      "after": "180a16180e30870c518bb1843c2f8669ea2020a14a4cd99dd63d91c7cf86bbef",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "runtime-test-support/client/src/main/java/jp/pirijuggler/runtime/client/Phase02Probe.java",
+      "before": "592a6b00d2aba3bcc0d4fb575f6fd29eaccf697ff7d219e098fd4c63fe75183d",
+      "after": "7f70acb8ec0e8b6e61db2fe7d5118262e96e2615cbe023d84ac85d2dc7fa44af",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "runtime-test-support/client/src/main/java/jp/pirijuggler/runtime/mixin/SlotViewAccessor.java",
+      "before": null,
+      "after": "12cbfdcbd7e9eaf771454607a7a22d4afc95aa156c910d9ff66296f5a33c437c",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/Phase02Observer.java",
+      "before": "f2e99af52301fa9e833215b6884df94485e5df645f56e9212a20b60e2731fb65",
+      "after": "4380bbfbca047888135af877dccc997c9b390f846e2b2b9da691c2d8b0db646c",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/Phase04Harness.java",
+      "before": null,
+      "after": "3e14ae70e4cbb44382863123717e44d8c47d0800cb9735692216529b4dd2206f",
+      "previousPhaseMatches": true
+    },
+    {
+      "path": "runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/RuntimeObserver.java",
+      "before": "6d6ca99fa1c1bc0c2a2745aa8cf45dff1cd168c32b9a9bab2a822d54e4015e6a",
+      "after": "f41d6a50206a99178e7160c35d72da803104d9ffba804ef89ebd03088a44fc69",
+      "previousPhaseMatches": true
+    }
+  ]
+}

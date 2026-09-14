@@ -1,0 +1,38 @@
+
+> Configure project :fabric
+Fabric Loom: 1.10.5
+
+> Task :asset-tools:compileJava UP-TO-DATE
+> Task :asset-tools:processResources NO-SOURCE
+> Task :asset-tools:classes UP-TO-DATE
+> Task :asset-tools:compileTestJava UP-TO-DATE
+> Task :asset-tools:processTestResources UP-TO-DATE
+> Task :asset-tools:testClasses UP-TO-DATE
+> Task :asset-tools:test UP-TO-DATE
+> Task :common:compileJava UP-TO-DATE
+> Task :common:processResources NO-SOURCE
+> Task :common:classes UP-TO-DATE
+> Task :common:jar UP-TO-DATE
+> Task :common:compileTestJava UP-TO-DATE
+> Task :common:processTestResources NO-SOURCE
+> Task :common:testClasses UP-TO-DATE
+> Task :common:test UP-TO-DATE
+> Task :fabric:compileJava UP-TO-DATE
+> Task :fabric:processResources UP-TO-DATE
+> Task :fabric:classes UP-TO-DATE
+> Task :paper:compileJava UP-TO-DATE
+> Task :fabric:compileTestJava UP-TO-DATE
+> Task :fabric:processTestResources NO-SOURCE
+> Task :fabric:testClasses UP-TO-DATE
+> Task :paper:processResources UP-TO-DATE
+> Task :paper:classes UP-TO-DATE
+> Task :paper:jar UP-TO-DATE
+> Task :fabric:test UP-TO-DATE
+> Task :paper:compileTestJava UP-TO-DATE
+> Task :paper:processTestResources NO-SOURCE
+> Task :paper:testClasses UP-TO-DATE
+> Task :paper:test UP-TO-DATE
+> Task :test UP-TO-DATE
+
+BUILD SUCCESSFUL in 22s
+17 actionable tasks: 17 up-to-date

@@ -1,0 +1,11 @@
+{
+  "role": "GRAPE",
+  "premiumF": false,
+  "profile": "REVERSE_500MS",
+  "order": [
+    "LEFT",
+    "RIGHT",
+    "CENTER"
+  ],
+  "label": "grape-lrc"
+}

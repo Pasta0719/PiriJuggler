@@ -1,0 +1,11 @@
+{
+  "role": "REG_ENTRY",
+  "premiumF": false,
+  "profile": "REVERSE_500MS",
+  "order": [
+    "LEFT",
+    "RIGHT",
+    "CENTER"
+  ],
+  "label": "reg_entry-lrc"
+}

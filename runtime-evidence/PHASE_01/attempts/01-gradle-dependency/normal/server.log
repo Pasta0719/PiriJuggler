@@ -1,0 +1,96 @@
+Downloading mojang_1.21.jar
+Applying patches
+Starting org.bukkit.craftbukkit.Main
+*** Warning, you've not updated in a while! ***
+*** Please download a new build as per instructions from https://papermc.io/downloads/paper ***
+WARN StatusConsoleListener Advanced terminal features are not available in this environment
+[12:26:56 INFO]: [bootstrap] Running Java 21 (OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS; Eclipse Adoptium Temurin-21.0.12.1+1) on Windows 11 10.0 (amd64)
+[12:26:56 INFO]: [bootstrap] Loading Paper 1.21-130-master@b1b5d4c (2024-08-10T10:02:42Z) for Minecraft 1.21
+[12:26:56 WARN]: [oshi.driver.windows.perfmon.PerfmonDisabled] Invalid registry value type detected for PerfOS counters. Should be REG_DWORD. Ignoring: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\PerfOS\Performance\Disable Performance Counters.
+[12:26:57 INFO]: [PluginInitializerManager] Initializing plugins...
+[12:26:59 INFO]: [ReobfServer] Remapping server...
+[12:27:03 INFO]: [ReobfServer] Done remapping server in 4517ms.
+[12:27:03 INFO]: [PluginRemapper] Remapping plugin 'plugins\piri-juggler-paper-1.0.0.jar'...
+[12:27:03 INFO]: [PluginRemapper] Remapping plugin 'plugins\piri-runtime-test-paper-1.0.0.jar'...
+[12:27:03 INFO]: [PluginRemapper] Done remapping plugin 'plugins\piri-runtime-test-paper-1.0.0.jar' in 159ms.
+[12:27:03 INFO]: [PluginRemapper] Done remapping plugin 'plugins\piri-juggler-paper-1.0.0.jar' in 162ms.
+[12:27:04 INFO]: [PluginInitializerManager] Initialized 2 plugins
+[12:27:04 INFO]: [PluginInitializerManager] Bukkit plugins (2):
+ - PiriJuggler (1.0.0), PiriRuntimeAcceptance (1.0.0)
+[12:27:09 INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[12:27:10 INFO]: Found new data pack file/bukkit, loading it automatically
+[12:27:10 INFO]: Found new data pack paper, loading it automatically
+[12:27:11 INFO]: No existing world data, creating new world
+[12:27:11 ERROR]: No key layers in MapLike[{}]
+[12:27:12 INFO]: Loaded 1290 recipes
+[12:27:12 INFO]: Loaded 1399 advancements
+[12:27:12 INFO]: Starting minecraft server version 1.21
+[12:27:12 INFO]: Loading properties
+[12:27:12 INFO]: This server is running Paper version 1.21-130-master@b1b5d4c (2024-08-10T10:02:42Z) (Implementing API version 1.21-R0.1-SNAPSHOT)
+[12:27:12 INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
+[12:27:13 INFO]: Server Ping Player Sample Count: 12
+[12:27:13 INFO]: Using 4 threads for Netty based IO
+[12:27:13 INFO]: [ChunkTaskScheduler] Chunk system is using 1 I/O threads, 4 worker threads, and population gen parallelism of 4 threads
+[12:27:14 INFO]: Default game type: SURVIVAL
+[12:27:14 INFO]: Generating keypair
+[12:27:14 INFO]: Starting Minecraft server on 127.0.0.1:25585
+[12:27:14 INFO]: Using default channel type
+[12:27:14 INFO]: Paper: Using Java compression from Velocity.
+[12:27:14 INFO]: Paper: Using Java cipher from Velocity.
+[12:27:14 INFO]: [PiriJuggler] Loading server plugin PiriJuggler v1.0.0
+[12:27:14 INFO]: [PiriRuntimeAcceptance] Loading server plugin PiriRuntimeAcceptance v1.0.0
+[12:27:14 WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[12:27:14 WARN]: The server will make no attempt to authenticate usernames. Beware.
+[12:27:14 WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[12:27:14 WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[12:27:14 INFO]: Preparing level "world"
+[12:27:14 ERROR]: No key layers in MapLike[{}]
+[12:27:15 ERROR]: No key layers in MapLike[{}]
+[12:27:16 ERROR]: No key layers in MapLike[{}]
+[12:27:16 INFO]: Preparing start region for dimension minecraft:overworld
+[12:27:17 INFO]: Time elapsed: 170 ms
+[12:27:17 INFO]: Preparing start region for dimension minecraft:the_nether
+[12:27:18 INFO]: Time elapsed: 1112 ms
+[12:27:18 INFO]: Preparing start region for dimension minecraft:the_end
+[12:27:18 INFO]: Time elapsed: 182 ms
+[12:27:18 INFO]: [PiriJuggler] Enabling PiriJuggler v1.0.0
+[12:27:18 INFO]: [PiriJuggler] Protocol 1; configuration valid
+[12:27:18 INFO]: [PiriRuntimeAcceptance] Enabling PiriRuntimeAcceptance v1.0.0
+[12:27:18 INFO]: [PiriRuntimeAcceptance] PIRI_RUNTIME_OBSERVER_READY 1.21-130-b1b5d4c (MC: 1.21)
+[12:27:18 INFO]: [spark] Starting background profiler...
+[12:27:18 INFO]: [spark] The async-profiler engine is not supported for your os/arch (windows11/amd64), so the built-in Java engine will be used instead.
+[12:27:18 INFO]: Done preparing level "world" (4.231s)
+[12:27:18 INFO]: Running delayed init tasks
+[12:27:18 INFO]: Done (23.190s)! For help, type "help"
+[12:27:18 INFO]: *************************************************************************************
+[12:27:18 INFO]: This is the first time you're starting this server.
+[12:27:18 INFO]: It's recommended you read our 'Getting Started' documentation for guidance.
+[12:27:18 INFO]: View this and more helpful information here: https://docs.papermc.io/paper/next-steps
+[12:27:18 INFO]: *************************************************************************************
+[12:27:18 INFO]: Timings Reset
+[12:27:47 INFO]: Stopping the server
+[12:27:47 INFO]: Stopping server
+[12:27:47 INFO]: [PiriRuntimeAcceptance] Disabling PiriRuntimeAcceptance v1.0.0
+[12:27:47 INFO]: [PiriJuggler] Disabling PiriJuggler v1.0.0
+[12:27:47 INFO]: Saving players
+[12:27:47 INFO]: Saving worlds
+[12:27:47 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:27:47 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world'
+[12:27:47 INFO]: [ChunkHolderManager] Halted chunk system for world 'world'
+[12:27:47 INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world'
+[12:27:48 INFO]: [ChunkHolderManager] Saved 841 block chunks, 49 entity chunks, 0 poi chunks in world 'world' in 0.64s
+[12:27:48 INFO]: Saving chunks for level 'ServerLevel[world_nether]'/minecraft:the_nether
+[12:27:48 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_nether'
+[12:27:48 INFO]: [ChunkHolderManager] Halted chunk system for world 'world_nether'
+[12:27:48 INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_nether'
+[12:27:49 INFO]: [ChunkHolderManager] Saved 841 block chunks, 49 entity chunks, 0 poi chunks in world 'world_nether' in 0.53s
+[12:27:49 INFO]: Saving chunks for level 'ServerLevel[world_the_end]'/minecraft:the_end
+[12:27:49 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_the_end'
+[12:27:49 INFO]: [ChunkHolderManager] Halted chunk system for world 'world_the_end'
+[12:27:49 INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_the_end'
+[12:27:49 INFO]: [ChunkHolderManager] Saved 841 block chunks, 49 entity chunks, 0 poi chunks in world 'world_the_end' in 0.29s
+[12:27:49 INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:27:49 INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+WARN StatusConsoleListener Advanced terminal features are not available in this environment
+[12:27:49 INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:27:49 INFO]: ThreadedAnvilChunkStorage: All dimensions are saved

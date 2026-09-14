@@ -1,0 +1,7 @@
+{
+  "type": "BONUS_END",
+  "payload": {
+    "bonusType": "BIG",
+    "finalCount": 280
+  }
+}

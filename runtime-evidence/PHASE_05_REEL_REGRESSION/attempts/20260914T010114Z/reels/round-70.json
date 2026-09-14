@@ -1,0 +1,11 @@
+{
+  "role": "CHERRY",
+  "premiumF": true,
+  "profile": "NORMAL",
+  "order": [
+    "CENTER",
+    "RIGHT",
+    "LEFT"
+  ],
+  "label": "premium-f-cherry-crl"
+}

@@ -1,0 +1,52 @@
+{
+  "bet": {
+    "sounds": [
+      "piri:bet"
+    ]
+  },
+  "bonus_end": {
+    "sounds": [
+      "piri:bonus_end"
+    ]
+  },
+  "bonus_start": {
+    "sounds": [
+      "piri:bonus_start"
+    ]
+  },
+  "error": {
+    "sounds": [
+      "piri:error"
+    ]
+  },
+  "lever": {
+    "sounds": [
+      "piri:lever"
+    ]
+  },
+  "notice": {
+    "sounds": [
+      "piri:notice"
+    ]
+  },
+  "notice_strong": {
+    "sounds": [
+      "piri:notice_strong"
+    ]
+  },
+  "payout": {
+    "sounds": [
+      "piri:payout"
+    ]
+  },
+  "stop": {
+    "sounds": [
+      "piri:stop"
+    ]
+  },
+  "tenpai": {
+    "sounds": [
+      "piri:tenpai"
+    ]
+  }
+}

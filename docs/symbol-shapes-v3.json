@@ -1,0 +1,669 @@
+{
+  "source": "v3 SPEC.md §121 (verbatim in docs/v3-section-121.txt); imported by v4 SPEC.md §121",
+  "sourceSha256": "8b778f6ee728dc49f4c832a4633b5304a2f69a19a5c7b16656c2131e0e751db7",
+  "size": [
+    256,
+    256
+  ],
+  "outlineWidth": 8,
+  "subjectBounds": [
+    24,
+    24,
+    232,
+    232
+  ],
+  "shapes": {
+    "seven": [
+      {
+        "kind": "polygon",
+        "coordinates": [
+          [
+            42,
+            55
+          ],
+          [
+            220,
+            55
+          ],
+          [
+            220,
+            91
+          ],
+          [
+            137,
+            211
+          ],
+          [
+            82,
+            211
+          ],
+          [
+            161,
+            99
+          ],
+          [
+            42,
+            99
+          ]
+        ],
+        "fill": "#E92A31",
+        "stroke": "#711016",
+        "width": 8
+      },
+      {
+        "kind": "polygon",
+        "coordinates": [
+          [
+            45,
+            124
+          ],
+          [
+            200,
+            104
+          ],
+          [
+            189,
+            132
+          ],
+          [
+            55,
+            151
+          ]
+        ],
+        "fill": "#F3C743",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "line",
+        "coordinates": [
+          [
+            68,
+            72
+          ],
+          [
+            179,
+            72
+          ]
+        ],
+        "fill": null,
+        "stroke": "#FFFFFF",
+        "width": 7
+      }
+    ],
+    "grape": [
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          79,
+          40,
+          50,
+          50
+        ],
+        "fill": "#6545C7",
+        "stroke": "#30206B",
+        "width": 6
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          112,
+          40,
+          50,
+          50
+        ],
+        "fill": "#6545C7",
+        "stroke": "#30206B",
+        "width": 6
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          59,
+          67,
+          50,
+          50
+        ],
+        "fill": "#6545C7",
+        "stroke": "#30206B",
+        "width": 6
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          93,
+          69,
+          50,
+          50
+        ],
+        "fill": "#6545C7",
+        "stroke": "#30206B",
+        "width": 6
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          128,
+          69,
+          50,
+          50
+        ],
+        "fill": "#6545C7",
+        "stroke": "#30206B",
+        "width": 6
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          47,
+          99,
+          50,
+          50
+        ],
+        "fill": "#6545C7",
+        "stroke": "#30206B",
+        "width": 6
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          81,
+          99,
+          50,
+          50
+        ],
+        "fill": "#6545C7",
+        "stroke": "#30206B",
+        "width": 6
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          116,
+          99,
+          50,
+          50
+        ],
+        "fill": "#6545C7",
+        "stroke": "#30206B",
+        "width": 6
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          66,
+          129,
+          50,
+          50
+        ],
+        "fill": "#6545C7",
+        "stroke": "#30206B",
+        "width": 6
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          101,
+          129,
+          50,
+          50
+        ],
+        "fill": "#6545C7",
+        "stroke": "#30206B",
+        "width": 6
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          83,
+          158,
+          50,
+          50
+        ],
+        "fill": "#6545C7",
+        "stroke": "#30206B",
+        "width": 6
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          144,
+          35,
+          66,
+          38
+        ],
+        "fill": "#39A755",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "line",
+        "coordinates": [
+          [
+            142,
+            60
+          ],
+          [
+            169,
+            40
+          ]
+        ],
+        "fill": null,
+        "stroke": "#35783C",
+        "width": 10
+      }
+    ],
+    "cherry": [
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          49,
+          110,
+          86,
+          86
+        ],
+        "fill": "#E92A31",
+        "stroke": "#77131A",
+        "width": 7
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          116,
+          116,
+          86,
+          86
+        ],
+        "fill": "#E92A31",
+        "stroke": "#77131A",
+        "width": 7
+      },
+      {
+        "kind": "line",
+        "coordinates": [
+          [
+            92,
+            113
+          ],
+          [
+            132,
+            52
+          ]
+        ],
+        "fill": null,
+        "stroke": "#3D963E",
+        "width": 10
+      },
+      {
+        "kind": "line",
+        "coordinates": [
+          [
+            159,
+            116
+          ],
+          [
+            132,
+            52
+          ]
+        ],
+        "fill": null,
+        "stroke": "#3D963E",
+        "width": 10
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          129,
+          42,
+          71,
+          37
+        ],
+        "fill": "#42A94E",
+        "stroke": null,
+        "width": 8
+      }
+    ],
+    "bell": [
+      {
+        "kind": "path",
+        "coordinates": [
+          [
+            "M",
+            75,
+            80
+          ],
+          [
+            "C",
+            75,
+            48,
+            181,
+            48,
+            181,
+            80
+          ],
+          [
+            "L",
+            198,
+            171
+          ],
+          [
+            "C",
+            203,
+            192,
+            53,
+            192,
+            58,
+            171
+          ],
+          [
+            "Z"
+          ]
+        ],
+        "fill": "#F6D33E",
+        "stroke": "#8F6810",
+        "width": 8
+      },
+      {
+        "kind": "line",
+        "coordinates": [
+          [
+            58,
+            173
+          ],
+          [
+            198,
+            173
+          ]
+        ],
+        "fill": null,
+        "stroke": "#8F6810",
+        "width": 8
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          110,
+          179,
+          36,
+          36
+        ],
+        "fill": "#D5A51B",
+        "stroke": null,
+        "width": 8
+      }
+    ],
+    "piero": [
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          56,
+          60,
+          144,
+          144
+        ],
+        "fill": "#F8E8CF",
+        "stroke": "#4B2520",
+        "width": 8
+      },
+      {
+        "kind": "polygon",
+        "coordinates": [
+          [
+            110,
+            30
+          ],
+          [
+            145,
+            30
+          ],
+          [
+            151,
+            86
+          ],
+          [
+            104,
+            86
+          ]
+        ],
+        "fill": "#E53038",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "polygon",
+        "coordinates": [
+          [
+            58,
+            48
+          ],
+          [
+            109,
+            30
+          ],
+          [
+            104,
+            88
+          ],
+          [
+            69,
+            94
+          ]
+        ],
+        "fill": "#F5F5F5",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "polygon",
+        "coordinates": [
+          [
+            145,
+            30
+          ],
+          [
+            198,
+            48
+          ],
+          [
+            187,
+            94
+          ],
+          [
+            151,
+            86
+          ]
+        ],
+        "fill": "#F5F5F5",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          110,
+          121,
+          36,
+          36
+        ],
+        "fill": "#E5353E",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          93,
+          110,
+          16,
+          16
+        ],
+        "fill": "#000000",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          147,
+          110,
+          16,
+          16
+        ],
+        "fill": "#000000",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "arc",
+        "coordinates": [
+          94,
+          135,
+          68,
+          46,
+          200,
+          140
+        ],
+        "fill": null,
+        "stroke": "#7B2027",
+        "width": 7
+      }
+    ],
+    "replay": [
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          67,
+          102,
+          124,
+          82
+        ],
+        "fill": "#E9862E",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          38,
+          60,
+          90,
+          90
+        ],
+        "fill": "#F19A3E",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          45,
+          104,
+          65,
+          42
+        ],
+        "fill": "#F5E1C0",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          70,
+          85,
+          12,
+          12
+        ],
+        "fill": "#000000",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "ellipse",
+        "coordinates": [
+          35,
+          111,
+          16,
+          16
+        ],
+        "fill": "#000000",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "polygon",
+        "coordinates": [
+          [
+            57,
+            68
+          ],
+          [
+            68,
+            28
+          ],
+          [
+            88,
+            73
+          ]
+        ],
+        "fill": "#E9862E",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "polygon",
+        "coordinates": [
+          [
+            87,
+            70
+          ],
+          [
+            111,
+            36
+          ],
+          [
+            116,
+            88
+          ]
+        ],
+        "fill": "#E9862E",
+        "stroke": null,
+        "width": 8
+      },
+      {
+        "kind": "path",
+        "coordinates": [
+          [
+            "M",
+            174,
+            130
+          ],
+          [
+            "C",
+            229,
+            94,
+            230,
+            184,
+            173,
+            176
+          ]
+        ],
+        "fill": null,
+        "stroke": "#E9862E",
+        "width": 32
+      }
+    ]
+  },
+  "pieroCollar": {
+    "y": 195,
+    "fills": [
+      "#E53038",
+      "#F3C743"
+    ],
+    "description": "triangles at y=195, fill alternating; v3 specifies no count or x coordinates"
+  },
+  "replayTailTip": {
+    "stroke": "#F5E1C0",
+    "width": 20,
+    "description": "last segment of the given tail curve; v3 specifies no split parameter"
+  }
+}

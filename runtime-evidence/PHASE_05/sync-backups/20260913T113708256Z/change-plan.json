@@ -1,0 +1,22 @@
+{
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "stage": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\phase05-v4",
+  "authorization": "User explicitly approved the bonus public-state mapping and instructed resuming Phase05 only. Individual before hashes are rechecked and existing files backed up; Phase06 remains NOT_STARTED.",
+  "changes": [
+    {
+      "path": "IMPLEMENTATION_STATUS.md",
+      "before": "967b9c9ed0eee894c5511d345cdd8953d8626a958fcaae5f050ee5c7dce73d4a",
+      "after": "94e9d5061dc8daa41ade3a39bb834b565d7a3db8b5e561dff8b76689d563d99a"
+    },
+    {
+      "path": "SPEC.md",
+      "before": "54713fdb73aeb46b12bdc32c4fe211e65b872273b07c41a5edded892ca532482",
+      "after": "239fd0d13b2a940445ba1880748f0dc17982168467c4c720bb3923f1c1f9d239"
+    },
+    {
+      "path": "SPEC_CONFLICT.md",
+      "before": "dca6f2fcfce53c60e02acc7fa8dbe55a133c6f7ed4a23f291b52c8e0b2dbc73c",
+      "after": "f93e9fa59fa88d4ff5526d590ea55b757a945e3233549cbf10b2034deba46ee8"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "role": "MISS",
+  "premiumF": false,
+  "profile": "NORMAL",
+  "order": [
+    "CENTER",
+    "RIGHT",
+    "LEFT"
+  ],
+  "label": "miss-crl"
+}

@@ -1,0 +1,63 @@
+
+> Configure project :fabric
+Fabric Loom: 1.10.5
+
+> Task :assemble UP-TO-DATE
+> Task :check UP-TO-DATE
+> Task :asset-tools:compileJava UP-TO-DATE
+> Task :asset-tools:processResources NO-SOURCE
+> Task :asset-tools:classes UP-TO-DATE
+> Task :asset-tools:jar UP-TO-DATE
+> Task :asset-tools:sourcesJar UP-TO-DATE
+> Task :asset-tools:assemble UP-TO-DATE
+> Task :asset-tools:compileTestJava UP-TO-DATE
+> Task :asset-tools:processTestResources UP-TO-DATE
+> Task :asset-tools:testClasses UP-TO-DATE
+> Task :asset-tools:test UP-TO-DATE
+> Task :asset-tools:check UP-TO-DATE
+> Task :asset-tools:build UP-TO-DATE
+> Task :common:compileJava UP-TO-DATE
+> Task :common:processResources NO-SOURCE
+> Task :common:classes UP-TO-DATE
+> Task :common:jar UP-TO-DATE
+> Task :common:sourcesJar
+> Task :common:assemble
+> Task :common:compileTestJava UP-TO-DATE
+> Task :common:processTestResources NO-SOURCE
+> Task :common:testClasses UP-TO-DATE
+> Task :common:test UP-TO-DATE
+> Task :common:check UP-TO-DATE
+> Task :common:build
+> Task :fabric:compileJava UP-TO-DATE
+> Task :fabric:processResources UP-TO-DATE
+> Task :fabric:classes UP-TO-DATE
+> Task :fabric:jar
+> Task :paper:compileJava UP-TO-DATE
+> Task :fabric:compileTestJava UP-TO-DATE
+> Task :fabric:processIncludeJars UP-TO-DATE
+> Task :fabric:sourcesJar
+> Task :fabric:remapSourcesJar
+> Task :fabric:processTestResources NO-SOURCE
+> Task :fabric:testClasses UP-TO-DATE
+> Task :paper:processResources UP-TO-DATE
+> Task :paper:classes UP-TO-DATE
+> Task :paper:jar UP-TO-DATE
+> Task :fabric:test UP-TO-DATE
+> Task :fabric:validateAccessWidener NO-SOURCE
+> Task :fabric:check UP-TO-DATE
+> Task :paper:sourcesJar
+> Task :paper:assemble
+> Task :paper:compileTestJava UP-TO-DATE
+> Task :paper:processTestResources NO-SOURCE
+> Task :paper:testClasses UP-TO-DATE
+> Task :paper:test UP-TO-DATE
+> Task :fabric:remapJar
+> Task :fabric:assemble
+> Task :fabric:build
+> Task :paper:check UP-TO-DATE
+> Task :paper:build
+> Task :build
+> Task :packagePiriJars
+
+BUILD SUCCESSFUL in 3s
+27 actionable tasks: 7 executed, 20 up-to-date

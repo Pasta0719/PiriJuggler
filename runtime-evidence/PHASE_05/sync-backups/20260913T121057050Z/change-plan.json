@@ -1,0 +1,92 @@
+{
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "stage": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\phase05-v4",
+  "authorization": "User explicitly approved the bonus public-state mapping and instructed resuming Phase05 only. Individual before hashes are rechecked and existing files backed up; Phase06 remains NOT_STARTED.",
+  "changes": [
+    {
+      "path": "SPEC.md",
+      "before": "239fd0d13b2a940445ba1880748f0dc17982168467c4c720bb3923f1c1f9d239",
+      "after": "468d938d45e916e9cf1cc7f9d97a9a30fd959b8de7cb4f096c068c35acdbfbe3"
+    },
+    {
+      "path": "docs/extract_spec_lock.py",
+      "before": "83fd5fb4727b1a7d3ba58049a13557927695b7fb3ee5068e327e8da09b62131a",
+      "after": "3498ed656f7d8ec6b30ae0d8669c5f7fedfe267f1fbde185a355720c3dddac06"
+    },
+    {
+      "path": "docs/PHASE_04_REELS.md",
+      "before": "048b7d593f21c6fba474adaee051a26e46984aef44f20999446ccd8043520717",
+      "after": "e847be1f7949b4005444e390c324ade854510a4aa3263c94f51fcea83f1031b9"
+    },
+    {
+      "path": "docs/PHASE_05_GAME_LOGIC.md",
+      "before": "a68f51ed317f343ef1b64acc9fadee6247d7871585fb96f9651e1837f898ca41",
+      "after": "491996aadef680eed58168b9cf35245ee5d439662086e29fe7c8212348508a52"
+    },
+    {
+      "path": "docs/preflight_phase04.py",
+      "before": "9c621f9f57eec6f3d2db2f43d091cae56931d5c394082c3a0e11067729c778e0",
+      "after": "6a1067a97db0b54545fd7ef30e77c71f6f306c9148c3b820ba36bc4c4747e3ba"
+    },
+    {
+      "path": "docs/spec-lock.json",
+      "before": "d7116a056e1c1e98c0988285654ad2830d42c8a544ecc7be621701223bd5d82d",
+      "after": "8fc3087c3b024ccc63950cbcc3e127973e66ea7455ac8c1e9abc0de194f924e9"
+    },
+    {
+      "path": "docs/verify_phase05_artifacts.py",
+      "before": "e07b6566bc858bb9e257eba460afdc92991f865a5bce5fd9398b3ed3b91df1cf",
+      "after": "5b638b176268d94c30a23ae20d257db7099aa1545de2a43939e9c2a9994821ab"
+    },
+    {
+      "path": "runtime-test-support/run_phase04.py",
+      "before": "9b23342ae27b2eab5fd3de034970f7a4140e549199cd322236e587b20af81513",
+      "after": "5d6a094b365f13de0c96622582faf040c62361877c0a02a887024d408999c525"
+    },
+    {
+      "path": "runtime-test-support/run_phase05.py",
+      "before": "cec6e97311033996efb6ee2c36c5a2b2e08f1355de1e66f1c1cdb93828b96f38",
+      "after": "f9ef749d10e6177962f7d05eaf1e3dc952fcf7b58721d01a0af41c1c10ab7d10"
+    },
+    {
+      "path": "common/src/main/java/jp/pirijuggler/common/reel/ReelMotion.java",
+      "before": "407c9a5646763a358538fe8932900cdb53ca4b8fab7edf0f2573056382859856",
+      "after": "acb8b299a80c95af9f44531bcdf702892d9f3edb707106174e384e5126fbeac6"
+    },
+    {
+      "path": "common/src/test/java/jp/pirijuggler/common/reel/ReelMotionTest.java",
+      "before": "211887cdd514a6fc09566b5886a3660186497fd0d435634b948fc48481096d18",
+      "after": "b3fce62a0e87d3ce784ac44102f1ebde29fed92e789541b2f805ffc0de41c1b0"
+    },
+    {
+      "path": "fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotViewState.java",
+      "before": "f42c2c50fae6f3cdfb4d0d6fc02895ceff7f79f3c704eec4581826d7f2423ccc",
+      "after": "152beb7da1e2affb8815fdfc3deb1cb8b38a3302ab3f22d12fcc90792d43e405"
+    },
+    {
+      "path": "fabric/src/test/java/jp/pirijuggler/fabric/ui/SlotViewStateTest.java",
+      "before": "b0f0bb2663ccadb5971acd46146588cfac3bca45f9af1fea1bb2339f439866da",
+      "after": "3dc7311f4bbd883be74c2c37fdffbfe19873ff556a7a36bde17a7773aeb702ca"
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/reel/ReelRoundTest.java",
+      "before": "7812d2a69dbad408fb087519d75c7a0356f2ff7550b190d116a3ced7fd8ab005",
+      "after": "52ed6da5baed2a0f34d653eb099544924ca3a7e29ee121a9164dce0ca0d49563"
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/reel/StopSolverTest.java",
+      "before": "5bc673b87dacabb04651bdc67987cb8a8bb906ec402a99bbaa6b77b1c4bd1ea5",
+      "after": "348ce34efc8a23ff0bc9ce96e70aaa896e006b441e369c4bb803e1ce3c921f80"
+    },
+    {
+      "path": "runtime-test-support/client/build.gradle.kts",
+      "before": "b7ece3ea98479edc04730f017340f655b2eab995f3344346073dd2724b8c8a0c",
+      "after": "acc5b44c2110d575dc9d1ab24c072e29922a34f27251f21d6a0193a5f4c98017"
+    },
+    {
+      "path": "runtime-test-support/client/src/main/java/jp/pirijuggler/runtime/client/Phase02Probe.java",
+      "before": "449091eb49425f2b7a9efd5f3229ce4dc3f289337899256aa302d20635d32854",
+      "after": "c66fb872c24e8e8c8b5b4dbcc3547f3a3d4abd08bc1d3cbe35168fac4a5ff2a8"
+    }
+  ]
+}

@@ -1,0 +1,344 @@
+{
+  "startedAt": "2026-09-12T05:10:52.365550+00:00",
+  "run": "20260912T051052Z",
+  "passed": false,
+  "versions": {
+    "minecraft": "1.21",
+    "paper": "1.21-130",
+    "fabricLoader": "0.16.14",
+    "fabricApi": "0.102.0+1.21",
+    "yarn": "1.21+build.9",
+    "java": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE"
+  },
+  "buildHashes": {
+    "common": "bdcf0f21d0964f8e628d97baa16ad9fa2568cfbc730f884bccb92f469d53a2df",
+    "paper": "8b0aea2607a01236185a2a9d0673bfe978822366ae270abfabe0f5d385242c05",
+    "fabric": "aa580bf222535bc60c441f8950f3fd1b620d72b695bca20539f9907e97e91187"
+  },
+  "helperHashes": {
+    "paper": "83cba34e54be7f944646fd2256cd4d9e7c1ed9e266dfde933fddf7810e77e0d5",
+    "client": "69f48bc0d9064ecf0783961b1a38ec38731bbdaa215e3eb7b73f49b6da43c7c2"
+  },
+  "assertions": [
+    {
+      "name": "real world Buttons placed",
+      "passed": true,
+      "at": "2026-09-12T05:11:58.300342+00:00",
+      "evidence": "attempts\\20260912T051052Z\\buttons-snapshot.json"
+    },
+    {
+      "name": "actual player raytrace command registered Button",
+      "passed": true,
+      "at": "2026-09-12T05:11:59.183747+00:00",
+      "evidence": "attempts\\20260912T051052Z\\created-snapshot.json"
+    },
+    {
+      "name": "duplicate location rejected",
+      "passed": true,
+      "at": "2026-09-12T05:11:59.744525+00:00",
+      "evidence": "attempts\\20260912T051052Z\\duplicate-snapshot.json"
+    },
+    {
+      "name": "real session plus OPEN_MACHINE and PUBLIC_STATE",
+      "passed": true,
+      "at": "2026-09-12T05:12:01.328516+00:00",
+      "evidence": "attempts\\20260912T051052Z\\opened-snapshot.json"
+    },
+    {
+      "name": "registered Button vanilla activation canceled",
+      "passed": true,
+      "at": "2026-09-12T05:12:01.335535+00:00",
+      "evidence": "attempts\\20260912T051052Z\\cancel-snapshot.json"
+    },
+    {
+      "name": "same player second session rejected",
+      "passed": true,
+      "at": "2026-09-12T05:12:02.127433+00:00",
+      "evidence": "attempts\\20260912T051052Z\\second-session-snapshot.json"
+    },
+    {
+      "name": "machine key opens admin entry even while busy",
+      "passed": true,
+      "at": "2026-09-12T05:12:04.240197+00:00",
+      "evidence": "attempts\\20260912T051052Z\\admin-snapshot.json"
+    },
+    {
+      "name": "disconnect grace persists lock snapshot",
+      "passed": true,
+      "at": "2026-09-12T05:12:05.941405+00:00",
+      "evidence": "attempts\\20260912T051052Z\\grace-snapshot.json"
+    },
+    {
+      "name": "registration durable on disk after process exit",
+      "passed": true,
+      "at": "2026-09-12T05:12:07.759573+00:00",
+      "evidence": {
+        "databaseRows": [
+          [
+            1,
+            "cd46023d-6cc9-4d04-93fd-7e2b73ca68f5",
+            0,
+            66,
+            0
+          ],
+          [
+            2,
+            "cd46023d-6cc9-4d04-93fd-7e2b73ca68f5",
+            2,
+            66,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "true JVM restart preserves registration and creates new period",
+      "passed": true,
+      "at": "2026-09-12T05:12:19.732386+00:00",
+      "evidence": "attempts\\20260912T051052Z\\restart-snapshot.json"
+    },
+    {
+      "name": "restart retains session as SAFE before new period",
+      "passed": true,
+      "at": "2026-09-12T05:12:19.738899+00:00",
+      "evidence": "attempts\\20260912T051052Z\\restart-session-snapshot.json"
+    },
+    {
+      "name": "SAFE resume reuses session and current period",
+      "passed": true,
+      "at": "2026-09-12T05:13:00.748734+00:00",
+      "evidence": "attempts\\20260912T051052Z\\resume-snapshot.json"
+    },
+    {
+      "name": "second actual Fabric client occupied click rejected",
+      "passed": true,
+      "at": "2026-09-12T05:13:21.013531+00:00",
+      "evidence": "attempts\\20260912T051052Z\\occupied-snapshot.json"
+    }
+  ],
+  "commands": [
+    {
+      "server": "before-restart",
+      "command": [
+        "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE",
+        "-Xms512M",
+        "-Xmx1536M",
+        "-Dfile.encoding=UTF-8",
+        "-Dpiri.runtime.phase=phase02",
+        "-Dpiri.runtime.serverResult=C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02\\attempts\\20260912T051052Z\\before-restart\\server-result.json",
+        "-jar",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\downloads\\paper-1.21-130.jar",
+        "nogui"
+      ],
+      "cwd": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02\\work\\server-20260912T051052Z"
+    },
+    {
+      "client": "phase02-create",
+      "command": [
+        "cmd.exe",
+        "/d",
+        "/c",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\gradlew.bat",
+        "-PruntimeAcceptance=true",
+        "-PruntimeScenario=phase02-create",
+        "-PruntimeRun=20260912T051052Z",
+        ":runtime-test-client:runClient",
+        "--console=plain"
+      ],
+      "cwd": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED"
+    },
+    {
+      "client": "phase02-create",
+      "id": 1,
+      "kind": "aim",
+      "x": 0
+    },
+    {
+      "client": "phase02-create",
+      "id": 2,
+      "kind": "command",
+      "text": "piri machine create"
+    },
+    {
+      "client": "phase02-create",
+      "id": 3,
+      "kind": "command",
+      "text": "piri machine create"
+    },
+    {
+      "client": "phase02-create",
+      "id": 4,
+      "kind": "aim",
+      "x": 2
+    },
+    {
+      "client": "phase02-create",
+      "id": 5,
+      "kind": "command",
+      "text": "piri machine create"
+    },
+    {
+      "client": "phase02-create",
+      "id": 6,
+      "kind": "aim",
+      "x": 0
+    },
+    {
+      "client": "phase02-create",
+      "id": 7,
+      "kind": "click",
+      "x": 0
+    },
+    {
+      "client": "phase02-create",
+      "id": 8,
+      "kind": "aim",
+      "x": 2
+    },
+    {
+      "client": "phase02-create",
+      "id": 9,
+      "kind": "click",
+      "x": 2
+    },
+    {
+      "client": "phase02-create",
+      "id": 10,
+      "kind": "command",
+      "text": "piri machine remove 1"
+    },
+    {
+      "client": "phase02-create",
+      "id": 11,
+      "kind": "command",
+      "text": "piri key give"
+    },
+    {
+      "client": "phase02-create",
+      "id": 12,
+      "kind": "slot",
+      "slot": 0
+    },
+    {
+      "client": "phase02-create",
+      "id": 13,
+      "kind": "aim",
+      "x": 0
+    },
+    {
+      "client": "phase02-create",
+      "id": 14,
+      "kind": "click",
+      "x": 0
+    },
+    {
+      "client": "phase02-create",
+      "id": 15,
+      "kind": "slot",
+      "slot": 8
+    },
+    {
+      "client": "phase02-create",
+      "id": 16,
+      "kind": "screenshot"
+    },
+    {
+      "client": "phase02-create",
+      "id": 17,
+      "kind": "exit"
+    },
+    {
+      "server": "after-restart",
+      "command": [
+        "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE",
+        "-Xms512M",
+        "-Xmx1536M",
+        "-Dfile.encoding=UTF-8",
+        "-Dpiri.runtime.phase=phase02",
+        "-Dpiri.runtime.serverResult=C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02\\attempts\\20260912T051052Z\\after-restart\\server-result.json",
+        "-jar",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\downloads\\paper-1.21-130.jar",
+        "nogui"
+      ],
+      "cwd": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02\\work\\server-20260912T051052Z"
+    },
+    {
+      "client": "phase02-owner",
+      "command": [
+        "cmd.exe",
+        "/d",
+        "/c",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\gradlew.bat",
+        "-PruntimeAcceptance=true",
+        "-PruntimeScenario=phase02-owner",
+        "-PruntimeRun=20260912T051052Z",
+        ":runtime-test-client:runClient",
+        "--console=plain"
+      ],
+      "cwd": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED"
+    },
+    {
+      "client": "phase02-owner",
+      "id": 1,
+      "kind": "aim",
+      "x": 0
+    },
+    {
+      "client": "phase02-owner",
+      "id": 2,
+      "kind": "click",
+      "x": 0
+    },
+    {
+      "client": "phase02-other",
+      "command": [
+        "cmd.exe",
+        "/d",
+        "/c",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\gradlew.bat",
+        "-PruntimeAcceptance=true",
+        "-PruntimeScenario=phase02-other",
+        "-PruntimeRun=20260912T051052Z",
+        ":runtime-test-client:runClient",
+        "--console=plain"
+      ],
+      "cwd": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED"
+    },
+    {
+      "client": "phase02-other",
+      "id": 1,
+      "kind": "aim",
+      "x": 0
+    },
+    {
+      "client": "phase02-other",
+      "id": 2,
+      "kind": "click",
+      "x": 0
+    }
+  ],
+  "exits": [
+    {
+      "client": "phase02-create",
+      "exit": 0
+    },
+    {
+      "server": 0
+    },
+    {
+      "server": 0
+    }
+  ],
+  "failure": "phase02-owner action close",
+  "uncaughtExceptions": [
+    {
+      "log": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02\\attempts\\20260912T051052Z\\phase02-other\\client.log",
+      "line": "[14:14:33] [Render thread/ERROR] (Minecraft) Unreported exception thrown!"
+    },
+    {
+      "log": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02\\attempts\\20260912T051052Z\\phase02-owner\\client.log",
+      "line": "[14:13:01] [Render thread/ERROR] (Minecraft) Unreported exception thrown!"
+    }
+  ],
+  "finishedAt": "2026-09-12T05:14:52.408937+00:00"
+}

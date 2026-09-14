@@ -1,0 +1,264 @@
+{
+  "server": {
+    "serverVersion": "1.21-130-b1b5d4c (MC: 1.21)",
+    "enabled": true,
+    "ready": true,
+    "period": "a1567f1f-3a04-4f2b-bddb-ab9dade9b957",
+    "machines": [
+      {
+        "id": 1,
+        "location": {
+          "world": "a8a2e64e-73d0-42d3-8480-40013eedb5c2",
+          "worldName": "world",
+          "x": 0,
+          "y": 66,
+          "z": 0,
+          "facing": "SOUTH"
+        },
+        "setting": 1,
+        "enabled": true,
+        "autoSetting": true,
+        "deleted": false,
+        "left": 0,
+        "center": 0,
+        "right": 0,
+        "createdAt": 1789302069026,
+        "updatedAt": 1789302069026
+      }
+    ],
+    "sessions": [
+      {
+        "session_id": "078d0d75-5cc9-4666-a1b3-450e82603945",
+        "player_uuid": "2b9a0e28-4a8f-3fe1-a65b-c41ad05e8077",
+        "machine_id": 1,
+        "source_business_period_id": "a1567f1f-3a04-4f2b-bddb-ab9dade9b957",
+        "game_state": "SEATED_READY",
+        "lifecycle": "ACTIVE",
+        "credit": 0,
+        "held_medals": 0,
+        "notice_state": "NONE",
+        "lamp_on": 0,
+        "bonus_payout_count": 0,
+        "current_bet": 0,
+        "pay_display": 0,
+        "display_left_stop": 0,
+        "display_center_stop": 0,
+        "display_right_stop": 0,
+        "stopped_mask": 0,
+        "phase_left": 0.0,
+        "phase_center": 0.0,
+        "phase_right": 0.0,
+        "last_client_sequence": 0,
+        "last_activity": 1789302069950
+      }
+    ],
+    "commands": [
+      {
+        "player": "PiriRuntimeTest",
+        "command": "/piri machine create",
+        "rayTarget": "STONE_BUTTON:0"
+      }
+    ],
+    "clicks": [
+      {
+        "player": "PiriRuntimeTest",
+        "x": 0,
+        "action": "RIGHT_CLICK_BLOCK",
+        "denied": true
+      }
+    ],
+    "phase04": {
+      "completed": 0,
+      "rounds": [],
+      "startup": {
+        "counts": {
+          "BIG_ENTRY": 10,
+          "MISS": 5250,
+          "CHERRY": 1514,
+          "REPLAY": 525,
+          "PIERO": 20,
+          "REG_ENTRY": 10,
+          "PREMIUM_B": 782,
+          "BELL": 50,
+          "GRAPE": 750
+        },
+        "allSequences": 500094,
+        "premiumFSecondChecks": 7938,
+        "premiumFSequences": 166698
+      }
+    },
+    "inbound": [],
+    "fixtures": [],
+    "fixtureCompleted": 0,
+    "buttons": [
+      {
+        "x": 0,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 2,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 3,
+        "type": "STONE_BUTTON",
+        "powered": false
+      }
+    ]
+  },
+  "clients": {
+    "phase04-reels": {
+      "completed": 4,
+      "connected": true,
+      "handshake": true,
+      "failure": null,
+      "packets": [
+        {
+          "type": "HELLO_ACK",
+          "payload": {
+            "protocol": 1,
+            "serverVersion": "1.0.0"
+          }
+        },
+        {
+          "type": "OPEN_MACHINE",
+          "payload": {
+            "sessionId": "078d0d75-5cc9-4666-a1b3-450e82603945",
+            "machineId": 1,
+            "expectedNextClientSequence": 1
+          }
+        },
+        {
+          "type": "PUBLIC_STATE",
+          "payload": {
+            "sessionId": "078d0d75-5cc9-4666-a1b3-450e82603945",
+            "machineId": 1,
+            "expectedNextClientSequence": 1,
+            "gameState": "SEATED_READY",
+            "lifecycle": "ACTIVE",
+            "credit": 0,
+            "heldMedals": 0,
+            "bet": 0,
+            "pay": 0,
+            "bonusCount": 0,
+            "lampOn": false,
+            "displayStops": {
+              "left": 0,
+              "center": 0,
+              "right": 0
+            },
+            "stoppedMask": 0
+          }
+        }
+      ],
+      "messages": [
+        "PiriRuntimeTest joined the game",
+        "MACHINE_CREATED 1"
+      ],
+      "actions": [
+        {
+          "id": 1,
+          "kind": "aim",
+          "x": 0
+        },
+        {
+          "id": 2,
+          "kind": "command",
+          "text": "piri machine create"
+        },
+        {
+          "id": 3,
+          "kind": "aim",
+          "x": 0
+        },
+        {
+          "id": 4,
+          "kind": "click",
+          "x": 0
+        }
+      ],
+      "motionSpin": null,
+      "motionTrace": [],
+      "productionSession": "078d0d75-5cc9-4666-a1b3-450e82603945",
+      "screen": "SlotScreen",
+      "hudHidden": true,
+      "cursorLocked": false,
+      "hudLeaks": 0,
+      "hudWorldCalls": 176,
+      "width": 960,
+      "height": 540,
+      "publicState": {
+        "sessionId": "078d0d75-5cc9-4666-a1b3-450e82603945",
+        "machineId": 1,
+        "expectedNextClientSequence": 1,
+        "gameState": "SEATED_READY",
+        "lifecycle": "ACTIVE",
+        "credit": 0,
+        "heldMedals": 0,
+        "bet": 0,
+        "pay": 0,
+        "bonusCount": 0,
+        "lampOn": false,
+        "displayStops": {
+          "left": 0,
+          "center": 0,
+          "right": 0
+        },
+        "stoppedMask": 0
+      },
+      "displayPhases": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "stopEnabled": true,
+      "sounds": {
+        "notice": {
+          "registered": true,
+          "available": false
+        },
+        "notice_strong": {
+          "registered": true,
+          "available": false
+        },
+        "tenpai": {
+          "registered": true,
+          "available": false
+        },
+        "bet": {
+          "registered": true,
+          "available": false
+        },
+        "lever": {
+          "registered": true,
+          "available": false
+        },
+        "stop": {
+          "registered": true,
+          "available": false
+        },
+        "payout": {
+          "registered": true,
+          "available": false
+        },
+        "error": {
+          "registered": true,
+          "available": false
+        },
+        "bonus_start": {
+          "registered": true,
+          "available": false
+        },
+        "bonus_end": {
+          "registered": true,
+          "available": false
+        }
+      },
+      "position": "(0.5, 65.0, 3.5)",
+      "yaw": -180.0,
+      "pitch": 2.021365
+    }
+  }
+}

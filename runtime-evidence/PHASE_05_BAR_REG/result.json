@@ -1,0 +1,231 @@
+{
+  "startedAt": "2026-09-14T00:59:19.484106+00:00",
+  "run": "20260914T005919Z",
+  "passed": true,
+  "versions": {
+    "minecraft": "1.21",
+    "paper": "1.21-130",
+    "fabricLoader": "0.16.14",
+    "fabricApi": "0.102.0+1.21",
+    "yarn": "1.21+build.9",
+    "java": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE"
+  },
+  "buildHashes": {
+    "common": "6fb82ca6eff8b196e5bbe78b05773f25da4f18db832b935c0153119ec96b582a",
+    "paper": "6262e2ae966b28ed7c54efb9eaeeed4f7d9fb44ae8dd3fc8eb9cf07edc53e2db",
+    "fabric": "1704d04bc9e1a285e2b8d7046ea3eb817a990964fea0749891d53ec9a17f9bfe"
+  },
+  "helperHashes": {
+    "paper": "aeea16ac7118eef50598df7e063f72669e14807325745517af8177d5ff59f4fc",
+    "client": "0cce24f2d938447b16eb3f9aca3e0873812f652f198a52faacdbd63eabbf274f"
+  },
+  "assertions": [
+    {
+      "name": "real REG draw stays private before BAR stops",
+      "passed": true,
+      "at": "2026-09-14T01:00:27.364241+00:00",
+      "evidence": "attempts\\20260914T005919Z\\private-draw-snapshot.json"
+    },
+    {
+      "name": "server chose timed BAR candidate reel 2",
+      "passed": true,
+      "at": "2026-09-14T01:00:28.404687+00:00",
+      "evidence": {
+        "spinId": "3d970dd4-b21d-4faf-9394-baea28b2a9a9",
+        "reel": "RIGHT",
+        "pressedIndex": 5,
+        "stopIndex": 5,
+        "slip": 0,
+        "durationMs": 80
+      }
+    },
+    {
+      "name": "server chose timed BAR candidate reel 0",
+      "passed": true,
+      "at": "2026-09-14T01:00:34.100081+00:00",
+      "evidence": {
+        "spinId": "3d970dd4-b21d-4faf-9394-baea28b2a9a9",
+        "reel": "LEFT",
+        "pressedIndex": 10,
+        "stopIndex": 10,
+        "slip": 0,
+        "durationMs": 80
+      }
+    },
+    {
+      "name": "server chose timed BAR candidate reel 1",
+      "passed": true,
+      "at": "2026-09-14T01:00:38.505941+00:00",
+      "evidence": {
+        "spinId": "3d970dd4-b21d-4faf-9394-baea28b2a9a9",
+        "reel": "CENTER",
+        "pressedIndex": 12,
+        "stopIndex": 12,
+        "slip": 0,
+        "durationMs": 80
+      }
+    },
+    {
+      "name": "BAR confirmation pays zero, lights Piri Chance and hides REG",
+      "passed": true,
+      "at": "2026-09-14T01:00:38.772591+00:00",
+      "evidence": "attempts\\20260914T005919Z\\bar-confirmation-snapshot.json"
+    },
+    {
+      "name": "actual screenshot contains all three reel symbol columns: bar-confirmation-reg",
+      "passed": true,
+      "at": "2026-09-14T01:00:39.603328+00:00",
+      "evidence": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_05_BAR_REG\\work\\client-phase05-game\\screenshots\\phase05-bar-confirmation-reg.png"
+    },
+    {
+      "name": "all BAR client packets keep bonus type private",
+      "passed": true,
+      "at": "2026-09-14T01:00:39.613305+00:00",
+      "evidence": "attempts\\20260914T005919Z\\no-leaks-snapshot.json"
+    },
+    {
+      "name": "BAR test input uses only identity and sequence",
+      "passed": true,
+      "at": "2026-09-14T01:00:39.617819+00:00"
+    },
+    {
+      "name": "BAR confirmation preserves pending REG rights on close",
+      "passed": true,
+      "at": "2026-09-14T01:00:40.148196+00:00",
+      "evidence": "attempts\\20260914T005919Z\\close-snapshot.json"
+    }
+  ],
+  "commands": [
+    {
+      "server": "bar-reg",
+      "command": [
+        "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE",
+        "-Xms512M",
+        "-Xmx1536M",
+        "-Dfile.encoding=UTF-8",
+        "-Dpiri.runtime.phase=phase05",
+        "-Dpiri.runtime.serverResult=C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_05_BAR_REG\\attempts\\20260914T005919Z\\bar-reg\\server-result.json",
+        "-jar",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\downloads\\paper-1.21-130.jar",
+        "nogui"
+      ],
+      "cwd": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_05_BAR_REG\\work\\server-20260914T005919Z"
+    },
+    {
+      "client": "phase05-game",
+      "command": [
+        "cmd.exe",
+        "/d",
+        "/c",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\gradlew.bat",
+        "-PruntimeAcceptance=true",
+        "-PruntimeScenario=phase05-game",
+        "-PruntimeRun=20260914T005919Z",
+        "-PruntimeEvidencePhase=PHASE_05_BAR_REG",
+        ":runtime-test-client:runClient",
+        "--console=plain"
+      ],
+      "cwd": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED"
+    },
+    {
+      "client": "phase05-game",
+      "id": 1,
+      "kind": "aim",
+      "x": 0
+    },
+    {
+      "client": "phase05-game",
+      "id": 2,
+      "kind": "command",
+      "text": "piri machine create"
+    },
+    {
+      "client": "phase05-game",
+      "id": 3,
+      "kind": "aim",
+      "x": 0
+    },
+    {
+      "client": "phase05-game",
+      "id": 4,
+      "kind": "click",
+      "x": 0
+    },
+    {
+      "client": "phase05-game",
+      "id": 5,
+      "kind": "aim",
+      "x": 0
+    },
+    {
+      "client": "phase05-game",
+      "id": 6,
+      "kind": "click",
+      "x": 0
+    },
+    {
+      "client": "phase05-game",
+      "id": 7,
+      "kind": "tap",
+      "key": 32
+    },
+    {
+      "client": "phase05-game",
+      "id": 8,
+      "kind": "tap",
+      "key": 32
+    },
+    {
+      "client": "phase05-game",
+      "id": 9,
+      "kind": "tap_at_phase",
+      "reel": 2,
+      "key": 262,
+      "phase": 5.72
+    },
+    {
+      "client": "phase05-game",
+      "id": 10,
+      "kind": "tap_at_phase",
+      "reel": 0,
+      "key": 263,
+      "phase": 10.72
+    },
+    {
+      "client": "phase05-game",
+      "id": 11,
+      "kind": "tap_at_phase",
+      "reel": 1,
+      "key": 264,
+      "phase": 12.72
+    },
+    {
+      "client": "phase05-game",
+      "id": 12,
+      "kind": "capture",
+      "label": "bar-confirmation-reg"
+    },
+    {
+      "client": "phase05-game",
+      "id": 13,
+      "kind": "tap",
+      "key": 256
+    },
+    {
+      "client": "phase05-game",
+      "id": 14,
+      "kind": "exit"
+    }
+  ],
+  "exits": [
+    {
+      "client": "phase05-game",
+      "exit": 0
+    },
+    {
+      "server": 0
+    }
+  ],
+  "uncaughtExceptions": [],
+  "finishedAt": "2026-09-14T01:00:42.791240+00:00"
+}

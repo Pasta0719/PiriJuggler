@@ -1,0 +1,11 @@
+{
+  "role": "PREMIUM_B",
+  "premiumF": false,
+  "profile": "NORMAL",
+  "order": [
+    "CENTER",
+    "RIGHT",
+    "LEFT"
+  ],
+  "label": "premium_b-crl"
+}

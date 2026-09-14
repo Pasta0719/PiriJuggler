@@ -1,0 +1,146 @@
+protocol_version: 1
+
+economy:
+  vault_per_medal: 20
+
+game:
+  idle_timeout_seconds: 180
+  disconnect_grace_seconds: 60
+
+sound:
+  notice_volume: 1.0
+  notice_strong_volume: 1.0
+  tenpai_volume: 0.9
+  bet_volume: 0.65
+  lever_volume: 0.75
+  stop_volume: 0.65
+  payout_volume: 0.70
+  error_volume: 0.70
+  bonus_start_volume: 0.90
+  bonus_end_volume: 0.90
+
+premium:
+  big_chance_weight: 50000
+  denominator: 1000000
+  weights:
+    reverse: 1
+    middle_cherry: 1
+    sound_first_peka: 1
+    strong_after_peka: 1
+    five_notice_blink: 1
+    fake_tenpai: 1
+
+prizes:
+  small: {medal_cost: 50, vault_value: 1000}
+  medium: {medal_cost: 200, vault_value: 4000}
+  large: {medal_cost: 450, vault_value: 9000}
+
+events:
+  timezone: "Asia/Tokyo"
+  default_profile: normal
+  weekday:
+    MONDAY: normal
+    TUESDAY: normal
+    WEDNESDAY: normal
+    THURSDAY: normal
+    FRIDAY: normal
+    SATURDAY: normal
+    SUNDAY: normal
+  special_dates: {}
+  profiles:
+    normal:
+      distribution: {1: 55, 2: 25, 3: 12, 4: 5, 5: 2, 6: 1}
+      min_setting_6: 0
+      min_setting_5_plus: 0
+      pattern: {type: NONE}
+    light:
+      distribution: {1: 35, 2: 25, 3: 18, 4: 12, 5: 7, 6: 3}
+      min_setting_6: 0
+      min_setting_5_plus: 1
+      pattern: {type: NONE}
+    strong:
+      distribution: {1: 15, 2: 20, 3: 20, 4: 20, 5: 15, 6: 10}
+      min_setting_6: 1
+      min_setting_5_plus: 2
+      pattern: {type: NONE}
+
+probabilities:
+  settings:
+    '1':
+      replay: 0
+      grape: 0
+      bell: 0
+      cherry: 0
+      piero: 0
+      big: 0
+      reg: 1000000000
+      cherry_big: 0
+      cherry_reg: 0
+      piero_big: 0
+      piero_reg: 0
+      miss: 0
+    '2':
+      replay: 0
+      grape: 0
+      bell: 0
+      cherry: 0
+      piero: 0
+      big: 0
+      reg: 1000000000
+      cherry_big: 0
+      cherry_reg: 0
+      piero_big: 0
+      piero_reg: 0
+      miss: 0
+    '3':
+      replay: 0
+      grape: 0
+      bell: 0
+      cherry: 0
+      piero: 0
+      big: 0
+      reg: 1000000000
+      cherry_big: 0
+      cherry_reg: 0
+      piero_big: 0
+      piero_reg: 0
+      miss: 0
+    '4':
+      replay: 0
+      grape: 0
+      bell: 0
+      cherry: 0
+      piero: 0
+      big: 0
+      reg: 1000000000
+      cherry_big: 0
+      cherry_reg: 0
+      piero_big: 0
+      piero_reg: 0
+      miss: 0
+    '5':
+      replay: 0
+      grape: 0
+      bell: 0
+      cherry: 0
+      piero: 0
+      big: 0
+      reg: 1000000000
+      cherry_big: 0
+      cherry_reg: 0
+      piero_big: 0
+      piero_reg: 0
+      miss: 0
+    '6':
+      replay: 0
+      grape: 0
+      bell: 0
+      cherry: 0
+      piero: 0
+      big: 0
+      reg: 1000000000
+      cherry_big: 0
+      cherry_reg: 0
+      piero_big: 0
+      piero_reg: 0
+      miss: 0

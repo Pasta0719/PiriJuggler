@@ -1,0 +1,51 @@
+{
+  "server": {
+    "serverVersion": "1.21-130-b1b5d4c (MC: 1.21)",
+    "enabled": true,
+    "ready": true,
+    "period": "3698459e-96f3-4cb9-a855-fe6c2d92b5b5",
+    "machines": [],
+    "sessions": [],
+    "commands": [],
+    "clicks": [],
+    "buttons": [
+      {
+        "x": 0,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 2,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 3,
+        "type": "STONE_BUTTON",
+        "powered": false
+      }
+    ]
+  },
+  "clients": {
+    "phase02-create": {
+      "completed": 0,
+      "connected": true,
+      "handshake": true,
+      "failure": null,
+      "packets": [
+        {
+          "type": "HELLO_ACK",
+          "payload": {
+            "protocol": 1,
+            "serverVersion": "1.0.0"
+          }
+        }
+      ],
+      "messages": [
+        "PiriRuntimeTest joined the game"
+      ],
+      "actions": [],
+      "productionSession": null
+    }
+  }
+}

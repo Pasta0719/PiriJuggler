@@ -1,0 +1,13 @@
+package jp.pirijuggler.fabric.mixin;
+import jp.pirijuggler.fabric.ui.SlotUi;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.render.RenderTickCounter;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+@Mixin(InGameHud.class)
+public abstract class SlotHudMixin {
+    @Inject(method="render",at=@At("HEAD"),cancellable=true)
+    private void piri$hideHud(DrawContext context,RenderTickCounter tickCounter,CallbackInfo ci){if(SlotUi.hidesHud())ci.cancel();}
+}

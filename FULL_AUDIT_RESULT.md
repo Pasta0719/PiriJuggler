@@ -1,0 +1,106 @@
+# FULL_AUDIT_RESULT.md
+
+- Checks: 83
+- PASS: 83
+- FAIL: 0
+
+- [PASS] SPEC sections are sequential 1..138 — 138 sections
+- [PASS] SPEC has no TODO/FIXME/TBD
+- [PASS] No stale term: source_business_day
+- [PASS] No stale term: active_session
+- [PASS] No stale term: OPEN_REQUEST=
+- [PASS] No stale term: ADMIN_OPEN=
+- [PASS] No stale term: ThreadLocalRandom
+- [PASS] No stale term: LTTBまたは
+- [PASS] No stale term: またはPython
+- [PASS] Exactly 11 phase files — 11
+- [PASS] Phase 01 references valid SPEC sections — [1, 2, 84, 85, 86, 87, 88, 94, 103, 104, 113, 114, 115, 125, 126, 130, 137]
+- [PASS] Phase 01 requires runtime acceptance
+- [PASS] Phase 02 references valid SPEC sections — [42, 63, 64, 65, 66, 67, 68, 70, 71, 78, 79, 84, 94, 95, 97, 127, 135, 137]
+- [PASS] Phase 02 requires runtime acceptance
+- [PASS] Phase 03 references valid SPEC sections — [3, 23, 32, 51, 52, 53, 54, 55, 56, 57, 84, 85, 86, 87, 89, 90, 91, 92, 109, 112, 119, 120, 121, 122, 129, 138, 137]
+- [PASS] Phase 03 requires runtime acceptance
+- [PASS] Phase 04 references valid SPEC sections — [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 30, 31, 34, 90, 106, 132, 137]
+- [PASS] Phase 04 requires runtime acceptance
+- [PASS] Phase 05 references valid SPEC sections — [16, 17, 18, 19, 20, 21, 22, 33, 40, 41, 51, 57, 59, 61, 88, 100, 103, 104, 105, 106, 113, 114, 128, 131, 132, 137]
+- [PASS] Phase 05 requires runtime acceptance
+- [PASS] Phase 06 references valid SPEC sections — [23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 35, 36, 37, 38, 39, 89, 90, 91, 101, 104, 106, 128, 129, 131, 137]
+- [PASS] Phase 06 requires runtime acceptance
+- [PASS] Phase 07 references valid SPEC sections — [40, 41, 42, 43, 44, 45, 46, 47, 51, 83, 94, 95, 96, 98, 103, 106, 108, 113, 114, 115, 127, 133, 134, 136, 137]
+- [PASS] Phase 07 requires runtime acceptance
+- [PASS] Phase 08 references valid SPEC sections — [48, 49, 50, 94, 95, 96, 97, 106, 108, 113, 114, 115, 134, 136, 137]
+- [PASS] Phase 08 requires runtime acceptance
+- [PASS] Phase 09 references valid SPEC sections — [58, 59, 60, 61, 62, 70, 71, 93, 99, 100, 106, 111, 122, 123, 133, 137]
+- [PASS] Phase 09 requires runtime acceptance
+- [PASS] Phase 10 references valid SPEC sections — [67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 86, 87, 94, 97, 100, 102, 103, 104, 106, 135, 137]
+- [PASS] Phase 10 requires runtime acceptance
+- [PASS] Phase 11 references valid SPEC sections — [42, 45, 70, 71, 78, 79, 80, 81, 82, 83, 88, 94, 95, 98, 99, 100, 101, 106, 107, 108, 113, 114, 115, 116, 117, 118, 126, 127, 130, 133, 134, 135, 136, 137]
+- [PASS] Phase 11 requires runtime acceptance
+- [PASS] Runtime acceptance has Phase01
+- [PASS] Runtime acceptance has Phase02
+- [PASS] Runtime acceptance has Phase03
+- [PASS] Runtime acceptance has Phase04
+- [PASS] Runtime acceptance has Phase05
+- [PASS] Runtime acceptance has Phase06
+- [PASS] Runtime acceptance has Phase07
+- [PASS] Runtime acceptance has Phase08
+- [PASS] Runtime acceptance has Phase09
+- [PASS] Runtime acceptance has Phase10
+- [PASS] Runtime acceptance has Phase11
+- [PASS] Runtime acceptance forbids COMPLETE if actual runtime unavailable
+- [PASS] Symbol asset size fixed 256x256
+- [PASS] Piri lamp fixed 512x256
+- [PASS] Wallet excludes credit/held
+- [PASS] Suspend keeps session assets
+- [PASS] GameState does not contain SUSPENDED
+- [PASS] Lifecycle explicitly separates suspended modes
+- [PASS] Unresolved state cannot unlock before settlement
+- [PASS] Business period uses UUID
+- [PASS] Same-day restart gets distinct period
+- [PASS] Packet numeric IDs have no conflicting names — {}
+- [PASS] Admin/game sequences separated
+- [PASS] All reel arrays length 21 — 21,21,21
+- [PASS] Reel arrays match locked transcription
+- [PASS] Strict candidate counts match locked values — {'GRAPE': 750, 'BELL': 50, 'PIERO': 20, 'REPLAY': 525, 'CHERRY': 1514, 'MISS': 5250, 'BIG_ENTRY': 10, 'REG_ENTRY': 10}
+- [PASS] Setting 1 role weights sum 1e9 — 1000000000
+- [PASS] Setting 2 role weights sum 1e9 — 1000000000
+- [PASS] Setting 3 role weights sum 1e9 — 1000000000
+- [PASS] Setting 4 role weights sum 1e9 — 1000000000
+- [PASS] Setting 5 role weights sum 1e9 — 1000000000
+- [PASS] Setting 6 role weights sum 1e9 — 1000000000
+- [PASS] Setting 1 theoretical payout matches target — 97.800002810%
+- [PASS] Setting 2 theoretical payout matches target — 99.400001776%
+- [PASS] Setting 3 theoretical payout matches target — 101.000002991%
+- [PASS] Setting 4 theoretical payout matches target — 103.400006022%
+- [PASS] Setting 5 theoretical payout matches target — 105.999988254%
+- [PASS] Setting 6 theoretical payout matches target — 111.400000987%
+- [PASS] Event profile normal distribution sums100 — [55, 25, 12, 5, 2, 1]
+- [PASS] Event profile light distribution sums100 — [35, 25, 18, 12, 7, 3]
+- [PASS] Event profile strong distribution sums100 — [15, 20, 20, 20, 15, 10]
+- [PASS] Schema table names unique — ['metadata', 'business_periods', 'machines', 'machine_period_stats', 'bonus_history', 'graph_points', 'setting_history', 'player_wallet', 'player_sessions', 'cashout_transactions', 'medal_tokens', 'medal_inventory_transactions', 'economy_transactions']
+- [PASS] Schema version 4 declared
+- [PASS] Migration preserves completed Phase1 code
+- [PASS] Migration retrofits Phase1 runtime acceptance
+- [PASS] Premium F exact second-stop filter defined
+- [PASS] Single-medal right-click split edge is defined
+- [PASS] Medal inventory crash journal schema exists
+- [PASS] Medal hard-crash reconciliation is defined
+- [PASS] Phase02 runtime occupancy uses actual second Fabric client
+- [PASS] Phase07 runtime tests token journal recovery
+
+## Exhaustive reel solver verification
+
+The fixed reel dataset was additionally exhaustively checked by script for all 6 stop orders and all pressed-index branches represented by the deterministic partial-stop solver.
+
+- [PASS] GRAPE reachable
+- [PASS] BELL reachable
+- [PASS] PIERO reachable
+- [PASS] REPLAY reachable
+- [PASS] CHERRY reachable
+- [PASS] MISS reachable
+- [PASS] BIG_ENTRY reachable
+- [PASS] REG_ENTRY reachable
+- [PASS] PREMIUM_B reachable
+- [PASS] Premium-F second-stop no-SEVEN-tenpai feasibility for BIG/MISS base
+- [PASS] Premium-F second-stop no-SEVEN-tenpai feasibility for CHERRY_BIG/CHERRY base
+- [PASS] Premium-F second-stop no-SEVEN-tenpai feasibility for PIERO_BIG/PIERO base

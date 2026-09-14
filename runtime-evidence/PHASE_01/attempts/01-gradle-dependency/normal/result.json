@@ -1,0 +1,30 @@
+{
+  "name": "normal",
+  "serverCommand": [
+    "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE",
+    "-Xms512M",
+    "-Xmx1536M",
+    "-Dfile.encoding=UTF-8",
+    "-Dpiri.runtime.serverResult=C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\normal\\server-result.json",
+    "-jar",
+    "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\downloads\\paper-1.21-130.jar",
+    "nogui"
+  ],
+  "clientCommand": [
+    "cmd.exe",
+    "/d",
+    "/c",
+    "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\gradlew.bat",
+    "-PruntimeAcceptance=true",
+    "-PruntimeScenario=normal",
+    ":runtime-test-client:runClient",
+    "--console=plain"
+  ],
+  "serverWorkingDirectory": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\server-normal",
+  "clientWorkingDirectory": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "passed": false,
+  "clientExitCode": 1,
+  "failure": "Fabric exited 1: \n> Configure project :fabric\nFabric Loom: 1.10.5\n\n> Configure project :runtime-test-client\nFabric Loom: 1.10.5\n\n> Task :common:compileJava UP-TO-DATE\n> Task :fabric:compileJava UP-TO-DATE\n> Task :fabric:processResources UP-TO-DATE\n> Task :fabric:classes UP-TO-DATE\n> Task :paper:compileJava UP-TO-DATE\n> Task :fabric:compileTestJava UP-TO-DATE\n> Task :common:processResources NO-SOURCE\n> Task :common:classes UP-TO-DATE\n> Task :fabric:jar UP-TO-DATE\n> Task :fabric:processIncludeJars UP-TO-DATE\n> Task :runtime-test-client:compileJava UP-TO-DATE\n> Task :runtime-test-client:processResources UP-TO-DATE\n> Task :runtime-test-client:classes UP-TO-DATE\n> Task :runtime-test-client:generateLog4jConfig\n> Task :runtime-test-client:generateRemapClasspath FAILED\n> Task :fabric:remapJar\n\n[Incubating] Problems report is available at: file:///C:/Users/PC_user/Documents/PiriJuggler_Codex_Workflow_v4_AUDITED/build/reports/problems/problems-report.html\n\nFAILURE: Build failed with an exception.\n\n* What went wrong:\nA problem was found with the configuration of task ':runtime-test-client:generateRemapClasspath' (type 'GenerateRemapClasspathTask').\n  - Gradle detected a problem with the following location: 'C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\fabric\\build\\libs\\piri-juggler-fabric-1.0.0.jar'.\n    \n    Reason: Task ':runtime-test-client:generateRemapClasspath' uses this output of task ':fabric:remapJar' without declaring an explicit or implicit dependency. This can lead to incorrect results being produced, depending on what order the tasks are executed.\n    \n    Possible solutions:\n      1. Declare task ':fabric:remapJar' as an input of ':runtime-test-client:generateRemapClasspath'.\n      2. Declare an explicit dependency on ':fabric:remapJar' from ':runtime-test-client:generateRemapClasspath' using Task#dependsOn.\n      3. Declare an explicit dependency on ':fabric:remapJar' from ':runtime-test-client:generateRemapClasspath' using Task#mustRunAfter.\n    \n    For more information, please refer to https://docs.gradle.org/8.14.3/userguide/validation_problems.html#implicit_dependency in the Gradle documentation.\n\n* Try:\n> Declare task ':fabric:remapJar' as an input of ':runtime-test-client:generateRemapClasspath'\n> Declare an explicit dependency on ':fabric:remapJar' from ':runtime-test-client:generateRemapClasspath' using Task#dependsOn\n> Declare an explicit dependency on ':fabric:remapJar' from ':runtime-test-client:generateRemapClasspath' using Task#mustRunAfter\n> Run with --scan to get full insights.\n\nBUILD FAILED in 26s\n12 actionable tasks: 3 executed, 9 up-to-date\n",
+  "serverExitCode": 0,
+  "durationSeconds": 59.52
+}

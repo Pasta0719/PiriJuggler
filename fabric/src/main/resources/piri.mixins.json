@@ -1,0 +1,1 @@
+{"required":true,"package":"jp.pirijuggler.fabric.mixin","compatibilityLevel":"JAVA_21","client":["SlotHudMixin","SlotToastMixin"],"injectors":{"defaultRequire":1}}

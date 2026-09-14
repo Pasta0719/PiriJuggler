@@ -1,0 +1,29 @@
+
+> Configure project :fabric
+Fabric Loom: 1.10.5
+
+> Configure project :runtime-test-client
+Fabric Loom: 1.10.5
+
+> Task :common:compileJava UP-TO-DATE
+> Task :common:processResources NO-SOURCE
+> Task :common:classes UP-TO-DATE
+> Task :fabric:compileJava UP-TO-DATE
+> Task :fabric:processResources UP-TO-DATE
+> Task :fabric:classes UP-TO-DATE
+> Task :fabric:jar UP-TO-DATE
+> Task :runtime-test-client:compileJava
+> Task :runtime-test-client:processResources
+> Task :runtime-test-client:classes
+> Task :runtime-test-client:compileTestJava NO-SOURCE
+> Task :runtime-test-client:jar
+> Task :runtime-test-client:processIncludeJars UP-TO-DATE
+> Task :paper:compileJava UP-TO-DATE
+> Task :runtime-test-paper:compileJava UP-TO-DATE
+> Task :runtime-test-paper:processResources UP-TO-DATE
+> Task :runtime-test-paper:classes UP-TO-DATE
+> Task :runtime-test-paper:jar UP-TO-DATE
+> Task :runtime-test-client:remapJar
+
+BUILD SUCCESSFUL in 29s
+13 actionable tasks: 4 executed, 9 up-to-date

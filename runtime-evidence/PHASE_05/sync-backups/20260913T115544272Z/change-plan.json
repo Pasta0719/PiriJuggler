@@ -1,0 +1,127 @@
+{
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "stage": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\phase05-v4",
+  "authorization": "User explicitly approved the bonus public-state mapping and instructed resuming Phase05 only. Individual before hashes are rechecked and existing files backed up; Phase06 remains NOT_STARTED.",
+  "changes": [
+    {
+      "path": "docs/extract_spec_lock.py",
+      "before": "0aae0315684ccd098aba5ab1c567771c07f8df970c997f9b52149dfd5207bab5",
+      "after": "83fd5fb4727b1a7d3ba58049a13557927695b7fb3ee5068e327e8da09b62131a"
+    },
+    {
+      "path": "docs/PHASE_05_GAME_LOGIC.md",
+      "before": null,
+      "after": "a68f51ed317f343ef1b64acc9fadee6247d7871585fb96f9651e1837f898ca41"
+    },
+    {
+      "path": "docs/spec-lock.json",
+      "before": "c18d2bc182a99bd5bf6e88fd8e2acd5096878a1e1be4352f92e872e844b17b69",
+      "after": "d7116a056e1c1e98c0988285654ad2830d42c8a544ecc7be621701223bd5d82d"
+    },
+    {
+      "path": "docs/verify_phase05_artifacts.py",
+      "before": null,
+      "after": "e07b6566bc858bb9e257eba460afdc92991f865a5bce5fd9398b3ed3b91df1cf"
+    },
+    {
+      "path": "runtime-test-support/run_phase01.py",
+      "before": "7ad2c540a406b2e4c176f79085c7ec3a8e15ce19fb6c74d9430c869fdd8b91ff",
+      "after": "042abc6e29646a1679e12ce30399442ad773302768f5594528a8dac81294d74e"
+    },
+    {
+      "path": "runtime-test-support/run_phase05.py",
+      "before": null,
+      "after": "a50bdf82b09da67d656a82b62506848b83c441b0084095ea392871209d5eb22d"
+    },
+    {
+      "path": "common/src/main/java/jp/pirijuggler/common/protocol/PublicGameState.java",
+      "before": null,
+      "after": "0736285aa1839ce4d65f86924b2e2c08bca71121bdf0f127411897836a7fe1a4"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/database/GameStore.java",
+      "before": null,
+      "after": "303361397bdb288fe8a172cb202563fdba124cfa87f24be94ee5bf3170177736"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/database/PiriDatabase.java",
+      "before": "9246dacde56956f45ead289408db25e2ed4df6750e5850ff27d9d8dcd07e134d",
+      "after": "9d417a83aeaab2cb496b68be2d64283c5dbae64f8f9f8ef4f3c9f99bef1112f6"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/game/GameRules.java",
+      "before": null,
+      "after": "f3f660e6e3423abc7bab87006db448a7a46daef2c2a5e0c0d60c90239ce1aab8"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/game/NormalGame.java",
+      "before": null,
+      "after": "225b7e7df14f3c54e278237d3d50c2bfbd09d802521e0ab600678f5dd69212c8"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/game/RandomStreams.java",
+      "before": null,
+      "after": "7a833cadfbd09530929bcdae6522b4fd5e3d0e549f5e44ff5c4af7264f20146f"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/game/RoleWeights.java",
+      "before": null,
+      "after": "27fe2037c56ff8a69abc496f9603849a0302a562b92b3dd69cce77cef1b428dd"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/game/Simulator.java",
+      "before": null,
+      "after": "f55a9eaf7a8d7dcd9f6faf1365b5f4faf241fb47e4bef0a596641eab86007018"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/machine/MachineService.java",
+      "before": "36a3be112eb7865d849217ad67ef8bf358d9119ab178652f8cec25469e43346b",
+      "after": "f0d8b368983ec04ced488b8f7c6ce3d08dbfdece991800ee6a7c787c049a2cf1"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/session/Session.java",
+      "before": "8969a158db89e88709e499c2f2b514a5e130de5ed397802e931d169dba3eb6ab",
+      "after": "c0608009881a85096ff24aed0c45e4b6ef123aaf56e628b47180faf3cd8f365a"
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/game/GameFixture.java",
+      "before": null,
+      "after": "7b27a672b64837557c11ed7e2d675e1ba6827004398a0381c3a16280dbd05f84"
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/game/NormalGameTest.java",
+      "before": null,
+      "after": "fcfe1a1a5ea83b51cc20a7b21be40af2240b36b754be9c506795d138ac5b2e50"
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/game/RandomSimulatorTest.java",
+      "before": null,
+      "after": "00d6282eaad79ceb78e6fa05d69925bc1e52060e9bddf4c6c4253091cf4c33ea"
+    },
+    {
+      "path": "runtime-test-support/client/build.gradle.kts",
+      "before": "9dabffe301e94ff87d38c98d87970bba06507bfd4300511509e46477207f9044",
+      "after": "b7ece3ea98479edc04730f017340f655b2eab995f3344346073dd2724b8c8a0c"
+    },
+    {
+      "path": "runtime-test-support/client/src/main/java/jp/pirijuggler/runtime/client/Phase02Probe.java",
+      "before": "7f70acb8ec0e8b6e61db2fe7d5118262e96e2615cbe023d84ac85d2dc7fa44af",
+      "after": "449091eb49425f2b7a9efd5f3229ce4dc3f289337899256aa302d20635d32854"
+    },
+    {
+      "path": "runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/Phase02Observer.java",
+      "before": "4380bbfbca047888135af877dccc997c9b390f846e2b2b9da691c2d8b0db646c",
+      "after": "4c0736fda0fae5f5242c844e6da9165d9a5449444e5aab356d6d18a215c94cd8"
+    },
+    {
+      "path": "runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/Phase05Fixture.java",
+      "before": null,
+      "after": "ba32531eccaad612faf8b7b76ba0c414def3b137c59a6d20576bfc7817c6db0d"
+    },
+    {
+      "path": "runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/RuntimeObserver.java",
+      "before": "f41d6a50206a99178e7160c35d72da803104d9ffba804ef89ebd03088a44fc69",
+      "after": "0d3f51f0f9a6745dc22a006146fc40021fc29c18e014b682a02127efbd796c21"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+Starting a Gradle Daemon, 1 busy and 1 incompatible and 1 stopped Daemons could not be reused, use --status for details
+
+> Configure project :fabric
+Fabric Loom: 1.10.5
+
+> Task :asset-tools:compileJava UP-TO-DATE
+> Task :asset-tools:processResources NO-SOURCE
+> Task :asset-tools:classes UP-TO-DATE
+> Task :asset-tools:compileTestJava UP-TO-DATE
+> Task :asset-tools:processTestResources UP-TO-DATE
+> Task :asset-tools:testClasses UP-TO-DATE
+> Task :asset-tools:test UP-TO-DATE
+> Task :common:compileJava UP-TO-DATE
+> Task :common:processResources NO-SOURCE
+> Task :common:classes UP-TO-DATE
+> Task :common:jar UP-TO-DATE
+> Task :common:compileTestJava UP-TO-DATE
+> Task :common:processTestResources NO-SOURCE
+> Task :common:testClasses UP-TO-DATE
+> Task :common:test UP-TO-DATE
+> Task :fabric:compileJava UP-TO-DATE
+> Task :fabric:processResources UP-TO-DATE
+> Task :fabric:classes UP-TO-DATE
+> Task :paper:compileJava UP-TO-DATE
+> Task :fabric:compileTestJava UP-TO-DATE
+> Task :fabric:processTestResources NO-SOURCE
+> Task :fabric:testClasses UP-TO-DATE
+> Task :paper:processResources UP-TO-DATE
+> Task :paper:classes UP-TO-DATE
+> Task :paper:jar UP-TO-DATE
+> Task :fabric:test UP-TO-DATE
+> Task :paper:compileTestJava
+> Task :paper:processTestResources NO-SOURCE
+> Task :paper:testClasses
+> Task :paper:test
+> Task :test
+
+BUILD SUCCESSFUL in 1m 17s
+17 actionable tasks: 2 executed, 15 up-to-date

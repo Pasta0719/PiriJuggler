@@ -1,0 +1,5 @@
+{
+  "id": 5,
+  "kind": "command",
+  "text": "piri machine create"
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "piri_runtime_acceptance",
+  "version": "1.0.0",
+  "name": "Piri Runtime Acceptance (test only)",
+  "environment": "client",
+  "entrypoints": { "client": ["jp.pirijuggler.runtime.client.RuntimeProbe"] },
+  "mixins": ["piri-runtime.mixins.json"],
+  "depends": {
+    "minecraft": "1.21",
+    "fabricloader": "0.16.14",
+    "fabric-api": "0.102.0+1.21",
+    "piri_juggler": "1.0.0"
+  }
+}

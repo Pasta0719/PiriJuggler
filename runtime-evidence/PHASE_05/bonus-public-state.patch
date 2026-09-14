@@ -1,0 +1,38 @@
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -702,6 +702,8 @@
+ REG_BETTED
+ REG_SPINNING
+ ```
++
++上記はサーバー内部とDB保存用のGameStateである。PUBLIC_STATE.gameStateの公開値は第92章の変換規則に従う。
+ 
+ `SUSPENDED`をGameStateへ入れてはいけない。中断すると元GameStateが失われるためである。
+ 
+@@ -3035,6 +3037,18 @@
+ ```
+ 
+ setting/internalRole/premium未告知情報を含めない。
++
++`gameState`は公開用状態文字列であり、内部GameStateは次のとおり変換して送る。
++
++| 内部GameState | PUBLIC_STATE.gameState |
++|---|---|
++| BONUS_PENDING_BIG / BONUS_PENDING_REG | BONUS_PENDING |
++| BONUS_ENTRY_BETTED_BIG / BONUS_ENTRY_BETTED_REG | BONUS_ENTRY_BETTED |
++| BONUS_ENTRY_SPINNING_BIG / BONUS_ENTRY_SPINNING_REG | BONUS_ENTRY_SPINNING |
++
++それ以外は内部GameState名と同じ文字列を送る。この変換は通信時だけ行い、内部GameState、DB保存値、遷移、BET額は変更しない。
++Fabricは公開値を表示・入力受付に使い、BIG/REG種類を推測して内部状態を補完しない。
++
+ 
+ ---
+ 
+@@ -3438,6 +3452,7 @@
+ # 101. bonus告知後の種類秘匿
+ 
+ Piri Chance点灯時点ではFabricへBIG/REG種類を送らない。
++PUBLIC_STATE.gameStateも第92章の公開値へ変換し、入賞前の状態名からBIG/REG種類を識別できないようにする。
+ 
+ ボーナス入賞ゲームのstop solverはserver内部bonusTypeに従う。
+ 

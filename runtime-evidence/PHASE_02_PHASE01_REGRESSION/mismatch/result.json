@@ -1,0 +1,60 @@
+{
+  "name": "mismatch",
+  "serverCommand": [
+    "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE",
+    "-Xms512M",
+    "-Xmx1536M",
+    "-Dfile.encoding=UTF-8",
+    "-Dpiri.runtime.serverResult=C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02_PHASE01_REGRESSION\\mismatch\\server-result.json",
+    "-jar",
+    "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\downloads\\paper-1.21-130.jar",
+    "nogui"
+  ],
+  "clientCommand": [
+    "cmd.exe",
+    "/d",
+    "/c",
+    "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\gradlew.bat",
+    "-PruntimeAcceptance=true",
+    "-PruntimeScenario=mismatch",
+    "-PruntimeEvidencePhase=PHASE_02_PHASE01_REGRESSION",
+    ":runtime-test-client:runClient",
+    "--console=plain"
+  ],
+  "serverWorkingDirectory": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02_PHASE01_REGRESSION\\work\\server-mismatch",
+  "clientWorkingDirectory": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "passed": true,
+  "clientExitCode": 0,
+  "server": {
+    "timestamp": "2026-09-12T14:19:58.052282500Z",
+    "serverVersion": "1.21-130-b1b5d4c (MC: 1.21)",
+    "minecraftVersion": "1.21",
+    "player": "PiriRuntimeTest",
+    "remoteAddress": "127.0.0.1",
+    "envelopeProtocol": 2,
+    "hello": {
+      "protocol": 2,
+      "modVersion": "1.0.0"
+    },
+    "productionPluginEnabled": true,
+    "gameplayAllowed": false,
+    "passed": true
+  },
+  "client": {
+    "timestamp": "2026-09-12T14:19:58.059395400Z",
+    "scenario": "mismatch",
+    "minecraftVersion": "1.21",
+    "fabricLoader": "0.16.14",
+    "fabricApi": "0.102.0+1.21",
+    "packetType": "ERROR",
+    "protocol": 1,
+    "payload": {
+      "errorCode": "PROTOCOL_MISMATCH"
+    },
+    "gameplayAllowed": false,
+    "passed": true
+  },
+  "serverExitCode": 0,
+  "uncaughtExceptions": [],
+  "durationSeconds": 94.3
+}

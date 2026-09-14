@@ -1,0 +1,4 @@
+common: 13568 bytes; SHA256=bdcf0f21d0964f8e628d97baa16ad9fa2568cfbc730f884bccb92f469d53a2df
+paper: 14428605 bytes; SHA256=95f4d8d9975056dcef5e99aa1f3914a1ae0a70a34f209191bb419157e5be8ed5
+fabric: 25269 bytes; SHA256=95c9def1d40db371af04f43e339082ed68644bf334c9bb2fe1621ad134eb1965
+PASS: 99 tests, 3 Java 21 jars, metadata, remapping, common inclusion, server-only data isolation, no unfinished markers.

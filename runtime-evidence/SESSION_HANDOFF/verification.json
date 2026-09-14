@@ -1,0 +1,530 @@
+{
+  "checkedAtUtc": "2026-09-14T01:26:44.662979+00:00",
+  "scope": "Documentation handoff only; no new Phase, implementation changes or test/runtime rerun",
+  "passed": true,
+  "phaseStates": {
+    "01": "COMPLETE",
+    "02": "COMPLETE",
+    "03": "COMPLETE",
+    "04": "COMPLETE",
+    "05": "COMPLETE",
+    "06": "NOT_STARTED",
+    "07": "NOT_STARTED",
+    "08": "NOT_STARTED",
+    "09": "NOT_STARTED",
+    "10": "NOT_STARTED",
+    "11": "NOT_STARTED"
+  },
+  "openBlockers": [],
+  "checks": [
+    {
+      "name": "All 107 locked SPEC chapters match current SPEC",
+      "passed": true
+    },
+    {
+      "name": "Word gap is four columns at scale five",
+      "passed": true
+    },
+    {
+      "name": "All six internal states have approved public mapping",
+      "passed": true
+    },
+    {
+      "name": "PUBLIC_STATE uses dedicated public mapping",
+      "passed": true
+    },
+    {
+      "name": "Current BAR minimums preserved",
+      "passed": true
+    },
+    {
+      "name": "User audio specification remains in force",
+      "passed": true
+    },
+    {
+      "name": "Normal and premium direction remain specified",
+      "passed": true
+    },
+    {
+      "name": "Only Phase01-05 COMPLETE; Phase06-11 NOT_STARTED",
+      "passed": true
+    },
+    {
+      "name": "v4 migration recorded",
+      "passed": true
+    },
+    {
+      "name": "common saved JUnit results pass without skips",
+      "passed": true
+    },
+    {
+      "name": "paper saved JUnit results pass without skips",
+      "passed": true
+    },
+    {
+      "name": "fabric saved JUnit results pass without skips",
+      "passed": true
+    },
+    {
+      "name": "asset-tools saved JUnit results pass without skips",
+      "passed": true
+    },
+    {
+      "name": "Saved unit/integration total is 144",
+      "passed": true
+    },
+    {
+      "name": "PHASE_05 passed using current JAR hashes",
+      "passed": true
+    },
+    {
+      "name": "PHASE_05 report and screenshot evidence exist",
+      "passed": true
+    },
+    {
+      "name": "PHASE_05_REEL_REGRESSION passed using current JAR hashes",
+      "passed": true
+    },
+    {
+      "name": "PHASE_05_REEL_REGRESSION report and screenshot evidence exist",
+      "passed": true
+    },
+    {
+      "name": "PHASE_05_PHASE01_REGRESSION passed using current JAR hashes",
+      "passed": true
+    },
+    {
+      "name": "PHASE_05_PHASE01_REGRESSION report and screenshot evidence exist",
+      "passed": true
+    },
+    {
+      "name": "PHASE_05_BAR_BIG passed using current JAR hashes",
+      "passed": true
+    },
+    {
+      "name": "PHASE_05_BAR_BIG report and screenshot evidence exist",
+      "passed": true
+    },
+    {
+      "name": "PHASE_05_BAR_REG passed using current JAR hashes",
+      "passed": true
+    },
+    {
+      "name": "PHASE_05_BAR_REG report and screenshot evidence exist",
+      "passed": true
+    },
+    {
+      "name": "paper dist JAR equals accepted JAR",
+      "passed": true
+    },
+    {
+      "name": "fabric dist JAR equals accepted JAR",
+      "passed": true
+    },
+    {
+      "name": "gradle-test.log records successful build",
+      "passed": true
+    },
+    {
+      "name": "gradle-build.log records successful build",
+      "passed": true
+    },
+    {
+      "name": "helper-build.log records successful build",
+      "passed": true
+    },
+    {
+      "name": "Artifact verification agrees with current files",
+      "passed": true
+    },
+    {
+      "name": "Six 10M simulations meet target tolerance",
+      "passed": true
+    },
+    {
+      "name": "Saved simulator equals generated report",
+      "passed": true
+    },
+    {
+      "name": "Required Paper runtime exists with pinned SHA",
+      "passed": true
+    },
+    {
+      "name": "Previously used Python runtime still exists",
+      "passed": true
+    },
+    {
+      "name": "Ten sound events and no generated OGG in accepted JAR",
+      "passed": true
+    },
+    {
+      "name": "No audio generator or Vorbis in accepted Fabric JAR",
+      "passed": true
+    },
+    {
+      "name": "Current audio inputs are empty",
+      "passed": true
+    },
+    {
+      "name": "PHASE_01 historical acceptance preserved",
+      "passed": true
+    },
+    {
+      "name": "PHASE_02 historical acceptance preserved",
+      "passed": true
+    },
+    {
+      "name": "PHASE_03 historical acceptance preserved",
+      "passed": true
+    },
+    {
+      "name": "PHASE_04 historical acceptance preserved",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: CODEX_START.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: SESSION_HANDOFF.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: IMPLEMENTATION_STATUS.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: SPEC_CONFLICT.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: SPEC.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: CODEX_START.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: IMPLEMENTATION_STATUS.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: SPEC_CONFLICT.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: phases/PHASE_06_BONUS_EFFECTS.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: RUNTIME_ACCEPTANCE.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: docs/V4_MIGRATION.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: runtime-evidence/PHASE_01/REPORT.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: docs/PHASE_03_CLIENT_UI.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: docs/USER_AUDIO.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: docs/PHASE_04_REELS.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: docs/PHASE_05_GAME_LOGIC.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: common/src/main/java/jp/pirijuggler/common/protocol/PublicGameState.java",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: paper/src/main/java/jp/pirijuggler/paper/session/Session.java",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: paper/src/main/java/jp/pirijuggler/paper/reel/StopCatalogue.java",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: common/src/main/java/jp/pirijuggler/common/reel/ReelMotion.java",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: paper/src/main/java/jp/pirijuggler/paper/game/NormalGame.java",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: paper/src/main/java/jp/pirijuggler/paper/database/GameStore.java",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: runtime-evidence/PHASE_05/REPORT.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: runtime-evidence/PHASE_05_REEL_REGRESSION/REPORT.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: runtime-evidence/PHASE_05_BAR_BIG/REPORT.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: runtime-evidence/PHASE_05_BAR_REG/REPORT.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: runtime-evidence/PHASE_05_PHASE01_REGRESSION/REPORT.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: runtime-evidence/PHASE_05/simulator-10m.json",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: BUILD_JARS.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: docs/USER_AUDIO.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: user-audio/README.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: runtime-evidence/SESSION_HANDOFF/REPORT.md",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: runtime-evidence/SESSION_HANDOFF/verification.json",
+      "passed": true
+    },
+    {
+      "name": "Local documentation link exists: SESSION_HANDOFF.md",
+      "passed": true
+    }
+  ],
+  "savedTests": {
+    "common": 24,
+    "paper": 99,
+    "fabric": 19,
+    "asset-tools": 2
+  },
+  "savedRuntime": {
+    "PHASE_05": {
+      "passed": true,
+      "assertionCount": 114,
+      "resultSha256": "71c44565517d05e17b1983b0f15d70268ecc4ee710f8d1263d93dafca7aa9567"
+    },
+    "PHASE_05_REEL_REGRESSION": {
+      "passed": true,
+      "assertionCount": 102,
+      "resultSha256": "5cd03a4b89bc9e2b52bfe4fc9ce112f79220af6ca82ea0a2df45dd8b16d2a6a1"
+    },
+    "PHASE_05_PHASE01_REGRESSION": {
+      "passed": true,
+      "assertionCount": 0,
+      "resultSha256": "3c906697a656836aa431702c51f8959c29648d248605790e8e76843208c548c6"
+    },
+    "PHASE_05_BAR_BIG": {
+      "passed": true,
+      "assertionCount": 9,
+      "resultSha256": "fd4e9bf2c3de4c4acc83c63d9d74e025ef003df023ebccc63e12949e9ab03df8"
+    },
+    "PHASE_05_BAR_REG": {
+      "passed": true,
+      "assertionCount": 9,
+      "resultSha256": "9c6ec614c60c5935e96b8d63d553d983e81ad584ade164067273ed47115c6d8e"
+    }
+  },
+  "buildHashes": {
+    "common": "6fb82ca6eff8b196e5bbe78b05773f25da4f18db832b935c0153119ec96b582a",
+    "paper": "6262e2ae966b28ed7c54efb9eaeeed4f7d9fb44ae8dd3fc8eb9cf07edc53e2db",
+    "fabric": "1704d04bc9e1a285e2b8d7046ea3eb817a990964fea0749891d53ec9a17f9bfe"
+  },
+  "specSha256": "ef10e9a031dc4b775bad07bb628441fd9672e9f230ab9c626ef5fe56e2936874",
+  "specLockSha256": "630798f5eb320ea240313be1e1f43ca145b234fc32e51b9b185745b1eceaeb8b",
+  "lockedChapterCount": 107,
+  "protectedFileHashes": {
+    "PHASE_MAP.json": "ab8596793d96abdfaf1223616ac65698995dfccd93a1e9bf5252f26036148b5c",
+    "RUNTIME_ACCEPTANCE.md": "672554e7c2a96a7cacae0d10bb142161ece369c52728065557abb844fb4f1527",
+    "SPEC.md": "ef10e9a031dc4b775bad07bb628441fd9672e9f230ab9c626ef5fe56e2936874",
+    "asset-tools/build.gradle.kts": "5559b0793552b55ff796b9465c0a5a84bc790dd77d5b207b468a898cede36106",
+    "asset-tools/src/main/java/jp/pirijuggler/assets/AssetGenerator.java": "f91a64787b4d47f3db7a1ce269033d2cb5addb780c61c51a474c8a70226a7972",
+    "asset-tools/src/test/java/jp/pirijuggler/assets/AssetGeneratorTest.java": "244d483d41e4f0c60ee360a4cf813804d2b0380023f22e7e46abee48230d62bb",
+    "asset-tools/src/test/resources/image-sha256.json": "1de918527603ea0ee129f387a894a4f520e6c343fc7e5fcb95742938762eb7b8",
+    "build-jars.bat": "2ea7c210b9e3f38996226d627de6e1571621d363d9b1d4c4493dca285eb39bb7",
+    "build.gradle.kts": "4024063a99fe3291c10774454079a6d8a45614ce7063364a1b13870d289319a6",
+    "common/build.gradle.kts": "d7f7beb0437f64bb126d0ec2ddf663e3b56e23e84ada44949ba359905e126d53",
+    "common/src/main/java/jp/pirijuggler/common/protocol/Envelope.java": "3936a861988bc49fd24f12054a77474eb493d8701512b4ba7b1171ab5caaf729",
+    "common/src/main/java/jp/pirijuggler/common/protocol/EnvelopeCodec.java": "1018f1dfd4298f0d4adc6eaa41f48597440e1e8beff9574aaba5dfa7cfe9e665",
+    "common/src/main/java/jp/pirijuggler/common/protocol/ErrorCode.java": "aea6bc06a7007a5eab5209503415893ddd9df4f8d47abfe263e32309e021ccd2",
+    "common/src/main/java/jp/pirijuggler/common/protocol/ErrorPackets.java": "f501e358fd812d1430836151e3955800c01c800acbaf153134771bb238145e02",
+    "common/src/main/java/jp/pirijuggler/common/protocol/Handshake.java": "bdcce49192c0cb0a71fc79374589c1569e394676914bb3aca789a5ff99ed244e",
+    "common/src/main/java/jp/pirijuggler/common/protocol/PacketType.java": "4f55923ed1ad9e7ac765b9c3ae913e40c7b9040cda18539ef9b3704cee9ec587",
+    "common/src/main/java/jp/pirijuggler/common/protocol/Protocol.java": "27a3cbb12449ef7400d9c4d37986f2da09b27ae2163c77e15a15e12dfccace39",
+    "common/src/main/java/jp/pirijuggler/common/protocol/ProtocolException.java": "971307d8afb3bf02ac2873561a3cef475e05f14cb42610a4f1c4778e320ed979",
+    "common/src/main/java/jp/pirijuggler/common/protocol/PublicGameState.java": "0736285aa1839ce4d65f86924b2e2c08bca71121bdf0f127411897836a7fe1a4",
+    "common/src/main/java/jp/pirijuggler/common/reel/FixedReels.java": "7d52f127de830d2494aa428083419c32103840bec519eef1df256a001ca72a01",
+    "common/src/main/java/jp/pirijuggler/common/reel/Reel.java": "f9f62724b7bed52933fab915446b0a5651749f718e5cb13fd8bfbd572eaaeb43",
+    "common/src/main/java/jp/pirijuggler/common/reel/ReelMotion.java": "acb8b299a80c95af9f44531bcdf702892d9f3edb707106174e384e5126fbeac6",
+    "common/src/main/java/jp/pirijuggler/common/reel/Symbol.java": "4bcb0396a060a386474780333abe714439d43afcbb6db7d65e9e28fdef6c41ef",
+    "common/src/test/java/jp/pirijuggler/common/protocol/EnvelopeCodecTest.java": "75ed7296a29c240db466f309287a80ab0708b2a86989d84051d2595c9f4f364a",
+    "common/src/test/java/jp/pirijuggler/common/protocol/SpecLockTest.java": "fa20b27aaf60bfe338661cce11c0f30b621bdcee913c686dbba04deea155b11c",
+    "common/src/test/java/jp/pirijuggler/common/protocol/V4ProtocolTest.java": "dc04e67fca22e56f57d7db1cef3acec5b7277952953428780fb2ebd837e54607",
+    "common/src/test/java/jp/pirijuggler/common/reel/ReelMotionTest.java": "b3fce62a0e87d3ce784ac44102f1ebde29fed92e789541b2f805ffc0de41c1b0",
+    "docs/spec-lock.json": "630798f5eb320ea240313be1e1f43ca145b234fc32e51b9b185745b1eceaeb8b",
+    "fabric/build.gradle.kts": "d1ca6f4f981ce98a444a791f469a294d9a2466b76bee2fab7e40199a2b71cead",
+    "fabric/logs/latest.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fabric/src/main/java/jp/pirijuggler/fabric/ErrorMessages.java": "c4f83c5b3d1f54673c0be946241230b32bef416465590e87a66e3ce73eba8ab4",
+    "fabric/src/main/java/jp/pirijuggler/fabric/PiriJugglerClient.java": "cba7fc0c11618cd7b96ff56b8a9fe153b9a403ec344416d3f034f1e11e897644",
+    "fabric/src/main/java/jp/pirijuggler/fabric/mixin/SlotHudMixin.java": "c3d636846643bb57574ab523efaf6aba834e52db13f3a95d8f20f8b96195bf2f",
+    "fabric/src/main/java/jp/pirijuggler/fabric/mixin/SlotToastMixin.java": "6da02c01f41143af49af95ee57db557533759f8b0d071da945d87e226a5b06ea",
+    "fabric/src/main/java/jp/pirijuggler/fabric/network/ClientHandshake.java": "496020cf769b0a6d01c4c510bb2a34666e06ec2a7f4b6160e04f4e8fd0e515cb",
+    "fabric/src/main/java/jp/pirijuggler/fabric/network/ClientSession.java": "9229c14b333652beb8fc8acfd77ec0d83e9edd438856c656c57b38580aff6be7",
+    "fabric/src/main/java/jp/pirijuggler/fabric/network/PiriPayload.java": "9619e3a7c57537b8d4544cf0ad123d12516efe50ac696646c288745a8d5b03a2",
+    "fabric/src/main/java/jp/pirijuggler/fabric/ui/PiriSounds.java": "6aa00378bcfea4c8a1f62fe1da797697ba5499f5cf6b019490a9998123aaf7dc",
+    "fabric/src/main/java/jp/pirijuggler/fabric/ui/SevenSegment.java": "3872b42aeaeefcdf830202fe4ee2600ce0c91131127de6eab40ea1cae5ba3d53",
+    "fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotChatScreen.java": "78d8b7ad99b80f401f62ea56dbd4d222fab0f4381f6b83052f2efe8bb57eb695",
+    "fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotInput.java": "f1063ad0be312b6233b10f1063ab476234aa672f7b8670f38f1cb84753287bec",
+    "fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotKeys.java": "13c0e3a40d58ae15d092375c78f306a2c3b558fc7b8fb5088ceb017d520aa92b",
+    "fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotLayout.java": "b63c87602afe25fffab145c26910e9edab505c8e673d79bfb88d644e24b78b72",
+    "fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotScreen.java": "0b20fe53d71efc51fd7584e86a80cbaa99e5a7220f3ea5fa4b9f41c4862ff1e7",
+    "fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotUi.java": "a3a9e9b989b86855c78e43ed5f4415c9d12e5836d69021a6616ff6312ec8d1cc",
+    "fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotViewState.java": "4fb7b04e0f0b0cc5898bd7435da3cfaeead5dfaad289cf25f3a14ad1b8fff5fb",
+    "fabric/src/main/java/jp/pirijuggler/fabric/ui/UiConstants.java": "f73676ab1160a5d587d7659d968fd9c930bdb3dcd975866e518164f886e48851",
+    "fabric/src/main/resources/assets/piri/client-ui.json": "b7a9085762aaaa30c8b782c5a051cf84e2d74e2afdb04c45821cfd37c9d8d243",
+    "fabric/src/main/resources/assets/piri/lang/en_us.json": "ac6bdc1ccf679b8482cc309c9d13c66973303e1f2cfb00d397ee40e063fb253d",
+    "fabric/src/main/resources/assets/piri/lang/ja_jp.json": "e842e1a6df9c09d397f53e0514a54dbb9306204ae2cc76a31ff90846d24f6390",
+    "fabric/src/main/resources/assets/piri/sounds.json": "83fe1083e6f6f9347dc1581c27265fb99daf62418d9546d709939a9191861f8b",
+    "fabric/src/main/resources/assets/piri/textures/lamp/piri_chance_off.png": "6b65f410dcc847636ea0caef2c2de2d8d9a964845bf6cadbe96fe7daa7f0cf60",
+    "fabric/src/main/resources/assets/piri/textures/lamp/piri_chance_on.png": "0a16a5705a50e832fa960f20cb78f472096b3b951333ef9a4efde2a5ab988ad3",
+    "fabric/src/main/resources/assets/piri/textures/symbols/bar.png": "5ad5f4782e516dd95f80fdaf72e974605976f9a10a4850d308165953a1e189c0",
+    "fabric/src/main/resources/assets/piri/textures/symbols/bell.png": "c7f382f934dc6b7704b498a366265ed41c6fa9092a6af440d8230b23a1fbeede",
+    "fabric/src/main/resources/assets/piri/textures/symbols/cherry.png": "4bd8112d6558617d1cebf874cf9bee278a7c710315e714158cac95a4eaa2ad9f",
+    "fabric/src/main/resources/assets/piri/textures/symbols/grape.png": "abbbdec4633e20d46ef5d6ea3425a4d1c7a6820f6abff543d8ca99479b958bc2",
+    "fabric/src/main/resources/assets/piri/textures/symbols/piero.png": "b5bd20c8c76f9fafe63ba4c6218fb46db0aba073b970ad974dd927ad84b2e84f",
+    "fabric/src/main/resources/assets/piri/textures/symbols/replay.png": "9b688d3e44858ffadf5e3690975a846d0e06daf72516cd13ff8d0784c8033e4c",
+    "fabric/src/main/resources/assets/piri/textures/symbols/seven.png": "106a2389a3281515312ca8f2739a5b4f3e3ffc311dc7f1190afaa603b845e696",
+    "fabric/src/main/resources/fabric.mod.json": "a66aee4122c8708d9f0a6c68a3e1cfd54dc9d329b1fed5b02af65a7f93b8167f",
+    "fabric/src/main/resources/piri.mixins.json": "917a70a30fa0a7077510264d219b43844af45e7bb1866c01039f2c376d6a8de7",
+    "fabric/src/test/java/jp/pirijuggler/fabric/network/ClientSessionTest.java": "d647a6eb87755516f945e151f315c93313a977d99edfcf58f32113d94b506cb0",
+    "fabric/src/test/java/jp/pirijuggler/fabric/network/HandshakeIntegrationTest.java": "b429cf6fddc191f9e560f8c96b615e21dbdc2f53b6ca4b3d82167b222658e10e",
+    "fabric/src/test/java/jp/pirijuggler/fabric/network/PiriPayloadTest.java": "45200480398fb73b53b53943116abd3a1168a9fea88a3168ce1c08c7ba7e5730",
+    "fabric/src/test/java/jp/pirijuggler/fabric/ui/SlotInputTest.java": "48b150bae2943fafa966adf3fc031cb223454fa78290f4225606ac2c8c137faa",
+    "fabric/src/test/java/jp/pirijuggler/fabric/ui/SlotViewStateTest.java": "577991be08e989ad5d4ae99ee8c7ac2aa51826358ca72702a5284626c3ed3e24",
+    "fabric/src/test/java/jp/pirijuggler/fabric/ui/UiResourcesTest.java": "3efabcb2246ba4c8b335fa9458f7d9a7f589dd47af4d73e94d18a53e4eb90b27",
+    "gradle.properties": "2920a5d5b1984386d1b4cbbd57b28fab2676e1ac185fae7a6d96559bb29ec137",
+    "gradle/wrapper/gradle-wrapper.jar": "7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172",
+    "gradle/wrapper/gradle-wrapper.properties": "42ff5f4a504c4295ef954bc052081e1abb4fca36d6558ecfc2631d523d251892",
+    "gradlew": "b187b4c52e749f5760afdd6fadc31b2a98ad35fb249bf0dff03b72650f320409",
+    "gradlew.bat": "1d297e00bd21de3ace22b4d7f2de1f9dfa858883d66bbf7c1ccbecccec8f4f3b",
+    "paper/build.gradle.kts": "71e4ee11be605cba2b05fd8fbb0dae8bdf9e7da8f26a6a635e7733444863d3d6",
+    "paper/src/main/java/jp/pirijuggler/paper/PiriJugglerPlugin.java": "2f0bc9919f761d8076d2a3eb0db7bc53d466fe1b60be150bc12a8ef801d508af",
+    "paper/src/main/java/jp/pirijuggler/paper/action/ActionGate.java": "44ef84a5bbff95cc58aa658bf38926a2d70ada16a1d72b8fff090eee96c061d4",
+    "paper/src/main/java/jp/pirijuggler/paper/config/ConfigValidation.java": "5a4c5bb2f0dd51ea0037de8cbb12dee34514be8db70708617fbf23975f6f42e5",
+    "paper/src/main/java/jp/pirijuggler/paper/config/FixedGameRules.java": "27ff062a3d509c7ae4197f3b1303b5c153c611da36431d61561c8da03ada4065",
+    "paper/src/main/java/jp/pirijuggler/paper/database/GameStore.java": "303361397bdb288fe8a172cb202563fdba124cfa87f24be94ee5bf3170177736",
+    "paper/src/main/java/jp/pirijuggler/paper/database/PiriDatabase.java": "9d417a83aeaab2cb496b68be2d64283c5dbae64f8f9f8ef4f3c9f99bef1112f6",
+    "paper/src/main/java/jp/pirijuggler/paper/database/StartupProfile.java": "180c61e6ce07bd5481ac9ffb6bdb299c2c62e1630a16b1d3f0ceea49c20cef9b",
+    "paper/src/main/java/jp/pirijuggler/paper/game/GameRules.java": "f3f660e6e3423abc7bab87006db448a7a46daef2c2a5e0c0d60c90239ce1aab8",
+    "paper/src/main/java/jp/pirijuggler/paper/game/NormalGame.java": "225b7e7df14f3c54e278237d3d50c2bfbd09d802521e0ab600678f5dd69212c8",
+    "paper/src/main/java/jp/pirijuggler/paper/game/RandomStreams.java": "7a833cadfbd09530929bcdae6522b4fd5e3d0e549f5e44ff5c4af7264f20146f",
+    "paper/src/main/java/jp/pirijuggler/paper/game/RoleWeights.java": "27fe2037c56ff8a69abc496f9603849a0302a562b92b3dd69cce77cef1b428dd",
+    "paper/src/main/java/jp/pirijuggler/paper/game/Simulator.java": "f55a9eaf7a8d7dcd9f6faf1365b5f4faf241fb47e4bef0a596641eab86007018",
+    "paper/src/main/java/jp/pirijuggler/paper/machine/DomainException.java": "28d0b5fb51dc931ea946c7090f6b72c95b9f02595e40bd2bc916b92fd8d78cb3",
+    "paper/src/main/java/jp/pirijuggler/paper/machine/Machine.java": "07a526035dd9335cb4b4a3bfe07e7e4d72fa37e24bd32731abd62518515a987a",
+    "paper/src/main/java/jp/pirijuggler/paper/machine/MachineService.java": "f0d8b368983ec04ced488b8f7c6ce3d08dbfdece991800ee6a7c787c049a2cf1",
+    "paper/src/main/java/jp/pirijuggler/paper/network/ServerHandshake.java": "3cd9fb5952c5080f74483ab8d4d8c9125fcd28a848396daeb4534c4f2d7ba167",
+    "paper/src/main/java/jp/pirijuggler/paper/reel/DisplayRole.java": "2636b274e06fd901669e6f7d2363022f442de2b4525112d3309d2f68acb0ab1b",
+    "paper/src/main/java/jp/pirijuggler/paper/reel/InternalRole.java": "8a9e77a15691ee97909c461a60bcee05a6add8b6f52c04817102066e6668f10d",
+    "paper/src/main/java/jp/pirijuggler/paper/reel/Payline.java": "95048318d24b9a28d0a0779ca301165f92a28e0bd529585193f7d9afb280c22e",
+    "paper/src/main/java/jp/pirijuggler/paper/reel/ReelEngine.java": "195d6051241adf36db5ea94411368ee036cdd4bf075745cbf4fdc9f11e9e4878",
+    "paper/src/main/java/jp/pirijuggler/paper/reel/ReelRound.java": "45470f26ecee74ffd55049be70539dbac0e9c4d5009100b43916b9f676155882",
+    "paper/src/main/java/jp/pirijuggler/paper/reel/ReelVerification.java": "c5170c91f5ee28e9e42a1923b861444d035b4cf54a411d37878daef9cde7911a",
+    "paper/src/main/java/jp/pirijuggler/paper/reel/StopCatalogue.java": "ccef9200b0bfa27b482dd420f5e2f1655a7df984743d9a8e8c86480428ed096d",
+    "paper/src/main/java/jp/pirijuggler/paper/reel/StopSolver.java": "3cc485fe095bf7f1fa68b07d8610d89bd9b8a70fd23ff193f68e876b879d8add",
+    "paper/src/main/java/jp/pirijuggler/paper/reel/StopTriplet.java": "82d97969cb173019cd4d1fde8c7c86ec9c9f4b452d9ad87e7a70fe371e061b4b",
+    "paper/src/main/java/jp/pirijuggler/paper/session/AdminSessions.java": "41af7852179ec62b79f0eb604be955aac84e4c8a34d874f86f025039c9d83fab",
+    "paper/src/main/java/jp/pirijuggler/paper/session/Session.java": "c0608009881a85096ff24aed0c45e4b6ef123aaf56e628b47180faf3cd8f365a",
+    "paper/src/main/java/jp/pirijuggler/paper/threading/MainThread.java": "e2e384d9994572cbd74204b870c6d2483803744a1afa180ce8955c596a83137f",
+    "paper/src/main/java/jp/pirijuggler/paper/threading/PaperMainThread.java": "0a8c1f0e8a8af1738c05c6a2f0ae1db361cb515fb36c72d2721a3505048f1bf8",
+    "paper/src/main/java/jp/pirijuggler/paper/threading/TaskExecutors.java": "bc91eb0fb6274d0bbd9177e2a2d9447559352396a826464b46d8645bcb67518f",
+    "paper/src/main/resources/config.yml": "24244c548b672af1d36d5c1ef1ea990a54b5b856c4a4f1335a33bf2a5cb81958",
+    "paper/src/main/resources/plugin.yml": "73d1881c87581c274e5129457eb9014304c37cc29f7bb2085c536b78e51bc18d",
+    "paper/src/main/resources/schema-v4.sql": "0f215886323f613d7879bed0ac9c99320fa077408de4b834a9c36fe169b1d07c",
+    "paper/src/test/java/jp/pirijuggler/paper/action/ActionGateTest.java": "dfb82c7ece37279dc9d6e740d38cb76cc9da4ae60579ef0a93cee025f0868e0b",
+    "paper/src/test/java/jp/pirijuggler/paper/config/ConfigValidationTest.java": "e0ef7250fd5560d7b98bdff0e74220407416a877a4981146e0b2c43e3b713830",
+    "paper/src/test/java/jp/pirijuggler/paper/config/V4ConfigValidationTest.java": "bf90160b5b904297bd9887df2ef6a998ecb175ba1e7c99f663e5a80ee529a2ed",
+    "paper/src/test/java/jp/pirijuggler/paper/database/PiriDatabaseTest.java": "50066b9bb4b54d6b03ebbca9befd2c8336cec40271acdbc8394c8be5f0aee091",
+    "paper/src/test/java/jp/pirijuggler/paper/database/StartupProfileTest.java": "8dea8ffa0eaace5d33def728d83c8f53907120324e901082ede9ed8bd6488577",
+    "paper/src/test/java/jp/pirijuggler/paper/game/BarConfirmationTest.java": "40d989e65fed4e451cc4f38a3c4661ca932d9cff49837fd6b05f914bc8c59a0e",
+    "paper/src/test/java/jp/pirijuggler/paper/game/GameFixture.java": "7b27a672b64837557c11ed7e2d675e1ba6827004398a0381c3a16280dbd05f84",
+    "paper/src/test/java/jp/pirijuggler/paper/game/NormalGameTest.java": "fcfe1a1a5ea83b51cc20a7b21be40af2240b36b754be9c506795d138ac5b2e50",
+    "paper/src/test/java/jp/pirijuggler/paper/game/RandomSimulatorTest.java": "00d6282eaad79ceb78e6fa05d69925bc1e52060e9bddf4c6c4253091cf4c33ea",
+    "paper/src/test/java/jp/pirijuggler/paper/network/ServerHandshakeTest.java": "0f5893cc9a9d4652aa6f45acbc96fdaa62fc37b162f8a40c1efc90ba20e8b7b5",
+    "paper/src/test/java/jp/pirijuggler/paper/reel/ReelRoundTest.java": "52ed6da5baed2a0f34d653eb099544924ca3a7e29ee121a9164dce0ca0d49563",
+    "paper/src/test/java/jp/pirijuggler/paper/reel/StopSolverTest.java": "0008e5f774a910014ba4d65a9685366d5cb944363dcf2f0ce84cf1c1a4df214a",
+    "paper/src/test/java/jp/pirijuggler/paper/session/AdminSessionsTest.java": "43f46695892116365563e8920198e64fb6436c403bf5244ddf409b15daab4c44",
+    "paper/src/test/java/jp/pirijuggler/paper/threading/TaskExecutorsTest.java": "22d4aec6590a1987a1a3cb6517365ef320a3b7921ccd0d82eae2950e9780df40",
+    "phases/PHASE_01_FOUNDATION.md": "68d91fc525c9af41a018d9021231640751947ff74d9b8c1c9710f2e052c7bbf4",
+    "phases/PHASE_02_DATABASE_MACHINE.md": "314bf2e2a3f4ef72d48a1c73faa29e673f3845e4585ef5244634bc5ea8e195fb",
+    "phases/PHASE_03_CLIENT_UI.md": "8e31dca0c25117b04c48ea3412c258e3fa447dfa7080dc145116301800bc7bc3",
+    "phases/PHASE_04_REELS.md": "5558c0f1e112201cce13d894b045ed9deb4c41670d9a623cfb77492efc4dab0c",
+    "phases/PHASE_05_GAME_LOGIC.md": "aa2f6f2fd704f84d45880f88eb28da3296125b509fc9bfec5250489b862d8e44",
+    "phases/PHASE_06_BONUS_EFFECTS.md": "76f42cfbb2c325bf8873a8a9d7b52d541c9ddc1f5778bc10f915808aed73a050",
+    "phases/PHASE_07_ECONOMY.md": "addeb367f47a572b1079c5b2f1c8316f17b4738e53bdbf2bdbf13dd12d1f4bd2",
+    "phases/PHASE_08_PRIZES.md": "d05fcf2f67955fdde0c7d66a97aff0f93e775c136d6e566b1a0d11c2e5134bd5",
+    "phases/PHASE_09_DATA_LAMP.md": "094cb47adf188f9cb3d864380b7b1735381b8f15706fa78ddfda4bd122d4a0c6",
+    "phases/PHASE_10_ADMIN_EVENTS.md": "c278575da7048dbc92d2eb431e713f757adc093940dcb683582b3c7d755da513",
+    "phases/PHASE_11_RECOVERY_FINAL.md": "a02ba61ebd858f9af850ca09e23f8f12fa615b28580870e13b830265323577a1",
+    "runtime-test-support/ScreenshotAudit.java": "5542fc9666abb48a426e8e0012c4e52575f6bce0a9f18cbcdfac1caf7c8fab7f",
+    "runtime-test-support/client/build.gradle.kts": "d26bff9a35139faffb84e15f873a9662d18ce0478b0377c75e4a6b967451ddc5",
+    "runtime-test-support/client/src/main/java/jp/pirijuggler/runtime/client/HudAudit.java": "7974f41d41d37e00b79841c92039848c78efd398e7d3164bc2d57e70f00af5c8",
+    "runtime-test-support/client/src/main/java/jp/pirijuggler/runtime/client/Phase02Probe.java": "6f8bc8e20a9529df42df2fed0f7fb3d0e65ed170d1fffd0bf00460ea9fadad4c",
+    "runtime-test-support/client/src/main/java/jp/pirijuggler/runtime/client/RuntimeProbe.java": "ed55e045a471afd94040622a8565a6ff78446e276c977b5102e7a67780e4c689",
+    "runtime-test-support/client/src/main/java/jp/pirijuggler/runtime/mixin/HandshakeObserverMixin.java": "c5cffa0f92038fc0a5333302a0618933b5cf21cc5354c14a26f2003b5528415f",
+    "runtime-test-support/client/src/main/java/jp/pirijuggler/runtime/mixin/HudAuditMixin.java": "e62c4e71ff288476dd60ac18d99040d3b482bce10b10c6ab34462379997a1d57",
+    "runtime-test-support/client/src/main/java/jp/pirijuggler/runtime/mixin/MouseEventsInvoker.java": "022d993f8127cf3fa3e2e2fd235f947a193128a68ee06452c3fb60abef079768",
+    "runtime-test-support/client/src/main/java/jp/pirijuggler/runtime/mixin/SlotViewAccessor.java": "12cbfdcbd7e9eaf771454607a7a22d4afc95aa156c910d9ff66296f5a33c437c",
+    "runtime-test-support/client/src/main/resources/fabric.mod.json": "f3ad46f061f0ea8be9b781900012102c53743a26466d141ac8bf7f77b59acb2e",
+    "runtime-test-support/client/src/main/resources/piri-runtime.mixins.json": "180a16180e30870c518bb1843c2f8669ea2020a14a4cd99dd63d91c7cf86bbef",
+    "runtime-test-support/paper/build.gradle.kts": "797e45d5fecbab20af6619a2dea8b65f0fee651ff15ea8835e987dc2a8c78ab8",
+    "runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/Phase02Observer.java": "4c0736fda0fae5f5242c844e6da9165d9a5449444e5aab356d6d18a215c94cd8",
+    "runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/Phase04Harness.java": "11c62c8ba3dd1f80db780148ee5a0569731b3aac168aa50256e0869c787af36a",
+    "runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/Phase05Fixture.java": "ba32531eccaad612faf8b7b76ba0c414def3b137c59a6d20576bfc7817c6db0d",
+    "runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/RuntimeObserver.java": "0d3f51f0f9a6745dc22a006146fc40021fc29c18e014b682a02127efbd796c21",
+    "runtime-test-support/paper/src/main/resources/plugin.yml": "5ecc8ce2bde32657b34972f09669fa417d84998d1eb3a628f1571170913837eb",
+    "runtime-test-support/run_phase01.py": "042abc6e29646a1679e12ce30399442ad773302768f5594528a8dac81294d74e",
+    "runtime-test-support/run_phase02.py": "6a7bf300aed8a1a08857c0ac538e8be60581f2be76f64481b4f11d1fecaede52",
+    "runtime-test-support/run_phase03.py": "b0895b98506bcba338a8322764705df10a2a8e1f723e2d4e14b3d8eab7ea571c",
+    "runtime-test-support/run_phase04.py": "76943313a842dac0344af1736dfbe85cfc76d7c6a0faa714d12e1bb91e053945",
+    "runtime-test-support/run_phase05.py": "8cb036c90b2ee6946456136881da1b5fe0425da4fcffb775563d1269d70f2ad5",
+    "runtime-test-support/run_phase05_bar.py": "6a1b615f07e062bebded3e3b77b310d25f3df9974d47dea18e13c344c8600450",
+    "settings.gradle.kts": "36eed69e4bf16910f00df0c5c3cb38fb19869c72b658956156ee8a386e282c56",
+    "user-audio/README.md": "2159c8953951c8a3a527ec0a27d688793d48ba80af459eddf5ba3beef2c5f430"
+  },
+  "documentationLinksChecked": 34,
+  "documentationHashes": {
+    "CODEX_START.md": "bb782376b4bef7808beb733748c23480ca35483b5501982441dbab78e4ee2b28",
+    "IMPLEMENTATION_STATUS.md": "e673d334fb2c59d11d213a8a73bec85a3f9bcabb0ec7bcda7bfeaded8a1411d5",
+    "README_FIRST.md": "e28864850c3e482180c2d8e825fbcdf65d91e72c883e68514784ea737429a784",
+    "SESSION_HANDOFF.md": "683ef25fff6270e8af8ef3e3b64fc9a874cf2cf80c83f7f5fce1e95f22c0b358",
+    "SPEC_CONFLICT.md": "2e5788cf986a21c016d138eb5274f5acf0a1092e9fa1db341da2751fe2ae08b0",
+    "runtime-evidence/SESSION_HANDOFF/REPORT.md": "30802726665f54041831e42bda25146521733e0bf169af4cf6e568d709637ecd"
+  }
+}

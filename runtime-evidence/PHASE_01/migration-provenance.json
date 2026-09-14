@@ -1,0 +1,163 @@
+{
+  "sourceRepository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow",
+  "destinationRepository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "preservedFiles": [
+    {
+      "path": "common/src/main/java/jp/pirijuggler/common/protocol/Envelope.java",
+      "v3Sha256": "3936a861988bc49fd24f12054a77474eb493d8701512b4ba7b1171ab5caaf729",
+      "v4Sha256": "3936a861988bc49fd24f12054a77474eb493d8701512b4ba7b1171ab5caaf729"
+    },
+    {
+      "path": "common/src/main/java/jp/pirijuggler/common/protocol/PacketType.java",
+      "v3Sha256": "4f55923ed1ad9e7ac765b9c3ae913e40c7b9040cda18539ef9b3704cee9ec587",
+      "v4Sha256": "4f55923ed1ad9e7ac765b9c3ae913e40c7b9040cda18539ef9b3704cee9ec587"
+    },
+    {
+      "path": "common/src/main/java/jp/pirijuggler/common/protocol/Protocol.java",
+      "v3Sha256": "27a3cbb12449ef7400d9c4d37986f2da09b27ae2163c77e15a15e12dfccace39",
+      "v4Sha256": "27a3cbb12449ef7400d9c4d37986f2da09b27ae2163c77e15a15e12dfccace39"
+    },
+    {
+      "path": "common/src/main/java/jp/pirijuggler/common/protocol/ProtocolException.java",
+      "v3Sha256": "971307d8afb3bf02ac2873561a3cef475e05f14cb42610a4f1c4778e320ed979",
+      "v4Sha256": "971307d8afb3bf02ac2873561a3cef475e05f14cb42610a4f1c4778e320ed979"
+    },
+    {
+      "path": "common/src/test/java/jp/pirijuggler/common/protocol/SpecLockTest.java",
+      "v3Sha256": "fa20b27aaf60bfe338661cce11c0f30b621bdcee913c686dbba04deea155b11c",
+      "v4Sha256": "fa20b27aaf60bfe338661cce11c0f30b621bdcee913c686dbba04deea155b11c"
+    },
+    {
+      "path": "paper/src/main/resources/plugin.yml",
+      "v3Sha256": "38de3c90e14b3fa7a91dcea0f4d69e93dff4f2eb1ceb842784d3ba0832dc31e1",
+      "v4Sha256": "38de3c90e14b3fa7a91dcea0f4d69e93dff4f2eb1ceb842784d3ba0832dc31e1"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/PiriJugglerPlugin.java",
+      "v3Sha256": "97f41d00fc5f4990bb226c9d1ad6eec671738ac438384738fc15db1f9dec9825",
+      "v4Sha256": "97f41d00fc5f4990bb226c9d1ad6eec671738ac438384738fc15db1f9dec9825"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/config/FixedGameRules.java",
+      "v3Sha256": "27ff062a3d509c7ae4197f3b1303b5c153c611da36431d61561c8da03ada4065",
+      "v4Sha256": "27ff062a3d509c7ae4197f3b1303b5c153c611da36431d61561c8da03ada4065"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/threading/MainThread.java",
+      "v3Sha256": "e2e384d9994572cbd74204b870c6d2483803744a1afa180ce8955c596a83137f",
+      "v4Sha256": "e2e384d9994572cbd74204b870c6d2483803744a1afa180ce8955c596a83137f"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/threading/PaperMainThread.java",
+      "v3Sha256": "0a8c1f0e8a8af1738c05c6a2f0ae1db361cb515fb36c72d2721a3505048f1bf8",
+      "v4Sha256": "0a8c1f0e8a8af1738c05c6a2f0ae1db361cb515fb36c72d2721a3505048f1bf8"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/threading/TaskExecutors.java",
+      "v3Sha256": "5490deba3bb177463d033fb9b1f780a2ec2c2f43bee9ebed73a30a83d2b7c386",
+      "v4Sha256": "5490deba3bb177463d033fb9b1f780a2ec2c2f43bee9ebed73a30a83d2b7c386"
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/threading/TaskExecutorsTest.java",
+      "v3Sha256": "22d4aec6590a1987a1a3cb6517365ef320a3b7921ccd0d82eae2950e9780df40",
+      "v4Sha256": "22d4aec6590a1987a1a3cb6517365ef320a3b7921ccd0d82eae2950e9780df40"
+    },
+    {
+      "path": "fabric/src/main/resources/fabric.mod.json",
+      "v3Sha256": "e631c42b6c7db98f843f7c2d5fb020955ff84da46a6d15ae2fa07c1b2769bd53",
+      "v4Sha256": "e631c42b6c7db98f843f7c2d5fb020955ff84da46a6d15ae2fa07c1b2769bd53"
+    },
+    {
+      "path": "fabric/src/main/java/jp/pirijuggler/fabric/PiriJugglerClient.java",
+      "v3Sha256": "eedb9a60cc6386b541fbb2d1bdf03be6cc137d4da7b62e5cbec5f5a8c61c7320",
+      "v4Sha256": "eedb9a60cc6386b541fbb2d1bdf03be6cc137d4da7b62e5cbec5f5a8c61c7320"
+    },
+    {
+      "path": "fabric/src/main/java/jp/pirijuggler/fabric/network/PiriPayload.java",
+      "v3Sha256": "9619e3a7c57537b8d4544cf0ad123d12516efe50ac696646c288745a8d5b03a2",
+      "v4Sha256": "9619e3a7c57537b8d4544cf0ad123d12516efe50ac696646c288745a8d5b03a2"
+    },
+    {
+      "path": "fabric/src/test/java/jp/pirijuggler/fabric/network/HandshakeIntegrationTest.java",
+      "v3Sha256": "b429cf6fddc191f9e560f8c96b615e21dbdc2f53b6ca4b3d82167b222658e10e",
+      "v4Sha256": "b429cf6fddc191f9e560f8c96b615e21dbdc2f53b6ca4b3d82167b222658e10e"
+    },
+    {
+      "path": "fabric/src/test/java/jp/pirijuggler/fabric/network/PiriPayloadTest.java",
+      "v3Sha256": "45200480398fb73b53b53943116abd3a1168a9fea88a3168ce1c08c7ba7e5730",
+      "v4Sha256": "45200480398fb73b53b53943116abd3a1168a9fea88a3168ce1c08c7ba7e5730"
+    }
+  ],
+  "modifiedFiles": [
+    {
+      "path": "common/src/main/java/jp/pirijuggler/common/protocol/EnvelopeCodec.java",
+      "v3Sha256": "0c30170e9b9b4e4f1588217289f265c0a13d4741109403b9a317f3a185877d8b",
+      "v4Sha256": "1018f1dfd4298f0d4adc6eaa41f48597440e1e8beff9574aaba5dfa7cfe9e665"
+    },
+    {
+      "path": "common/src/main/java/jp/pirijuggler/common/protocol/ErrorCode.java",
+      "v3Sha256": "ee4382537b073ced68b7f4fe831a039cff5d6c8c4594b7a91b2d4b8bc875cef3",
+      "v4Sha256": "aea6bc06a7007a5eab5209503415893ddd9df4f8d47abfe263e32309e021ccd2"
+    },
+    {
+      "path": "common/src/main/java/jp/pirijuggler/common/protocol/Handshake.java",
+      "v3Sha256": "e69ed4589d0c28f83829f37905b23301ae2ac62dd8fc38e0be320b669d68d31a",
+      "v4Sha256": "bdcce49192c0cb0a71fc79374589c1569e394676914bb3aca789a5ff99ed244e"
+    },
+    {
+      "path": "common/src/test/java/jp/pirijuggler/common/protocol/EnvelopeCodecTest.java",
+      "v3Sha256": "80d0ce4211f5cd8e6002f2b1d81b20fa643caa7425bb68104120046107052938",
+      "v4Sha256": "75ed7296a29c240db466f309287a80ab0708b2a86989d84051d2595c9f4f364a"
+    },
+    {
+      "path": "paper/src/main/resources/config.yml",
+      "v3Sha256": "de9b5e995fd742be1818fd96ae0eaf8895f9cba9c3ebe65bd37c1a3d29d7c1c5",
+      "v4Sha256": "24244c548b672af1d36d5c1ef1ea990a54b5b856c4a4f1335a33bf2a5cb81958"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/action/ActionGate.java",
+      "v3Sha256": "03d89796136ecd57a0b1c2e0947d9836345689278ba2d99a98bcba8a2cc096e7",
+      "v4Sha256": "44ef84a5bbff95cc58aa658bf38926a2d70ada16a1d72b8fff090eee96c061d4"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/config/ConfigValidation.java",
+      "v3Sha256": "82103a8aa5eb4a9f6b5b721ca0afb04aa7a5a14151d37fddae1137b04d7931c2",
+      "v4Sha256": "5a4c5bb2f0dd51ea0037de8cbb12dee34514be8db70708617fbf23975f6f42e5"
+    },
+    {
+      "path": "paper/src/main/java/jp/pirijuggler/paper/network/ServerHandshake.java",
+      "v3Sha256": "39c1c067abff3b8b242264796d1437e044aa8a5fe37d5dc1dc6c8ad9e29d5f0a",
+      "v4Sha256": "3cd9fb5952c5080f74483ab8d4d8c9125fcd28a848396daeb4534c4f2d7ba167"
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/action/ActionGateTest.java",
+      "v3Sha256": "ebd85e17d932a9daa255888efbbfeb59e617cb7f1c3887df5379cbfafbf5940f",
+      "v4Sha256": "dfb82c7ece37279dc9d6e740d38cb76cc9da4ae60579ef0a93cee025f0868e0b"
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/config/ConfigValidationTest.java",
+      "v3Sha256": "dd367526285e5f173593c5a3fa5f4b1fb38d72199db4446fcce2c87ee662e188",
+      "v4Sha256": "e0ef7250fd5560d7b98bdff0e74220407416a877a4981146e0b2c43e3b713830"
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/network/ServerHandshakeTest.java",
+      "v3Sha256": "7ece3e96df00bf33e1f8cc1c5225f0568b82ce51d4a03325d6b53fea52d7d1c0",
+      "v4Sha256": "0f5893cc9a9d4652aa6f45acbc96fdaa62fc37b162f8a40c1efc90ba20e8b7b5"
+    },
+    {
+      "path": "fabric/src/main/java/jp/pirijuggler/fabric/ErrorMessages.java",
+      "v3Sha256": "70e8b04dd9836f9489cecdee60b238e8a0ed58cdb4a2b122f590090112952c24",
+      "v4Sha256": "c4f83c5b3d1f54673c0be946241230b32bef416465590e87a66e3ce73eba8ab4"
+    },
+    {
+      "path": "fabric/src/main/java/jp/pirijuggler/fabric/network/ClientHandshake.java",
+      "v3Sha256": "b180e12a78cdbe5ac235a4fc1d74ba1f21b7f796313998fe396e636bbeba6c13",
+      "v4Sha256": "496020cf769b0a6d01c4c510bb2a34666e06ec2a7f4b6160e04f4e8fd0e515cb"
+    }
+  ],
+  "addedFiles": [
+    "common/src/main/java/jp/pirijuggler/common/protocol/ErrorPackets.java",
+    "common/src/test/java/jp/pirijuggler/common/protocol/V4ProtocolTest.java",
+    "paper/src/test/java/jp/pirijuggler/paper/config/V4ConfigValidationTest.java"
+  ]
+}

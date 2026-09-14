@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "tests": {
+    "common": 23,
+    "paper": 82,
+    "fabric": 17,
+    "asset-tools": 2
+  },
+  "totalTests": 124,
+  "imageCount": 9,
+  "soundEventCount": 10,
+  "suppliedAudio": [],
+  "runtimeAssertions": 92,
+  "phase01Regression": true,
+  "buildHashes": {
+    "common": "276a6c308723619b38c86a2096e15556b3dd49f262d8891af1c9b58903027fa6",
+    "paper": "b66727bd71f446a1f27a83806ae8e5801d972bee83296f9fffe02d6865d02994",
+    "fabric": "59afd97c366c36d986869b37dd7cb55fe2b9fb101575e5190c178b39ba24a358"
+  }
+}

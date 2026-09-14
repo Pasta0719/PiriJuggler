@@ -1,0 +1,32 @@
+{
+  "repository": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "stage": "C:\\Users\\PC_user\\Documents\\Codex\\2026-09-11\\minecraft-valut-jecon-minecraft\\work\\phase05-v4",
+  "authorization": "User explicitly approved the bonus public-state mapping and instructed resuming Phase05 only. Individual before hashes are rechecked and existing files backed up; Phase06 remains NOT_STARTED.",
+  "changes": [
+    {
+      "path": "docs/preflight_phase04.py",
+      "before": "6a1067a97db0b54545fd7ef30e77c71f6f306c9148c3b820ba36bc4c4747e3ba",
+      "after": "c1cbeefd7b6ca73518a7f87c3b5bc9292f8f8399fafef2218689739763bb168d"
+    },
+    {
+      "path": "runtime-test-support/run_phase04.py",
+      "before": "5d6a094b365f13de0c96622582faf040c62361877c0a02a887024d408999c525",
+      "after": "76943313a842dac0344af1736dfbe85cfc76d7c6a0faa714d12e1bb91e053945"
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/game/BarConfirmationTest.java",
+      "before": null,
+      "after": "05879671ef99bf96d0ba342cde25ccc412a4d83f478b2e2700a53f81ac817db8"
+    },
+    {
+      "path": "paper/src/test/java/jp/pirijuggler/paper/reel/StopSolverTest.java",
+      "before": "348ce34efc8a23ff0bc9ce96e70aaa896e006b441e369c4bb803e1ce3c921f80",
+      "after": "0008e5f774a910014ba4d65a9685366d5cb944363dcf2f0ce84cf1c1a4df214a"
+    },
+    {
+      "path": "runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/Phase04Harness.java",
+      "before": "3e14ae70e4cbb44382863123717e44d8c47d0800cb9735692216529b4dd2206f",
+      "after": "11c62c8ba3dd1f80db780148ee5a0569731b3aac168aa50256e0869c787af36a"
+    }
+  ]
+}

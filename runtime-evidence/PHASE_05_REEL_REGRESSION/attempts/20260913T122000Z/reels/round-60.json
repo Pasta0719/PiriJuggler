@@ -1,0 +1,11 @@
+{
+  "role": "MISS",
+  "premiumF": true,
+  "profile": "RESUME_NORMAL",
+  "order": [
+    "RIGHT",
+    "CENTER",
+    "LEFT"
+  ],
+  "label": "premium-f-miss-rcl"
+}

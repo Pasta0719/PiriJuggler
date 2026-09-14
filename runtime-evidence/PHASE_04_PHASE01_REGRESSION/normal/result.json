@@ -1,0 +1,61 @@
+{
+  "name": "normal",
+  "serverCommand": [
+    "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE",
+    "-Xms512M",
+    "-Xmx1536M",
+    "-Dfile.encoding=UTF-8",
+    "-Dpiri.runtime.serverResult=C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_04_PHASE01_REGRESSION\\normal\\server-result.json",
+    "-jar",
+    "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\downloads\\paper-1.21-130.jar",
+    "nogui"
+  ],
+  "clientCommand": [
+    "cmd.exe",
+    "/d",
+    "/c",
+    "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\gradlew.bat",
+    "-PruntimeAcceptance=true",
+    "-PruntimeScenario=normal",
+    "-PruntimeEvidencePhase=PHASE_04_PHASE01_REGRESSION",
+    ":runtime-test-client:runClient",
+    "--console=plain"
+  ],
+  "serverWorkingDirectory": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_04_PHASE01_REGRESSION\\work\\server-normal",
+  "clientWorkingDirectory": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+  "passed": true,
+  "clientExitCode": 0,
+  "server": {
+    "timestamp": "2026-09-13T06:33:53.558005500Z",
+    "serverVersion": "1.21-130-b1b5d4c (MC: 1.21)",
+    "minecraftVersion": "1.21",
+    "player": "PiriRuntimeTest",
+    "remoteAddress": "127.0.0.1",
+    "envelopeProtocol": 1,
+    "hello": {
+      "protocol": 1,
+      "modVersion": "1.0.0"
+    },
+    "productionPluginEnabled": true,
+    "gameplayAllowed": true,
+    "passed": true
+  },
+  "client": {
+    "timestamp": "2026-09-13T06:33:53.670008700Z",
+    "scenario": "normal",
+    "minecraftVersion": "1.21",
+    "fabricLoader": "0.16.14",
+    "fabricApi": "0.102.0+1.21",
+    "packetType": "HELLO_ACK",
+    "protocol": 1,
+    "payload": {
+      "protocol": 1,
+      "serverVersion": "1.0.0"
+    },
+    "gameplayAllowed": true,
+    "passed": true
+  },
+  "serverExitCode": 0,
+  "uncaughtExceptions": [],
+  "durationSeconds": 68.8
+}

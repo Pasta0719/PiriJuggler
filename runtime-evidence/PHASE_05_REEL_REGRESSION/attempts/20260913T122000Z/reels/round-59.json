@@ -1,0 +1,11 @@
+{
+  "role": "MISS",
+  "premiumF": true,
+  "profile": "REVERSE_500MS",
+  "order": [
+    "RIGHT",
+    "LEFT",
+    "CENTER"
+  ],
+  "label": "premium-f-miss-rlc"
+}

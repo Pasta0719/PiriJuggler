@@ -1,0 +1,32 @@
+
+> Configure project :fabric
+Fabric Loom: 1.10.5
+:remapping 50 mods from modImplementation (java-api)
+:remapping sources
+
+> Task :common:compileJava
+> Task :common:processResources NO-SOURCE
+> Task :common:classes
+> Task :common:jar
+> Task :common:compileTestJava
+> Task :common:processTestResources NO-SOURCE
+> Task :common:testClasses
+
+> Task :common:test FAILED
+
+SpecLockTest > lockIsTiedToTheActualSpecChapters() FAILED
+    org.opentest4j.AssertionFailedError at SpecLockTest.java:45
+
+18 tests completed, 1 failed
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':common:test'.
+> There were failing tests. See the report at: file:///C:/Users/PC_user/Documents/PiriJuggler_Codex_Workflow_v4_AUDITED/common/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights.
+
+BUILD FAILED in 1m 3s
+4 actionable tasks: 4 executed

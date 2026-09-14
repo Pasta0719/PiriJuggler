@@ -1,0 +1,11 @@
+{
+  "role": "PREMIUM_B",
+  "premiumF": false,
+  "profile": "RESUME_NORMAL",
+  "order": [
+    "CENTER",
+    "LEFT",
+    "RIGHT"
+  ],
+  "label": "premium_b-clr"
+}

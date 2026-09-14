@@ -1,0 +1,288 @@
+{
+  "server": {
+    "serverVersion": "1.21-130-b1b5d4c (MC: 1.21)",
+    "enabled": true,
+    "ready": true,
+    "period": "ff29b0b2-a0d4-4a57-bc60-337b8c1ed751",
+    "machines": [
+      {
+        "id": 1,
+        "location": {
+          "world": "cd46023d-6cc9-4d04-93fd-7e2b73ca68f5",
+          "worldName": "world",
+          "x": 0,
+          "y": 66,
+          "z": 0,
+          "facing": "SOUTH"
+        },
+        "setting": 1,
+        "enabled": true,
+        "autoSetting": true,
+        "deleted": false,
+        "left": 0,
+        "center": 0,
+        "right": 0,
+        "createdAt": 1789189918773,
+        "updatedAt": 1789189918773
+      },
+      {
+        "id": 2,
+        "location": {
+          "world": "cd46023d-6cc9-4d04-93fd-7e2b73ca68f5",
+          "worldName": "world",
+          "x": 2,
+          "y": 66,
+          "z": 0,
+          "facing": "SOUTH"
+        },
+        "setting": 1,
+        "enabled": true,
+        "autoSetting": true,
+        "deleted": false,
+        "left": 0,
+        "center": 0,
+        "right": 0,
+        "createdAt": 1789189920248,
+        "updatedAt": 1789189920248
+      }
+    ],
+    "sessions": [
+      {
+        "session_id": "7fb18be6-158c-464f-95ab-491f6f44fe2b",
+        "player_uuid": "2b9a0e28-4a8f-3fe1-a65b-c41ad05e8077",
+        "machine_id": 1,
+        "source_business_period_id": "ff29b0b2-a0d4-4a57-bc60-337b8c1ed751",
+        "game_state": "SEATED_READY",
+        "lifecycle": "ACTIVE",
+        "credit": 0,
+        "held_medals": 0,
+        "notice_state": "NONE",
+        "lamp_on": 0,
+        "bonus_payout_count": 0,
+        "current_bet": 0,
+        "pay_display": 0,
+        "display_left_stop": 0,
+        "display_center_stop": 0,
+        "display_right_stop": 0,
+        "stopped_mask": 0,
+        "phase_left": 0.0,
+        "phase_center": 0.0,
+        "phase_right": 0.0,
+        "last_client_sequence": 0,
+        "last_activity": 1789189921008
+      }
+    ],
+    "commands": [
+      {
+        "player": "PiriRuntimeTest",
+        "command": "/piri machine create",
+        "rayTarget": "STONE_BUTTON:0"
+      },
+      {
+        "player": "PiriRuntimeTest",
+        "command": "/piri machine create",
+        "rayTarget": "STONE_BUTTON:0"
+      },
+      {
+        "player": "PiriRuntimeTest",
+        "command": "/piri machine create",
+        "rayTarget": "STONE_BUTTON:2"
+      },
+      {
+        "player": "PiriRuntimeTest",
+        "command": "/piri machine remove 1",
+        "rayTarget": "STONE_BUTTON:2"
+      },
+      {
+        "player": "PiriRuntimeTest",
+        "command": "/piri key give",
+        "rayTarget": "STONE_BUTTON:2"
+      }
+    ],
+    "clicks": [
+      {
+        "player": "PiriRuntimeTest",
+        "x": 0,
+        "action": "RIGHT_CLICK_BLOCK",
+        "denied": true
+      },
+      {
+        "player": "PiriRuntimeTest",
+        "x": 2,
+        "action": "RIGHT_CLICK_BLOCK",
+        "denied": true
+      },
+      {
+        "player": "PiriRuntimeTest",
+        "x": 0,
+        "action": "RIGHT_CLICK_BLOCK",
+        "denied": true
+      }
+    ],
+    "buttons": [
+      {
+        "x": 0,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 2,
+        "type": "STONE_BUTTON",
+        "powered": false
+      },
+      {
+        "x": 3,
+        "type": "STONE_BUTTON",
+        "powered": false
+      }
+    ]
+  },
+  "clients": {
+    "phase02-create": {
+      "completed": 14,
+      "connected": true,
+      "handshake": true,
+      "failure": null,
+      "packets": [
+        {
+          "type": "HELLO_ACK",
+          "payload": {
+            "protocol": 1,
+            "serverVersion": "1.0.0"
+          }
+        },
+        {
+          "type": "OPEN_MACHINE",
+          "payload": {
+            "sessionId": "7fb18be6-158c-464f-95ab-491f6f44fe2b",
+            "machineId": 1,
+            "expectedNextClientSequence": 1
+          }
+        },
+        {
+          "type": "PUBLIC_STATE",
+          "payload": {
+            "sessionId": "7fb18be6-158c-464f-95ab-491f6f44fe2b",
+            "machineId": 1,
+            "expectedNextClientSequence": 1,
+            "gameState": "SEATED_READY",
+            "lifecycle": "ACTIVE",
+            "credit": 0,
+            "heldMedals": 0,
+            "bet": 0,
+            "pay": 0,
+            "bonusCount": 0,
+            "lampOn": false,
+            "displayStops": {
+              "left": 0,
+              "center": 0,
+              "right": 0
+            },
+            "stoppedMask": 0
+          }
+        },
+        {
+          "type": "ADMIN_STATE",
+          "payload": {
+            "machineId": 1,
+            "setting": 1,
+            "autoSetting": true,
+            "enabled": true,
+            "activeProfile": "normal",
+            "busy": true,
+            "totalGames": 0,
+            "bigCount": 0,
+            "regCount": 0,
+            "currentGames": 0,
+            "todayDifference": 0,
+            "todayMaxDifference": 0,
+            "settingHistory": [],
+            "adminSessionId": "12be9a91-bb0e-4411-809b-d2aa91d32cb8"
+          }
+        }
+      ],
+      "messages": [
+        "PiriRuntimeTest joined the game",
+        "MACHINE_CREATED 1",
+        "LOCATION_ALREADY_REGISTERED",
+        "MACHINE_CREATED 2",
+        "RECOVERY_REQUIRED",
+        "MACHINE_OCCUPIED",
+        "KEY_GIVEN PiriRuntimeTest"
+      ],
+      "actions": [
+        {
+          "id": 1,
+          "kind": "aim",
+          "x": 0
+        },
+        {
+          "id": 2,
+          "kind": "command",
+          "text": "piri machine create"
+        },
+        {
+          "id": 3,
+          "kind": "command",
+          "text": "piri machine create"
+        },
+        {
+          "id": 4,
+          "kind": "aim",
+          "x": 2
+        },
+        {
+          "id": 5,
+          "kind": "command",
+          "text": "piri machine create"
+        },
+        {
+          "id": 6,
+          "kind": "aim",
+          "x": 0
+        },
+        {
+          "id": 7,
+          "kind": "click",
+          "x": 0
+        },
+        {
+          "id": 8,
+          "kind": "aim",
+          "x": 2
+        },
+        {
+          "id": 9,
+          "kind": "click",
+          "x": 2
+        },
+        {
+          "id": 10,
+          "kind": "command",
+          "text": "piri machine remove 1"
+        },
+        {
+          "id": 11,
+          "kind": "command",
+          "text": "piri key give"
+        },
+        {
+          "id": 12,
+          "kind": "slot",
+          "slot": 0
+        },
+        {
+          "id": 13,
+          "kind": "aim",
+          "x": 0
+        },
+        {
+          "id": 14,
+          "kind": "click",
+          "x": 0
+        }
+      ],
+      "productionSession": "7fb18be6-158c-464f-95ab-491f6f44fe2b"
+    }
+  }
+}

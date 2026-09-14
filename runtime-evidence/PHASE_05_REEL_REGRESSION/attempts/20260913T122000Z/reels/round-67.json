@@ -1,0 +1,11 @@
+{
+  "role": "PIERO",
+  "premiumF": true,
+  "profile": "NORMAL",
+  "order": [
+    "LEFT",
+    "CENTER",
+    "RIGHT"
+  ],
+  "label": "premium-f-piero-lcr"
+}

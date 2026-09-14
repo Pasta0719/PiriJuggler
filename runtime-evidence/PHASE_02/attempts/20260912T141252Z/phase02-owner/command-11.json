@@ -1,0 +1,5 @@
+{
+  "id": 11,
+  "kind": "command",
+  "text": "piri machine remove 1"
+}

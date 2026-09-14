@@ -1,0 +1,38 @@
+{
+  "triplets": 9261,
+  "counts": {
+    "GRAPE": 750,
+    "BELL": 50,
+    "PIERO": 20,
+    "REPLAY": 525,
+    "BIG_ENTRY": 10,
+    "REG_ENTRY": 10,
+    "CHERRY": 1514,
+    "MISS": 5250,
+    "PREMIUM_B": 782
+  },
+  "minimums": {
+    "GRAPE": 750,
+    "BELL": 50,
+    "PIERO": 20,
+    "REPLAY": 525,
+    "CHERRY": 1514,
+    "MISS": 5250,
+    "BIG_ENTRY": 10,
+    "REG_ENTRY": 10,
+    "PREMIUM_B": 1
+  },
+  "minimumPass": {
+    "GRAPE": true,
+    "BELL": true,
+    "PIERO": true,
+    "REPLAY": true,
+    "CHERRY": true,
+    "MISS": true,
+    "BIG_ENTRY": true,
+    "REG_ENTRY": true,
+    "PREMIUM_B": true
+  },
+  "premiumFCheckedCases": 7938,
+  "premiumFEmptyFirstStopCases": []
+}

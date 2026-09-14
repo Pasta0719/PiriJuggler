@@ -1,0 +1,7 @@
+{
+  "type": "BONUS_START",
+  "payload": {
+    "bonusType": "BIG",
+    "count": 0
+  }
+}

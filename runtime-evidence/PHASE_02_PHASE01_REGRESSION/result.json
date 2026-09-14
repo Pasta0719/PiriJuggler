@@ -1,0 +1,144 @@
+{
+  "startedAt": "2026-09-12T14:16:57.390276+00:00",
+  "versions": {
+    "minecraft": "1.21",
+    "paper": "1.21-130",
+    "fabricLoader": "0.16.14",
+    "fabricApi": "0.102.0+1.21",
+    "yarn": "1.21+build.9"
+  },
+  "buildHashes": {
+    "common": "bdcf0f21d0964f8e628d97baa16ad9fa2568cfbc730f884bccb92f469d53a2df",
+    "paper": "95f4d8d9975056dcef5e99aa1f3914a1ae0a70a34f209191bb419157e5be8ed5",
+    "fabric": "95c9def1d40db371af04f43e339082ed68644bf334c9bb2fe1621ad134eb1965"
+  },
+  "helperHashes": {
+    "paper": "d41ad585b965beb067693141d8bd8067939c15674d478dad54c4a63ad2fe7ac6",
+    "fabric": "afe73d27479f732343696b12a51757da34357beb99e81d2c6efbf5d9643d5b30"
+  },
+  "scenarios": [
+    {
+      "name": "normal",
+      "serverCommand": [
+        "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE",
+        "-Xms512M",
+        "-Xmx1536M",
+        "-Dfile.encoding=UTF-8",
+        "-Dpiri.runtime.serverResult=C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02_PHASE01_REGRESSION\\normal\\server-result.json",
+        "-jar",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\downloads\\paper-1.21-130.jar",
+        "nogui"
+      ],
+      "clientCommand": [
+        "cmd.exe",
+        "/d",
+        "/c",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\gradlew.bat",
+        "-PruntimeAcceptance=true",
+        "-PruntimeScenario=normal",
+        "-PruntimeEvidencePhase=PHASE_02_PHASE01_REGRESSION",
+        ":runtime-test-client:runClient",
+        "--console=plain"
+      ],
+      "serverWorkingDirectory": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02_PHASE01_REGRESSION\\work\\server-normal",
+      "clientWorkingDirectory": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+      "passed": true,
+      "clientExitCode": 0,
+      "server": {
+        "timestamp": "2026-09-12T14:18:24.419045500Z",
+        "serverVersion": "1.21-130-b1b5d4c (MC: 1.21)",
+        "minecraftVersion": "1.21",
+        "player": "PiriRuntimeTest",
+        "remoteAddress": "127.0.0.1",
+        "envelopeProtocol": 1,
+        "hello": {
+          "protocol": 1,
+          "modVersion": "1.0.0"
+        },
+        "productionPluginEnabled": true,
+        "gameplayAllowed": true,
+        "passed": true
+      },
+      "client": {
+        "timestamp": "2026-09-12T14:18:24.712336400Z",
+        "scenario": "normal",
+        "minecraftVersion": "1.21",
+        "fabricLoader": "0.16.14",
+        "fabricApi": "0.102.0+1.21",
+        "packetType": "HELLO_ACK",
+        "protocol": 1,
+        "payload": {
+          "protocol": 1,
+          "serverVersion": "1.0.0"
+        },
+        "gameplayAllowed": true,
+        "passed": true
+      },
+      "serverExitCode": 0,
+      "uncaughtExceptions": [],
+      "durationSeconds": 95.83
+    },
+    {
+      "name": "mismatch",
+      "serverCommand": [
+        "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot\\bin\\java.EXE",
+        "-Xms512M",
+        "-Xmx1536M",
+        "-Dfile.encoding=UTF-8",
+        "-Dpiri.runtime.serverResult=C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02_PHASE01_REGRESSION\\mismatch\\server-result.json",
+        "-jar",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_01\\work\\downloads\\paper-1.21-130.jar",
+        "nogui"
+      ],
+      "clientCommand": [
+        "cmd.exe",
+        "/d",
+        "/c",
+        "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\gradlew.bat",
+        "-PruntimeAcceptance=true",
+        "-PruntimeScenario=mismatch",
+        "-PruntimeEvidencePhase=PHASE_02_PHASE01_REGRESSION",
+        ":runtime-test-client:runClient",
+        "--console=plain"
+      ],
+      "serverWorkingDirectory": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED\\runtime-evidence\\PHASE_02_PHASE01_REGRESSION\\work\\server-mismatch",
+      "clientWorkingDirectory": "C:\\Users\\PC_user\\Documents\\PiriJuggler_Codex_Workflow_v4_AUDITED",
+      "passed": true,
+      "clientExitCode": 0,
+      "server": {
+        "timestamp": "2026-09-12T14:19:58.052282500Z",
+        "serverVersion": "1.21-130-b1b5d4c (MC: 1.21)",
+        "minecraftVersion": "1.21",
+        "player": "PiriRuntimeTest",
+        "remoteAddress": "127.0.0.1",
+        "envelopeProtocol": 2,
+        "hello": {
+          "protocol": 2,
+          "modVersion": "1.0.0"
+        },
+        "productionPluginEnabled": true,
+        "gameplayAllowed": false,
+        "passed": true
+      },
+      "client": {
+        "timestamp": "2026-09-12T14:19:58.059395400Z",
+        "scenario": "mismatch",
+        "minecraftVersion": "1.21",
+        "fabricLoader": "0.16.14",
+        "fabricApi": "0.102.0+1.21",
+        "packetType": "ERROR",
+        "protocol": 1,
+        "payload": {
+          "errorCode": "PROTOCOL_MISMATCH"
+        },
+        "gameplayAllowed": false,
+        "passed": true
+      },
+      "serverExitCode": 0,
+      "uncaughtExceptions": [],
+      "durationSeconds": 94.3
+    }
+  ],
+  "passed": true,
+  "finishedAt": "2026-09-12T14:20:07.562737+00:00"
+}

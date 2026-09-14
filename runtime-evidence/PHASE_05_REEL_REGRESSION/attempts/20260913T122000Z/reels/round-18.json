@@ -1,0 +1,11 @@
+{
+  "role": "PIERO",
+  "premiumF": false,
+  "profile": "RESUME_NORMAL",
+  "order": [
+    "RIGHT",
+    "CENTER",
+    "LEFT"
+  ],
+  "label": "piero-rcl"
+}

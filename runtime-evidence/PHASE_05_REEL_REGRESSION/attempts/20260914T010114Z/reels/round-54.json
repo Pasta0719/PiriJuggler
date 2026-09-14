@@ -1,0 +1,11 @@
+{
+  "role": "REG_ENTRY",
+  "premiumF": false,
+  "profile": "RESUME_NORMAL",
+  "order": [
+    "RIGHT",
+    "CENTER",
+    "LEFT"
+  ],
+  "label": "reg_entry-rcl"
+}
