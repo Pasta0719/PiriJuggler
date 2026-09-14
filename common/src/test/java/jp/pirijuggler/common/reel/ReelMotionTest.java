@@ -7,7 +7,7 @@ class ReelMotionTest {
     @Test void premiumStartsOppositeNormalAndThenReturnsToNormalDirection(){
         assertTrue(ReelMotion.delta(ReelMotion.Profile.NORMAL,.4)<ReelMotion.delta(ReelMotion.Profile.NORMAL,.2));
         assertTrue(ReelMotion.delta(ReelMotion.Profile.REVERSE_500MS,.4)>ReelMotion.delta(ReelMotion.Profile.REVERSE_500MS,.2));
-        for(var profile:ReelMotion.Profile.values())assertEquals(-1.8,ReelMotion.delta(profile,1.1)-ReelMotion.delta(profile,1),1e-9);
+        for(var profile:ReelMotion.Profile.values())assertEquals(-2.1,ReelMotion.delta(profile,1.1)-ReelMotion.delta(profile,1),1e-9);
         assertEquals(20,ReelMotion.slip(1,0));assertEquals(1,ReelMotion.slip(20,0));
     }
     @Test void normalStopEndpointNeverReversesAndLatePacketsCannotForceVisualOverspeed(){
@@ -18,9 +18,9 @@ class ReelMotionTest {
             double from=step/10.0,endpoint=ReelMotion.normalStopEndpoint(from,target);
             assertTrue(endpoint<=from);assertEquals(target,ReelMotion.wrap(endpoint),1e-9);
             int ms=ReelMotion.visualDurationMs(from,endpoint,80);
-            assertTrue((from-endpoint)/(ms/1000.0)<=18.0000001);
+            assertTrue((from-endpoint)/(ms/1000.0)<=ReelMotion.NORMAL_SPEED+1e-7);
         }
-        assertEquals(1117,ReelMotion.visualDurationMs(20.1,0,80));
+        assertEquals(958,ReelMotion.visualDurationMs(20.1,0,80));
         assertEquals(380,ReelMotion.visualDurationMs(8,2,380));
     }
     @Test void exactCompiledArraysAndThreeRowsMatchSpec() throws Exception {
@@ -29,9 +29,9 @@ class ReelMotionTest {
             assertEquals(FixedReels.at(reel,20),FixedReels.row(reel,0,-1));assertEquals(FixedReels.at(reel,0),FixedReels.row(reel,20,1));assertThrows(UnsupportedOperationException.class,()->FixedReels.sequence(reel).set(0,Symbol.BAR));}
     }
     @Test void motionBoundariesAndReverseWrapAreExact(){
-        assertEquals(0,ReelMotion.delta(ReelMotion.Profile.NORMAL,.150));assertEquals(-3.15,ReelMotion.delta(ReelMotion.Profile.NORMAL,.500),1e-12);
-        assertEquals(6,ReelMotion.delta(ReelMotion.Profile.REVERSE_500MS,.5),1e-12);assertEquals(3.3,ReelMotion.delta(ReelMotion.Profile.REVERSE_500MS,.8),1e-12);
-        assertEquals(6,ReelMotion.phase(ReelMotion.Profile.REVERSE_500MS,0,.5),1e-12);assertEquals(9,ReelMotion.phase(ReelMotion.Profile.RESUME_NORMAL,6,1),1e-12);
+        assertEquals(0,ReelMotion.delta(ReelMotion.Profile.NORMAL,.150));assertEquals(-3.675,ReelMotion.delta(ReelMotion.Profile.NORMAL,.500),1e-12);
+        assertEquals(6,ReelMotion.delta(ReelMotion.Profile.REVERSE_500MS,.5),1e-12);assertEquals(2.85,ReelMotion.delta(ReelMotion.Profile.REVERSE_500MS,.8),1e-12);
+        assertEquals(6,ReelMotion.phase(ReelMotion.Profile.REVERSE_500MS,0,.5),1e-12);assertEquals(6,ReelMotion.phase(ReelMotion.Profile.RESUME_NORMAL,6,1),1e-12);
         for(var p:ReelMotion.Profile.values())for(double boundary:new double[]{.150,.500,.800})assertEquals(ReelMotion.delta(p,boundary-1e-10),ReelMotion.delta(p,boundary+1e-10),1e-7);
     }
     @Test void rttUsesClampedFullPingAndCannotGoBeforeStart(){
