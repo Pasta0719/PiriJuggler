@@ -19,8 +19,10 @@ public final class TestVaultPlugin extends JavaPlugin {
     private final TestEconomy economy = new TestEconomy();
 
     @Override public void onEnable() {
-        Bukkit.getServicesManager().register(Economy.class, economy, this, ServicePriority.Normal);
-        getLogger().info("PIRI_TEST_VAULT_READY");
+        // Runtime acceptance must never debit the server's real economy provider.
+        // Register above normal production providers so PiriJuggler's Vault discovery resolves this test economy.
+        Bukkit.getServicesManager().register(Economy.class, economy, this, ServicePriority.Highest);
+        getLogger().info("PIRI_TEST_VAULT_READY priority=HIGHEST provider=" + economy.getClass().getName());
     }
 
     @Override public void onDisable() {
