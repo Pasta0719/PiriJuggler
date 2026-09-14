@@ -6,8 +6,8 @@ description: Piri Juggler server-authoritative slot foundation
 softdepend: [Vault]
 commands:
   piri:
-    description: Piri machine and session management
-    usage: /piri machine create|redefine|remove|list|info or /piri key give
+    description: Piri Juggler commands
+    usage: /piri prizes | /piri exchange <small|medium|large> [count] | /piri exchange all | /piri machine create|redefine|remove|list|info | /piri key give
   pirimerge:
     description: Merge all valid Piri Medal items in the player inventory into one token
     usage: /pirimerge
