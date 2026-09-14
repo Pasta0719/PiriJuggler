@@ -38,7 +38,8 @@ public final class GameStore {
             db.sql("UPDATE machine_period_stats SET total_games=?,big_count=?,reg_count=?,current_games=?,today_difference=?,today_max_difference=?,last_bonus_type=COALESCE(?,last_bonus_type),last_bonus_at=CASE WHEN ? IS NULL THEN last_bonus_at ELSE ? END WHERE machine_id=? AND business_period_id=?",
                     total,big,reg,current,difference,max,action.bonusStarted(),action.bonusStarted(),after.number("last_activity"),before.machine(),period);
             db.sql("UPDATE machines SET last_left_stop=?,last_center_stop=?,last_right_stop=?,updated_at=? WHERE machine_id=?",after.number("display_left_stop"),after.number("display_center_stop"),after.number("display_right_stop"),after.number("last_activity"),before.machine());
-            if((action.finished()&&action.normalSpins()>0)||action.bonusEnded())db.sql("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,?,?,?)",before.machine(),period,total,difference,after.number("last_activity"));
+            boolean normalResult=action.finished()&&before.state()==Session.GameState.NORMAL_SPINNING;
+            if(normalResult||action.bonusEnded())db.sql("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,?,?,?)",before.machine(),period,total,difference,after.number("last_activity"));
             db.sql("INSERT INTO metadata(key,value) VALUES(?,?)",receipt,before.id().toString());
             return after;
         });
