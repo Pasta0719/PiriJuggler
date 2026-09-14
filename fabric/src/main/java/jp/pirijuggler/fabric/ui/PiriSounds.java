@@ -15,7 +15,7 @@ public final class PiriSounds {
     public static final List<String> NAMES=List.of("notice","notice_strong","tenpai","bet","lever","stop","payout","error","bonus_start","bonus_end","big_bgm","reg_bgm");
     private static final Map<String,SoundEvent> EVENTS=new HashMap<>();
     private static final PriorityQueue<Pending> QUEUE=new PriorityQueue<>(Comparator.comparingLong(Pending::at));
-    private static SoundInstance loop;
+    private static SoundInstance loop;private static String loopName;
     private record Pending(String name,long at){}
     private static final class LoopSound extends AbstractSoundInstance {
         private LoopSound(SoundEvent event){super(event,SoundCategory.MASTER,SoundInstance.createRandom());repeat=true;repeatDelay=0;relative=true;attenuationType=SoundInstance.AttenuationType.NONE;volume=1.0f;pitch=1.0f;}
@@ -26,10 +26,10 @@ public final class PiriSounds {
     public static boolean available(String name){return NAMES.contains(name)&&MinecraftClient.getInstance().getResourceManager().getResource(Identifier.of("piri","sounds/"+name+".ogg")).isPresent();}
     public static void play(String name){if(available(name))MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(EVENTS.get(name),1));}
     public static void startLoop(String name){
-        if(!name.equals("big_bgm")&&!name.equals("reg_bgm"))throw new IllegalArgumentException(name);stopLoop();
-        if(!available(name))return;loop=new LoopSound(EVENTS.get(name));MinecraftClient.getInstance().getSoundManager().play(loop);
+        if(!name.equals("big_bgm")&&!name.equals("reg_bgm"))throw new IllegalArgumentException(name);if(name.equals(loopName)&&loop!=null)return;stopLoop();
+        if(!available(name))return;loopName=name;loop=new LoopSound(EVENTS.get(name));MinecraftClient.getInstance().getSoundManager().play(loop);
     }
-    public static void stopLoop(){if(loop!=null){MinecraftClient.getInstance().getSoundManager().stop(loop);loop=null;}}
+    public static void stopLoop(){if(loop!=null)MinecraftClient.getInstance().getSoundManager().stop(loop);loop=null;loopName=null;}
     public static void reset(){QUEUE.clear();stopLoop();}
     private PiriSounds(){}
 }
