@@ -26,7 +26,7 @@ public final class SlotUi {
             case SPIN_START -> {if(view.matches(b)&&!"RESUME_NORMAL".equals(b.get("animation").getAsString()))PiriSounds.queue("lever",1,0);}
             case TENPAI_SOUND -> {if(view.matchesSpin(b))PiriSounds.queue("tenpai",1,0);}
             case PAYOUT -> PiriSounds.queue("payout",1,0);
-            case BONUS_START -> {PiriSounds.queue("bonus_start",1,0);if(b.has("type"))PiriSounds.startLoop("BIG".equals(b.get("type").getAsString())?"big_bgm":"reg_bgm");}
+            case BONUS_START -> {PiriSounds.queue("bonus_start",1,0);if(b.has("bonusType"))PiriSounds.startLoop("BIG".equals(b.get("bonusType").getAsString())?"big_bgm":"reg_bgm");}
             case BONUS_END -> {PiriSounds.stopLoop();PiriSounds.queue("bonus_end",1,0);}
             case PUBLIC_STATE -> {if(view.matches(b)){String state=b.get("gameState").getAsString();if(state.startsWith("BIG_"))PiriSounds.startLoop("big_bgm");else if(state.startsWith("REG_"))PiriSounds.startLoop("reg_bgm");else if(state.equals("SEATED_READY"))PiriSounds.stopLoop();}}
             case ACTION_ACCEPTED -> {String sound=ACCEPT_SOUNDS.remove(b.get("clientSequence").getAsLong());if("bet".equals(sound))PiriSounds.queue(sound,1,0);}
