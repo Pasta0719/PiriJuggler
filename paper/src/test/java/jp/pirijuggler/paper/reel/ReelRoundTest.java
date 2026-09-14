@@ -12,21 +12,25 @@ class ReelRoundTest {
     private final Thread thread=Thread.currentThread();private final MainThread main=new MainThread(){public void execute(Runnable r){r.run();}public boolean isMainThread(){return Thread.currentThread()==thread;}};
     private ReelRound round(ReelMotion.Profile profile,DisplayRole role){return new ReelRound(SOLVER,new ReelRound.Identity(OWNER,SESSION,1,SPIN),role,false,profile,"NORMAL",new double[]{8,3,12},new StopTriplet(0,0,0),0,0,main);}
     private Envelope request(PacketType type,long seq){var b=new JsonObject();b.addProperty("sessionId",SESSION.toString());b.addProperty("machineId",1);b.addProperty("clientSequence",seq);return Envelope.current(type,b);}
+    private Envelope request(PacketType type,long seq,int pressed){var b=request(type,seq).payload();b.addProperty("pressedIndex",pressed);return Envelope.current(type,b);}
     private static String error(ReelRound.Result r){assertFalse(r.accepted());return r.packets().getFirst().payload().get("errorCode").getAsString();}
     @Test void earlyStopConsumesSequenceAndUsesServerTimeWithPing(){
-        var r=round(ReelMotion.Profile.NORMAL,DisplayRole.BELL);assertEquals(400,r.begin(0).payload().get("stopEnableAfterMs").getAsInt());
+        var r=round(ReelMotion.Profile.NORMAL,DisplayRole.BELL);var start=r.begin(0);assertEquals(400,start.payload().get("stopEnableAfterMs").getAsInt());assertTrue(start.payload().has("stopHints"));
         assertEquals("STOP_TOO_EARLY",error(r.receive(OWNER,request(PacketType.STOP_LEFT,1),449_999_999,100)));assertEquals(1,r.lastSequence());
         assertEquals("SEQUENCE_OLD",error(r.receive(OWNER,request(PacketType.STOP_LEFT,1),600_000_000,100)));
         var valid=r.receive(OWNER,request(PacketType.STOP_LEFT,2),600_000_000,100);assertTrue(valid.accepted());assertEquals(4,valid.choice().pressedIndex());assertEquals(1,r.stoppedMask());
-        assertEquals(Set.of("spinId","reel","pressedIndex","stopIndex","slip","durationMs"),valid.packets().get(1).payload().keySet());assertEquals("ALREADY_STOPPED",error(r.receive(OWNER,request(PacketType.STOP_LEFT,3),900_000_000,100)));
+        assertEquals(Set.of("spinId","reel","pressedIndex","stopIndex","slip","durationMs","nextStopHints"),valid.packets().get(1).payload().keySet());assertEquals("ALREADY_STOPPED",error(r.receive(OWNER,request(PacketType.STOP_LEFT,3),900_000_000,100)));
     }
     @Test void profileThresholdsAndClientDelaysAreFixed(){for(var profile:ReelMotion.Profile.values()){
         var r=round(profile,DisplayRole.GRAPE);assertEquals(profile.clientDelayMs(),r.begin(0).payload().get("stopEnableAfterMs").getAsInt());long boundary=profile.serverThresholdMs()*1_000_000L;
         assertEquals("STOP_TOO_EARLY",error(r.receive(OWNER,request(PacketType.STOP_LEFT,1),boundary-1,0)));assertTrue(r.receive(OWNER,request(PacketType.STOP_LEFT,2),boundary,0).accepted());}}
-    @Test void sessionOwnerAndForbiddenStopFieldsAreRejectedWithoutMovingReels(){
-        var r=round(ReelMotion.Profile.NORMAL,DisplayRole.MISS);r.begin(0);assertEquals("SESSION_MISMATCH",error(r.receive(UUID.randomUUID(),request(PacketType.STOP_LEFT,1),1_000_000_000,0)));
-        for(String key:List.of("pressedIndex","spinId","phase","targetStopIndex")){var b=request(PacketType.STOP_LEFT,1).payload();b.addProperty(key,9);assertEquals("SESSION_MISMATCH",error(r.receive(OWNER,Envelope.current(PacketType.STOP_LEFT,b),1_000_000_000,0)));}
-        assertEquals(0,r.lastSequence());assertEquals(0,r.stoppedMask());
+    @Test void clientPressedIndexUsesPrecomputedHintAndInvalidFieldsAreRejected(){
+        var r=round(ReelMotion.Profile.NORMAL,DisplayRole.MISS);var start=r.begin(0);assertEquals("SESSION_MISMATCH",error(r.receive(UUID.randomUUID(),request(PacketType.STOP_LEFT,1),1_000_000_000,0)));
+        var hint=start.payload().getAsJsonObject("stopHints").getAsJsonArray("left").get(9).getAsJsonObject();
+        var accepted=r.receive(OWNER,request(PacketType.STOP_LEFT,1,9),1_000_000_000,0);assertTrue(accepted.accepted());assertEquals(9,accepted.choice().pressedIndex());assertEquals(hint.get("stopIndex").getAsInt(),accepted.choice().stopIndex());assertEquals(hint.get("slip").getAsInt(),accepted.choice().slip());
+        for(int bad:List.of(-1,21)){var fresh=round(ReelMotion.Profile.NORMAL,DisplayRole.MISS);fresh.begin(0);assertEquals("SESSION_MISMATCH",error(fresh.receive(OWNER,request(PacketType.STOP_LEFT,1,bad),1_000_000_000,0)));assertEquals(0,fresh.lastSequence());}
+        var fresh=round(ReelMotion.Profile.NORMAL,DisplayRole.MISS);fresh.begin(0);for(String key:List.of("spinId","phase","targetStopIndex")){var b=request(PacketType.STOP_LEFT,1).payload();b.addProperty(key,9);assertEquals("SESSION_MISMATCH",error(fresh.receive(OWNER,Envelope.current(PacketType.STOP_LEFT,b),1_000_000_000,0)));}
+        assertEquals(0,fresh.lastSequence());assertEquals(0,fresh.stoppedMask());
     }
     @Test void spaceSelectsNextUnstoppedAndNeverReturnsInternalOutcome(){
         var r=round(ReelMotion.Profile.NORMAL,DisplayRole.PREMIUM_B);r.begin(0);r.receive(OWNER,request(PacketType.STOP_CENTER,1),1_000_000_000,0);
