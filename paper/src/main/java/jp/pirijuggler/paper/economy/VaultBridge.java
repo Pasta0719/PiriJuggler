@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
  */
 public final class VaultBridge {
     private static final String FAIL_DEPOSIT_PROPERTY = "piri.runtime.failVaultDeposit";
+    private static final String THROW_DEPOSIT_PROPERTY = "piri.runtime.throwVaultDeposit";
 
     private final Class<?> economyClass;
     private final Method getBalance;
@@ -66,6 +67,9 @@ public final class VaultBridge {
     }
 
     public boolean deposit(OfflinePlayer player, double amount) {
+        if (Boolean.getBoolean(THROW_DEPOSIT_PROPERTY)) {
+            throw new IllegalStateException("Simulated uncertain Vault deposit outcome before provider call");
+        }
         if (Boolean.getBoolean(FAIL_DEPOSIT_PROPERTY)) return false;
         return invokeTransaction(depositPlayer, player, amount, "deposit");
     }
