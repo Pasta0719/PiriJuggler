@@ -33,9 +33,9 @@ public final class SlotViewState {
             }}
             case REEL_STOP -> {if(matchesSpin(b)) {
                 int reel=switch(b.get("reel").getAsString()){case "LEFT"->0;case "CENTER"->1;case "RIGHT"->2;default->throw new IllegalArgumentException("Unknown reel");};
-                if(stops[reel]!=null)return;double from=phase(reel),target=b.get("stopIndex").getAsInt();
-                // Keep the endpoint integral; subtracting a wrapped distance can round zero to 21.
-                double endpoint=target<=from?target:target-21;stops[reel]=new Stop(from,endpoint,now,b.get("durationMs").getAsLong()*1_000_000L);rest[reel]=target;
+                if(stops[reel]!=null)return;double from=phase(reel);int target=b.get("stopIndex").getAsInt();
+                double endpoint=ReelMotion.normalStopEndpoint(from,target);int requested=b.get("durationMs").getAsInt();int visualMs=ReelMotion.visualDurationMs(from,endpoint,requested);
+                stops[reel]=new Stop(from,endpoint,now,visualMs*1_000_000L);rest[reel]=target;
             }}
             case NOTICE -> {if(matchesSpin(b)){notice="ON".equals(b.get("lamp").getAsString());blink="FAST_BLINK_1S".equals(b.get("pattern").getAsString());noticeAt=now;}}
             case DATA_LAMP -> {if(b.has("machineId")&&b.get("machineId").getAsInt()==machine)dataLamp=b.deepCopy();}
@@ -46,9 +46,7 @@ public final class SlotViewState {
     public boolean matches(JsonObject b){return session!=null&&b.has("sessionId")&&b.has("machineId")&&session.toString().equals(b.get("sessionId").getAsString())&&machine==b.get("machineId").getAsInt();}
     public boolean matchesSpin(JsonObject b){return spin!=null&&b.has("spinId")&&spin.toString().equals(b.get("spinId").getAsString());}
     public static double wrap(double value){return ReelMotion.wrap(value);}
-    public static double distance(String animation,double seconds){
-        return ReelMotion.delta(ReelMotion.Profile.valueOf(animation),seconds);
-    }
+    public static double distance(String animation,double seconds){return ReelMotion.delta(ReelMotion.Profile.valueOf(animation),seconds);}
     public double phase(int reel){
         long now=time.getAsLong();Stop stop=stops[reel];if(stop!=null){double p=stop.duration==0?1:Math.min(1,Math.max(0,(now-stop.at)/(double)stop.duration));return p>=1?wrap(stop.target):wrap(stop.from+(stop.target-stop.from)*p);}
         return spinning?wrap(starts[reel]+distance(animation,(now-spinAt)/1e9)):rest[reel];
