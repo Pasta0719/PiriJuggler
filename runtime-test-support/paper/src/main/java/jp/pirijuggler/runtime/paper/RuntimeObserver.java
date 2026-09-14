@@ -19,6 +19,9 @@ public final class RuntimeObserver extends JavaPlugin {
         var balanceCommand=getCommand("piribalance");
         if(balanceCommand==null)throw new IllegalStateException("piribalance command missing");
         balanceCommand.setExecutor(new TestBalanceCommand(this));
+        var resetCommand=getCommand("pirireset");
+        if(resetCommand==null)throw new IllegalStateException("pirireset command missing");
+        resetCommand.setExecutor(new TestResetCommand(this));
 
         if ("phase05".equals(System.getProperty("piri.runtime.phase"))) {new Phase02Observer(this);new Phase05Fixture(this);getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase05");return;}
         if ("phase04".equals(System.getProperty("piri.runtime.phase"))) {
