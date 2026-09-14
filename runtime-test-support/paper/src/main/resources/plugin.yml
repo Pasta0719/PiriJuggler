@@ -12,10 +12,6 @@ commands:
     description: Set an exact Phase07 runtime session balance
     usage: /piribalance <credit 0..50> <held >=0> [player]
     permission: piri.runtime
-  pirireset:
-    description: Reset an unsettled runtime-test game snapshot while preserving CREDIT and held medals
-    usage: /pirireset [player]
-    permission: piri.runtime
 permissions:
   piri.runtime:
     default: op
