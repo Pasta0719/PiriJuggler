@@ -21,8 +21,9 @@ class SlotViewStateTest {
     @Test void lateStopPacketDoesNotReverseOrSprintThroughAFullWrap(){
         var time=new AtomicLong();var view=open(time);var b=start().payload();b.getAsJsonObject("startPhase").addProperty("left",20.1);view.receive(Envelope.current(PacketType.SPIN_START,b));
         view.receive(packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\"LEFT\",\"stopIndex\":0,\"durationMs\":80}"));
-        time.set(80_000_000);double after80=view.phase(0);assertTrue(after80<20.1&&after80>18.5,"must continue downward without a visual sprint");
-        time.set(958_000_000L);assertEquals(0,view.phase(0),1e-9);
+        int stopMs=jp.pirijuggler.common.reel.ReelMotion.visualDurationMs(20.1,0,80);
+        time.set(80_000_000);double after80=view.phase(0);double expected=20.1*(1-80.0/stopMs);assertEquals(expected,after80,1e-9,"must continue downward at the configured normal-speed cap");
+        time.set(stopMs*1_000_000L);assertEquals(0,view.phase(0),1e-9);
     }
     static final String ID="00000000-0000-0000-0000-000000000001",SPIN="00000000-0000-0000-0000-000000000002";
     static Envelope packet(PacketType type,String json){return Envelope.current(type,JsonParser.parseString(json).getAsJsonObject());}
