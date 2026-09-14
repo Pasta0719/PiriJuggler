@@ -1,10 +1,13 @@
 package jp.pirijuggler.paper.economy;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+import java.util.List;
 import java.util.UUID;
 
 /** Canonical server-side representation of the physical Piri Medal token. */
@@ -25,7 +28,22 @@ public final class MedalToken {
         Value value = new Value(bundleId, amount);
         ItemStack item = new ItemStack(Material.IRON_NUGGET, 1);
         var meta = item.getItemMeta();
-        meta.displayName(Component.text("Piri Medal"));
+        meta.displayName(Component.text("Piri Medal", NamedTextColor.GOLD)
+                .decorate(TextDecoration.BOLD)
+                .decoration(TextDecoration.ITALIC, false));
+        meta.lore(List.of(
+                Component.text("PIRI JUGGLER", NamedTextColor.DARK_GRAY)
+                        .decoration(TextDecoration.ITALIC, false),
+                Component.empty(),
+                Component.text("残高  ", NamedTextColor.GRAY)
+                        .append(Component.text(value.amount(), NamedTextColor.YELLOW).decorate(TextDecoration.BOLD))
+                        .append(Component.text(" MEDALS", NamedTextColor.GOLD))
+                        .decoration(TextDecoration.ITALIC, false),
+                Component.text("台のCREDITへ投入できます", NamedTextColor.GRAY)
+                        .decoration(TextDecoration.ITALIC, false),
+                Component.text("1トークン 最大500枚", NamedTextColor.DARK_GRAY)
+                        .decoration(TextDecoration.ITALIC, false)
+        ));
         meta.setMaxStackSize(1);
         var pdc = meta.getPersistentDataContainer();
         pdc.set(ITEM_TYPE, PersistentDataType.STRING, "medal");
