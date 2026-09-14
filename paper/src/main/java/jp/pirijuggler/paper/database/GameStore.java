@@ -29,9 +29,16 @@ public final class GameStore {
             long total=Math.addExact(((Number)stats.get("total_games")).longValue(),action.normalSpins());
             long current=Math.addExact(((Number)stats.get("current_games")).longValue(),action.normalSpins());
             long max=Math.max(((Number)stats.get("today_max_difference")).longValue(),difference);
-            db.sql("UPDATE machine_period_stats SET total_games=?,current_games=?,today_difference=?,today_max_difference=? WHERE machine_id=? AND business_period_id=?",total,current,difference,max,before.machine(),period);
+            long big=((Number)stats.get("big_count")).longValue(),reg=((Number)stats.get("reg_count")).longValue();
+            if(action.bonusStarted()!=null){
+                if(action.bonusStarted().equals("BIG"))big=Math.addExact(big,1);else if(action.bonusStarted().equals("REG"))reg=Math.addExact(reg,1);else throw new IllegalArgumentException("Unknown bonus type");
+                db.sql("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,?,?,?)",before.machine(),period,action.bonusStarted(),current,after.number("last_activity"));
+            }
+            if(action.bonusEnded())current=0;
+            db.sql("UPDATE machine_period_stats SET total_games=?,big_count=?,reg_count=?,current_games=?,today_difference=?,today_max_difference=?,last_bonus_type=COALESCE(?,last_bonus_type),last_bonus_at=CASE WHEN ? IS NULL THEN last_bonus_at ELSE ? END WHERE machine_id=? AND business_period_id=?",
+                    total,big,reg,current,difference,max,action.bonusStarted(),action.bonusStarted(),after.number("last_activity"),before.machine(),period);
             db.sql("UPDATE machines SET last_left_stop=?,last_center_stop=?,last_right_stop=?,updated_at=? WHERE machine_id=?",after.number("display_left_stop"),after.number("display_center_stop"),after.number("display_right_stop"),after.number("last_activity"),before.machine());
-            if(action.finished())db.sql("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,?,?,?)",before.machine(),period,total,difference,after.number("last_activity"));
+            if((action.finished()&&action.normalSpins()>0)||action.bonusEnded())db.sql("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,?,?,?)",before.machine(),period,total,difference,after.number("last_activity"));
             db.sql("INSERT INTO metadata(key,value) VALUES(?,?)",receipt,before.id().toString());
             return after;
         });
