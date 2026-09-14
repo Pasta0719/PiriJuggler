@@ -8,6 +8,7 @@ import jp.pirijuggler.paper.config.ConfigValidation;
 import jp.pirijuggler.paper.network.ServerHandshake;
 import jp.pirijuggler.paper.threading.PaperMainThread;
 import jp.pirijuggler.paper.threading.TaskExecutors;
+import jp.pirijuggler.paper.economy.EconomyStartupRecovery;
 import jp.pirijuggler.paper.economy.MedalMergeCommand;
 import jp.pirijuggler.paper.economy.MedalRecoveryListener;
 import jp.pirijuggler.paper.economy.PrizeService;
@@ -52,6 +53,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
                 if (configurationValid) {
                     machines = new MachineService(this, result.values());
                     prizes = new PrizeService(this, result.values());
+                    EconomyStartupRecovery.reconcile(this);
                     Objects.requireNonNull(getCommand("piri")).setExecutor((sender, command, label, args) ->
                             prizes.handle(sender, args) || machines.onCommand(sender, command, label, args));
                 }
