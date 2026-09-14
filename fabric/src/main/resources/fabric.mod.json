@@ -10,9 +10,9 @@
     "client": ["jp.pirijuggler.fabric.PiriJugglerClient"]
   },
   "depends": {
-    "fabricloader": "0.16.14",
-    "minecraft": "1.21",
+    "fabricloader": "${fabricLoaderVersion}",
+    "minecraft": "${minecraftVersion}",
     "java": ">=21",
-    "fabric-api": "0.102.0+1.21"
+    "fabric-api": "${fabricApiVersion}"
   }
 }
