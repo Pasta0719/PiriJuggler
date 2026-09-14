@@ -9,14 +9,14 @@ import java.lang.reflect.Method;
  * All methods are called on the Paper main thread by economy services.
  */
 public final class VaultBridge {
-    private final Object provider;
+    private final Class<?> economyClass;
     private final Method getBalance;
     private final Method withdrawPlayer;
     private final Method depositPlayer;
     private final Method transactionSuccess;
 
-    private VaultBridge(Object provider, Method getBalance, Method withdrawPlayer, Method depositPlayer, Method transactionSuccess) {
-        this.provider = provider;
+    private VaultBridge(Class<?> economyClass, Method getBalance, Method withdrawPlayer, Method depositPlayer, Method transactionSuccess) {
+        this.economyClass = economyClass;
         this.getBalance = getBalance;
         this.withdrawPlayer = withdrawPlayer;
         this.depositPlayer = depositPlayer;
@@ -34,15 +34,22 @@ public final class VaultBridge {
             Method depositPlayer = economyClass.getMethod("depositPlayer", OfflinePlayer.class, double.class);
             Class<?> responseClass = Class.forName("net.milkbowl.vault.economy.EconomyResponse");
             Method transactionSuccess = responseClass.getMethod("transactionSuccess");
-            return new VaultBridge(provider, getBalance, withdrawPlayer, depositPlayer, transactionSuccess);
+            return new VaultBridge(economyClass, getBalance, withdrawPlayer, depositPlayer, transactionSuccess);
         } catch (ReflectiveOperationException | LinkageError unavailable) {
             return null;
         }
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private Object currentProvider() {
+        Object provider = Bukkit.getServicesManager().load((Class) economyClass);
+        if (provider == null) throw new IllegalStateException("Vault economy provider unavailable");
+        return provider;
+    }
+
     public double balance(OfflinePlayer player) {
         try {
-            Object value = getBalance.invoke(provider, player);
+            Object value = getBalance.invoke(currentProvider(), player);
             if (!(value instanceof Number number)) throw new IllegalStateException("Vault getBalance returned non-number");
             double result = number.doubleValue();
             if (!Double.isFinite(result) || result < 0) throw new IllegalStateException("Vault returned invalid balance");
@@ -63,7 +70,7 @@ public final class VaultBridge {
     private boolean invokeTransaction(Method method, OfflinePlayer player, double amount, String operation) {
         if (!Double.isFinite(amount) || amount < 0) throw new IllegalArgumentException("amount");
         try {
-            Object response = method.invoke(provider, player, amount);
+            Object response = method.invoke(currentProvider(), player, amount);
             return Boolean.TRUE.equals(transactionSuccess.invoke(response));
         } catch (ReflectiveOperationException error) {
             throw new IllegalStateException("Vault " + operation + " failed", error);
