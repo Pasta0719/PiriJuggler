@@ -13,53 +13,63 @@ public final class SlotViewState {
     private final Stop[] stops=new Stop[3];
     private final Press[] presses=new Press[3];
     private record Stop(double from,double target,long at,long duration) {}
-    private record Press(double phase,long at) {}
+    private record Press(int pressedIndex,int stopIndex,long at) {}
     private UUID session,spin;private int machine;private long spinAt,noticeAt;private String animation="NORMAL";private int stopEnableAfterMs;
-    private boolean spinning,notice,blink;private JsonObject state,dataLamp;private String error="";
+    private boolean spinning,notice,blink;private JsonObject state,dataLamp,stopHints=new JsonObject();private String error="";
     public SlotViewState(LongSupplier nanos){time=nanos;}
     public void receive(Envelope envelope) {
         JsonObject b=envelope.payload();long now=time.getAsLong();
         switch(envelope.packetType()) {
-            case OPEN_MACHINE -> {session=UUID.fromString(b.get("sessionId").getAsString());machine=b.get("machineId").getAsInt();spin=null;state=null;dataLamp=null;error="";spinning=false;notice=false;blink=false;Arrays.fill(stops,null);Arrays.fill(presses,null);Arrays.fill(rest,0);}
+            case OPEN_MACHINE -> {session=UUID.fromString(b.get("sessionId").getAsString());machine=b.get("machineId").getAsInt();spin=null;state=null;dataLamp=null;stopHints=new JsonObject();error="";spinning=false;notice=false;blink=false;Arrays.fill(stops,null);Arrays.fill(presses,null);Arrays.fill(rest,0);}
             case PUBLIC_STATE -> {if(matches(b)) {
                 state=b.deepCopy();notice=b.get("lampOn").getAsBoolean();error="";
                 var display=b.getAsJsonObject("displayStops");
                 for(int i=0;i<3;i++){rest[i]=display.get(new String[]{"left","center","right"}[i]).getAsDouble();if(spin==null)starts[i]=rest[i];}
-                if(!b.get("gameState").getAsString().contains("SPINNING")){spinning=false;Arrays.fill(presses,null);}
+                if(!b.get("gameState").getAsString().contains("SPINNING")){spinning=false;stopHints=new JsonObject();Arrays.fill(presses,null);}
             }}
             case SPIN_START -> {if(matches(b)) {
                 spin=UUID.fromString(b.get("spinId").getAsString());animation=b.get("animation").getAsString();spinAt=now;spinning=true;error="";
                 stopEnableAfterMs=b.has("stopEnableAfterMs")?b.get("stopEnableAfterMs").getAsInt():ReelMotion.Profile.valueOf(animation).clientDelayMs();
+                stopHints=b.has("stopHints")?b.getAsJsonObject("stopHints").deepCopy():new JsonObject();
                 var phases=b.getAsJsonObject("startPhase");for(int i=0;i<3;i++)starts[i]=phases.get(new String[]{"left","center","right"}[i]).getAsDouble();Arrays.fill(stops,null);Arrays.fill(presses,null);
                 if(animation.equals("RESUME_NORMAL")&&state!=null&&state.has("stoppedMask"))for(int i=0;i<3;i++)if((state.get("stoppedMask").getAsInt()&(1<<i))!=0)stops[i]=new Stop(rest[i],rest[i],now,0);
             }}
             case REEL_STOP -> {if(matchesSpin(b)) {
                 int reel=switch(b.get("reel").getAsString()){case "LEFT"->0;case "CENTER"->1;case "RIGHT"->2;default->throw new IllegalArgumentException("Unknown reel");};
-                if(stops[reel]!=null)return;
-                Press press=presses[reel];
-                double from=phase(reel);presses[reel]=null;
-                int target=b.get("stopIndex").getAsInt();double endpoint=ReelMotion.normalStopEndpoint(from,target);int requested=b.get("durationMs").getAsInt();
-                if(press!=null){long elapsedMs=Math.max(0,(now-press.at())/1_000_000L);requested=(int)Math.max(0,requested-elapsedMs);}
-                int visualMs=ReelMotion.visualDurationMs(from,endpoint,requested);
-                stops[reel]=new Stop(from,endpoint,now,visualMs*1_000_000L);rest[reel]=target;
+                Press press=presses[reel];int target=b.get("stopIndex").getAsInt();int pressed=b.has("pressedIndex")?b.get("pressedIndex").getAsInt():-1;
+                if(press!=null&&press.pressedIndex()==pressed&&press.stopIndex()==target){
+                    presses[reel]=null;rest[reel]=target;
+                } else {
+                    double from=phase(reel);presses[reel]=null;int requested=b.get("durationMs").getAsInt();
+                    double endpoint=ReelMotion.normalStopEndpoint(from,target);int visualMs=ReelMotion.visualDurationMs(from,endpoint,requested);
+                    stops[reel]=new Stop(from,endpoint,now,visualMs*1_000_000L);rest[reel]=target;
+                }
+                if(b.has("nextStopHints"))stopHints=b.getAsJsonObject("nextStopHints").deepCopy();
             }}
             case NOTICE -> {if(matchesSpin(b)){notice="ON".equals(b.get("lamp").getAsString());blink="FAST_BLINK_1S".equals(b.get("pattern").getAsString());noticeAt=now;}}
             case DATA_LAMP -> {if(b.has("machineId")&&b.get("machineId").getAsInt()==machine)dataLamp=b.deepCopy();}
-            case ACTION_REJECTED,ERROR -> {if(b.has("errorCode"))error=b.get("errorCode").getAsString();Arrays.fill(presses,null);}
+            case ACTION_REJECTED,ERROR -> {if(b.has("errorCode"))error=b.get("errorCode").getAsString();for(int i=0;i<3;i++)if(presses[i]!=null){presses[i]=null;stops[i]=null;}}
             default -> {}
         }
     }
     /**
-     * Start a zero-ping visual stop immediately at button press. Until the authoritative
-     * REEL_STOP arrives, the client only decelerates toward the zero-slip boundary; it
-     * never chooses a result. The server response then retargets that same motion to the
-     * authoritative stop index without reversing.
+     * Begin the exact server-precomputed stop motion at the local button edge. The returned
+     * pressed index is sent back to Paper, which validates timing and uses that same index.
      */
-    public void localInput(PacketType action){
-        if(!spinning)return;int reel=switch(action){case STOP_LEFT->0;case STOP_CENTER->1;case STOP_RIGHT->2;case SPACE_ACTION->nextPendingReel();default->-1;};
-        if(reel>=0&&stops[reel]==null&&presses[reel]==null)presses[reel]=new Press(phase(reel),time.getAsLong());
+    public int localInput(PacketType action){
+        if(!spinning||hasPendingPress())return -1;
+        int reel=switch(action){case STOP_LEFT->0;case STOP_CENTER->1;case STOP_RIGHT->2;case SPACE_ACTION->nextPendingReel();default->-1;};
+        if(reel<0||stops[reel]!=null)return -1;
+        double from=phase(reel);int pressed=(int)Math.floor(from);JsonObject hint=hint(reel,pressed);if(hint==null)return -1;
+        int target=hint.get("stopIndex").getAsInt(),requested=hint.get("durationMs").getAsInt();long now=time.getAsLong();
+        double endpoint=ReelMotion.normalStopEndpoint(from,target);int visualMs=ReelMotion.visualDurationMs(from,endpoint,requested);
+        stops[reel]=new Stop(from,endpoint,now,visualMs*1_000_000L);presses[reel]=new Press(pressed,target,now);rest[reel]=target;return pressed;
     }
-    private int nextPendingReel(){for(int i=0;i<3;i++)if(stops[i]==null&&presses[i]==null)return i;return -1;}
+    private JsonObject hint(int reel,int pressed){
+        String name=new String[]{"left","center","right"}[reel];if(!stopHints.has(name))return null;JsonArray a=stopHints.getAsJsonArray(name);return pressed>=0&&pressed<a.size()?a.get(pressed).getAsJsonObject():null;
+    }
+    private boolean hasPendingPress(){for(var p:presses)if(p!=null)return true;return false;}
+    private int nextPendingReel(){for(int i=0;i<3;i++)if(stops[i]==null)return i;return -1;}
     public boolean matches(JsonObject b){return session!=null&&b.has("sessionId")&&b.has("machineId")&&session.toString().equals(b.get("sessionId").getAsString())&&machine==b.get("machineId").getAsInt();}
     public boolean matchesSpin(JsonObject b){return spin!=null&&b.has("spinId")&&spin.toString().equals(b.get("spinId").getAsString());}
     public static double wrap(double value){return ReelMotion.wrap(value);}
@@ -67,12 +77,15 @@ public final class SlotViewState {
     public double phase(int reel){
         long now=time.getAsLong();Stop stop=stops[reel];
         if(stop!=null){double p=stop.duration==0?1:Math.min(1,Math.max(0,(now-stop.at)/(double)stop.duration));return p>=1?rest[reel]:wrap(stop.from+(stop.target-stop.from)*p);}
-        Press press=presses[reel];
-        if(press!=null){double endpoint=Math.floor(press.phase());int ms=ReelMotion.visualDurationMs(press.phase(),endpoint,ReelMotion.durationMs(0));double p=ms==0?1:Math.min(1,Math.max(0,(now-press.at())/(ms*1_000_000.0)));return wrap(press.phase()+(endpoint-press.phase())*p);}
         return spinning?wrap(starts[reel]+distance(animation,(now-spinAt)/1e9)):rest[reel];
     }
     public boolean lampOn(){long elapsed=time.getAsLong()-noticeAt;return notice&&(!blink||elapsed>=1_000_000_000L||elapsed/100_000_000L%2==0);}
-    public boolean canSend(PacketType action){return !spinning||!Set.of(PacketType.SPACE_ACTION,PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT).contains(action)||time.getAsLong()-spinAt>=stopEnableAfterMs*1_000_000L;}
+    public boolean canSend(PacketType action){
+        if(!spinning||!Set.of(PacketType.SPACE_ACTION,PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT).contains(action))return true;
+        if(time.getAsLong()-spinAt<stopEnableAfterMs*1_000_000L||hasPendingPress())return false;
+        int reel=switch(action){case STOP_LEFT->0;case STOP_CENTER->1;case STOP_RIGHT->2;case SPACE_ACTION->nextPendingReel();default->-1;};
+        return reel>=0&&stops[reel]==null&&stopHints.has(new String[]{"left","center","right"}[reel]);
+    }
     public JsonObject publicState(){return state==null?null:state.deepCopy();}
     public JsonObject dataLamp(){return dataLamp==null?null:dataLamp.deepCopy();}
     public String error(){return error;}
