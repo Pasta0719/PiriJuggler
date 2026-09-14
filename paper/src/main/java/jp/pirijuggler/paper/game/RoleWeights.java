@@ -12,7 +12,9 @@ public final class RoleWeights {
         InternalRole.PIERO,InternalRole.BIG,InternalRole.REG,InternalRole.CHERRY_BIG,InternalRole.CHERRY_REG,
         InternalRole.PIERO_BIG,InternalRole.PIERO_REG,InternalRole.MISS};
     private final int[][] cumulative=new int[6][12];
+    private final Map<String,Object> sourceConfig;
     public RoleWeights(Map<String,Object> config) {
+        sourceConfig=config;
         var settings=StartupProfile.map(StartupProfile.map(config.get("probabilities")).get("settings"));
         for(int setting=1;setting<=6;setting++) {
             var row=StartupProfile.map(settings.get(Integer.toString(setting)));long sum=0;
@@ -25,6 +27,7 @@ public final class RoleWeights {
             if(sum!=DENOMINATOR)throw new IllegalArgumentException("Role weights must total 1e9");
         }
     }
+    Map<String,Object> sourceConfig(){return sourceConfig;}
     public InternalRole draw(int setting,RandomGenerator rng) { return at(setting,rng.nextInt(DENOMINATOR)); }
     public InternalRole at(int setting,int value) {
         if(setting<1||setting>6||value<0||value>=DENOMINATOR)throw new IllegalArgumentException("Draw bounds");
