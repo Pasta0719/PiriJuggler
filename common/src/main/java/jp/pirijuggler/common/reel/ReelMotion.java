@@ -28,7 +28,11 @@ public final class ReelMotion {
     /** Preserve server timing unless packet delay would require a visual speed above the normal 18 symbols/sec. */
     public static int visualDurationMs(double from,double endpoint,int requestedMs){
         if(!Double.isFinite(from)||!Double.isFinite(endpoint)||requestedMs<0||endpoint>from)throw new IllegalArgumentException("Invalid visual stop");
-        int continuity=(int)Math.ceil((from-endpoint)/18.0*1000.0);return Math.max(requestedMs,continuity);
+        double exactMs=(from-endpoint)/18.0*1000.0;
+        // wrap() can move a decimal phase by a few ulps (e.g. 1.8 -> 1.8000000000000007).
+        // Do not let that harmless floating-point noise add a whole millisecond and make client/test timing disagree.
+        int continuity=(int)Math.ceil(exactMs-1e-9);
+        return Math.max(requestedMs,continuity);
     }
     private ReelMotion(){}
 }
