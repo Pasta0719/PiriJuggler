@@ -8,21 +8,19 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BarConfirmationTest extends GameFixture {
-    @Test void barLinesAreForbiddenForEveryNonBonusCandidateOnAllFivePaylines(){
+    @Test void formalReachEyesAreForbiddenForEveryNonBonusCandidateOnAllFivePaylines(){
         int[] perLine=new int[5];int raw=0,strict=0;
         for(var e:SOLVER.catalogue().evaluations()){
-            int bar=0;for(var line:Payline.values()){
-                boolean all=true;for(var reel:Reel.values())all&=FixedReels.row(reel,e.stops().stop(reel),line.row(reel))==Symbol.BAR;
-                if(all){bar|=1<<line.ordinal();perLine[line.ordinal()]++;}
-            }
-            assertEquals(bar,e.winningBarConfirmationLines());
-            if(bar!=0){raw++;for(var role:DisplayRole.values())if(role!=DisplayRole.BONUS)assertFalse(e.valid(role));if(e.valid(DisplayRole.BONUS))strict++;}
+            int reach=StopCatalogue.reachLines(e.stops());assertEquals(reach,e.winningReachLines());
+            if(reach!=0){raw++;for(var line:Payline.values())if((reach&(1<<line.ordinal()))!=0)perLine[line.ordinal()]++;for(var role:DisplayRole.values())if(role!=DisplayRole.BONUS)assertFalse(e.valid(role),e.stops()+" "+role);if(e.valid(DisplayRole.BONUS))strict++;}
         }
-        assertEquals(20,raw);assertEquals(8,strict);for(int count:perLine)assertTrue(count>0);
-        assertEquals(10,SOLVER.catalogue().candidates(DisplayRole.REG_ENTRY).size());
+        assertEquals(160,raw);assertEquals(124,strict);for(int count:perLine)assertTrue(count>0);
+        assertEquals(5126,SOLVER.catalogue().candidates(DisplayRole.MISS).size());assertEquals(1502,SOLVER.catalogue().candidates(DisplayRole.CHERRY).size());assertEquals(5250,SOLVER.catalogue().candidates(DisplayRole.BONUS).size());
+        assertFalse(StopCatalogue.isReachPattern(Symbol.SEVEN,Symbol.SEVEN,Symbol.SEVEN));assertFalse(StopCatalogue.isReachPattern(Symbol.SEVEN,Symbol.SEVEN,Symbol.BAR));
+        assertTrue(StopCatalogue.isReachPattern(Symbol.BAR,Symbol.BAR,Symbol.BAR));assertTrue(StopCatalogue.isReachPattern(Symbol.PIERO,Symbol.BAR,Symbol.PIERO));
     }
-    @Test void bothBonusTypesCanShowEveryBarShapeInEveryStopOrderWithoutPayoutOrDisclosure() throws Exception {
-        var bars=SOLVER.catalogue().candidates(DisplayRole.BONUS).stream().filter(e->e.winningBarConfirmationLines()!=0).toList();
+    @Test void standaloneBigAndRegCanStillShowBarBarBarWithoutPayoutOrDisclosure() throws Exception {
+        var bars=SOLVER.catalogue().candidates(DisplayRole.BONUS).stream().filter(e->e.winningBarConfirmationLines()!=0).toList();assertFalse(bars.isEmpty());
         for(var internal:List.of(InternalRole.BIG,InternalRole.REG))for(var target:bars)for(var order:ReelVerification.orders()){
             var game=game(internal);var s=seat(50,7);s=action(game,s,PacketType.SPACE_ACTION,0);s=action(game,s,PacketType.SPACE_ACTION,0);
             long previous=0;
