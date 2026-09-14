@@ -1,11 +1,11 @@
 # CODEX_START.md — v4
 
-`SPEC.md`が唯一の製品仕様。
-`AUDIT_REPORT.md`はv3からの修正理由であり、仕様値の正はSPEC.md。
+`SPEC.md`が製品仕様の正本。Phase05完了後のユーザー承認hotfixについては `docs/POST_PHASE05_HOTFIX.md` を必ず併読し、同文書が明示的に変更した範囲ではhotfix内容を最新仕様として扱う。次回SPEC整合更新時に正本へ統合する。
+`AUDIT_REPORT.md`はv3からの修正理由であり、仕様値の正はSPEC.mdと上記承認hotfix。
 
 ## 開始時の引き継ぎ確認
 
-最初に `SESSION_HANDOFF.md`、`IMPLEMENTATION_STATUS.md` 冒頭の現状とPhase表、`SPEC_CONFLICT.md` の解消状況を読む。会話履歴や旧作業フォルダを前提にしない。製品仕様の正は引き続き `SPEC.md`。
+最初に `SESSION_HANDOFF.md`、`docs/POST_PHASE05_HOTFIX.md`、`IMPLEMENTATION_STATUS.md` 冒頭の現状とPhase表、`SPEC_CONFLICT.md` の解消状況を読む。会話履歴や旧作業フォルダを前提にしない。
 
 ユーザーが確認・引き継ぎ文書更新だけを依頼したrunでは、Phase選択・IN_PROGRESS化・次Phase実装を行わず、その依頼だけを完了する。実装続行を依頼されたrunで下の通常runへ進む。
 
@@ -19,18 +19,19 @@ repoに既存実装があり、`IMPLEMENTATION_STATUS.md`にPhase01 COMPLETEま�
 ## 通常run
 
 1. IMPLEMENTATION_STATUS.mdを読む。
-2. IN_PROGRESSがあればそのPhase。なければ最小NOT_STARTED Phase。
-3. 対応phase fileを全文読む。
-4. 指定SPEC章 + `RUNTIME_ACCEPTANCE.md`を読む。
-5. statusをIN_PROGRESS。
-6. 実装。
-7. unit/integration test。
-8. `./gradlew test`。
-9. `./gradlew build`。
-10. そのPhaseの実Minecraft Runtime Acceptanceを実施。
-11. evidenceを保存。
-12. 全完了条件PASS後だけCOMPLETE。
-13. 次Phaseへ進まず終了。
+2. `docs/POST_PHASE05_HOTFIX.md` の未検証事項があれば、後続Phaseを始める前にその回帰検証を行う。
+3. IN_PROGRESSがあればそのPhase。なければ最小NOT_STARTED Phase。
+4. 対応phase fileを全文読む。
+5. 指定SPEC章 + `RUNTIME_ACCEPTANCE.md`を読む。
+6. statusをIN_PROGRESS。
+7. 実装。
+8. unit/integration test。
+9. `./gradlew test`。
+10. `./gradlew build`。
+11. そのPhaseの実Minecraft Runtime Acceptanceを実施。
+12. evidenceを保存。
+13. 全完了条件PASS後だけCOMPLETE。
+14. 次Phaseへ進まず終了。
 
 ## COMPLETE禁止
 
