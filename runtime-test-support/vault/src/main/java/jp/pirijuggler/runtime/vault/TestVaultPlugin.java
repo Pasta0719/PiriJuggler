@@ -73,5 +73,15 @@ public final class TestVaultPlugin extends JavaPlugin {
             balances.put(player.getUniqueId(), after);
             return new EconomyResponse(amount, after, EconomyResponse.ResponseType.SUCCESS, null);
         }
+
+        @Override public EconomyResponse depositPlayer(OfflinePlayer player, double amount) {
+            double before = getBalance(player);
+            if (!Double.isFinite(amount) || amount < 0) {
+                return new EconomyResponse(0, before, EconomyResponse.ResponseType.FAILURE, "invalid amount");
+            }
+            double after = before + amount;
+            balances.put(player.getUniqueId(), after);
+            return new EconomyResponse(amount, after, EconomyResponse.ResponseType.SUCCESS, null);
+        }
     }
 }
