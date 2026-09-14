@@ -39,6 +39,14 @@ class SlotViewStateTest {
         view.receive(packet(PacketType.REEL_STOP,"{\"spinId\":\"00000000-0000-0000-0000-000000000099\",\"reel\":\"LEFT\",\"stopIndex\":1,\"durationMs\":0}"));assertEquals(8,view.phase(0));
         view.receive(packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\"LEFT\",\"pressedIndex\":8,\"stopIndex\":2,\"slip\":6,\"durationMs\":380}"));time.set(190_000_000);assertEquals(5,view.phase(0),1e-9);time.set(380_000_000);assertEquals(2,view.phase(0),1e-9);time.set(9_000_000_000L);assertEquals(2,view.phase(0),1e-9);
     }
+    @Test void localStopStartsVisuallyBeforeServerReplyAndThenLandsOnAuthoritativeIndex(){
+        var time=new AtomicLong();var view=open(time);var b=start().payload();b.getAsJsonObject("startPhase").addProperty("left",8.7);view.receive(Envelope.current(PacketType.SPIN_START,b));
+        time.set(500_000_000L);double atPress=view.phase(0);view.localInput(PacketType.STOP_LEFT);
+        time.addAndGet(40_000_000L);double beforeReply=view.phase(0);assertTrue(beforeReply<atPress,"local STOP must visibly decelerate before any REEL_STOP packet arrives");assertTrue(beforeReply>=Math.floor(atPress),"zero-ping preview must not pass the zero-slip boundary");
+        view.receive(packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\"LEFT\",\"pressedIndex\":5,\"stopIndex\":2,\"slip\":3,\"durationMs\":230}"));
+        double afterReply=view.phase(0);assertEquals(beforeReply,afterReply,1e-9,"authoritative reply must not visually jump at receipt");
+        time.addAndGet(500_000_000L);assertEquals(2,view.phase(0),1e-9,"server stop index remains authoritative");
+    }
     @Test void publicAssetsRemainAuthoritativeAndNoticeBlinkUsesOneSecondWindow(){
         var time=new AtomicLong();var view=open(time);view.receive(start());view.receive(packet(PacketType.NOTICE,"{\"spinId\":\""+SPIN+"\",\"lamp\":\"ON\",\"pattern\":\"FAST_BLINK_1S\"}"));assertTrue(view.lampOn());time.set(100_000_000);assertFalse(view.lampOn());time.set(1_000_000_000);assertTrue(view.lampOn());
         assertEquals("—",view.value("credit"));view.receive(packet(PacketType.PUBLIC_STATE,"{\"sessionId\":\""+ID+"\",\"machineId\":1,\"gameState\":\"REPLAY_READY\",\"credit\":32,\"bet\":3,\"pay\":0,\"heldMedals\":442,\"lampOn\":false,\"displayStops\":{\"left\":3,\"center\":3,\"right\":3}}"));assertEquals("32",view.value("credit"));assertEquals("3",view.value("bet"));assertEquals(3,view.phase(0));assertFalse(view.lampOn());
