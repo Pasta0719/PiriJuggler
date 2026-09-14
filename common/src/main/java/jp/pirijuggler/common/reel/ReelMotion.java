@@ -17,7 +17,18 @@ public final class ReelMotion {
     }
     public static double phase(Profile profile,double start,double elapsedSec){if(!Double.isFinite(start))throw new IllegalArgumentException("Non-finite phase");return wrap(start+delta(profile,elapsedSec));}
     public static int pressedIndex(Profile profile,double start,long startNanos,long receiveNanos,int ping){return (int)Math.floor(phase(profile,start,effectiveMillis(startNanos,receiveNanos,ping)/1000));}
+    /** Normal reel travel is index-decreasing, so slip advances only in that direction. */
     public static int slip(int target,int pressed){return Math.floorMod(pressed-target,21);}
     public static int durationMs(int slip){if(slip<0||slip>20)throw new IllegalArgumentException("Invalid slip");return Math.min(1200,80+slip*50);}
+    /** Unwrapped normal-direction endpoint. Never chooses the opposite-direction shortcut. */
+    public static double normalStopEndpoint(double current,int target){
+        if(!Double.isFinite(current)||target<0||target>=21)throw new IllegalArgumentException("Invalid stop endpoint");
+        double endpoint=target;while(endpoint>current)endpoint-=21;return endpoint;
+    }
+    /** Preserve server timing unless packet delay would require a visual speed above the normal 18 symbols/sec. */
+    public static int visualDurationMs(double from,double endpoint,int requestedMs){
+        if(!Double.isFinite(from)||!Double.isFinite(endpoint)||requestedMs<0||endpoint>from)throw new IllegalArgumentException("Invalid visual stop");
+        int continuity=(int)Math.ceil((from-endpoint)/18.0*1000.0);return Math.max(requestedMs,continuity);
+    }
     private ReelMotion(){}
 }
