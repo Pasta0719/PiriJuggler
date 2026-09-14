@@ -36,10 +36,12 @@ public final class SlotViewState {
             case REEL_STOP -> {if(matchesSpin(b)) {
                 int reel=switch(b.get("reel").getAsString()){case "LEFT"->0;case "CENTER"->1;case "RIGHT"->2;default->throw new IllegalArgumentException("Unknown reel");};
                 if(stops[reel]!=null)return;
-                Press press=presses[reel];presses[reel]=null;
-                double from=press!=null?press.phase():phase(reel);long at=press!=null?press.at():now;int target=b.get("stopIndex").getAsInt();
-                double endpoint=ReelMotion.normalStopEndpoint(from,target);int requested=b.get("durationMs").getAsInt();int visualMs=ReelMotion.visualDurationMs(from,endpoint,requested);
-                stops[reel]=new Stop(from,endpoint,at,visualMs*1_000_000L);rest[reel]=target;
+                Press press=presses[reel];
+                double from=phase(reel);presses[reel]=null;
+                int target=b.get("stopIndex").getAsInt();double endpoint=ReelMotion.normalStopEndpoint(from,target);int requested=b.get("durationMs").getAsInt();
+                if(press!=null){long elapsedMs=Math.max(0,(now-press.at())/1_000_000L);requested=(int)Math.max(0,requested-elapsedMs);}
+                int visualMs=ReelMotion.visualDurationMs(from,endpoint,requested);
+                stops[reel]=new Stop(from,endpoint,now,visualMs*1_000_000L);rest[reel]=target;
             }}
             case NOTICE -> {if(matchesSpin(b)){notice="ON".equals(b.get("lamp").getAsString());blink="FAST_BLINK_1S".equals(b.get("pattern").getAsString());noticeAt=now;}}
             case DATA_LAMP -> {if(b.has("machineId")&&b.get("machineId").getAsInt()==machine)dataLamp=b.deepCopy();}
@@ -47,7 +49,12 @@ public final class SlotViewState {
             default -> {}
         }
     }
-    /** Capture the exact local visual phase when the player presses STOP. The server still chooses the final stop index. */
+    /**
+     * Start a zero-ping visual stop immediately at button press. Until the authoritative
+     * REEL_STOP arrives, the client only decelerates toward the zero-slip boundary; it
+     * never chooses a result. The server response then retargets that same motion to the
+     * authoritative stop index without reversing.
+     */
     public void localInput(PacketType action){
         if(!spinning)return;int reel=switch(action){case STOP_LEFT->0;case STOP_CENTER->1;case STOP_RIGHT->2;case SPACE_ACTION->nextPendingReel();default->-1;};
         if(reel>=0&&stops[reel]==null&&presses[reel]==null)presses[reel]=new Press(phase(reel),time.getAsLong());
@@ -58,7 +65,10 @@ public final class SlotViewState {
     public static double wrap(double value){return ReelMotion.wrap(value);}
     public static double distance(String animation,double seconds){return ReelMotion.delta(ReelMotion.Profile.valueOf(animation),seconds);}
     public double phase(int reel){
-        long now=time.getAsLong();Stop stop=stops[reel];if(stop!=null){double p=stop.duration==0?1:Math.min(1,Math.max(0,(now-stop.at)/(double)stop.duration));return p>=1?rest[reel]:wrap(stop.from+(stop.target-stop.from)*p);}
+        long now=time.getAsLong();Stop stop=stops[reel];
+        if(stop!=null){double p=stop.duration==0?1:Math.min(1,Math.max(0,(now-stop.at)/(double)stop.duration));return p>=1?rest[reel]:wrap(stop.from+(stop.target-stop.from)*p);}
+        Press press=presses[reel];
+        if(press!=null){double endpoint=Math.floor(press.phase());int ms=ReelMotion.visualDurationMs(press.phase(),endpoint,ReelMotion.durationMs(0));double p=ms==0?1:Math.min(1,Math.max(0,(now-press.at())/(ms*1_000_000.0)));return wrap(press.phase()+(endpoint-press.phase())*p);}
         return spinning?wrap(starts[reel]+distance(animation,(now-spinAt)/1e9)):rest[reel];
     }
     public boolean lampOn(){long elapsed=time.getAsLong()-noticeAt;return notice&&(!blink||elapsed>=1_000_000_000L||elapsed/100_000_000L%2==0);}
