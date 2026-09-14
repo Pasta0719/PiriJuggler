@@ -33,7 +33,6 @@ public final class MedalRecoveryListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        // Let the login inventory finish loading before taking the authoritative item snapshot.
         Bukkit.getScheduler().runTaskLater(plugin, () -> reconcilePlayer(player), 20L);
     }
 
@@ -86,13 +85,12 @@ public final class MedalRecoveryListener implements Listener {
                               Set<UUID> present) throws Exception {
         boolean anyBefore = before.stream().anyMatch(present::contains);
         boolean anyAfter = after.stream().anyMatch(present::contains);
-        boolean allBefore = !before.isEmpty() && present.containsAll(before);
-        boolean allAfter = !after.isEmpty() && present.containsAll(after);
+        boolean allBefore = before.isEmpty() || present.containsAll(before);
+        boolean allAfter = after.isEmpty() || present.containsAll(after);
         boolean ledgerRowsComplete = allTokenRowsExist(connection, before) && allTokenRowsExist(connection, after);
         long now = System.currentTimeMillis();
 
-        if (ledgerRowsComplete && allBefore && !anyAfter) {
-            // Inventory still has the pre-mutation representation: restore ledger to match it.
+        if (ledgerRowsComplete && !before.isEmpty() && allBefore && !anyAfter) {
             for (UUID id : before) setState(connection, id, "ACTIVE", now);
             for (UUID id : after) setState(connection, id, "RETIRED", now);
             setJournal(connection, transactionId, "ROLLED_BACK", now);
@@ -101,7 +99,6 @@ public final class MedalRecoveryListener implements Listener {
         }
 
         if (ledgerRowsComplete && allAfter && !anyBefore) {
-            // Inventory already has the post-mutation representation: confirm the committed ledger.
             for (UUID id : before) setState(connection, id, "RETIRED", now);
             for (UUID id : after) setState(connection, id, "ACTIVE", now);
             setJournal(connection, transactionId, "APPLIED", now);
@@ -109,8 +106,6 @@ public final class MedalRecoveryListener implements Listener {
             return;
         }
 
-        // Both sides, neither side, partial sides, or missing ledger rows are ambiguous. The REVIEW_REQUIRED
-        // journal state itself makes every referenced bundle unusable through EconomyStore validation.
         setJournal(connection, transactionId, "REVIEW_REQUIRED", now);
         plugin.getLogger().severe("PIRI_MEDAL_REVIEW_REQUIRED tx=" + transactionId +
                 " beforePresent=" + anyBefore + " afterPresent=" + anyAfter +
