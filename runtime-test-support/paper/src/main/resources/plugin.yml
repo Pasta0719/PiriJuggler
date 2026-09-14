@@ -6,7 +6,7 @@ depend: [PiriJuggler]
 commands:
   piritest:
     description: Piri Juggler runtime acceptance helper
-    usage: /piritest fund [player]
+    usage: /piritest fund [player] | /piritest force <big|reg|A|B|C|D|E|F> [player] | /piritest clear
     permission: piri.runtime
 permissions:
   piri.runtime:
