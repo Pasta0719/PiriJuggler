@@ -1,0 +1,53 @@
+package jp.pirijuggler.paper.economy;
+
+import net.kyori.adventure.text.Component;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
+import java.util.UUID;
+
+/** Canonical server-side representation of the physical Piri Medal token. */
+public final class MedalToken {
+    public static final int MAX_AMOUNT = 500;
+    public static final NamespacedKey ITEM_TYPE = new NamespacedKey("piri", "item_type");
+    public static final NamespacedKey BUNDLE_ID = new NamespacedKey("piri", "bundle_id");
+    public static final NamespacedKey MEDAL_AMOUNT = new NamespacedKey("piri", "medal_amount");
+    public static final NamespacedKey ITEM_VERSION = new NamespacedKey("piri", "item_version");
+
+    public record Value(UUID bundleId, int amount) {
+        public Value {
+            if (bundleId == null || amount < 1 || amount > MAX_AMOUNT) throw new IllegalArgumentException("Invalid medal token");
+        }
+    }
+
+    public static ItemStack create(UUID bundleId, int amount) {
+        Value value = new Value(bundleId, amount);
+        ItemStack item = new ItemStack(Material.IRON_NUGGET, 1);
+        var meta = item.getItemMeta();
+        meta.displayName(Component.text("Piri Medal"));
+        meta.setMaxStackSize(1);
+        var pdc = meta.getPersistentDataContainer();
+        pdc.set(ITEM_TYPE, PersistentDataType.STRING, "medal");
+        pdc.set(BUNDLE_ID, PersistentDataType.STRING, value.bundleId().toString());
+        pdc.set(MEDAL_AMOUNT, PersistentDataType.INTEGER, value.amount());
+        pdc.set(ITEM_VERSION, PersistentDataType.INTEGER, 1);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public static Value read(ItemStack item) {
+        if (item == null || item.getType() != Material.IRON_NUGGET || item.getAmount() != 1 || !item.hasItemMeta()) return null;
+        var meta = item.getItemMeta();
+        var pdc = meta.getPersistentDataContainer();
+        if (!"medal".equals(pdc.get(ITEM_TYPE, PersistentDataType.STRING))) return null;
+        if (!Integer.valueOf(1).equals(pdc.get(ITEM_VERSION, PersistentDataType.INTEGER))) return null;
+        String id = pdc.get(BUNDLE_ID, PersistentDataType.STRING);
+        Integer amount = pdc.get(MEDAL_AMOUNT, PersistentDataType.INTEGER);
+        if (id == null || amount == null || amount < 1 || amount > MAX_AMOUNT) return null;
+        try { return new Value(UUID.fromString(id), amount); }
+        catch (IllegalArgumentException invalid) { return null; }
+    }
+
+    private MedalToken() { }
+}
