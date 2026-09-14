@@ -10,6 +10,19 @@ class ReelMotionTest {
         for(var profile:ReelMotion.Profile.values())assertEquals(-1.8,ReelMotion.delta(profile,1.1)-ReelMotion.delta(profile,1),1e-9);
         assertEquals(20,ReelMotion.slip(1,0));assertEquals(1,ReelMotion.slip(20,0));
     }
+    @Test void normalStopEndpointNeverReversesAndLatePacketsCannotForceVisualOverspeed(){
+        assertEquals(-1,ReelMotion.normalStopEndpoint(.5,20),1e-9);
+        assertEquals(5,ReelMotion.normalStopEndpoint(5.2,5),1e-9);
+        assertEquals(0,ReelMotion.normalStopEndpoint(20.1,0),1e-9);
+        for(int target=0;target<21;target++)for(int step=0;step<210;step++){
+            double from=step/10.0,endpoint=ReelMotion.normalStopEndpoint(from,target);
+            assertTrue(endpoint<=from);assertEquals(target,ReelMotion.wrap(endpoint),1e-9);
+            int ms=ReelMotion.visualDurationMs(from,endpoint,80);
+            assertTrue((from-endpoint)/(ms/1000.0)<=18.0000001);
+        }
+        assertEquals(1117,ReelMotion.visualDurationMs(20.1,0,80));
+        assertEquals(380,ReelMotion.visualDurationMs(8,2,380));
+    }
     @Test void exactCompiledArraysAndThreeRowsMatchSpec() throws Exception {
         var lock=JsonParser.parseString(Files.readString(Path.of(System.getProperty("piri.specRoot"),"docs/spec-lock.json"))).getAsJsonObject().getAsJsonObject("reelArrays");
         for(var reel:Reel.values()){var a=lock.getAsJsonArray(reel.name()+"_REEL");assertEquals(21,FixedReels.sequence(reel).size());for(int i=0;i<21;i++)assertEquals(a.get(i).getAsString(),FixedReels.at(reel,i).name());
