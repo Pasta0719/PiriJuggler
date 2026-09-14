@@ -11,3 +11,10 @@ commands:
   pirimerge:
     description: Merge all valid Piri Medal items in the player inventory into one token
     usage: /pirimerge
+  pirireset:
+    description: Development reset for an unsettled Piri game snapshot while preserving CREDIT and held medals
+    usage: /pirireset [player]
+    permission: piri.dev
+permissions:
+  piri.dev:
+    default: op
