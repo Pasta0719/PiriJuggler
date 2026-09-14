@@ -10,8 +10,10 @@
 
 | 完成ファイル | 配置先 |
 |---|---|
-| dist/piri-juggler-paper-1.0.0.jar | Paper 1.21サーバーのpluginsフォルダ |
-| dist/piri-juggler-fabric-1.0.0.jar | Minecraft 1.21 + Fabricクライアントのmodsフォルダ |
+| dist/piri-juggler-paper-1.0.1.jar | Paper 1.21サーバーのpluginsフォルダ |
+| dist/piri-juggler-fabric-1.0.1.jar | Minecraft 1.21 + Fabricクライアントのmodsフォルダ |
+
+現在の製品バージョンはルート `gradle.properties` の `piriVersion` を唯一の変更点として管理し、Paper/Fabric/テストhelperのGradle project versionとplugin/mod metadataへ展開します。
 
 Fabric Loader 0.16.14とFabric API 0.102.0+1.21を使用します。音源はFabric用JARに同梱されます。差し替えたら再ビルドし、クライアントのJARを更新してください。ソースを自由に編集して同じ手順で再ビルドできます。
 
