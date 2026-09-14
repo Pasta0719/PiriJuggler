@@ -29,7 +29,10 @@ class SlotViewStateTest {
     static Envelope packet(PacketType type,String json){return Envelope.current(type,JsonParser.parseString(json).getAsJsonObject());}
     static SlotViewState open(AtomicLong clock){var view=new SlotViewState(clock::get);view.receive(packet(PacketType.OPEN_MACHINE,"{\"sessionId\":\""+ID+"\",\"machineId\":1}"));return view;}
     static JsonObject hints(){var all=new JsonObject();for(String name:new String[]{"left","center","right"}){var a=new JsonArray();for(int p=0;p<21;p++){var h=new JsonObject();h.addProperty("stopIndex",p);h.addProperty("slip",0);h.addProperty("durationMs",80);a.add(h);}all.add(name,a);}return all;}
-    static Envelope start(){var e=packet(PacketType.SPIN_START,"{\"sessionId\":\""+ID+"\",\"machineId\":1,\"spinId\":\""+SPIN+"\",\"animation\":\"NORMAL\",\"startPhase\":{\"left\":8,\"center\":3,\"right\":12}}");e.payload().add("stopHints",hints());return e;}
+    static Envelope start(){
+        var b=JsonParser.parseString("{\"sessionId\":\""+ID+"\",\"machineId\":1,\"spinId\":\""+SPIN+"\",\"animation\":\"NORMAL\",\"startPhase\":{\"left\":8,\"center\":3,\"right\":12}}").getAsJsonObject();
+        b.add("stopHints",hints());return Envelope.current(PacketType.SPIN_START,b);
+    }
     @Test void motionBoundariesAreContinuousAndRespectReceptionTime(){
         assertEquals(0,SlotViewState.distance("NORMAL",.150));assertEquals(-3.675,SlotViewState.distance("NORMAL",.5),1e-9);assertEquals(-14.175,SlotViewState.distance("NORMAL",1),1e-9);
         assertEquals(6,SlotViewState.distance("REVERSE_500MS",.5),1e-9);assertEquals(2.85,SlotViewState.distance("REVERSE_500MS",.8),1e-9);assertEquals(-21,SlotViewState.distance("RESUME_NORMAL",1));
