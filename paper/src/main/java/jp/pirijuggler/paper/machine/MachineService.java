@@ -6,6 +6,9 @@ import jp.pirijuggler.paper.PiriJugglerPlugin;
 import jp.pirijuggler.paper.database.PiriDatabase;
 import jp.pirijuggler.paper.session.AdminSessions;
 import jp.pirijuggler.paper.session.Session;
+import jp.pirijuggler.paper.economy.EconomyStore;
+import jp.pirijuggler.paper.economy.MedalToken;
+import jp.pirijuggler.paper.economy.VaultBridge;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Directional;
@@ -40,6 +43,8 @@ public final class MachineService implements Listener, CommandExecutor {
     private final Map<UUID, Runnable> deferredClose = new HashMap<>();
     private final Set<UUID> deferredDisconnect = new HashSet<>();
     private final long graceMs;
+    private final int vaultPerMedal;
+    private final VaultBridge vault;
     private PiriDatabase database;
     private PiriDatabase.State state;
     private boolean stopped;
@@ -54,11 +59,16 @@ public final class MachineService implements Listener, CommandExecutor {
         random=RandomStreams.production();weights=new RoleWeights(config);
         games=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin),config);
         graceMs = ((Number) jp.pirijuggler.paper.database.StartupProfile.map(config.get("game")).get("disconnect_grace_seconds")).longValue() * 1000;
+        vaultPerMedal=((Number)jp.pirijuggler.paper.database.StartupProfile.map(config.get("economy")).get("vault_per_medal")).intValue();
+        vault=VaultBridge.discover();
         long jvm = ManagementFactory.getRuntimeMXBean().getStartTime();
         long now = System.currentTimeMillis();
         plugin.executors().database(() -> {
             database = new PiriDatabase(plugin.getDataFolder().toPath().resolve("piri.db"));
-            return database.open(jvm, now, config, random.eventAllocation(), plugin.getLogger()::warning);
+            PiriDatabase.State opened=database.open(jvm, now, config, random.eventAllocation(), plugin.getLogger()::warning);
+            var uncertain=new EconomyStore(database).quarantineStartedVaultTransactions(now);
+            for(var row:uncertain)plugin.getLogger().severe("PIRI_VAULT_REVIEW_REQUIRED transactionId="+row.get("transaction_id")+" operation="+row.get("operation")+" expected="+row.get("vault_amount")+" balanceBefore="+row.get("balance_before"));
+            return opened;
         }, (loaded, error) -> {
             if (error != null) plugin.getLogger().log(Level.SEVERE, "Gameplay disabled: database initialization failed", error);
             else { state = loaded; plugin.getLogger().info("PIRI_DATABASE_READY schema=4 period=" + state.period() + " machines=" + state.machines().size()); }
@@ -191,10 +201,136 @@ public final class MachineService implements Listener, CommandExecutor {
             UUID id = UUID.fromString(body.get("sessionId").getAsString());
             int machine = body.get("machineId").getAsBigDecimal().intValueExact();
             long sequence = body.get("clientSequence").getAsBigDecimal().longValueExact();
-            if(envelope.packetType()==PacketType.CLOSE_REQUEST)closeRequest(player,id,machine,sequence);
-            else gameAction(player,id,machine,sequence,envelope.packetType(),pressed);
+            switch(envelope.packetType()) {
+                case CLOSE_REQUEST -> closeRequest(player,id,machine,sequence);
+                case LOAN -> loanAction(player,id,machine,sequence);
+                case INSERT_MEDALS -> insertAction(player,id,machine,sequence);
+                case CASH_OUT -> cashoutAction(player,id,machine,sequence);
+                default -> gameAction(player,id,machine,sequence,envelope.packetType(),pressed);
+            }
         } catch (RuntimeException invalid) { error(player, "SESSION_MISMATCH"); }
     }
+
+    private boolean reserveEconomy(Player player,UUID id,int machine,long sequence) {
+        Session session=state.session(player.getUniqueId());
+        if(session==null||!session.id().equals(id)||session.machine()!=machine||session.lifecycle()!=Session.Lifecycle.ACTIVE){reject(player,sequence,"SESSION_MISMATCH");return false;}
+        if(sequence<=session.sequence()){reject(player,sequence,"SEQUENCE_OLD");return false;}
+        if(pendingPlayers.contains(player.getUniqueId())||pendingMachines.contains(machine)){reject(player,sequence,"BUSY");return false;}
+        pendingPlayers.add(player.getUniqueId());pendingMachines.add(machine);return true;
+    }
+    private void releaseEconomy(UUID player,int machine) {
+        pendingPlayers.remove(player);pendingMachines.remove(machine);
+        Runnable close=deferredClose.remove(player);if(close!=null&&!stopped)close.run();
+        if(deferredDisconnect.remove(player)&&!stopped)disconnect(player);
+    }
+    private void loanAction(Player player,UUID id,int machine,long sequence) {
+        Session session=state.session(player.getUniqueId());
+        if(session==null||!session.id().equals(id)||session.machine()!=machine||session.lifecycle()!=Session.Lifecycle.ACTIVE){reject(player,sequence,"SESSION_MISMATCH");return;}
+        if(!EconomyStore.allowed(session.state())){reject(player,sequence,"INVALID_STATE");return;}
+        if(vault==null){reject(player,sequence,"ECONOMY_UNAVAILABLE");return;}
+        if(!reserveEconomy(player,id,machine,sequence))return;
+        UUID owner=player.getUniqueId();
+        final double balance;
+        try {balance=vault.balance(player);}catch(RuntimeException failure){releaseEconomy(owner,machine);reject(player,sequence,"VAULT_ERROR");return;}
+        int need=50-Math.toIntExact(session.number("credit"));
+        int affordable=(int)Math.min(Integer.MAX_VALUE,Math.floor(balance/vaultPerMedal));
+        int borrow=Math.min(need,affordable);
+        if(borrow<1){releaseEconomy(owner,machine);reject(player,sequence,"NOT_ENOUGH_VAULT");return;}
+        long now=System.currentTimeMillis();
+        plugin.executors().database(()->new Saved<>(new EconomyStore(database).prepareLoan(owner,id,machine,sequence,borrow,vaultPerMedal,balance,now),database.state()),(prepared,error)->{
+            if(prepared!=null)state=prepared.state;
+            if(stopped){releaseEconomy(owner,machine);return;}
+            if(error!=null){releaseEconomy(owner,machine);failure(player,error);return;}
+            EconomyStore.LoanPlan plan=prepared.value;
+            if(plan.state()==EconomyStore.JournalState.APPLIED){releaseEconomy(owner,machine);accepted(player,PacketType.LOAN,sequence);send(player,PacketType.PUBLIC_STATE,state.session(owner).publicState());return;}
+            if(plan.state()!=EconomyStore.JournalState.PREPARED){releaseEconomy(owner,machine);reject(player,sequence,"VAULT_ERROR");return;}
+            plugin.executors().database(()->{new EconomyStore(database).markLoanCallStarted(plan.transactionId(),System.currentTimeMillis());return null;},(unused,markError)->{
+                if(markError!=null){releaseEconomy(owner,machine);failure(player,markError);return;}
+                final boolean withdrawn;
+                try {withdrawn=vault.withdraw(player,plan.vaultAmount());}
+                catch(RuntimeException uncertain){
+                    plugin.getLogger().log(Level.SEVERE,"Vault call outcome uncertain; transaction left CALL_STARTED: "+plan.transactionId(),uncertain);
+                    releaseEconomy(owner,machine);reject(player,sequence,"VAULT_ERROR");return;
+                }
+                if(!withdrawn){
+                    plugin.executors().database(()->{new EconomyStore(database).rollbackLoan(plan.transactionId(),System.currentTimeMillis());return null;},(ignored,rollbackError)->{
+                        releaseEconomy(owner,machine);if(rollbackError!=null)failure(player,rollbackError);else reject(player,sequence,"VAULT_ERROR");
+                    });return;
+                }
+                plugin.executors().database(()->new Saved<>(new EconomyStore(database).applyLoan(owner,id,machine,sequence,plan,System.currentTimeMillis()),database.state()),(applied,applyError)->{
+                    if(applied!=null)state=applied.state;
+                    releaseEconomy(owner,machine);
+                    if(applyError!=null){plugin.getLogger().log(Level.SEVERE,"Vault withdrawal succeeded but local apply failed; manual review required tx="+plan.transactionId(),applyError);reject(player,sequence,"VAULT_ERROR");return;}
+                    accepted(player,PacketType.LOAN,sequence);send(player,PacketType.PUBLIC_STATE,applied.value.publicState());
+                });
+            });
+        });
+    }
+    private void insertAction(Player player,UUID id,int machine,long sequence) {
+        if(!reserveEconomy(player,id,machine,sequence))return;
+        UUID owner=player.getUniqueId();
+        List<EconomyStore.InsertCandidate> candidates=new ArrayList<>();
+        for(int slot=0;slot<=35;slot++){
+            MedalToken.Value value=MedalToken.read(player.getInventory().getItem(slot));
+            if(value!=null)candidates.add(new EconomyStore.InsertCandidate(slot,value.bundleId(),value.amount()));
+        }
+        plugin.executors().database(()->new Saved<>(new EconomyStore(database).prepareInsert(owner,id,machine,sequence,candidates,System.currentTimeMillis()),database.state()),(prepared,error)->{
+            if(prepared!=null)state=prepared.state;
+            if(stopped){releaseEconomy(owner,machine);return;}
+            if(error!=null){releaseEconomy(owner,machine);failureOrReject(player,sequence,error);return;}
+            EconomyStore.InsertPlan plan=prepared.value;
+            boolean matches=true;
+            for(var replacement:plan.replacements()){
+                MedalToken.Value current=MedalToken.read(player.getInventory().getItem(replacement.slot()));
+                if(current==null||!current.bundleId().equals(replacement.oldBundleId())||current.amount()!=replacement.oldAmount()){matches=false;break;}
+            }
+            if(!matches){
+                plugin.executors().database(()->new Saved<>(new EconomyStore(database).rollbackInsert(owner,id,plan,System.currentTimeMillis()),database.state()),(rolled,rollbackError)->{
+                    if(rolled!=null)state=rolled.state;releaseEconomy(owner,machine);
+                    if(rollbackError!=null)failure(player,rollbackError);else reject(player,sequence,"BUSY");
+                });return;
+            }
+            for(var replacement:plan.replacements())player.getInventory().setItem(replacement.slot(),replacement.newBundleId()==null?null:MedalToken.create(replacement.newBundleId(),replacement.newAmount()));
+            plugin.executors().database(()->{new EconomyStore(database).markInsertApplied(plan.transactionId(),System.currentTimeMillis());return database.state();},(saved,markError)->{
+                if(saved!=null)state=saved;releaseEconomy(owner,machine);
+                if(markError!=null){failure(player,markError);return;}
+                accepted(player,PacketType.INSERT_MEDALS,sequence);send(player,PacketType.PUBLIC_STATE,plan.session().publicState());
+            });
+        });
+    }
+    private void cashoutAction(Player player,UUID id,int machine,long sequence) {
+        if(!reserveEconomy(player,id,machine,sequence))return;
+        UUID owner=player.getUniqueId();
+        plugin.executors().database(()->new Saved<>(new EconomyStore(database).prepareCashout(owner,id,machine,sequence,System.currentTimeMillis()),database.state()),(prepared,error)->{
+            if(prepared!=null)state=prepared.state;
+            if(stopped){releaseEconomy(owner,machine);return;}
+            if(error!=null){releaseEconomy(owner,machine);failureOrReject(player,sequence,error);return;}
+            EconomyStore.CashoutPlan plan=prepared.value;
+            if(plan.alreadyCompleted()){
+                releaseEconomy(owner,machine);accepted(player,PacketType.CASH_OUT,sequence);cashoutResult(player,plan.amount(),0,0);send(player,PacketType.PUBLIC_STATE,plan.session().publicState());return;
+            }
+            Set<UUID> delivered=new HashSet<>();long deliveredAmount=0;
+            for(var bundle:plan.bundles()){
+                int slot=player.getInventory().firstEmpty();if(slot<0)break;
+                player.getInventory().setItem(slot,MedalToken.create(bundle.id(),bundle.amount()));delivered.add(bundle.id());deliveredAmount+=bundle.amount();
+            }
+            long finalDelivered=deliveredAmount;
+            plugin.executors().database(()->new Saved<>(new EconomyStore(database).finishCashout(owner,plan.transactionId(),delivered,System.currentTimeMillis()),database.state()),(finished,finishError)->{
+                if(finished!=null)state=finished.state;releaseEconomy(owner,machine);
+                if(finishError!=null){removeBundleItems(player,delivered);failure(player,finishError);return;}
+                long pending=plan.amount()-finalDelivered;accepted(player,PacketType.CASH_OUT,sequence);cashoutResult(player,plan.amount(),finalDelivered,pending);send(player,PacketType.PUBLIC_STATE,finished.value.publicState());
+            });
+        });
+    }
+    private static void removeBundleItems(Player player,Set<UUID> ids){
+        for(int slot=0;slot<=35;slot++){MedalToken.Value value=MedalToken.read(player.getInventory().getItem(slot));if(value!=null&&ids.contains(value.bundleId()))player.getInventory().setItem(slot,null);}
+    }
+    private void cashoutResult(Player player,long amount,long delivered,long pending){
+        JsonObject body=new JsonObject();body.addProperty("amount",amount);body.addProperty("delivered",delivered);body.addProperty("pending",pending);send(player,PacketType.CASHOUT_RESULT,body);
+    }
+    private void accepted(Player player,PacketType action,long sequence){JsonObject body=new JsonObject();body.addProperty("clientSequence",sequence);body.addProperty("action",action.name());send(player,PacketType.ACTION_ACCEPTED,body);}
+    private void failureOrReject(Player player,long sequence,Throwable failure){String code=failure instanceof DomainException?failure.getMessage():"DB_ERROR";if(failure instanceof DomainException)reject(player,sequence,code);else failure(player,failure);}
+
     private void gameAction(Player player,UUID id,int machine,long sequence,PacketType action,Integer pressedIndex) {
         Session session=state.session(player.getUniqueId());
         if(session==null||!session.id().equals(id)||session.machine()!=machine||session.lifecycle()!=Session.Lifecycle.ACTIVE){reject(player,sequence,"SESSION_MISMATCH");return;}
