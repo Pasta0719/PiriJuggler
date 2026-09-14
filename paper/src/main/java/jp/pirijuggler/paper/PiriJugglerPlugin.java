@@ -9,6 +9,7 @@ import jp.pirijuggler.paper.network.ServerHandshake;
 import jp.pirijuggler.paper.threading.PaperMainThread;
 import jp.pirijuggler.paper.threading.TaskExecutors;
 import jp.pirijuggler.paper.economy.MedalMergeCommand;
+import jp.pirijuggler.paper.economy.MedalRecoveryListener;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -60,6 +61,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
         getServer().getMessenger().registerOutgoingPluginChannel(this, Protocol.CHANNEL);
         getServer().getMessenger().registerIncomingPluginChannel(this, Protocol.CHANNEL, this);
         getServer().getPluginManager().registerEvents(this, this);
+        getServer().getPluginManager().registerEvents(new MedalRecoveryListener(this), this);
         getLogger().info("Protocol " + Protocol.VERSION + "; configuration " + (configurationValid ? "valid" : "invalid; gameplay disabled"));
     }
 
