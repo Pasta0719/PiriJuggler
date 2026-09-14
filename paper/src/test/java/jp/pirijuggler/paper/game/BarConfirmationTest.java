@@ -26,7 +26,8 @@ class BarConfirmationTest extends GameFixture {
             long previous=0;
             for(var reel:order){
                 int stop=target.stops().stop(reel),turn=1;long time;
-                do{time=Math.round((.5+(21*turn++-3.15-stop-.5)/18)*1e9);}while(time<500_000_000||time<=previous);
+                double halfSecondDelta=ReelMotion.delta(ReelMotion.Profile.NORMAL,.5);
+                do{time=Math.round((.5+(21*turn+++halfSecondDelta-stop-.5)/ReelMotion.NORMAL_SPEED)*1e9);}while(time<500_000_000||time<=previous);
                 var transition=game.plan(s,PacketType.valueOf("STOP_"+reel.name()),s.sequence()+1,1,NOW+s.sequence(),time,0);
                 s=store.commit(transition);var wire=game.committed(transition,time);previous=time;
                 assertEquals(stop,s.number("display_"+reel.name().toLowerCase(Locale.ROOT)+"_stop"));
