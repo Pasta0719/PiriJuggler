@@ -69,7 +69,7 @@ class EconomyStoreTest {
         assertEquals(50,plan.inserted());assertEquals(50,plan.session().number("credit"));assertEquals(1,plan.replacements().size());
         var replacement=plan.replacements().getFirst();assertNull(replacement.newBundleId());assertEquals(0,replacement.newAmount());
         assertEquals("RETIRED",db.rows("SELECT state FROM medal_tokens WHERE bundle_id=?",bundle.toString()).getFirst().get("state"));
-        assertEquals(0,db.rows("SELECT count(*) AS c FROM medal_tokens WHERE state='ACTIVE'").getFirst().get("c"));
+        assertEquals(0,((Number)db.rows("SELECT count(*) AS c FROM medal_tokens WHERE state='ACTIVE'").getFirst().get("c")).intValue());
     }
 
     @Test void retiredDuplicateBundleCannotBeSpentAgain() throws Exception {
