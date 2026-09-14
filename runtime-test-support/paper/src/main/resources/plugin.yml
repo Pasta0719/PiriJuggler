@@ -16,6 +16,10 @@ commands:
     description: Phase07 medal LEDGER_COMMITTED crash/reconciliation fault injection
     usage: /pirifault <before|after|status> [player]
     permission: piri.runtime
+  pirivaultfault:
+    description: Phase08 test-only Vault deposit failure injection using the real economy provider
+    usage: /pirivaultfault <on|off|status>
+    permission: piri.runtime
 permissions:
   piri.runtime:
     default: op
