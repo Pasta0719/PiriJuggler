@@ -81,7 +81,7 @@ public final class NormalGame {
                 sample(values,motion,receivedNanos);
                 int delay=stop.choice().durationMs();
                 if(stop.tenpaiSound()){JsonObject b=new JsonObject();b.addProperty("spinId",before.text("spin_id"));scheduled.add(new Scheduled(delay,Envelope.current(PacketType.TENPAI_SOUND,b)));}
-                if(state==Session.GameState.NORMAL_SPINNING&&premiumType(before)==PremiumPolicy.Type.B&&stoppedReel(action,round)==Reel.LEFT)scheduled.add(new Scheduled(delay,notice(before,"NOTICE","STEADY")));
+                if(state==Session.GameState.NORMAL_SPINNING&&premiumType(before)==PremiumPolicy.Type.B&&stoppedReel(action,round)==Reel.LEFT)scheduled.add(new Scheduled(delay,notice(before,"OFF","NOTICE","STEADY")));
                 if(premiumType(before)==PremiumPolicy.Type.A)values.put("lamp_on",1);
                 if(round.stoppedMask()==7) {
                     finished=true;publicDelay=delay;
@@ -159,24 +159,24 @@ public final class NormalGame {
         if(p==null){
             boolean first=random.gameplay(((Number)values.get("machine_id")).intValue()).nextLong(1_000_000)<250_000;
             values.put("notice_state",first?"FIRST":"AFTER");values.put("lamp_on",first?1:0);
-            if(first)afterStart.add(notice((String)values.get("spin_id"),"NONE","STEADY"));return;
+            if(first)afterStart.add(notice((String)values.get("spin_id"),"ON","NONE","STEADY"));return;
         }
         values.put("notice_state","PREMIUM_"+p.name());
         switch(p){
-            case A -> {values.put("lamp_on",0);scheduled.add(new Scheduled(500,notice((String)values.get("spin_id"),"NONE","STEADY")));}
+            case A -> {values.put("lamp_on",0);scheduled.add(new Scheduled(500,notice((String)values.get("spin_id"),"ON","NONE","STEADY")));}
             case B,D,F -> values.put("lamp_on",0);
-            case C -> {values.put("lamp_on",1);afterStart.add(notice((String)values.get("spin_id"),"NOTICE","STEADY"));}
-            case E -> {values.put("lamp_on",1);afterStart.add(notice((String)values.get("spin_id"),"NOTICE_X5","FAST_BLINK_1S"));}
+            case C -> {values.put("lamp_on",1);afterStart.add(notice((String)values.get("spin_id"),"ON","NOTICE","STEADY"));}
+            case E -> {values.put("lamp_on",1);afterStart.add(notice((String)values.get("spin_id"),"ON","NOTICE_X5","FAST_BLINK_1S"));}
         }
     }
     private void addFinalNotice(Session before,String bonus,List<Scheduled> scheduled,int delay){
         if(bonus==null)return;PremiumPolicy.Type p=premiumType(before);String state=before.text("notice_state");
-        if(p==null&&"AFTER".equals(state))scheduled.add(new Scheduled(delay,notice(before,"NOTICE","STEADY")));
-        else if(p==PremiumPolicy.Type.B||p==PremiumPolicy.Type.F)scheduled.add(new Scheduled(delay,notice(before,"NOTICE","STEADY")));
-        else if(p==PremiumPolicy.Type.D)scheduled.add(new Scheduled(delay,notice(before,"NOTICE_STRONG","STEADY")));
+        if(p==null&&"AFTER".equals(state))scheduled.add(new Scheduled(delay,notice(before,"ON","NOTICE","STEADY")));
+        else if(p==PremiumPolicy.Type.B||p==PremiumPolicy.Type.F)scheduled.add(new Scheduled(delay,notice(before,"ON","NOTICE","STEADY")));
+        else if(p==PremiumPolicy.Type.D)scheduled.add(new Scheduled(delay,notice(before,"ON","NOTICE_STRONG","STEADY")));
     }
-    private static Envelope notice(Session s,String sound,String pattern){return notice(s.text("spin_id"),sound,pattern);}
-    private static Envelope notice(String spin,String sound,String pattern){JsonObject b=new JsonObject();b.addProperty("spinId",spin);b.addProperty("lamp","ON");b.addProperty("pattern",pattern);b.addProperty("sound",sound);return Envelope.current(PacketType.NOTICE,b);}
+    private static Envelope notice(Session s,String lamp,String sound,String pattern){return notice(s.text("spin_id"),lamp,sound,pattern);}
+    private static Envelope notice(String spin,String lamp,String sound,String pattern){JsonObject b=new JsonObject();b.addProperty("spinId",spin);b.addProperty("lamp",lamp);b.addProperty("pattern",pattern);b.addProperty("sound",sound);return Envelope.current(PacketType.NOTICE,b);}
 
     private void beginSpin(Map<String,Object> values,Session before,String internalRole,ReelMotion.Profile profile,String nextState,String bonus){
         values.put("game_state",nextState);values.put("spin_id",UUID.randomUUID().toString());values.put("internal_role",internalRole);values.put("premium_type",null);
