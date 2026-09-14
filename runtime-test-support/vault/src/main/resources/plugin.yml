@@ -1,0 +1,13 @@
+name: Vault
+version: '${version}'
+main: jp.pirijuggler.runtime.vault.TestVaultPlugin
+api-version: '1.21'
+description: Test-only Vault Economy provider for Piri Juggler runtime acceptance
+commands:
+  testvault:
+    description: Set or inspect the runtime acceptance Vault balance
+    usage: /testvault set [player] <amount> | /testvault get [player]
+    permission: piri.runtime
+permissions:
+  piri.runtime:
+    default: op
