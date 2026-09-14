@@ -8,6 +8,7 @@ import jp.pirijuggler.paper.config.ConfigValidation;
 import jp.pirijuggler.paper.network.ServerHandshake;
 import jp.pirijuggler.paper.threading.PaperMainThread;
 import jp.pirijuggler.paper.threading.TaskExecutors;
+import jp.pirijuggler.paper.economy.MedalMergeCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -50,6 +51,9 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
             configurationValid = false;
             getLogger().log(java.util.logging.Level.SEVERE, "Gameplay disabled: config.yml could not be loaded", exception);
         }
+        var mergeCommand = getCommand("pirimerge");
+        if (mergeCommand == null) throw new IllegalStateException("pirimerge command missing");
+        mergeCommand.setExecutor(new MedalMergeCommand(this));
         getServer().getMessenger().registerOutgoingPluginChannel(this, Protocol.CHANNEL);
         getServer().getMessenger().registerIncomingPluginChannel(this, Protocol.CHANNEL, this);
         getServer().getPluginManager().registerEvents(this, this);
