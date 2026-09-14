@@ -14,11 +14,19 @@
 | stop.ogg | piri:stop | 停止 |
 | payout.ogg | piri:payout | 払出 |
 | error.ogg | piri:error | エラー |
-| bonus_start.ogg | piri:bonus_start | ボーナス開始 |
-| bonus_end.ogg | piri:bonus_end | ボーナス終了 |
+| bonus_start.ogg | piri:bonus_start | BIG開始時のみ再生 |
+| bonus_end.ogg | piri:bonus_end | BIG終了時のみ再生 |
 | big_bgm.ogg | piri:big_bgm | BIG消化中BGM（ループ） |
 | reg_bgm.ogg | piri:reg_bgm | REG消化中BGM（ループ） |
 
-`big_bgm` / `reg_bgm` はPhase06でユーザー指定により追加したBGM SoundEventです。BIG/REG開始後にクライアント側でループし、終了・session reset時に停止します。
+`big_bgm` / `reg_bgm` はPhase06でユーザー指定により追加したBGM SoundEventです。
+
+追加仕様:
+- REGでは `bonus_start.ogg` / `bonus_end.ogg` を再生しません。
+- BIGでは `bonus_start.ogg` を再生したあと、`big_bgm.ogg` の初回開始だけ4.5秒待機します。
+- 4.5秒待機はBIG BGMの初回開始にのみ適用し、BGM自体のループ間隔には入りません。
+- REG BGMはREG開始時に待機なしで開始します。
+- 途中でスロット画面を再度開いた場合は、進行中のBIG/REG BGMをその場から通常のループ再生として開始します。
+- BIG/REG終了・session reset時にBGMを停止します。
 
 未配置の場合は無音で処理を続行します。build/test/runtimeに実音源は必須ではありません。
