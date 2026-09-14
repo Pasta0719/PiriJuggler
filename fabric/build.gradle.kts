@@ -31,7 +31,7 @@ tasks.processResources {
         )
     }
     val userAudio = rootProject.file("user-audio")
-    val names = listOf("notice", "notice_strong", "tenpai", "bet", "lever", "stop", "payout", "error", "bonus_start", "bonus_end")
+    val names = listOf("notice", "notice_strong", "tenpai", "bet", "lever", "stop", "payout", "error", "bonus_start", "bonus_end", "big_bgm", "reg_bgm")
     from(userAudio) {
         include(names.map { "$it.ogg" })
         into("assets/piri/sounds")
