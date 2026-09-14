@@ -103,7 +103,7 @@ public final class NormalGame {
                             if(!solver.catalogue().evaluation(round.display()).valid(expected))throw new IllegalStateException("Unexpected bonus entry shape");
                             String type=state==Session.GameState.BONUS_ENTRY_SPINNING_BIG?"BIG":"REG";bonusStarted=type;
                             values.put("game_state",type+"_READY");values.put("current_bet",0);values.put("bonus_payout_count",0);values.put("lamp_on",1);values.put("notice_state","ON");clearSpin(values);
-                            JsonObject b=new JsonObject();b.addProperty("type",type);scheduled.add(new Scheduled(delay,Envelope.current(PacketType.BONUS_START,b)));
+                            JsonObject b=new JsonObject();b.addProperty("bonusType",type);scheduled.add(new Scheduled(delay,Envelope.current(PacketType.BONUS_START,b)));
                         }
                         case BIG_SPINNING, REG_SPINNING -> {
                             DisplayRole role=DisplayRole.valueOf(before.text("internal_role"));
@@ -114,7 +114,7 @@ public final class NormalGame {
                             if(end){bonusEnded=true;values.put("game_state","SEATED_READY");values.put("bonus_payout_count",0);values.put("lamp_on",0);values.put("notice_state","NONE");values.put("bonus_type",null);}
                             else values.put("game_state",big?"BIG_READY":"REG_READY");
                             clearSpin(values);scheduled.add(new Scheduled(delay,Envelope.current(PacketType.PAYOUT,new JsonObject())));
-                            if(end){JsonObject b=new JsonObject();b.addProperty("type",big?"BIG":"REG");scheduled.add(new Scheduled(delay,Envelope.current(PacketType.BONUS_END,b)));}
+                            if(end){JsonObject b=new JsonObject();b.addProperty("bonusType",big?"BIG":"REG");scheduled.add(new Scheduled(delay,Envelope.current(PacketType.BONUS_END,b)));}
                         }
                         default -> throw new IllegalStateException("Unexpected spinning state "+state);
                     }
