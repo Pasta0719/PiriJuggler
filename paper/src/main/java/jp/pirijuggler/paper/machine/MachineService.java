@@ -52,7 +52,7 @@ public final class MachineService implements Listener, CommandExecutor {
     public MachineService(PiriJugglerPlugin plugin, Map<String, Object> config) {
         this.plugin = plugin;
         random=RandomStreams.production();weights=new RoleWeights(config);
-        games=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin));
+        games=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin),config);
         graceMs = ((Number) jp.pirijuggler.paper.database.StartupProfile.map(config.get("game")).get("disconnect_grace_seconds")).longValue() * 1000;
         long jvm = ManagementFactory.getRuntimeMXBean().getStartTime();
         long now = System.currentTimeMillis();
@@ -157,7 +157,6 @@ public final class MachineService implements Listener, CommandExecutor {
         Player player = event.getPlayer(); UUID owner = player.getUniqueId();
         if (!plugin.canUseSlot(owner)) { tell(player, "Piri Juggler Client Mod 1.0.0 が必要です"); return; }
         if (player.isOp() && validKey(event.getItem())) {
-            // Read access deliberately does not take the machine mutation reservation.
             plugin.executors().database(() -> database.adminState(machine.id()), (json, error) -> {
                 if (stopped || !player.isOnline()) return;
                 if (!player.isOp()) { error(player, "NOT_OP"); return; }
@@ -182,26 +181,40 @@ public final class MachineService implements Listener, CommandExecutor {
         main(); if (!ready() || envelope.packetType() == PacketType.HELLO) return;
         try {
             JsonObject body = envelope.payload();
-            if (!body.keySet().equals(Set.of("sessionId","machineId","clientSequence"))) throw new IllegalArgumentException();
+            var keys=new HashSet<>(body.keySet());boolean hasPressed=keys.remove("pressedIndex");
+            if (!keys.equals(Set.of("sessionId","machineId","clientSequence"))) throw new IllegalArgumentException();
+            Integer pressed=null;
+            if(hasPressed){
+                if(!Set.of(PacketType.SPACE_ACTION,PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT).contains(envelope.packetType()))throw new IllegalArgumentException();
+                pressed=body.get("pressedIndex").getAsBigDecimal().intValueExact();if(pressed<0||pressed>=21)throw new IllegalArgumentException();
+            }
             UUID id = UUID.fromString(body.get("sessionId").getAsString());
             int machine = body.get("machineId").getAsBigDecimal().intValueExact();
             long sequence = body.get("clientSequence").getAsBigDecimal().longValueExact();
             if(envelope.packetType()==PacketType.CLOSE_REQUEST)closeRequest(player,id,machine,sequence);
-            else gameAction(player,id,machine,sequence,envelope.packetType());
+            else gameAction(player,id,machine,sequence,envelope.packetType(),pressed);
         } catch (RuntimeException invalid) { error(player, "SESSION_MISMATCH"); }
     }
-    private void gameAction(Player player,UUID id,int machine,long sequence,PacketType action) {
+    private void gameAction(Player player,UUID id,int machine,long sequence,PacketType action,Integer pressedIndex) {
         Session session=state.session(player.getUniqueId());
         if(session==null||!session.id().equals(id)||session.machine()!=machine||session.lifecycle()!=Session.Lifecycle.ACTIVE){reject(player,sequence,"SESSION_MISMATCH");return;}
         if(sequence<=session.sequence()){reject(player,sequence,"SEQUENCE_OLD");return;}
         if(pendingPlayers.contains(player.getUniqueId())||pendingMachines.contains(machine)){reject(player,sequence,"BUSY");return;}
         try {
-            var transition=games.plan(session,action,sequence,state.machine(machine).setting(),System.currentTimeMillis(),System.nanoTime(),player.getPing());
+            var transition=games.plan(session,action,sequence,state.machine(machine).setting(),System.currentTimeMillis(),System.nanoTime(),player.getPing(),pressedIndex);
             submit(player,player.getUniqueId(),machine,()->new GameStore(database).commit(transition),saved->{
                 for(var packet:games.committed(transition,System.nanoTime()))send(player,packet);
+                for(var event:games.scheduled(transition))schedule(player,id,event);
             });
         } catch(DomainException error){reject(player,sequence,error.getMessage());}
         catch(ArithmeticException overflow){reject(player,sequence,"INVALID_STATE");}
+    }
+    private void schedule(Player player,UUID sessionId,NormalGame.Scheduled event){
+        long ticks=Math.max(1,(event.delayMs()+49)/50);
+        plugin.getServer().getScheduler().runTaskLater(plugin,()->{
+            if(stopped||state==null||!player.isOnline())return;Session current=state.session(player.getUniqueId());
+            if(current!=null&&current.id().equals(sessionId))send(player,event.packet());
+        },ticks);
     }
     private void closeRequest(Player player, UUID id, int machine, long sequence) {
         UUID owner = player.getUniqueId();
@@ -264,7 +277,7 @@ public final class MachineService implements Listener, CommandExecutor {
     private static void tell(CommandSender sender, String message) { sender.sendMessage(Component.text(message)); }
     private void error(CommandSender sender, String code) {
         tell(sender, code);
-        if (sender instanceof Player player) try { send(player, ErrorPackets.error(ErrorCode.valueOf(code))); } catch (IllegalArgumentException commandOnlyCode) { /* Command-only errors have no wire ID. */ }
+        if (sender instanceof Player player) try { send(player, ErrorPackets.error(ErrorCode.valueOf(code))); } catch (IllegalArgumentException commandOnlyCode) { }
     }
     private void reject(Player player, long sequence, String code) { send(player, ErrorPackets.rejected(sequence, ErrorCode.valueOf(code))); }
     private void send(Player player, PacketType type, JsonObject body) { send(player, new Envelope(Protocol.VERSION, type, body)); }
