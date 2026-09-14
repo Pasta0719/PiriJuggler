@@ -1,6 +1,7 @@
 package jp.pirijuggler.common.reel;
 /** Shared visual formulas only; the Paper receiver supplies its own time and ping. */
 public final class ReelMotion {
+    public static final double NORMAL_SPEED = 21.0;
     public enum Profile {
         NORMAL(400,350), REVERSE_500MS(800,750), RESUME_NORMAL(200,150);
         private final int clientDelayMs,serverThresholdMs;
@@ -11,9 +12,9 @@ public final class ReelMotion {
     public static double effectiveMillis(long startNanos,long receiveNanos,int ping){return Math.max(0,(receiveNanos-startNanos)/1_000_000.0-Math.clamp(ping,0,250));}
     public static double delta(Profile profile,double seconds){
         if(!Double.isFinite(seconds))throw new IllegalArgumentException("Non-finite elapsed time");double e=Math.max(0,seconds);
-        return switch(profile){case NORMAL ->e<=.150?0:e<.500?-.5*(18/.350)*(e-.150)*(e-.150):-3.15-18*(e-.500);
-            case REVERSE_500MS ->e<.500?12*e:e<.800?6-.5*(18/.300)*(e-.500)*(e-.500):3.3-18*(e-.800);
-            case RESUME_NORMAL ->-18*e;};
+        return switch(profile){case NORMAL ->e<=.150?0:e<.500?-.5*(NORMAL_SPEED/.350)*(e-.150)*(e-.150):-3.675-NORMAL_SPEED*(e-.500);
+            case REVERSE_500MS ->e<.500?12*e:e<.800?6-.5*(NORMAL_SPEED/.300)*(e-.500)*(e-.500):2.85-NORMAL_SPEED*(e-.800);
+            case RESUME_NORMAL ->-NORMAL_SPEED*e;};
     }
     public static double phase(Profile profile,double start,double elapsedSec){if(!Double.isFinite(start))throw new IllegalArgumentException("Non-finite phase");return wrap(start+delta(profile,elapsedSec));}
     public static int pressedIndex(Profile profile,double start,long startNanos,long receiveNanos,int ping){return (int)Math.floor(phase(profile,start,effectiveMillis(startNanos,receiveNanos,ping)/1000));}
@@ -25,10 +26,10 @@ public final class ReelMotion {
         if(!Double.isFinite(current)||target<0||target>=21)throw new IllegalArgumentException("Invalid stop endpoint");
         double endpoint=target;while(endpoint>current)endpoint-=21;return endpoint;
     }
-    /** Preserve server timing unless packet delay would require a visual speed above the normal 18 symbols/sec. */
+    /** Preserve server timing unless packet delay would require a visual speed above the normal reel speed. */
     public static int visualDurationMs(double from,double endpoint,int requestedMs){
         if(!Double.isFinite(from)||!Double.isFinite(endpoint)||requestedMs<0||endpoint>from)throw new IllegalArgumentException("Invalid visual stop");
-        double exactMs=(from-endpoint)/18.0*1000.0;
+        double exactMs=(from-endpoint)/NORMAL_SPEED*1000.0;
         // wrap() can move a decimal phase by a few ulps (e.g. 1.8 -> 1.8000000000000007).
         // Do not let that harmless floating-point noise add a whole millisecond and make client/test timing disagree.
         int continuity=(int)Math.ceil(exactMs-1e-9);
