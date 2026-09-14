@@ -54,6 +54,9 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
         var mergeCommand = getCommand("pirimerge");
         if (mergeCommand == null) throw new IllegalStateException("pirimerge command missing");
         mergeCommand.setExecutor(new MedalMergeCommand(this));
+        var resetCommand = getCommand("pirireset");
+        if (resetCommand == null) throw new IllegalStateException("pirireset command missing");
+        resetCommand.setExecutor(new DevResetCommand(this));
         getServer().getMessenger().registerOutgoingPluginChannel(this, Protocol.CHANNEL);
         getServer().getMessenger().registerIncomingPluginChannel(this, Protocol.CHANNEL, this);
         getServer().getPluginManager().registerEvents(this, this);
