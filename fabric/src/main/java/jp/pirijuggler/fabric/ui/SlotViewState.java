@@ -48,7 +48,7 @@ public final class SlotViewState {
     public static double wrap(double value){return ReelMotion.wrap(value);}
     public static double distance(String animation,double seconds){return ReelMotion.delta(ReelMotion.Profile.valueOf(animation),seconds);}
     public double phase(int reel){
-        long now=time.getAsLong();Stop stop=stops[reel];if(stop!=null){double p=stop.duration==0?1:Math.min(1,Math.max(0,(now-stop.at)/(double)stop.duration));return p>=1?wrap(stop.target):wrap(stop.from+(stop.target-stop.from)*p);}
+        long now=time.getAsLong();Stop stop=stops[reel];if(stop!=null){double p=stop.duration==0?1:Math.min(1,Math.max(0,(now-stop.at)/(double)stop.duration));return p>=1?rest[reel]:wrap(stop.from+(stop.target-stop.from)*p);}
         return spinning?wrap(starts[reel]+distance(animation,(now-spinAt)/1e9)):rest[reel];
     }
     public boolean lampOn(){long elapsed=time.getAsLong()-noticeAt;return notice&&(!blink||elapsed>=1_000_000_000L||elapsed/100_000_000L%2==0);}
