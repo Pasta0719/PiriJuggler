@@ -23,6 +23,7 @@ public final class EconomyStore {
         public InsertPlan { replacements = List.copyOf(replacements); }
     }
 
+    private static final String UNLIMITED_TABLE = "medal_tokens_unlimited";
     private static final EnumSet<Session.GameState> ECONOMY_STATES = EnumSet.of(
             Session.GameState.SEATED_READY, Session.GameState.REPLAY_READY,
             Session.GameState.BONUS_PENDING_BIG, Session.GameState.BONUS_PENDING_REG,
@@ -98,6 +99,7 @@ public final class EconomyStore {
     public CashoutPlan prepareCashout(UUID player, UUID sessionId, int machine, long sequence, long now) throws Exception {
         String transactionId = deterministic("CASHOUT", sessionId, sequence);
         return db.transaction(() -> {
+            ensureUnlimitedTable();
             var existing = db.rows("SELECT * FROM cashout_transactions WHERE transaction_id=?", transactionId);
             if (!existing.isEmpty()) {
                 var row = existing.getFirst();
@@ -108,16 +110,15 @@ public final class EconomyStore {
             if (!allowed(session.state())) throw new DomainException("INVALID_STATE");
             if (sequence <= session.sequence()) throw new DomainException("SEQUENCE_OLD");
             long amount = Math.addExact(session.number("credit"), session.number("held_medals"));
+            if (amount > MedalToken.MAX_AMOUNT) throw new DomainException("MEDAL_AMOUNT_TOO_LARGE");
             db.sql("INSERT INTO cashout_transactions(transaction_id,player_uuid,amount,status,created_at,updated_at) VALUES(?,?,?,'PENDING',?,?)",
                     transactionId, player.toString(), amount, now, now);
             List<Bundle> bundles = new ArrayList<>();
-            long remaining = amount;
-            while (remaining > 0) {
-                int part = (int) Math.min(MedalToken.MAX_AMOUNT, remaining);
+            if (amount > 0) {
+                int whole = Math.toIntExact(amount);
                 UUID id = UUID.randomUUID();
-                db.sql("INSERT INTO medal_tokens(bundle_id,amount,state,source_transaction_id,created_at,updated_at) VALUES(?,?,'PENDING_DELIVERY',?,?,?)",
-                        id.toString(), part, transactionId, now, now);
-                bundles.add(new Bundle(id, part)); remaining -= part;
+                insertUnlimitedBundle(id, whole, "PENDING_DELIVERY", transactionId, now);
+                bundles.add(new Bundle(id, whole));
             }
             int changed = db.sql("UPDATE player_sessions SET credit=0,held_medals=0,last_client_sequence=?,last_activity=? WHERE session_id=? AND last_client_sequence=? AND lifecycle='ACTIVE'",
                     sequence, now, sessionId.toString(), session.sequence());
@@ -128,15 +129,16 @@ public final class EconomyStore {
 
     public Session finishCashout(UUID player, String transactionId, Set<UUID> delivered, long now) throws Exception {
         return db.transaction(() -> {
+            ensureUnlimitedTable();
             var cashout = requireRow("SELECT * FROM cashout_transactions WHERE transaction_id=? AND player_uuid=?", transactionId, player.toString());
             if ("COMPLETED".equals(cashout.get("status"))) return requireSession(player);
             long deliveredAmount = 0, pendingAmount = 0;
             for (Bundle bundle : bundlesFor(transactionId)) {
                 if (delivered.contains(bundle.id())) {
-                    db.sql("UPDATE medal_tokens SET state='ACTIVE',updated_at=? WHERE bundle_id=? AND state='PENDING_DELIVERY'", now, bundle.id().toString());
+                    setBundleState(bundle.id(), "PENDING_DELIVERY", "ACTIVE", now);
                     deliveredAmount = Math.addExact(deliveredAmount, bundle.amount());
                 } else {
-                    db.sql("UPDATE medal_tokens SET state='RETIRED',updated_at=? WHERE bundle_id=? AND state='PENDING_DELIVERY'", now, bundle.id().toString());
+                    setBundleState(bundle.id(), "PENDING_DELIVERY", "RETIRED", now);
                     pendingAmount = Math.addExact(pendingAmount, bundle.amount());
                 }
             }
@@ -153,6 +155,7 @@ public final class EconomyStore {
         Objects.requireNonNull(candidates);
         String transactionId = deterministic("INSERT", sessionId, sequence);
         return db.transaction(() -> {
+            ensureUnlimitedTable();
             Session session = requireActive(player, sessionId, machine);
             if (!allowed(session.state())) throw new DomainException("INVALID_STATE");
             if (sequence <= session.sequence()) throw new DomainException("SEQUENCE_OLD");
@@ -163,7 +166,7 @@ public final class EconomyStore {
             int inserted = 0;
             for (InsertCandidate candidate : candidates) {
                 if (inserted >= need) break;
-                if (candidate.slot() < 0 || candidate.slot() > 35 || candidate.amount() < 1 || candidate.amount() > 500 || !seen.add(candidate.bundleId()))
+                if (candidate.slot() < 0 || candidate.slot() > 35 || candidate.amount() < 1 || candidate.amount() > MedalToken.MAX_AMOUNT || !seen.add(candidate.bundleId()))
                     throw new DomainException("INVALID_ITEM");
                 requireUsableBundle(candidate.bundleId(), candidate.amount());
                 int consumed = Math.min(candidate.amount(), need - inserted);
@@ -176,10 +179,9 @@ public final class EconomyStore {
             JsonArray beforeJson = new JsonArray(), afterJson = new JsonArray();
             for (InsertReplacement replacement : replacements) {
                 beforeJson.add(bundleJson(replacement.oldBundleId(), replacement.oldAmount(), replacement.slot()));
-                db.sql("UPDATE medal_tokens SET state='RETIRED',updated_at=? WHERE bundle_id=? AND state='ACTIVE'", now, replacement.oldBundleId().toString());
+                setBundleState(replacement.oldBundleId(), "ACTIVE", "RETIRED", now);
                 if (replacement.newBundleId() != null) {
-                    db.sql("INSERT INTO medal_tokens(bundle_id,amount,state,source_transaction_id,created_at,updated_at) VALUES(?,?,'ACTIVE',NULL,?,?)",
-                            replacement.newBundleId().toString(), replacement.newAmount(), now, now);
+                    insertUnlimitedBundle(replacement.newBundleId(), replacement.newAmount(), "ACTIVE", null, now);
                     afterJson.add(bundleJson(replacement.newBundleId(), replacement.newAmount(), replacement.slot()));
                 }
             }
@@ -199,9 +201,10 @@ public final class EconomyStore {
 
     public Session rollbackInsert(UUID player, UUID sessionId, InsertPlan plan, long now) throws Exception {
         return db.transaction(() -> {
+            ensureUnlimitedTable();
             for (InsertReplacement replacement : plan.replacements()) {
-                db.sql("UPDATE medal_tokens SET state='ACTIVE',updated_at=? WHERE bundle_id=?", now, replacement.oldBundleId().toString());
-                if (replacement.newBundleId() != null) db.sql("UPDATE medal_tokens SET state='RETIRED',updated_at=? WHERE bundle_id=?", now, replacement.newBundleId().toString());
+                setBundleStateAny(replacement.oldBundleId(), "ACTIVE", now);
+                if (replacement.newBundleId() != null) setBundleStateAny(replacement.newBundleId(), "RETIRED", now);
             }
             db.sql("UPDATE player_sessions SET credit=?,last_client_sequence=?,last_activity=? WHERE session_id=?",
                     plan.creditBefore(), plan.sequenceBefore(), now, sessionId.toString());
@@ -211,6 +214,7 @@ public final class EconomyStore {
     }
 
     public boolean validActiveBundle(UUID id, int amount) throws Exception {
+        ensureUnlimitedTable();
         try { requireUsableBundle(id, amount); return true; }
         catch (DomainException invalid) { return false; }
     }
@@ -223,8 +227,8 @@ public final class EconomyStore {
         String needle = "%" + id + "%";
         if (!db.rows("SELECT transaction_id FROM medal_inventory_transactions WHERE status='REVIEW_REQUIRED' AND (before_bundle_json LIKE ? OR after_bundle_json LIKE ?) LIMIT 1", needle, needle).isEmpty())
             throw new DomainException("TOKEN_REVIEW_REQUIRED");
-        var rows = db.rows("SELECT amount,state FROM medal_tokens WHERE bundle_id=?", id.toString());
-        if (rows.size() != 1 || !"ACTIVE".equals(rows.getFirst().get("state")) || ((Number) rows.getFirst().get("amount")).intValue() != amount)
+        var current = bundleRow(id);
+        if (current == null || !"ACTIVE".equals(current.get("state")) || ((Number) current.get("amount")).intValue() != amount)
             throw new DomainException("INVALID_ITEM");
     }
 
@@ -242,10 +246,42 @@ public final class EconomyStore {
     }
 
     private List<Bundle> bundlesFor(String sourceTransactionId) throws Exception {
+        ensureUnlimitedTable();
         List<Bundle> result = new ArrayList<>();
         for (var row : db.rows("SELECT bundle_id,amount FROM medal_tokens WHERE source_transaction_id=? ORDER BY created_at,bundle_id", sourceTransactionId))
             result.add(new Bundle(UUID.fromString((String) row.get("bundle_id")), ((Number) row.get("amount")).intValue()));
+        for (var row : db.rows("SELECT bundle_id,amount FROM " + UNLIMITED_TABLE + " WHERE source_transaction_id=? ORDER BY created_at,bundle_id", sourceTransactionId))
+            result.add(new Bundle(UUID.fromString((String) row.get("bundle_id")), ((Number) row.get("amount")).intValue()));
         return result;
+    }
+
+    private void ensureUnlimitedTable() throws Exception {
+        db.sql("CREATE TABLE IF NOT EXISTS " + UNLIMITED_TABLE + " (bundle_id TEXT PRIMARY KEY,amount INTEGER NOT NULL CHECK(amount>=1),state TEXT NOT NULL CHECK(state IN ('PENDING_DELIVERY','ACTIVE','RETIRED')),source_transaction_id TEXT,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL)");
+    }
+
+    private void insertUnlimitedBundle(UUID id, int amount, String state, String sourceTransactionId, long now) throws Exception {
+        if (amount < 1 || amount > MedalToken.MAX_AMOUNT) throw new DomainException("INVALID_ITEM");
+        db.sql("INSERT INTO " + UNLIMITED_TABLE + "(bundle_id,amount,state,source_transaction_id,created_at,updated_at) VALUES(?,?,?,?,?,?)",
+                id.toString(), amount, state, sourceTransactionId, now, now);
+    }
+
+    private Map<String,Object> bundleRow(UUID id) throws Exception {
+        var modern = db.rows("SELECT amount,state FROM " + UNLIMITED_TABLE + " WHERE bundle_id=?", id.toString());
+        if (modern.size() == 1) return modern.getFirst();
+        var legacy = db.rows("SELECT amount,state FROM medal_tokens WHERE bundle_id=?", id.toString());
+        return legacy.size() == 1 ? legacy.getFirst() : null;
+    }
+
+    private void setBundleState(UUID id, String from, String to, long now) throws Exception {
+        int changed = db.sql("UPDATE " + UNLIMITED_TABLE + " SET state=?,updated_at=? WHERE bundle_id=? AND state=?", to, now, id.toString(), from);
+        if (changed == 0) changed = db.sql("UPDATE medal_tokens SET state=?,updated_at=? WHERE bundle_id=? AND state=?", to, now, id.toString(), from);
+        if (changed != 1) throw new DomainException("INVALID_ITEM");
+    }
+
+    private void setBundleStateAny(UUID id, String to, long now) throws Exception {
+        int changed = db.sql("UPDATE " + UNLIMITED_TABLE + " SET state=?,updated_at=? WHERE bundle_id=?", to, now, id.toString());
+        if (changed == 0) changed = db.sql("UPDATE medal_tokens SET state=?,updated_at=? WHERE bundle_id=?", to, now, id.toString());
+        if (changed != 1) throw new DomainException("INVALID_ITEM");
     }
 
     private Map<String,Object> requireRow(String sql, Object... args) throws Exception {
