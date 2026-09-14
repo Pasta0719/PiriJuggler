@@ -8,6 +8,10 @@ commands:
     description: Piri Juggler runtime acceptance helper
     usage: /piritest fund [player] | /piritest force <big|reg|A|B|C|D|E|F> [player] | /piritest clear
     permission: piri.runtime
+  piribalance:
+    description: Set an exact Phase07 runtime session balance
+    usage: /piribalance <credit 0..50> <held >=0> [player]
+    permission: piri.runtime
 permissions:
   piri.runtime:
     default: op
