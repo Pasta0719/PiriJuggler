@@ -3,6 +3,7 @@ version: '${version}'
 main: jp.pirijuggler.paper.PiriJugglerPlugin
 api-version: '1.21'
 description: Piri Juggler server-authoritative slot foundation
+softdepend: [Vault]
 commands:
   piri:
     description: Piri machine and session management
