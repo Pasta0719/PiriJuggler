@@ -9,13 +9,20 @@ class SlotViewStateTest {
         for(int target=0;target<21;target++)for(int step=1;step<210;step++){
             var time=new AtomicLong();var view=open(time);var b=start().payload();b.getAsJsonObject("startPhase").addProperty("left",step/10.0);view.receive(Envelope.current(PacketType.SPIN_START,b));
             view.receive(packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\"LEFT\",\"stopIndex\":"+target+",\"durationMs\":380}"));
-            time.set(380_000_000);assertEquals((double)target,view.phase(0));time.set(900_000_000);assertEquals((double)target,view.phase(0));
+            long minMs=jp.pirijuggler.common.reel.ReelMotion.visualDurationMs(step/10.0,jp.pirijuggler.common.reel.ReelMotion.normalStopEndpoint(step/10.0,target),380);
+            time.set(minMs*1_000_000L);assertEquals((double)target,view.phase(0));time.set((minMs+500)*1_000_000L);assertEquals((double)target,view.phase(0));
         }
     }
     @Test void downwardStopWrapsAcrossZeroWithoutTakingTheOppositeShortcut(){
         var time=new AtomicLong();var view=open(time);var b=start().payload();b.getAsJsonObject("startPhase").addProperty("left",.5);view.receive(Envelope.current(PacketType.SPIN_START,b));
         view.receive(packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\"LEFT\",\"stopIndex\":20,\"durationMs\":200}"));
         time.set(100_000_000);assertEquals(20.75,view.phase(0),1e-9);time.set(200_000_000);assertEquals(20,view.phase(0),1e-9);
+    }
+    @Test void lateStopPacketDoesNotReverseOrSprintThroughAFullWrap(){
+        var time=new AtomicLong();var view=open(time);var b=start().payload();b.getAsJsonObject("startPhase").addProperty("left",20.1);view.receive(Envelope.current(PacketType.SPIN_START,b));
+        view.receive(packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\"LEFT\",\"stopIndex\":0,\"durationMs\":80}"));
+        time.set(80_000_000);double after80=view.phase(0);assertTrue(after80<20.1&&after80>18.5,"must continue downward without a visual sprint");
+        time.set(1_117_000_000L);assertEquals(0,view.phase(0),1e-9);
     }
     static final String ID="00000000-0000-0000-0000-000000000001",SPIN="00000000-0000-0000-0000-000000000002";
     static Envelope packet(PacketType type,String json){return Envelope.current(type,JsonParser.parseString(json).getAsJsonObject());}
