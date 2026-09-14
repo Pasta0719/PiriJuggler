@@ -9,6 +9,8 @@ import java.lang.reflect.Method;
  * All methods are called on the Paper main thread by economy services.
  */
 public final class VaultBridge {
+    private static final String FAIL_DEPOSIT_PROPERTY = "piri.runtime.failVaultDeposit";
+
     private final Class<?> economyClass;
     private final Method getBalance;
     private final Method withdrawPlayer;
@@ -64,6 +66,7 @@ public final class VaultBridge {
     }
 
     public boolean deposit(OfflinePlayer player, double amount) {
+        if (Boolean.getBoolean(FAIL_DEPOSIT_PROPERTY)) return false;
         return invokeTransaction(depositPlayer, player, amount, "deposit");
     }
 
