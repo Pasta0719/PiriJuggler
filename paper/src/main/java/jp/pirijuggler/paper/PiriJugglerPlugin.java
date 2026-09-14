@@ -10,6 +10,7 @@ import jp.pirijuggler.paper.threading.PaperMainThread;
 import jp.pirijuggler.paper.threading.TaskExecutors;
 import jp.pirijuggler.paper.economy.MedalMergeCommand;
 import jp.pirijuggler.paper.economy.MedalRecoveryListener;
+import jp.pirijuggler.paper.economy.PrizeService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,6 +20,7 @@ import org.bukkit.plugin.messaging.PluginMessageListener;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Objects;
 import java.util.UUID;
 import jp.pirijuggler.paper.reel.ReelEngine;
 
@@ -28,6 +30,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
     private ServerHandshake handshake;
     private boolean configurationValid;
     private MachineService machines;
+    private PrizeService prizes;
     private ReelEngine reels;
 
     @Override public void onEnable() {
@@ -46,7 +49,12 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
                 ConfigValidation.Result result = ConfigValidation.load(reader);
                 configurationValid = result.valid();
                 for (String error : result.errors()) getLogger().severe("Gameplay disabled: " + error);
-                if (configurationValid) machines = new MachineService(this, result.values());
+                if (configurationValid) {
+                    machines = new MachineService(this, result.values());
+                    prizes = new PrizeService(this, result.values());
+                    Objects.requireNonNull(getCommand("piri")).setExecutor((sender, command, label, args) ->
+                            prizes.handle(sender, args) || machines.onCommand(sender, command, label, args));
+                }
             }
         } catch (IOException | RuntimeException exception) {
             configurationValid = false;
