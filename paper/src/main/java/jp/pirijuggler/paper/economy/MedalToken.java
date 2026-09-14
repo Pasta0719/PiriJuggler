@@ -12,7 +12,8 @@ import java.util.UUID;
 
 /** Canonical server-side representation of the physical Piri Medal token. */
 public final class MedalToken {
-    public static final int MAX_AMOUNT = 500;
+    /** Physical Piri Medal items do not split into 500-medal bundles anymore. */
+    public static final int MAX_AMOUNT = Integer.MAX_VALUE;
     public static final NamespacedKey ITEM_TYPE = new NamespacedKey("piri", "item_type");
     public static final NamespacedKey BUNDLE_ID = new NamespacedKey("piri", "bundle_id");
     public static final NamespacedKey MEDAL_AMOUNT = new NamespacedKey("piri", "medal_amount");
@@ -41,7 +42,7 @@ public final class MedalToken {
                         .decoration(TextDecoration.ITALIC, false),
                 Component.text("台のCREDITへ投入できます", NamedTextColor.GRAY)
                         .decoration(TextDecoration.ITALIC, false),
-                Component.text("1トークン 最大500枚", NamedTextColor.DARK_GRAY)
+                Component.text("メダル残高はこの1枚にまとめて保持されます", NamedTextColor.DARK_GRAY)
                         .decoration(TextDecoration.ITALIC, false)
         ));
         meta.setMaxStackSize(1);
