@@ -8,3 +8,6 @@ commands:
   piri:
     description: Piri machine and session management
     usage: /piri machine create|redefine|remove|list|info or /piri key give
+  pirimerge:
+    description: Merge all valid Piri Medal items in the player inventory into one token
+    usage: /pirimerge
