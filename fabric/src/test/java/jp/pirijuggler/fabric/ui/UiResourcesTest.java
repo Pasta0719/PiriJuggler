@@ -19,7 +19,14 @@ class UiResourcesTest {
         for(int reel=0;reel<3;reel++)for(int i=0;i<21;i++)assertEquals(lock.getAsJsonObject("reelArrays").getAsJsonArray(new String[]{"LEFT_REEL","CENTER_REEL","RIGHT_REEL"}[reel]).get(i).getAsString().toLowerCase(Locale.ROOT),UiConstants.symbol(reel,i));
         var registry=JsonParser.parseString(Files.readString(ROOT.resolve("fabric/src/main/resources/assets/piri/sounds.json"))).getAsJsonObject();
         var ids=Set.of("notice","notice_strong","tenpai","bet","lever","stop","payout","error","bonus_start","bonus_end","big_bgm","reg_bgm");assertEquals(ids,registry.keySet());
-        for(String id:ids)assertEquals("piri:"+id,registry.getAsJsonObject(id).getAsJsonArray("sounds").get(0).getAsString());
+        for(String id:ids){
+            JsonElement sound=registry.getAsJsonObject(id).getAsJsonArray("sounds").get(0);
+            if(id.equals("big_bgm")||id.equals("reg_bgm")){
+                assertTrue(sound.isJsonObject());
+                assertEquals("piri:"+id,sound.getAsJsonObject().get("name").getAsString());
+                assertTrue(sound.getAsJsonObject().get("stream").getAsBoolean());
+            }else assertEquals("piri:"+id,sound.getAsString());
+        }
         // Sound files are deliberately optional: verify the registry contract, never a waveform/hash.
     }
     @Test void sevenSegmentGeometryAndInactiveAlphaContract(){assertEquals(7,SevenSegment.RECTANGLES.length);assertArrayEquals(new int[]{8,32,24,8},SevenSegment.RECTANGLES[6]);for(int n=0;n<10;n++)for(int s=0;s<7;s++)assertEquals(SevenSegment.DIGITS[n].indexOf('A'+s)>=0,SevenSegment.active((char)('0'+n),s));assertTrue(SevenSegment.active('-',6));}
