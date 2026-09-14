@@ -26,14 +26,16 @@ public final class ReelRound {
     public Envelope begin(long now){
         main.requireMainThread();if(motionStartNanos!=null)throw new IllegalStateException("Round already began");motionStartNanos=now;
         JsonObject b=new JsonObject();b.addProperty("sessionId",identity.session.toString());b.addProperty("machineId",identity.machine);b.addProperty("spinId",identity.spin.toString());b.addProperty("mode",mode);b.addProperty("animation",profile.name());
-        JsonObject phases=new JsonObject();for(var reel:Reel.values())phases.addProperty(reel.name().toLowerCase(Locale.ROOT),starts[reel.ordinal()]);b.add("startPhase",phases);b.addProperty("stopEnableAfterMs",profile.clientDelayMs());return Envelope.current(PacketType.SPIN_START,b);
+        JsonObject phases=new JsonObject();for(var reel:Reel.values())phases.addProperty(reel.name().toLowerCase(Locale.ROOT),starts[reel.ordinal()]);b.add("startPhase",phases);b.addProperty("stopEnableAfterMs",profile.clientDelayMs());b.add("stopHints",stopHints());return Envelope.current(PacketType.SPIN_START,b);
     }
     public Result receive(UUID owner,Envelope input,long receivedNanos,int playerPing){
         main.requireMainThread();long sequence=-1;JsonObject b=input.payload();
         try {
             if(input.protocol()!=Protocol.VERSION)return rejected(sequence,ErrorCode.PROTOCOL_MISMATCH);
-            if(!Set.of("sessionId","machineId","clientSequence").equals(b.keySet()))return rejected(sequence,ErrorCode.SESSION_MISMATCH);
+            var keys=new HashSet<>(b.keySet());boolean hasPressed=keys.remove("pressedIndex");
+            if(!keys.equals(Set.of("sessionId","machineId","clientSequence")))return rejected(sequence,ErrorCode.SESSION_MISMATCH);
             sequence=b.get("clientSequence").getAsBigDecimal().longValueExact();
+            if(hasPressed){int p=b.get("pressedIndex").getAsBigDecimal().intValueExact();if(p<0||p>=21)return rejected(sequence,ErrorCode.SESSION_MISMATCH);}
             if(!identity.owner.equals(owner)||!identity.session.toString().equals(b.get("sessionId").getAsString())||identity.machine!=b.get("machineId").getAsBigDecimal().intValueExact())return rejected(sequence,ErrorCode.SESSION_MISMATCH);
         }catch(RuntimeException malformed){return rejected(sequence,ErrorCode.SESSION_MISMATCH);}
         var decision=gate.acceptStop(sequence,identity.spin,motionStartNanos==null?null:identity.spin);if(decision.error()!=null)return rejected(sequence,decision.error());
@@ -43,15 +45,29 @@ public final class ReelRound {
         double elapsed=ReelMotion.effectiveMillis(motionStartNanos,receivedNanos,playerPing);
         if(elapsed<profile.serverThresholdMs())return rejected(sequence,ErrorCode.STOP_TOO_EARLY);
         try(var lease=gate.beginBusy()){
-            int pressed=ReelMotion.pressedIndex(profile,starts[reel.ordinal()],motionStartNanos,receivedNanos,playerPing);
+            int pressed=b.has("pressedIndex")?b.get("pressedIndex").getAsInt():ReelMotion.pressedIndex(profile,starts[reel.ordinal()],motionStartNanos,receivedNanos,playerPing);
             var choice=solver.choose(role,stoppedMask,display,reel,pressed,premiumF);display=display.with(reel,choice.stopIndex());stoppedMask|=reel.bit();
             int tenpai=Integer.bitCount(stoppedMask)==2?StopCatalogue.sevenTenpaiLines(display,stoppedMask):0;
             boolean sound=Integer.bitCount(stoppedMask)==2&&(premiumF||tenpai>0);
             if(premiumF&&Integer.bitCount(stoppedMask)==2&&tenpai!=0)throw new IllegalStateException("Premium F unexpectedly has SEVEN tenpai");
             JsonObject accepted=new JsonObject();accepted.addProperty("clientSequence",sequence);accepted.addProperty("action",input.packetType().name());
-            JsonObject stop=new JsonObject();stop.addProperty("spinId",identity.spin.toString());stop.addProperty("reel",reel.name());stop.addProperty("pressedIndex",pressed);stop.addProperty("stopIndex",choice.stopIndex());stop.addProperty("slip",choice.slip());stop.addProperty("durationMs",choice.durationMs());
+            JsonObject stop=new JsonObject();stop.addProperty("spinId",identity.spin.toString());stop.addProperty("reel",reel.name());stop.addProperty("pressedIndex",pressed);stop.addProperty("stopIndex",choice.stopIndex());stop.addProperty("slip",choice.slip());stop.addProperty("durationMs",choice.durationMs());stop.add("nextStopHints",stopHints());
             return new Result(List.of(Envelope.current(PacketType.ACTION_ACCEPTED,accepted),Envelope.current(PacketType.REEL_STOP,stop)),choice,sound,tenpai);
         }
+    }
+    /** Authoritative per-pressed-index choices for the current partial reel state. */
+    private JsonObject stopHints(){
+        JsonObject all=new JsonObject();
+        for(var reel:Reel.values()){
+            if((stoppedMask&reel.bit())!=0)continue;
+            JsonArray choices=new JsonArray();
+            for(int pressed=0;pressed<21;pressed++){
+                var choice=solver.choose(role,stoppedMask,display,reel,pressed,premiumF);JsonObject item=new JsonObject();
+                item.addProperty("stopIndex",choice.stopIndex());item.addProperty("slip",choice.slip());item.addProperty("durationMs",choice.durationMs());choices.add(item);
+            }
+            all.add(reel.name().toLowerCase(Locale.ROOT),choices);
+        }
+        return all;
     }
     private Reel nextReel(){for(var reel:Reel.values())if((stoppedMask&reel.bit())==0)return reel;return null;}
     private Result rejected(long sequence,ErrorCode code){return new Result(List.of(ErrorPackets.rejected(sequence,code)),null,false,0);}
