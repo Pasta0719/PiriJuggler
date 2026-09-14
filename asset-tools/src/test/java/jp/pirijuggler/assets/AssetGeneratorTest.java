@@ -3,18 +3,33 @@ import com.google.gson.*;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.nio.file.*;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 class AssetGeneratorTest {
     private static final Path ROOT=Path.of(System.getProperty("piri.specRoot"));
-    @Test void lockedShapesReproduceAllNineCommittedImages() throws Exception {
+    @Test void lockedGeneratedAssetsAndUserSymbolOverridesAreValid() throws Exception {
         var generator=new AssetGenerator(ROOT);var images=generator.generate();assertEquals(9,images.size());
         var manifest=JsonParser.parseString(Files.readString(ROOT.resolve("asset-tools/src/test/resources/image-sha256.json"))).getAsJsonObject();
         assertEquals(images.keySet(),manifest.keySet());
         for(var entry:images.entrySet()){
-            String hash=manifest.get(entry.getKey()).getAsString();assertEquals(hash,AssetGenerator.sha(AssetGenerator.png(entry.getValue())),entry.getKey());
-            assertEquals(hash,AssetGenerator.sha(Files.readAllBytes(ROOT.resolve("fabric/src/main/resources/assets/piri/textures/"+entry.getKey()))));
-            assertEquals(entry.getKey().startsWith("lamp/")?512:256,entry.getValue().getWidth());assertEquals(256,entry.getValue().getHeight());assertEquals(0,entry.getValue().getRGB(0,0)>>>24);
+            String key=entry.getKey();
+            String hash=manifest.get(key).getAsString();
+            assertEquals(hash,AssetGenerator.sha(AssetGenerator.png(entry.getValue())),key);
+            Path committed=ROOT.resolve("fabric/src/main/resources/assets/piri/textures/"+key);
+            assertTrue(Files.isRegularFile(committed),key);
+            if(key.startsWith("lamp/")){
+                assertEquals(hash,AssetGenerator.sha(Files.readAllBytes(committed)),key);
+                assertEquals(512,entry.getValue().getWidth());
+                assertEquals(256,entry.getValue().getHeight());
+                assertEquals(0,entry.getValue().getRGB(0,0)>>>24);
+            } else {
+                // Symbol textures are intentionally replaceable user art. They are no longer required to match
+                // the deterministic placeholder generator or its historical SHA manifest.
+                BufferedImage symbol=ImageIO.read(committed.toFile());
+                assertNotNull(symbol,key);
+                assertTrue(symbol.getWidth()>0&&symbol.getHeight()>0,key);
+            }
         }
         var source=generator.lock().getAsJsonObject("symbolShapes");assertEquals(source.get("sourceSha256").getAsString(),AssetGenerator.sha(Files.readAllBytes(ROOT.resolve("docs/v3-section-121.txt"))));
     }
