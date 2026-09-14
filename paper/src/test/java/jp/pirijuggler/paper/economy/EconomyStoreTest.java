@@ -63,9 +63,20 @@ class EconomyStoreTest {
         assertEquals("APPLIED",db.rows("SELECT status FROM medal_inventory_transactions WHERE transaction_id=?",plan.transactionId()).getFirst().get("status"));
     }
 
+    @Test void insertionFullyConsumesTokenWithoutCreatingZeroValueReplacement() throws Exception {
+        UUID bundle=UUID.randomUUID();db.sql("INSERT INTO medal_tokens(bundle_id,amount,state,created_at,updated_at) VALUES(?,50,'ACTIVE',?,?)",bundle.toString(),NOW,NOW);
+        var session=db.state().session(player);var plan=store.prepareInsert(player,session.id(),machine,1,List.of(new EconomyStore.InsertCandidate(0,bundle,50)),NOW+1);
+        assertEquals(50,plan.inserted());assertEquals(50,plan.session().number("credit"));assertEquals(1,plan.replacements().size());
+        var replacement=plan.replacements().getFirst();assertNull(replacement.newBundleId());assertEquals(0,replacement.newAmount());
+        assertEquals("RETIRED",db.rows("SELECT state FROM medal_tokens WHERE bundle_id=?",bundle.toString()).getFirst().get("state"));
+        assertEquals(0,db.rows("SELECT count(*) AS c FROM medal_tokens WHERE state='ACTIVE'").getFirst().get("c"));
+    }
+
     @Test void retiredDuplicateBundleCannotBeSpentAgain() throws Exception {
         UUID bundle=UUID.randomUUID();db.sql("INSERT INTO medal_tokens(bundle_id,amount,state,created_at,updated_at) VALUES(?,20,'ACTIVE',?,?)",bundle.toString(),NOW,NOW);
-        var session=db.state().session(player);var first=store.prepareInsert(player,session.id(),machine,1,List.of(new EconomyStore.InsertCandidate(0,bundle,20)),NOW+1);store.markInsertApplied(first.transactionId(),NOW+2);
+        var session=db.state().session(player);var first=store.prepareInsert(player,session.id(),machine,1,List.of(new EconomyStore.InsertCandidate(0,bundle,20)),NOW+1);
+        assertNull(first.replacements().getFirst().newBundleId());assertEquals(0,first.replacements().getFirst().newAmount());
+        store.markInsertApplied(first.transactionId(),NOW+2);
         db.sql("UPDATE player_sessions SET credit=0");session=db.state().session(player);
         UUID sid=session.id();code("INVALID_ITEM",()->store.prepareInsert(player,sid,machine,2,List.of(new EconomyStore.InsertCandidate(1,bundle,20)),NOW+3));
     }
