@@ -3,9 +3,11 @@ plugins {
     id("fabric-loom") version "1.10.5" apply false
 }
 
+val piriVersion = providers.gradleProperty("piriVersion").get()
+
 allprojects {
     group = "jp.pirijuggler"
-    version = "1.0.0"
+    version = piriVersion
     repositories { mavenCentral() }
 }
 
