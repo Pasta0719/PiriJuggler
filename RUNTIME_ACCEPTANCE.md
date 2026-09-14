@@ -77,12 +77,17 @@ REPORTは実行日時、build hash、Minecraft/Paper/Fabric version、手順、�
 - screenshots: Piri ON, premium blink, BIG/REG entry result
 
 ## Phase07
-- runtime test Vault provider balanceを設定
-- actual LOAN, held refill BET, medal insert, cashout
-- 662 cashout itemが500+162表示
-- chestへ移動、split/merge、再投入
+- actual LOANでVault所持金が`borrowedMedals * vault_per_medal`だけ減り、CREDITが増える
+- held refill BETが実機で動作する
+- medal insert / cashoutが実機で動作する
+- cashout総額は500枚単位へ分割せず、総額を保持するPiri Medal 1個として発行される（例: 662=>662 MEDALS 1個）
+- 部分投入時は同じ物理トークン相当の残高が減り、残高0ならitemを削除する
+- 複数の旧Piri Medalが存在する場合は`/pirimerge`で合算し1個へ統合できる
+- chestへ移動して取り出した後もtoken value維持、再投入可能
 - server restart後token value維持
-- split/merge中断をruntime-test fault injectionで`LEDGER_COMMITTED`に止め、再join後のbefore-only/after-only reconciliationを各1ケース確認
+- runtime-test `/pirifault before`で`LEDGER_COMMITTED` + before-onlyを作り、再join後journal=`ROLLED_BACK`、メダル総額不変
+- runtime-test `/pirifault after`で`LEDGER_COMMITTED` + after-onlyを作り、再join後journal=`APPLIED`、メダル総額不変
+- `/pirifault status`で上記journal状態を確認する
 
 ## Phase08
 - prize GUI screenshot
