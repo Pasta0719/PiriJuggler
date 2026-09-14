@@ -12,6 +12,7 @@
 | Phase05 BONUS_TYPE_PUBLIC_STATE | 解消済み。内部状態を維持し、入賞前3組を明示的に公開用状態へ変換 | SPEC第92/101章、`PublicGameState`、`Session.publicGameState()`、Phase05 COMPLETE |
 | 回転方向変更 | 通常は下向き・index減少、逆回転の最初500msは上向き・index増加 | SPEC第5/25/33/34/90/132章、`PHASE_05_REEL_REGRESSION` |
 | BAR揃い変更 | 単独BIG/REG共通の0枚確定目。点灯・種類秘匿。MISSの全5ラインで禁止。REGの77BAR維持 | SPEC第9–14/30/92章、`PHASE_05_BAR_BIG`、`PHASE_05_BAR_REG` |
+| Piri Medal束上限 | 2026-09-14ユーザー指示で500枚上限・500+残り分割を廃止。物理Piri Medal 1個が任意枚数を保持し、清算は原則1トークン。既存複数トークンは合算可能 | `MedalToken`、`EconomyStore`、`MedalMergeCommand`。Phase07 runtime acceptanceで要確認 |
 
 Phase03/05ともBLOCKED→IN_PROGRESSへの復帰と、その後の全完了条件PASSによるCOMPLETEまで実施済み。回転方向・BAR揃いは追加仕様変更として反映済みで、未解消CONFLICTではない。
 
@@ -86,7 +87,7 @@ Minimal change required:
   BONUS_ENTRY_BETTED_BIG/REG -> BONUS_ENTRY_BETTED
   BONUS_ENTRY_SPINNING_BIG/REG -> BONUS_ENTRY_SPINNING
   それ以外の公開状態は内部GameState名を使用する。
-  BIG/REGの区別は入賞ゲーム第3停止のBONUS_STARTから公開する。
+  BIG/REGの区別は入賞ゲーム第3STOPのBONUS_STARTから公開する。
 
 これは公開状態の外部仕様が不足していることによる停止であり、内部クラス構成などの実装都合による質問ではない。
 第18/92章が公開状態も内部GameStateと完全同一の値域とする意図なら第101章と両立しない。公開専用の値域を認める意図なら、その変換を仕様に追加すれば解消する。
