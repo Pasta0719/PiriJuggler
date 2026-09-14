@@ -13,6 +13,6 @@
     "fabricloader": "${fabricLoaderVersion}",
     "minecraft": "${minecraftVersion}",
     "java": ">=21",
-    "fabric-api": "${fabricApiVersion}"
+    "fabric-api": "${fabricApiRequirement}"
   }
 }
