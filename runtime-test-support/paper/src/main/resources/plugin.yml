@@ -3,3 +3,11 @@ version: '1.0.0'
 main: jp.pirijuggler.runtime.paper.RuntimeObserver
 api-version: '1.21'
 depend: [PiriJuggler]
+commands:
+  piritest:
+    description: Piri Juggler runtime acceptance helper
+    usage: /piritest fund [player]
+    permission: piri.runtime
+permissions:
+  piri.runtime:
+    default: op
