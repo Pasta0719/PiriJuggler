@@ -16,5 +16,9 @@
 | error.ogg | piri:error | エラー |
 | bonus_start.ogg | piri:bonus_start | ボーナス開始 |
 | bonus_end.ogg | piri:bonus_end | ボーナス終了 |
+| big_bgm.ogg | piri:big_bgm | BIG消化中BGM（ループ） |
+| reg_bgm.ogg | piri:reg_bgm | REG消化中BGM（ループ） |
 
-未配置の場合は無音で処理を続行します。build/test/runtimeに実音源は必須ではありません。音源の品質や内容をPhase03の完成条件にしません。
+`big_bgm` / `reg_bgm` はPhase06でユーザー指定により追加したBGM SoundEventです。BIG/REG開始後にクライアント側でループし、終了・session reset時に停止します。
+
+未配置の場合は無音で処理を続行します。build/test/runtimeに実音源は必須ではありません。
