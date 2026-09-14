@@ -14,7 +14,7 @@ public final class SlotUi {
         var client=MinecraftClient.getInstance();var b=packet.payload();
         if(packet.packetType()==PacketType.OPEN_MACHINE){
             reset();view=new SlotViewState(System::nanoTime);input=new SlotInput(session,envelope->{
-                view.localInput(envelope.packetType());
+                int pressed=view.localInput(envelope.packetType());if(pressed>=0)envelope.payload().addProperty("pressedIndex",pressed);
                 if(envelope.packetType()==PacketType.SPACE_ACTION){String state=view.value("gameState");String sound=state.contains("BETTED")||state.equals("REPLAY_READY")?"lever":state.contains("SPINNING")?"stop":"bet";ACCEPT_SOUNDS.put(envelope.payload().get("clientSequence").getAsLong(),sound);if(ACCEPT_SOUNDS.size()>128)ACCEPT_SOUNDS.remove(ACCEPT_SOUNDS.keySet().iterator().next());}
                 sender.accept(envelope);
             },System::nanoTime,view::canSend);view.receive(packet);client.setScreen(new SlotScreen(view,input));return;
