@@ -11,38 +11,48 @@ public final class SlotViewState {
     private final LongSupplier time;
     private final double[] starts=new double[3],rest=new double[3];
     private final Stop[] stops=new Stop[3];
+    private final Press[] presses=new Press[3];
     private record Stop(double from,double target,long at,long duration) {}
+    private record Press(double phase,long at) {}
     private UUID session,spin;private int machine;private long spinAt,noticeAt;private String animation="NORMAL";private int stopEnableAfterMs;
     private boolean spinning,notice,blink;private JsonObject state,dataLamp;private String error="";
     public SlotViewState(LongSupplier nanos){time=nanos;}
     public void receive(Envelope envelope) {
         JsonObject b=envelope.payload();long now=time.getAsLong();
         switch(envelope.packetType()) {
-            case OPEN_MACHINE -> {session=UUID.fromString(b.get("sessionId").getAsString());machine=b.get("machineId").getAsInt();spin=null;state=null;dataLamp=null;error="";spinning=false;notice=false;blink=false;Arrays.fill(stops,null);Arrays.fill(rest,0);}
+            case OPEN_MACHINE -> {session=UUID.fromString(b.get("sessionId").getAsString());machine=b.get("machineId").getAsInt();spin=null;state=null;dataLamp=null;error="";spinning=false;notice=false;blink=false;Arrays.fill(stops,null);Arrays.fill(presses,null);Arrays.fill(rest,0);}
             case PUBLIC_STATE -> {if(matches(b)) {
                 state=b.deepCopy();notice=b.get("lampOn").getAsBoolean();error="";
                 var display=b.getAsJsonObject("displayStops");
                 for(int i=0;i<3;i++){rest[i]=display.get(new String[]{"left","center","right"}[i]).getAsDouble();if(spin==null)starts[i]=rest[i];}
-                if(!b.get("gameState").getAsString().contains("SPINNING"))spinning=false;
+                if(!b.get("gameState").getAsString().contains("SPINNING")){spinning=false;Arrays.fill(presses,null);}
             }}
             case SPIN_START -> {if(matches(b)) {
                 spin=UUID.fromString(b.get("spinId").getAsString());animation=b.get("animation").getAsString();spinAt=now;spinning=true;error="";
                 stopEnableAfterMs=b.has("stopEnableAfterMs")?b.get("stopEnableAfterMs").getAsInt():ReelMotion.Profile.valueOf(animation).clientDelayMs();
-                var phases=b.getAsJsonObject("startPhase");for(int i=0;i<3;i++)starts[i]=phases.get(new String[]{"left","center","right"}[i]).getAsDouble();Arrays.fill(stops,null);
+                var phases=b.getAsJsonObject("startPhase");for(int i=0;i<3;i++)starts[i]=phases.get(new String[]{"left","center","right"}[i]).getAsDouble();Arrays.fill(stops,null);Arrays.fill(presses,null);
                 if(animation.equals("RESUME_NORMAL")&&state!=null&&state.has("stoppedMask"))for(int i=0;i<3;i++)if((state.get("stoppedMask").getAsInt()&(1<<i))!=0)stops[i]=new Stop(rest[i],rest[i],now,0);
             }}
             case REEL_STOP -> {if(matchesSpin(b)) {
                 int reel=switch(b.get("reel").getAsString()){case "LEFT"->0;case "CENTER"->1;case "RIGHT"->2;default->throw new IllegalArgumentException("Unknown reel");};
-                if(stops[reel]!=null)return;double from=phase(reel);int target=b.get("stopIndex").getAsInt();
+                if(stops[reel]!=null)return;
+                Press press=presses[reel];presses[reel]=null;
+                double from=press!=null?press.phase():phase(reel);long at=press!=null?press.at():now;int target=b.get("stopIndex").getAsInt();
                 double endpoint=ReelMotion.normalStopEndpoint(from,target);int requested=b.get("durationMs").getAsInt();int visualMs=ReelMotion.visualDurationMs(from,endpoint,requested);
-                stops[reel]=new Stop(from,endpoint,now,visualMs*1_000_000L);rest[reel]=target;
+                stops[reel]=new Stop(from,endpoint,at,visualMs*1_000_000L);rest[reel]=target;
             }}
             case NOTICE -> {if(matchesSpin(b)){notice="ON".equals(b.get("lamp").getAsString());blink="FAST_BLINK_1S".equals(b.get("pattern").getAsString());noticeAt=now;}}
             case DATA_LAMP -> {if(b.has("machineId")&&b.get("machineId").getAsInt()==machine)dataLamp=b.deepCopy();}
-            case ACTION_REJECTED,ERROR -> {if(b.has("errorCode"))error=b.get("errorCode").getAsString();}
+            case ACTION_REJECTED,ERROR -> {if(b.has("errorCode"))error=b.get("errorCode").getAsString();Arrays.fill(presses,null);}
             default -> {}
         }
     }
+    /** Capture the exact local visual phase when the player presses STOP. The server still chooses the final stop index. */
+    public void localInput(PacketType action){
+        if(!spinning)return;int reel=switch(action){case STOP_LEFT->0;case STOP_CENTER->1;case STOP_RIGHT->2;case SPACE_ACTION->nextPendingReel();default->-1;};
+        if(reel>=0&&stops[reel]==null&&presses[reel]==null)presses[reel]=new Press(phase(reel),time.getAsLong());
+    }
+    private int nextPendingReel(){for(int i=0;i<3;i++)if(stops[i]==null&&presses[i]==null)return i;return -1;}
     public boolean matches(JsonObject b){return session!=null&&b.has("sessionId")&&b.has("machineId")&&session.toString().equals(b.get("sessionId").getAsString())&&machine==b.get("machineId").getAsInt();}
     public boolean matchesSpin(JsonObject b){return spin!=null&&b.has("spinId")&&spin.toString().equals(b.get("spinId").getAsString());}
     public static double wrap(double value){return ReelMotion.wrap(value);}
