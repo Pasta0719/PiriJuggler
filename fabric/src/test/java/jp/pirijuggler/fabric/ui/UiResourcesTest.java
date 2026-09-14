@@ -18,7 +18,7 @@ class UiResourcesTest {
         for(var entry:lock.getAsJsonObject("uiColors").entrySet())assertEquals(0xff000000|Integer.parseInt(entry.getValue().getAsString().substring(1),16),UiConstants.color(entry.getKey()));
         for(int reel=0;reel<3;reel++)for(int i=0;i<21;i++)assertEquals(lock.getAsJsonObject("reelArrays").getAsJsonArray(new String[]{"LEFT_REEL","CENTER_REEL","RIGHT_REEL"}[reel]).get(i).getAsString().toLowerCase(Locale.ROOT),UiConstants.symbol(reel,i));
         var registry=JsonParser.parseString(Files.readString(ROOT.resolve("fabric/src/main/resources/assets/piri/sounds.json"))).getAsJsonObject();
-        var ids=Set.of("notice","notice_strong","tenpai","bet","lever","stop","payout","error","bonus_start","bonus_end");assertEquals(ids,registry.keySet());
+        var ids=Set.of("notice","notice_strong","tenpai","bet","lever","stop","payout","error","bonus_start","bonus_end","big_bgm","reg_bgm");assertEquals(ids,registry.keySet());
         for(String id:ids)assertEquals("piri:"+id,registry.getAsJsonObject(id).getAsJsonArray("sounds").get(0).getAsString());
         // Sound files are deliberately optional: verify the registry contract, never a waveform/hash.
     }
