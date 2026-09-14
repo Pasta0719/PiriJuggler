@@ -19,8 +19,6 @@ public final class TestVaultPlugin extends JavaPlugin {
     private final TestEconomy economy = new TestEconomy();
 
     @Override public void onEnable() {
-        // Runtime acceptance must never debit the server's real economy provider.
-        // Register above normal production providers so PiriJuggler's Vault discovery resolves this test economy.
         Bukkit.getServicesManager().register(Economy.class, economy, this, ServicePriority.Highest);
         getLogger().info("PIRI_TEST_VAULT_READY priority=HIGHEST provider=" + economy.getClass().getName());
     }
@@ -33,6 +31,12 @@ public final class TestVaultPlugin extends JavaPlugin {
         if (!sender.isOp()) { sender.sendMessage("NOT_OP"); return true; }
         if (args.length < 1 || args.length > 3) return false;
         String action = args[0].toLowerCase();
+        if (action.equals("faildeposit")) {
+            if (args.length != 2 || !(args[1].equalsIgnoreCase("on") || args[1].equalsIgnoreCase("off"))) return false;
+            economy.failDeposit = args[1].equalsIgnoreCase("on");
+            sender.sendMessage("TEST_VAULT_FAIL_DEPOSIT " + economy.failDeposit);
+            return true;
+        }
         Player target = args.length >= 2 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player p ? p : null;
         if (target == null) { sender.sendMessage("PLAYER_REQUIRED"); return true; }
         switch (action) {
@@ -57,6 +61,7 @@ public final class TestVaultPlugin extends JavaPlugin {
 
     private static final class TestEconomy implements Economy {
         private final Map<UUID, Double> balances = new ConcurrentHashMap<>();
+        private volatile boolean failDeposit;
 
         void set(OfflinePlayer player, double amount) { balances.put(player.getUniqueId(), amount); }
 
@@ -76,6 +81,7 @@ public final class TestVaultPlugin extends JavaPlugin {
 
         @Override public EconomyResponse depositPlayer(OfflinePlayer player, double amount) {
             double before = getBalance(player);
+            if (failDeposit) return new EconomyResponse(0, before, EconomyResponse.ResponseType.FAILURE, "simulated deposit failure");
             if (!Double.isFinite(amount) || amount < 0) {
                 return new EconomyResponse(0, before, EconomyResponse.ResponseType.FAILURE, "invalid amount");
             }
