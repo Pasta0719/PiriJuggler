@@ -12,6 +12,10 @@ commands:
     description: Set an exact Phase07 runtime session balance
     usage: /piribalance <credit 0..50> <held >=0> [player]
     permission: piri.runtime
+  pirifault:
+    description: Phase07 medal LEDGER_COMMITTED crash/reconciliation fault injection
+    usage: /pirifault <before|after|status> [player]
+    permission: piri.runtime
 permissions:
   piri.runtime:
     default: op
