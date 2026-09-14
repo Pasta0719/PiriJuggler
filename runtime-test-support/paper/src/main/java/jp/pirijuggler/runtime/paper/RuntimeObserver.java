@@ -13,6 +13,10 @@ import java.time.Instant;
 /** Observes the built production plugin; it does not authorize or simulate a session. */
 public final class RuntimeObserver extends JavaPlugin {
     @Override public void onEnable() {
+        var testCommand=getCommand("piritest");
+        if(testCommand==null)throw new IllegalStateException("piritest command missing");
+        testCommand.setExecutor(new DevFundCommand(this));
+
         if ("phase05".equals(System.getProperty("piri.runtime.phase"))) {new Phase02Observer(this);new Phase05Fixture(this);getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase05");return;}
         if ("phase04".equals(System.getProperty("piri.runtime.phase"))) {
             new Phase02Observer(this); new Phase04Harness(this); getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase04 " + getServer().getVersion()); return;
