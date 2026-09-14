@@ -1,5 +1,5 @@
 name: PiriRuntimeAcceptance
-version: '1.0.0'
+version: '${version}'
 main: jp.pirijuggler.runtime.paper.RuntimeObserver
 api-version: '1.21'
 depend: [PiriJuggler]
