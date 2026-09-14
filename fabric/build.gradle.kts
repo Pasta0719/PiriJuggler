@@ -6,6 +6,7 @@ val minecraftVersion = providers.gradleProperty("minecraftVersion").get()
 val yarnVersion = providers.gradleProperty("yarnVersion").get()
 val fabricLoaderVersion = providers.gradleProperty("fabricLoaderVersion").get()
 val fabricApiVersion = providers.gradleProperty("fabricApiVersion").get()
+val fabricApiRequirement = providers.gradleProperty("fabricApiRequirement").get()
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion")
@@ -20,13 +21,13 @@ tasks.processResources {
     inputs.property("version", project.version)
     inputs.property("minecraftVersion", minecraftVersion)
     inputs.property("fabricLoaderVersion", fabricLoaderVersion)
-    inputs.property("fabricApiVersion", fabricApiVersion)
+    inputs.property("fabricApiRequirement", fabricApiRequirement)
     filesMatching("fabric.mod.json") {
         expand(
             "version" to project.version,
             "minecraftVersion" to minecraftVersion,
             "fabricLoaderVersion" to fabricLoaderVersion,
-            "fabricApiVersion" to fabricApiVersion
+            "fabricApiRequirement" to fabricApiRequirement
         )
     }
     val userAudio = rootProject.file("user-audio")
