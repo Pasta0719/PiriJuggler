@@ -6,18 +6,24 @@ import static jp.pirijuggler.common.reel.Symbol.*;
 
 /** Exhaustive immutable catalogue of all 9,261 triplets, including rejected shapes. */
 public final class StopCatalogue {
+    private static final Symbol[][] REACH_PATTERNS={
+        {SEVEN,BAR,SEVEN},{SEVEN,BAR,BAR},{BAR,SEVEN,SEVEN},{BAR,SEVEN,BAR},{BAR,BAR,SEVEN},{BAR,BAR,BAR},
+        {PIERO,SEVEN,PIERO},{PIERO,BAR,PIERO}
+    };
     public record Evaluation(StopTriplet stops,int winningGrapeLines,int winningBellLines,int winningPieroLines,int winningReplayLines,
-                             boolean leftTopCherry,boolean leftMiddleCherry,boolean leftBottomCherry,int winningBigLines,int winningRegLines,int winningBarConfirmationLines) {
-        public int lineMask(DisplayRole role){return switch(role){case GRAPE->winningGrapeLines;case BELL->winningBellLines;case PIERO->winningPieroLines;case REPLAY->winningReplayLines;case BIG_ENTRY->winningBigLines;case REG_ENTRY->winningRegLines;case BONUS->winningBarConfirmationLines;default->0;};}
-        public int totalLines(){return Integer.bitCount(winningGrapeLines)+Integer.bitCount(winningBellLines)+Integer.bitCount(winningPieroLines)+Integer.bitCount(winningReplayLines)+Integer.bitCount(winningBigLines)+Integer.bitCount(winningRegLines)+Integer.bitCount(winningBarConfirmationLines);}
+                             boolean leftTopCherry,boolean leftMiddleCherry,boolean leftBottomCherry,int winningBigLines,int winningRegLines,
+                             int winningBarConfirmationLines,int winningReachLines) {
+        public int lineMask(DisplayRole role){return switch(role){case GRAPE->winningGrapeLines;case BELL->winningBellLines;case PIERO->winningPieroLines;case REPLAY->winningReplayLines;case BIG_ENTRY->winningBigLines;case REG_ENTRY->winningRegLines;case BONUS->winningReachLines;default->0;};}
+        public int baseLines(){return Integer.bitCount(winningGrapeLines)+Integer.bitCount(winningBellLines)+Integer.bitCount(winningPieroLines)+Integer.bitCount(winningReplayLines)+Integer.bitCount(winningBigLines)+Integer.bitCount(winningRegLines);}
+        public int totalLines(){return baseLines()+Integer.bitCount(winningReachLines);}
         public boolean anyCherry(){return leftTopCherry||leftMiddleCherry||leftBottomCherry;}
         public boolean valid(DisplayRole role){return switch(role){
-            case MISS->totalLines()==0&&!anyCherry();
-            case BONUS->!anyCherry()&&(totalLines()==0||totalLines()==1&&Integer.bitCount(winningBarConfirmationLines)==1);
-            case CHERRY->totalLines()==0&&!leftMiddleCherry&&(leftTopCherry^leftBottomCherry);
-            case PREMIUM_B->totalLines()==0&&leftMiddleCherry&&!leftTopCherry&&!leftBottomCherry;
-            default->!anyCherry()&&totalLines()==1&&Integer.bitCount(lineMask(role))==1;};}
-        public int targetRank(DisplayRole role){if(!valid(role))throw new IllegalArgumentException("Not a strict candidate");return switch(role){case MISS->5;case BONUS->winningBarConfirmationLines==0?5:Integer.numberOfTrailingZeros(winningBarConfirmationLines);case CHERRY->leftTopCherry?1:2;case PREMIUM_B->0;default->Integer.numberOfTrailingZeros(lineMask(role));};}
+            case MISS->baseLines()==0&&winningReachLines==0&&!anyCherry();
+            case BONUS->!anyCherry()&&baseLines()==0&&(winningReachLines==0||Integer.bitCount(winningReachLines)==1);
+            case CHERRY->baseLines()==0&&winningReachLines==0&&!leftMiddleCherry&&(leftTopCherry^leftBottomCherry);
+            case PREMIUM_B->baseLines()==0&&winningReachLines==0&&leftMiddleCherry&&!leftTopCherry&&!leftBottomCherry;
+            default->winningReachLines==0&&!anyCherry()&&baseLines()==1&&Integer.bitCount(lineMask(role))==1;};}
+        public int targetRank(DisplayRole role){if(!valid(role))throw new IllegalArgumentException("Not a strict candidate");return switch(role){case MISS->5;case BONUS->winningReachLines==0?5:Integer.numberOfTrailingZeros(winningReachLines);case CHERRY->leftTopCherry?1:2;case PREMIUM_B->0;default->Integer.numberOfTrailingZeros(lineMask(role));};}
     }
     private final List<Evaluation> evaluations;
     private final Map<DisplayRole,List<Evaluation>> candidates;
@@ -35,9 +41,12 @@ public final class StopCatalogue {
     }
     public static Evaluation evaluate(StopTriplet stops){
         return new Evaluation(stops,winning(stops,GRAPE,GRAPE,GRAPE),winning(stops,BELL,BELL,BELL),winning(stops,PIERO,PIERO,PIERO),winning(stops,REPLAY,REPLAY,REPLAY),
-            FixedReels.row(Reel.LEFT,stops.left(),-1)==CHERRY,FixedReels.row(Reel.LEFT,stops.left(),0)==CHERRY,FixedReels.row(Reel.LEFT,stops.left(),1)==CHERRY,winning(stops,SEVEN,SEVEN,SEVEN),winning(stops,SEVEN,SEVEN,BAR),winning(stops,BAR,BAR,BAR));
+            FixedReels.row(Reel.LEFT,stops.left(),-1)==CHERRY,FixedReels.row(Reel.LEFT,stops.left(),0)==CHERRY,FixedReels.row(Reel.LEFT,stops.left(),1)==CHERRY,
+            winning(stops,SEVEN,SEVEN,SEVEN),winning(stops,SEVEN,SEVEN,BAR),winning(stops,BAR,BAR,BAR),reachLines(stops));
     }
     private static int winning(StopTriplet stops,Symbol left,Symbol center,Symbol right){int bits=0;for(var line:Payline.values())if(FixedReels.row(Reel.LEFT,stops.left(),line.row(Reel.LEFT))==left&&FixedReels.row(Reel.CENTER,stops.center(),line.row(Reel.CENTER))==center&&FixedReels.row(Reel.RIGHT,stops.right(),line.row(Reel.RIGHT))==right)bits|=1<<line.ordinal();return bits;}
+    public static int reachLines(StopTriplet stops){int bits=0;for(var pattern:REACH_PATTERNS)bits|=winning(stops,pattern[0],pattern[1],pattern[2]);return bits;}
+    public static boolean isReachPattern(Symbol left,Symbol center,Symbol right){for(var pattern:REACH_PATTERNS)if(pattern[0]==left&&pattern[1]==center&&pattern[2]==right)return true;return false;}
     public static int sevenTenpaiLines(StopTriplet stops,int mask){
         if(Integer.bitCount(mask)!=2||mask<0||mask>7)throw new IllegalArgumentException("Tenpai requires exactly two stopped reels");
         int count=0;for(var line:Payline.values()){boolean both=true;for(var reel:Reel.values())if((mask&reel.bit())!=0&&FixedReels.row(reel,stops.stop(reel),line.row(reel))!=SEVEN)both=false;if(both)count++;}return count;
