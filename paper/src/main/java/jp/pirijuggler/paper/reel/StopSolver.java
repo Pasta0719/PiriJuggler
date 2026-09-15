@@ -13,7 +13,7 @@ public final class StopSolver {
             DisplayRole.BIG_ENTRY, DisplayRole.REG_ENTRY);
 
     public record Choice(StopTriplet candidate,int targetRank,int pressedIndex,int stopIndex,int slip,int durationMs){}
-    private record Key(DisplayRole role,int fixedKey,Reel reel,boolean nonTenpai,boolean forbidRightFirstGrapeSevenBar){}
+    private record Key(DisplayRole role,int fixedKey,Reel reel,boolean premiumF,boolean forbidRightFirstGrapeSevenBar){}
     private final StopCatalogue catalogue;
     private final ConcurrentHashMap<Key,Choice[]> cache=new ConcurrentHashMap<>();
     public StopSolver(StopCatalogue catalogue){this.catalogue=catalogue;}
@@ -24,19 +24,20 @@ public final class StopSolver {
     public Choice choose(DisplayRole role,int stoppedMask,StopTriplet stopped,Reel reel,int pressedIndex,boolean premiumF,boolean forbidRightFirstGrapeSevenBar){
         if(pressedIndex<0||pressedIndex>=21||stoppedMask<0||stoppedMask>7||(stoppedMask&reel.bit())!=0)throw new IllegalArgumentException("Invalid STOP conditions");
         if(premiumF&&role!=DisplayRole.BONUS&&role!=DisplayRole.BONUS_CHERRY&&role!=DisplayRole.PIERO_BONUS)throw new IllegalArgumentException("Invalid premium F base");
-        boolean filter=premiumF&&Integer.bitCount(stoppedMask)==1;
-        var key=new Key(role,stopped.fixedKey(stoppedMask),reel,filter,forbidRightFirstGrapeSevenBar);
-        return cache.computeIfAbsent(key,ignored->choices(role,stoppedMask,stopped,reel,filter,forbidRightFirstGrapeSevenBar))[pressedIndex];
+        var key=new Key(role,stopped.fixedKey(stoppedMask),reel,premiumF,forbidRightFirstGrapeSevenBar);
+        return cache.computeIfAbsent(key,ignored->choices(role,stoppedMask,stopped,reel,premiumF,forbidRightFirstGrapeSevenBar))[pressedIndex];
     }
 
-    private Choice[] choices(DisplayRole role,int mask,StopTriplet stopped,Reel reel,boolean filter,boolean forbidRightFirstGrapeSevenBar){
+    private Choice[] choices(DisplayRole role,int mask,StopTriplet stopped,Reel reel,boolean premiumF,boolean forbidRightFirstGrapeSevenBar){
         var candidates=new ArrayList<StopCatalogue.Evaluation>();
+        boolean secondPremiumStop=premiumF&&Integer.bitCount(mask)==1;
         for(var candidate:catalogue.candidates(role,mask,stopped)){
-            if(filter&&StopCatalogue.sevenTenpaiLines(candidate.stops(),mask|reel.bit())!=0)continue;
+            if(secondPremiumStop&&StopCatalogue.sevenTenpaiLines(candidate.stops(),mask|reel.bit())!=0)continue;
+            if(premiumF&&mask==0&&!premiumFirstStopFeasible(role,reel,candidate.stops().stop(reel)))continue;
             if(forbidRightFirstGrapeSevenBar&&mask==0&&reel==Reel.RIGHT&&StopCatalogue.isRightGrapeSevenBarStop(candidate.stops().right()))continue;
             candidates.add(candidate);
         }
-        if(candidates.isEmpty())throw new IllegalStateException("No candidate: role="+role+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" premiumF="+filter+" forbidRightFirstGrapeSevenBar="+forbidRightFirstGrapeSevenBar);
+        if(candidates.isEmpty())throw new IllegalStateException("No candidate: role="+role+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" premiumF="+premiumF+" forbidRightFirstGrapeSevenBar="+forbidRightFirstGrapeSevenBar);
 
         Choice[] best=new Choice[21];
         for(int p=0;p<21;p++){
@@ -107,6 +108,22 @@ public final class StopSolver {
             best[p]=new Choice(selected.stops(),selectedRank,p,stop,selectedSlip,ReelMotion.durationMs(selectedSlip));
         }
         return best;
+    }
+
+    private boolean premiumFirstStopFeasible(DisplayRole role,Reel first,int firstStop){
+        int firstMask=first.bit();
+        StopTriplet partial=new StopTriplet(0,0,0).with(first,firstStop);
+        var remaining=catalogue.candidates(role,firstMask,partial);
+        for(var second:Reel.values()){
+            if(second==first)continue;
+            boolean possible=false;
+            int pairMask=firstMask|second.bit();
+            for(var candidate:remaining){
+                if(StopCatalogue.sevenTenpaiLines(candidate.stops(),pairMask)==0){possible=true;break;}
+            }
+            if(!possible)return false;
+        }
+        return true;
     }
 
     private static int preferredLine(int mask,StopTriplet stopped,Reel reel,int pressedIndex){
