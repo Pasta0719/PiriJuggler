@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 class StopSolverTest {
     private static final StopCatalogue CATALOGUE=new StopCatalogue();private static final StopSolver SOLVER=new StopSolver(CATALOGUE);
+    private static final Set<DisplayRole> DIVERSIFIED=EnumSet.of(DisplayRole.GRAPE,DisplayRole.BELL,DisplayRole.PIERO,DisplayRole.REPLAY,DisplayRole.BIG_ENTRY,DisplayRole.REG_ENTRY);
     @Test void everyTripletAndExactStrictCountsMatchIndependentEnumeration() throws Exception {
         assertEquals(9261,CATALOGUE.evaluations().size());assertEquals(9261,CATALOGUE.evaluations().stream().map(e->e.stops().id()).distinct().count());
         var expected=Map.of(DisplayRole.GRAPE,750,DisplayRole.BELL,50,DisplayRole.PIERO,20,DisplayRole.REPLAY,525,DisplayRole.CHERRY,1502,DisplayRole.MISS,5126,DisplayRole.BONUS,5250,DisplayRole.BIG_ENTRY,10,DisplayRole.REG_ENTRY,10,DisplayRole.PREMIUM_B,758);
@@ -33,16 +34,35 @@ class StopSolverTest {
     @Test void allOrdersAndAllPressedSequencesCompleteIncludingPremiumF(){
         var report=ReelVerification.verify(SOLVER);assertEquals(555660,report.allSequences());assertEquals(166698,report.premiumFSequences());assertEquals(7938,report.premiumFSecondChecks());
     }
-    @Test void tieBreakMatchesIndependentLexicographicOrderingForEveryPartialCandidateState(){
+    @Test void stopChoicesStayDeterministicAndOnlyTradeAtMostTwoFramesForLineVariety(){
         for(var role:DisplayRole.values()){
             var seen=new HashSet<Integer>();
             for(var e:CATALOGUE.candidates(role))for(int mask=0;mask<7;mask++)if(seen.add(e.stops().fixedKey(mask))){
                 final int fixedMask=mask;var candidates=CATALOGUE.candidates(role,mask,e.stops());
                 for(var reel:Reel.values())if((mask&reel.bit())==0)for(int p=0;p<21;p++){
-                    final int press=p;var best=candidates.stream().min(Comparator.comparingInt((StopCatalogue.Evaluation c)->Math.floorMod(press-c.stops().stop(reel),21)).thenComparingInt(c->c.targetRank(role)).thenComparingInt(c->c.stops().left()).thenComparingInt(c->c.stops().center()).thenComparingInt(c->c.stops().right())).orElseThrow();
-                    var choice=SOLVER.choose(role,fixedMask,e.stops(),reel,p,false);assertEquals(best.stops(),choice.candidate());assertSame(choice,SOLVER.choose(role,fixedMask,e.stops(),reel,p,false));
+                    final int press=p;int minSlip=candidates.stream().mapToInt(c->ReelMotion.slip(c.stops().stop(reel),press)).min().orElseThrow();
+                    var choice=SOLVER.choose(role,fixedMask,e.stops(),reel,p,false);
+                    assertTrue(candidates.stream().anyMatch(c->c.stops().equals(choice.candidate())));
+                    assertSame(choice,SOLVER.choose(role,fixedMask,e.stops(),reel,p,false));
+                    if(DIVERSIFIED.contains(role)&&minSlip>0){assertTrue(choice.slip()>=minSlip&&choice.slip()<=Math.min(20,minSlip+2),role+" min="+minSlip+" actual="+choice.slip());}
+                    else assertEquals(minSlip,choice.slip(),role+" press="+p);
+                    if(minSlip==0)assertEquals(0,choice.slip(),"Exact eye-stop must remain exact");
                 }
             }
+        }
+    }
+    @Test void ordinaryPressesCanFinishEveryPaylineForLineRoles(){
+        for(var role:DIVERSIFIED){
+            boolean[] seen=new boolean[5];int count=0;
+            outer:for(int leftPress=0;leftPress<21;leftPress++)for(int centerPress=0;centerPress<21;centerPress++)for(int rightPress=0;rightPress<21;rightPress++){
+                StopTriplet stopped=new StopTriplet(0,0,0);int mask=0;int[] presses={leftPress,centerPress,rightPress};
+                for(var reel:Reel.values()){
+                    var choice=SOLVER.choose(role,mask,stopped,reel,presses[reel.ordinal()],false);stopped=stopped.with(reel,choice.stopIndex());mask|=reel.bit();
+                }
+                int lineMask=CATALOGUE.evaluation(stopped).lineMask(role);assertEquals(1,Integer.bitCount(lineMask),role+" "+stopped);
+                int line=Integer.numberOfTrailingZeros(lineMask);if(!seen[line]){seen[line]=true;count++;if(count==5)break outer;}
+            }
+            assertEquals(5,count,"All five paylines should appear for "+role);
         }
     }
     @Test void overlapsMapToBaseVisualAndPremiumBIsRestricted(){
