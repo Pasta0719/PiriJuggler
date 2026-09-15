@@ -8,10 +8,11 @@ public final class ReelVerification {
     public static Report verify(StopSolver solver){
         var catalogue=solver.catalogue();if(catalogue.evaluations().size()!=9261)throw new IllegalStateException("Expected all 9261 triplets");
         for(var role:DisplayRole.values())if(catalogue.candidates(role).size()<role.minimum())throw new IllegalStateException("Strict candidate minimum failed: "+role+"="+catalogue.candidates(role).size());
-        if(catalogue.candidates(DisplayRole.BONUS).stream().filter(e->e.winningReachLines()!=0).count()!=124)throw new IllegalStateException("Expected 124 strict reach-eye triplets");
+        if(catalogue.candidates(DisplayRole.BONUS).size()!=124)throw new IllegalStateException("Expected 124 pure-bonus reach triplets");
+        if(catalogue.candidates(DisplayRole.BONUS_CHERRY).size()!=12)throw new IllegalStateException("Expected 12 cherry-bonus reach triplets");
         int normal=0,premium=0,seconds=0;
         for(var role:DisplayRole.values())normal+=verifySequences(solver,role,false);
-        for(var role:List.of(DisplayRole.BONUS,DisplayRole.CHERRY,DisplayRole.PIERO)){premium+=verifySequences(solver,role,true);seconds+=6*21*21;}
+        for(var role:List.of(DisplayRole.BONUS,DisplayRole.BONUS_CHERRY,DisplayRole.PIERO)){premium+=verifySequences(solver,role,true);seconds+=6*21*21;}
         return new Report(catalogue.counts(),normal,seconds,premium);
     }
     private static int verifySequences(StopSolver solver,DisplayRole role,boolean premium){
