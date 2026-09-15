@@ -12,13 +12,17 @@ public final class ReelRound {
     public record Identity(UUID owner,UUID session,int machine,UUID spin){public Identity {Objects.requireNonNull(owner);Objects.requireNonNull(session);Objects.requireNonNull(spin);if(machine<1)throw new IllegalArgumentException("Machine ID");}}
     public record Result(List<Envelope> packets,StopSolver.Choice choice,boolean tenpaiSound,int actualTenpaiLines){public Result {packets=List.copyOf(packets);}public boolean accepted(){return choice!=null;}}
     private final Identity identity;private final StopSolver solver;private final DisplayRole role;private final boolean premiumF;
+    private final boolean forbidRightFirstGrapeSevenBar;
     private final ReelMotion.Profile profile;private final String mode;private final double[] starts;private final MainThread main;private final ActionGate gate;
     private StopTriplet display;private int stoppedMask;private Long motionStartNanos;
     public ReelRound(StopSolver solver,Identity identity,DisplayRole role,boolean premiumF,ReelMotion.Profile profile,String mode,double[] starts,StopTriplet display,int stoppedMask,long lastSequence,MainThread main){
-        this.solver=Objects.requireNonNull(solver);this.identity=identity;this.role=role;this.premiumF=premiumF;this.profile=profile;this.mode=mode;this.main=main;main.requireMainThread();
+        this(solver,identity,role,premiumF,profile,mode,starts,display,stoppedMask,lastSequence,main,false);
+    }
+    public ReelRound(StopSolver solver,Identity identity,DisplayRole role,boolean premiumF,ReelMotion.Profile profile,String mode,double[] starts,StopTriplet display,int stoppedMask,long lastSequence,MainThread main,boolean forbidRightFirstGrapeSevenBar){
+        this.solver=Objects.requireNonNull(solver);this.identity=identity;this.role=role;this.premiumF=premiumF;this.profile=profile;this.mode=mode;this.main=main;this.forbidRightFirstGrapeSevenBar=forbidRightFirstGrapeSevenBar;main.requireMainThread();
         if(!Set.of("NORMAL","BONUS_ENTRY","BIG","REG").contains(mode)||starts.length!=3||stoppedMask<0||stoppedMask>7)throw new IllegalArgumentException("Invalid round state");
         this.starts=starts.clone();for(double phase:starts)if(!Double.isFinite(phase)||phase<0||phase>=21)throw new IllegalArgumentException("Start phase");
-        if(premiumF&&role!=DisplayRole.BONUS&&role!=DisplayRole.CHERRY&&role!=DisplayRole.PIERO)throw new IllegalArgumentException("Invalid premium F base");
+        if(premiumF&&role!=DisplayRole.BONUS&&role!=DisplayRole.BONUS_CHERRY&&role!=DisplayRole.PIERO)throw new IllegalArgumentException("Invalid premium F base");
         if(solver.catalogue().candidates(role,stoppedMask,display).isEmpty())throw new IllegalArgumentException("Unreachable resumed stops");
         this.display=display;this.stoppedMask=stoppedMask;gate=new ActionGate(main,lastSequence);
     }
@@ -46,7 +50,7 @@ public final class ReelRound {
         if(elapsed<profile.serverThresholdMs())return rejected(sequence,ErrorCode.STOP_TOO_EARLY);
         try(var lease=gate.beginBusy()){
             int pressed=b.has("pressedIndex")?b.get("pressedIndex").getAsInt():ReelMotion.pressedIndex(profile,starts[reel.ordinal()],motionStartNanos,receivedNanos,playerPing);
-            var choice=solver.choose(role,stoppedMask,display,reel,pressed,premiumF);display=display.with(reel,choice.stopIndex());stoppedMask|=reel.bit();
+            var choice=solver.choose(role,stoppedMask,display,reel,pressed,premiumF,forbidRightFirstGrapeSevenBar);display=display.with(reel,choice.stopIndex());stoppedMask|=reel.bit();
             int tenpai=Integer.bitCount(stoppedMask)==2?StopCatalogue.sevenTenpaiLines(display,stoppedMask):0;
             boolean sound=Integer.bitCount(stoppedMask)==2&&(premiumF||tenpai>0);
             if(premiumF&&Integer.bitCount(stoppedMask)==2&&tenpai!=0)throw new IllegalStateException("Premium F unexpectedly has SEVEN tenpai");
@@ -62,7 +66,7 @@ public final class ReelRound {
             if((stoppedMask&reel.bit())!=0)continue;
             JsonArray choices=new JsonArray();
             for(int pressed=0;pressed<21;pressed++){
-                var choice=solver.choose(role,stoppedMask,display,reel,pressed,premiumF);JsonObject item=new JsonObject();
+                var choice=solver.choose(role,stoppedMask,display,reel,pressed,premiumF,forbidRightFirstGrapeSevenBar);JsonObject item=new JsonObject();
                 item.addProperty("stopIndex",choice.stopIndex());item.addProperty("slip",choice.slip());item.addProperty("durationMs",choice.durationMs());choices.add(item);
             }
             all.add(reel.name().toLowerCase(Locale.ROOT),choices);
