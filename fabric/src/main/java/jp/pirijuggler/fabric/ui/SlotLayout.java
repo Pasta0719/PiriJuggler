@@ -16,13 +16,13 @@ public final class SlotLayout {
     public static final Rect DATA_RIGHT=new Rect(1645,325,257,430);
     public static final Rect CABINET=new Rect(290,205,1340,835), LAMP=new Rect(350,390,300,170), REELS=new Rect(670,300,900,390), STATUS=new Rect(670,710,900,95);
     public static final List<Control> CONTROLS=List.of(
-        new Control("BET",new Rect(420,860,150,100),PacketType.SPACE_ACTION),
-        new Control("LEVER",new Rect(250,780,130,260),PacketType.SPACE_ACTION),
+        new Control("BET",new Rect(440,860,150,100),PacketType.SPACE_ACTION),
+        new Control("LEVER",new Rect(300,780,130,260),PacketType.SPACE_ACTION),
         new Control("LEFT",new Rect(720,865,180,110),PacketType.STOP_LEFT),
         new Control("CENTER",new Rect(990,865,180,110),PacketType.STOP_CENTER),
         new Control("RIGHT",new Rect(1260,865,180,110),PacketType.STOP_RIGHT),
-        new Control("CASH OUT",new Rect(1490,870,100,90),PacketType.CASH_OUT),
-        new Control("LOAN",new Rect(1490,740,100,55),PacketType.LOAN),
-        new Control("INSERT",new Rect(1490,805,100,55),PacketType.INSERT_MEDALS));
+        new Control("LOAN",new Rect(1664,780,220,55),PacketType.LOAN),
+        new Control("INSERT",new Rect(1664,845,220,55),PacketType.INSERT_MEDALS),
+        new Control("CASH OUT",new Rect(1664,910,220,65),PacketType.CASH_OUT));
     private SlotLayout(){}
 }
