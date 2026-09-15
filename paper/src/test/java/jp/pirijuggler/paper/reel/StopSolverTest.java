@@ -10,7 +10,10 @@ class StopSolverTest {
     private static final Set<DisplayRole> DIVERSIFIED=EnumSet.of(DisplayRole.GRAPE,DisplayRole.BELL,DisplayRole.PIERO,DisplayRole.REPLAY,DisplayRole.BIG_ENTRY,DisplayRole.REG_ENTRY);
     @Test void everyTripletAndExactStrictCountsMatchIndependentEnumeration() throws Exception {
         assertEquals(9261,CATALOGUE.evaluations().size());assertEquals(9261,CATALOGUE.evaluations().stream().map(e->e.stops().id()).distinct().count());
-        var expected=Map.of(DisplayRole.GRAPE,750,DisplayRole.BELL,50,DisplayRole.PIERO,20,DisplayRole.REPLAY,525,DisplayRole.CHERRY,1502,DisplayRole.MISS,5126,DisplayRole.BONUS,5250,DisplayRole.BIG_ENTRY,10,DisplayRole.REG_ENTRY,10,DisplayRole.PREMIUM_B,758);
+        var expected=Map.ofEntries(
+                Map.entry(DisplayRole.GRAPE,750),Map.entry(DisplayRole.BELL,50),Map.entry(DisplayRole.PIERO,20),Map.entry(DisplayRole.REPLAY,525),
+                Map.entry(DisplayRole.CHERRY,1502),Map.entry(DisplayRole.MISS,5126),Map.entry(DisplayRole.BONUS,124),Map.entry(DisplayRole.BONUS_CHERRY,12),
+                Map.entry(DisplayRole.BIG_ENTRY,10),Map.entry(DisplayRole.REG_ENTRY,10),Map.entry(DisplayRole.PREMIUM_B,758));
         assertEquals(expected,CATALOGUE.counts());
         var lock=JsonParser.parseString(Files.readString(Path.of(System.getProperty("piri.specRoot"),"docs/spec-lock.json"))).getAsJsonObject();
         for(var role:DisplayRole.values()){assertTrue(CATALOGUE.candidates(role).size()>=role.minimum());for(var candidate:CATALOGUE.candidates(role))assertTrue(oracle(candidate.stops()).contains(role),candidate.stops()+" "+role);}
@@ -27,12 +30,21 @@ class StopSolverTest {
         boolean top=FixedReels.row(Reel.LEFT,s.left(),-1)==Symbol.CHERRY,middle=FixedReels.row(Reel.LEFT,s.left(),0)==Symbol.CHERRY,bottom=FixedReels.row(Reel.LEFT,s.left(),1)==Symbol.CHERRY;var result=EnumSet.noneOf(DisplayRole.class);
         boolean noCherry=!top&&!middle&&!bottom;
         if(noCherry&&wins.isEmpty()&&reach==0)result.add(DisplayRole.MISS);
-        if(noCherry&&wins.isEmpty()&&(reach==0||reach==1))result.add(DisplayRole.BONUS);
+        if(noCherry&&wins.isEmpty()&&reach==1)result.add(DisplayRole.BONUS);
+        if(wins.isEmpty()&&reach==1&&!middle&&(top^bottom))result.add(DisplayRole.BONUS_CHERRY);
         if(noCherry&&reach==0&&wins.size()==1&&wins.values().iterator().next()==1)result.add(wins.keySet().iterator().next());
         if(wins.isEmpty()&&reach==0){if(!middle&&(top^bottom))result.add(DisplayRole.CHERRY);if(middle&&!top&&!bottom)result.add(DisplayRole.PREMIUM_B);}return result;
     }
     @Test void allOrdersAndAllPressedSequencesCompleteIncludingPremiumF(){
-        var report=ReelVerification.verify(SOLVER);assertEquals(555660,report.allSequences());assertEquals(166698,report.premiumFSequences());assertEquals(7938,report.premiumFSecondChecks());
+        var report=ReelVerification.verify(SOLVER);assertEquals(611226,report.allSequences());assertEquals(166698,report.premiumFSequences());assertEquals(7938,report.premiumFSecondChecks());
+    }
+    @Test void pureBonusAlwaysHasOneReachLineAndNoCherryWhileCherryBonusHasBoth(){
+        for(var e:CATALOGUE.candidates(DisplayRole.BONUS)){
+            assertEquals(1,Integer.bitCount(e.winningReachLines()));assertFalse(e.anyCherry());
+        }
+        for(var e:CATALOGUE.candidates(DisplayRole.BONUS_CHERRY)){
+            assertEquals(1,Integer.bitCount(e.winningReachLines()));assertFalse(e.leftMiddleCherry());assertTrue(e.leftTopCherry()^e.leftBottomCherry());
+        }
     }
     @Test void stopChoicesPreferTheNearestNaturalStopAndFallBackLongOnlyWhenRequired(){
         for(var role:DisplayRole.values()){
@@ -80,7 +92,9 @@ class StopSolverTest {
     }
     @Test void overlapsMapToBaseVisualAndPremiumBIsRestricted(){
         for(var role:InternalRole.values())assertFalse(CATALOGUE.candidates(role.display(false)).isEmpty());
-        assertEquals(DisplayRole.BONUS,InternalRole.BIG.display(false));assertEquals(DisplayRole.BONUS,InternalRole.REG.display(false));assertEquals(DisplayRole.CHERRY,InternalRole.CHERRY_BIG.display(false));assertEquals(DisplayRole.PIERO,InternalRole.PIERO_REG.display(false));
+        assertEquals(DisplayRole.BONUS,InternalRole.BIG.display(false));assertEquals(DisplayRole.BONUS,InternalRole.REG.display(false));
+        assertEquals(DisplayRole.BONUS_CHERRY,InternalRole.CHERRY_BIG.display(false));assertEquals(DisplayRole.BONUS_CHERRY,InternalRole.CHERRY_REG.display(false));
+        assertEquals(DisplayRole.PIERO,InternalRole.PIERO_REG.display(false));
         for(var role:InternalRole.values())if(role!=InternalRole.CHERRY_BIG)assertThrows(IllegalArgumentException.class,()->role.display(true));assertEquals(DisplayRole.PREMIUM_B,InternalRole.CHERRY_BIG.display(true));
         for(var role:List.of(InternalRole.BIG,InternalRole.CHERRY_BIG,InternalRole.PIERO_BIG))assertTrue(role.premiumFEligible());for(var role:List.of(InternalRole.REG,InternalRole.CHERRY_REG,InternalRole.PIERO_REG))assertFalse(role.premiumFEligible());
     }
