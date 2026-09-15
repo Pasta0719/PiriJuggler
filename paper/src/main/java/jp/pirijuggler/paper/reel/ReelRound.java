@@ -16,15 +16,19 @@ public final class ReelRound {
     private final ReelMotion.Profile profile;private final String mode;private final double[] starts;private final MainThread main;private final ActionGate gate;
     private StopTriplet display;private int stoppedMask;private Long motionStartNanos;
     public ReelRound(StopSolver solver,Identity identity,DisplayRole role,boolean premiumF,ReelMotion.Profile profile,String mode,double[] starts,StopTriplet display,int stoppedMask,long lastSequence,MainThread main){
-        this(solver,identity,role,premiumF,profile,mode,starts,display,stoppedMask,lastSequence,main,false);
+        this(solver,identity,role,premiumF,profile,mode,starts,display,stoppedMask,lastSequence,main,defaultRightFirstTellRestriction(role,mode));
     }
     public ReelRound(StopSolver solver,Identity identity,DisplayRole role,boolean premiumF,ReelMotion.Profile profile,String mode,double[] starts,StopTriplet display,int stoppedMask,long lastSequence,MainThread main,boolean forbidRightFirstGrapeSevenBar){
         this.solver=Objects.requireNonNull(solver);this.identity=identity;this.role=role;this.premiumF=premiumF;this.profile=profile;this.mode=mode;this.main=main;this.forbidRightFirstGrapeSevenBar=forbidRightFirstGrapeSevenBar;main.requireMainThread();
         if(!Set.of("NORMAL","BONUS_ENTRY","BIG","REG").contains(mode)||starts.length!=3||stoppedMask<0||stoppedMask>7)throw new IllegalArgumentException("Invalid round state");
         this.starts=starts.clone();for(double phase:starts)if(!Double.isFinite(phase)||phase<0||phase>=21)throw new IllegalArgumentException("Start phase");
-        if(premiumF&&role!=DisplayRole.BONUS&&role!=DisplayRole.BONUS_CHERRY&&role!=DisplayRole.PIERO)throw new IllegalArgumentException("Invalid premium F base");
+        if(premiumF&&role!=DisplayRole.BONUS&&role!=DisplayRole.BONUS_CHERRY&&role!=DisplayRole.PIERO_BONUS)throw new IllegalArgumentException("Invalid premium F base");
         if(solver.catalogue().candidates(role,stoppedMask,display).isEmpty())throw new IllegalArgumentException("Unreachable resumed stops");
         this.display=display;this.stoppedMask=stoppedMask;gate=new ActionGate(main,lastSequence);
+    }
+    private static boolean defaultRightFirstTellRestriction(DisplayRole role,String mode){
+        if(!"NORMAL".equals(mode))return false;
+        return switch(role){case GRAPE,BONUS,BONUS_CHERRY,PIERO_BONUS->false;default->true;};
     }
     /** Call immediately before sending this envelope, using System.nanoTime on Paper's thread. */
     public Envelope begin(long now){
