@@ -148,7 +148,7 @@ public final class SlotScreen extends Screen {
             long elapsed=System.nanoTime()-leverAt;double e=leverAt==Long.MIN_VALUE?1:elapsed/1e6;
             double offset=e>=180?0:e<=90?18*e/90:18*(180-e)/90;
             c.fill(r.x()+(r.w()-22)/2,r.y()+35,r.x()+(r.w()+22)/2,r.y()+r.h()-35,color("BUTTON_METAL_DARK"));
-            rounded(c,r.x()+(r.w()-70)/2f,(float)(r.y()+35+offset),70,70,35,down?fill:hover?UiConstants.brighter(color("BUTTON_RED")):color("BUTTON_RED"));
+            rounded(c,r.x()+(r.w()-70)/2f,(float)(r.y()+27+offset),70,70,35,down?fill:hover?UiConstants.brighter(color("BUTTON_RED")):color("BUTTON_RED"));
             text(c,"LEVER",r.x()+r.w()/2,r.y()+r.h()-25,2,true);
         }else if(control.name().equals("LEFT")||control.name().equals("CENTER")||control.name().equals("RIGHT")){
             float x=r.x()+(r.w()-88)/2f,y=r.y()+(r.h()-88)/2f;
