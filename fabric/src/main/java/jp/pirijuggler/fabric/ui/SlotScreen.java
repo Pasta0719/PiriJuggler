@@ -64,31 +64,37 @@ public final class SlotScreen extends Screen {
     private String errorText(){if(view.error().isEmpty())return "";try{return ErrorMessages.japanese(ErrorCode.valueOf(view.error()));}catch(IllegalArgumentException e){return view.error();}}
     private void data(DrawContext c,double mx,double my){
         JsonObject data=view.dataLamp();
-        String[] labels={"No.","G","BIG","REG","TOTAL G","DIFF","MAX"};
+        String[] labels={"台 番","現在ゲーム","BIG 回数","REG 回数","トータルG","差 枚","MAX差枚"};
         String[] fields={null,"currentGames","bigCount","regCount","totalGames","todayDifference","todayMaxDifference"};
-        int start=350,cell=174;
+        String[] units={"","G","回","回","G","枚","枚"};
+        int start=350,cell=174,top=27,bottom=101;
+        c.fill(342,bottom,1578,bottom+2,color("CABINET_EDGE"));
         for(int i=0;i<labels.length;i++){
-            int left=start+i*cell,right=left+156;text(c,labels[i],left,31,1.35f,false);
-            String number=i==0?Integer.toString(view.machineId()):data==null||!data.has(fields[i])?null:data.get(fields[i]).getAsString();
+            int left=start+i*cell,right=left+156,center=left+78;
+            if(i>0)c.fill(left-9,top,left-7,bottom-7,color("BUTTON_METAL_DARK"));
             int tint=i==2?color("DISPLAY_BIG"):i==3?color("DISPLAY_REG"):color("DISPLAY_WHITE");
-            if(number==null)text(c,"-",right-12,62,2,false);else digitsFit(c,number,right,55,150,.42f,tint);
+            text(c,labels[i],center,31,1.45f,true,tint);
+            String number=i==0?Integer.toString(view.machineId()):data==null||!data.has(fields[i])?null:data.get(fields[i]).getAsString();
+            if(number==null)text(c,"-",center,58,2.35f,true,tint);else digitsFitCentered(c,number,center,57,145,.62f,tint);
+            if(!units[i].isEmpty())text(c,units[i],center,88,.82f,true,color("DISPLAY_WHITE"));
         }
         if(data==null)return;
 
-        text(c,"DIFF GRAPH",350,105,1.05f,false);drawGraph(c,data.has("graph")?data.getAsJsonArray("graph"):new JsonArray(),350,120,400,68);
-        text(c,"HISTORY",775,105,1.05f,false);
+        text(c,"差枚グラフ",350,108,1.05f,false);drawGraph(c,data.has("graph")?data.getAsJsonArray("graph"):new JsonArray(),350,124,400,60);
+        text(c,"ボーナス履歴  新しい → 古い",775,108,1.05f,false);
         JsonArray history=data.has("history")?data.getAsJsonArray("history"):new JsonArray();
         String hoverTime=null;
         for(int i=0;i<Math.min(10,history.size());i++){
             JsonObject item=history.get(i).getAsJsonObject();int x=775+i*54;String type=item.get("type").getAsString();
-            int tint="BIG".equals(type)?color("DISPLAY_BIG"):color("DISPLAY_REG");text(c,"BIG".equals(type)?"B":"R",x+24,120,1.1f,true);
-            digitsFit(c,item.get("games").getAsString(),x+50,143,48,.23f,tint);
-            if(mx>=x&&mx<x+52&&my>=116&&my<184&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
+            int tint="BIG".equals(type)?color("DISPLAY_BIG"):color("DISPLAY_REG");text(c,"BIG".equals(type)?"B":"R",x+24,124,1.15f,true,tint);
+            digitsFitCentered(c,item.get("games").getAsString(),x+25,148,48,.30f,tint);
+            text(c,"G",x+25,174,.70f,true,color("DISPLAY_WHITE"));
+            if(mx>=x&&mx<x+52&&my>=120&&my<185&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
         }
         if(hoverTime!=null)text(c,hoverTime,1045,188,.9f,true);
         if(data.has("piriChain")&&data.get("piriChain").getAsBoolean()){
             int chain=data.has("piriChainCount")?data.get("piriChainCount").getAsInt():1;
-            text(c,"ピリ連チャレンジ中  "+chain+"連目",1460,144,1.1f,true,color("DISPLAY_GREEN"));
+            text(c,"ピリ連チャレンジ中  "+chain+"連目",1460,149,1.1f,true,color("DISPLAY_GREEN"));
         }
     }
     private void drawGraph(DrawContext c,JsonArray graph,float x,float y,float w,float h){
@@ -123,6 +129,9 @@ public final class SlotScreen extends Screen {
     private void text(DrawContext c,String value,float x,float y,float scale,boolean centered,int tint){
         c.getMatrices().push();c.getMatrices().translate(x,y,0);c.getMatrices().scale(scale,scale,1);int left=centered?-textRenderer.getWidth(value)/2:0;
         c.drawText(textRenderer,value,left+1,1,color("TEXT_SHADOW"),false);c.drawText(textRenderer,value,left,0,tint,false);c.getMatrices().pop();
+    }
+    private static void digitsFitCentered(DrawContext c,String value,float center,float y,float maxWidth,float baseScale,int active){
+        float logical=value.isEmpty()?0:(value.length()-1)*48+40;float scale=baseScale;if(logical>0){float fit=maxWidth/logical;if(fit<scale)scale=Math.max(.45f,fit);if(logical*scale>maxWidth)scale=fit;}digits(c,value,center-logical*scale/2,y,scale,active);
     }
     private static void digitsFit(DrawContext c,String value,float right,float y,float maxWidth,float baseScale,int active){
         float logical=value.isEmpty()?0:(value.length()-1)*48+40;float scale=baseScale;if(logical>0){float fit=maxWidth/logical;if(fit<scale)scale=Math.max(.45f,fit);if(logical*scale>maxWidth)scale=fit;}float x=right-logical*scale;digits(c,value,x,y,scale,active);
