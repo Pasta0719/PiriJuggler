@@ -87,16 +87,27 @@ public final class NormalGame {
                     finished=true;publicDelay=delay;
                     switch(state) {
                         case NORMAL_SPINNING -> {
-                            InternalRole role=InternalRole.valueOf(before.text("internal_role"));boolean premiumB=premiumType(before)==PremiumPolicy.Type.B;
-                            if(!solver.catalogue().evaluation(round.display()).valid(role.display(premiumB)))throw new IllegalStateException("Unexpected final reel shape");
-                            payout=GameRules.payout(role);putBalance(values,balance(before).payout(payout));values.put("pay_display",payout);
+                            InternalRole role=InternalRole.valueOf(before.text("internal_role"));PremiumPolicy.Type p=premiumType(before);boolean premiumB=p==PremiumPolicy.Type.B;
+                            var evaluation=solver.catalogue().evaluation(round.display());
+                            DisplayRole baseRole=role.display(premiumB);DisplayRole directRole=directEntryRole(role,p);
+                            boolean directEntry=directRole!=null&&evaluation.valid(directRole);
+                            if(!evaluation.valid(baseRole)&&!directEntry)throw new IllegalStateException("Unexpected final reel shape");
                             String bonus=GameRules.bonus(role);
-                            values.put("game_state",bonus!=null?"BONUS_PENDING_"+bonus:role==InternalRole.REPLAY?"REPLAY_READY":"SEATED_READY");
-                            values.put("current_bet",role==InternalRole.REPLAY?3:0);values.put("lamp_on",bonus!=null?1:0);
-                            addFinalNotice(before,bonus,scheduled,delay);
-                            clearSpin(values);if(bonus==null){values.put("bonus_type",null);values.put("notice_state","NONE");}
-                            else values.put("notice_state","ON");
-                            if(payout>0)scheduled.add(new Scheduled(delay,Envelope.current(PacketType.PAYOUT,new JsonObject())));
+                            if(directEntry){
+                                if(bonus==null)throw new IllegalStateException("Direct entry requires a bonus role");
+                                payout=0;values.put("pay_display",0);bonusStarted=bonus;
+                                values.put("game_state",bonus+"_READY");values.put("current_bet",0);values.put("bonus_payout_count",0);values.put("lamp_on",1);values.put("notice_state","ON");
+                                addFinalNotice(before,bonus,scheduled,delay);clearSpin(values);
+                                JsonObject b=new JsonObject();b.addProperty("bonusType",bonus);scheduled.add(new Scheduled(delay,Envelope.current(PacketType.BONUS_START,b)));
+                            }else{
+                                payout=GameRules.payout(role);putBalance(values,balance(before).payout(payout));values.put("pay_display",payout);
+                                values.put("game_state",bonus!=null?"BONUS_PENDING_"+bonus:role==InternalRole.REPLAY?"REPLAY_READY":"SEATED_READY");
+                                values.put("current_bet",role==InternalRole.REPLAY?3:0);values.put("lamp_on",bonus!=null?1:0);
+                                addFinalNotice(before,bonus,scheduled,delay);
+                                clearSpin(values);if(bonus==null){values.put("bonus_type",null);values.put("notice_state","NONE");}
+                                else values.put("notice_state","ON");
+                                if(payout>0)scheduled.add(new Scheduled(delay,Envelope.current(PacketType.PAYOUT,new JsonObject())));
+                            }
                         }
                         case BONUS_ENTRY_SPINNING_BIG, BONUS_ENTRY_SPINNING_REG -> {
                             DisplayRole expected=state==Session.GameState.BONUS_ENTRY_SPINNING_BIG?DisplayRole.BIG_ENTRY:DisplayRole.REG_ENTRY;
@@ -187,6 +198,7 @@ public final class NormalGame {
     private static boolean isSpinning(Session.GameState state){return state==Session.GameState.NORMAL_SPINNING||state==Session.GameState.BONUS_ENTRY_SPINNING_BIG||state==Session.GameState.BONUS_ENTRY_SPINNING_REG||state==Session.GameState.BIG_SPINNING||state==Session.GameState.REG_SPINNING;}
     private static String stateForNormalSpin(){return "NORMAL_SPINNING";}
     private static PremiumPolicy.Type premiumType(Session s){String text=s.text("premium_type");return text==null?null:PremiumPolicy.Type.valueOf(text);}
+    private static DisplayRole directEntryRole(InternalRole role,PremiumPolicy.Type premium){return premium==PremiumPolicy.Type.B||premium==PremiumPolicy.Type.F?null:role.directEntryDisplay();}
     private static Reel stoppedReel(PacketType action,ReelRound round){return switch(action){case STOP_LEFT->Reel.LEFT;case STOP_CENTER->Reel.CENTER;case STOP_RIGHT->Reel.RIGHT;case SPACE_ACTION->{int mask=round.stoppedMask();if((mask&Reel.RIGHT.bit())!=0&&(mask&Reel.CENTER.bit())==0)yield Reel.CENTER;if((mask&Reel.CENTER.bit())!=0&&(mask&Reel.LEFT.bit())==0)yield Reel.LEFT;if((mask&Reel.RIGHT.bit())!=0)yield Reel.RIGHT;if((mask&Reel.CENTER.bit())!=0)yield Reel.CENTER;yield Reel.LEFT;}default->null;};}
     private DisplayRole drawBonusDisplay(int machine){long roll=random.gameplay(machine).nextLong(1_000_000);if(roll<916)return DisplayRole.BELL;if(roll<1832)return DisplayRole.PIERO;if(roll<850275)return DisplayRole.GRAPE;return DisplayRole.CHERRY;}
     private static ReelMotion.Profile profile(Session s){String value=s.text("motion_profile");return value==null?ReelMotion.Profile.NORMAL:ReelMotion.Profile.valueOf(value);}
@@ -195,16 +207,16 @@ public final class NormalGame {
         for(var reel:Reel.values()) {String name=reel.name().toLowerCase(Locale.ROOT);values.put("phase_"+name,(mask&reel.bit())!=0?((Number)values.get("display_"+name+"_stop")).doubleValue():ReelMotion.phase(motion.profile,starts[reel.ordinal()],Math.max(0,(now-motion.started)/1e9)));}
     }
     private ReelRound round(Session s,Motion m) {
-        DisplayRole role;boolean premiumF=false;String mode;
+        DisplayRole role;DisplayRole alternateRole=null;boolean premiumF=false;String mode;
         switch(s.state()){
-            case NORMAL_SPINNING -> {InternalRole internal=InternalRole.valueOf(s.text("internal_role"));PremiumPolicy.Type p=premiumType(s);role=internal.display(p==PremiumPolicy.Type.B);premiumF=p==PremiumPolicy.Type.F;mode="NORMAL";}
+            case NORMAL_SPINNING -> {InternalRole internal=InternalRole.valueOf(s.text("internal_role"));PremiumPolicy.Type p=premiumType(s);role=internal.display(p==PremiumPolicy.Type.B);premiumF=p==PremiumPolicy.Type.F;alternateRole=directEntryRole(internal,p);mode="NORMAL";}
             case BONUS_ENTRY_SPINNING_BIG -> {role=DisplayRole.BIG_ENTRY;mode="BONUS_ENTRY";}
             case BONUS_ENTRY_SPINNING_REG -> {role=DisplayRole.REG_ENTRY;mode="BONUS_ENTRY";}
             case BIG_SPINNING -> {role=DisplayRole.valueOf(s.text("internal_role"));mode="BIG";}
             case REG_SPINNING -> {role=DisplayRole.valueOf(s.text("internal_role"));mode="REG";}
             default -> throw new IllegalArgumentException("Not spinning: "+s.state());
         }
-        return new ReelRound(solver,new ReelRound.Identity(s.player(),s.id(),s.machine(),m.spin),role,premiumF,m.profile,mode,m.starts(),new StopTriplet((int)s.number("display_left_stop"),(int)s.number("display_center_stop"),(int)s.number("display_right_stop")),(int)s.number("stopped_mask"),s.sequence(),main);
+        return new ReelRound(solver,new ReelRound.Identity(s.player(),s.id(),s.machine(),m.spin),role,alternateRole,premiumF,m.profile,mode,m.starts(),new StopTriplet((int)s.number("display_left_stop"),(int)s.number("display_center_stop"),(int)s.number("display_right_stop")),(int)s.number("stopped_mask"),s.sequence(),main);
     }
     private static double phase(Session s,String name){return ((Number)s.snapshot().get("phase_"+name)).doubleValue();}
     public static GameRules.Balance balance(Session s){return new GameRules.Balance(Math.toIntExact(s.number("credit")),s.number("held_medals"));}
