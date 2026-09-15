@@ -12,6 +12,7 @@ import jp.pirijuggler.paper.economy.EconomyStartupRecovery;
 import jp.pirijuggler.paper.economy.MedalMergeCommand;
 import jp.pirijuggler.paper.economy.MedalRecoveryListener;
 import jp.pirijuggler.paper.economy.PrizeService;
+import jp.pirijuggler.paper.data.DataLampPublisher;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -33,6 +34,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
     private MachineService machines;
     private PrizeService prizes;
     private ReelEngine reels;
+    private DataLampPublisher dataLamp;
 
     @Override public void onEnable() {
         mainThread = new PaperMainThread(this);
@@ -52,6 +54,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
                 for (String error : result.errors()) getLogger().severe("Gameplay disabled: " + error);
                 if (configurationValid) {
                     machines = new MachineService(this, result.values());
+                    dataLamp = new DataLampPublisher(this);
                     prizes = new PrizeService(this, result.values());
                     EconomyStartupRecovery.reconcile(this);
                     Objects.requireNonNull(getCommand("piri")).setExecutor((sender, command, label, args) ->
@@ -103,6 +106,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
 
     @Override public void onDisable() {
         configurationValid = false;
+        if (dataLamp != null) dataLamp.close();
         if (machines != null) machines.shutdown();
         if (handshake != null) handshake.clear();
         getServer().getMessenger().unregisterIncomingPluginChannel(this);
