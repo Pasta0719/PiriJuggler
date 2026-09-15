@@ -6,7 +6,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /** Candidate existence is preserved after every stop; all ordering is integer/deterministic. */
 public final class StopSolver {
-    private static final int LINE_SLIP_WINDOW = 2;
+    private static final int NATURAL_MAX_SLIP = 4;
+    private static final int FALLBACK_LINE_SLIP_WINDOW = 2;
     private static final EnumSet<DisplayRole> DIVERSIFIED_LINE_ROLES = EnumSet.of(
             DisplayRole.GRAPE, DisplayRole.BELL, DisplayRole.PIERO, DisplayRole.REPLAY,
             DisplayRole.BIG_ENTRY, DisplayRole.REG_ENTRY);
@@ -36,11 +37,34 @@ public final class StopSolver {
         Choice[] best=new Choice[21];
         for(int p=0;p<21;p++){
             int minSlip=21;
-            for(var candidate:candidates)minSlip=Math.min(minSlip,ReelMotion.slip(candidate.stops().stop(reel),p));
-            int maxSlip=minSlip;
-            if(DIVERSIFIED_LINE_ROLES.contains(role)&&minSlip>0)maxSlip=Math.min(20,minSlip+LINE_SLIP_WINDOW);
-            int preferredLine=preferredLine(mask,stopped,reel,p);
+            boolean hasNatural=false;
+            for(var candidate:candidates){
+                int slip=ReelMotion.slip(candidate.stops().stop(reel),p);
+                minSlip=Math.min(minSlip,slip);
+                if(slip<=NATURAL_MAX_SLIP)hasNatural=true;
+            }
 
+            int minAllowedSlip;
+            int maxAllowedSlip;
+            if(!DIVERSIFIED_LINE_ROLES.contains(role)){
+                minAllowedSlip=minSlip;
+                maxAllowedSlip=minSlip;
+            }else if(minSlip==0){
+                // A true eye-stop is already the most natural answer. Never slide past it just to change the line.
+                minAllowedSlip=0;
+                maxAllowedSlip=0;
+            }else if(hasNatural){
+                // Prefer any physically natural 1..4 frame pull-in and use that room to diversify the final payline.
+                minAllowedSlip=1;
+                maxAllowedSlip=NATURAL_MAX_SLIP;
+            }else{
+                // No natural pull-in can preserve the role. Give up on short slip and allow the required long pull-in,
+                // while still permitting a very small window so all five paylines are not collapsed to one shape.
+                minAllowedSlip=minSlip;
+                maxAllowedSlip=Math.min(20,minSlip+FALLBACK_LINE_SLIP_WINDOW);
+            }
+
+            int preferredLine=preferredLine(mask,stopped,reel,p);
             StopCatalogue.Evaluation selected=null;
             int selectedSlip=Integer.MAX_VALUE;
             int selectedLineDistance=Integer.MAX_VALUE;
@@ -49,7 +73,7 @@ public final class StopSolver {
             for(var candidate:candidates){
                 int stop=candidate.stops().stop(reel);
                 int slip=ReelMotion.slip(stop,p);
-                if(slip>maxSlip)continue;
+                if(slip<minAllowedSlip||slip>maxAllowedSlip)continue;
                 int rank=candidate.targetRank(role);
                 int lineDistance=DIVERSIFIED_LINE_ROLES.contains(role)?lineDistance(rank,preferredLine):0;
                 int lineDirection=DIVERSIFIED_LINE_ROLES.contains(role)&&rank<5?Math.floorMod(rank-preferredLine,5):rank;
