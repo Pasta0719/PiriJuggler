@@ -95,7 +95,7 @@ public final class SlotScreen extends Screen {
             text(c,item.get("games").getAsString()+"G",x+23,y,1.35f,false,color("DISPLAY_WHITE"));
             if(mx>=x-4&&mx<x+92&&my>=y-4&&my<y+29&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
         }
-        if(hoverTime!=null)text(c,995,248,.95f,true,color("DISPLAY_WHITE"));
+        if(hoverTime!=null)text(c,hoverTime,995,248,.95f,true,color("DISPLAY_WHITE"));
 
         long total=data.has("totalGames")?data.get("totalGames").getAsLong():0;
         long big=data.has("bigCount")?data.get("bigCount").getAsLong():0;
