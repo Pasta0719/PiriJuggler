@@ -34,7 +34,7 @@ class StopSolverTest {
     @Test void allOrdersAndAllPressedSequencesCompleteIncludingPremiumF(){
         var report=ReelVerification.verify(SOLVER);assertEquals(555660,report.allSequences());assertEquals(166698,report.premiumFSequences());assertEquals(7938,report.premiumFSecondChecks());
     }
-    @Test void stopChoicesPreferNaturalOneToFourFramesAndFallBackLongOnlyWhenRequired(){
+    @Test void stopChoicesPreferTheNearestNaturalStopAndFallBackLongOnlyWhenRequired(){
         for(var role:DisplayRole.values()){
             var seen=new HashSet<Integer>();
             for(var e:CATALOGUE.candidates(role))for(int mask=0;mask<7;mask++)if(seen.add(e.stops().fixedKey(mask))){
@@ -48,10 +48,20 @@ class StopSolverTest {
                     assertSame(choice,SOLVER.choose(role,fixedMask,e.stops(),reel,p,false));
                     if(!DIVERSIFIED.contains(role))assertEquals(minSlip,choice.slip(),role+" press="+p);
                     else if(minSlip==0)assertEquals(0,choice.slip(),"Exact eye-stop must remain exact");
-                    else if(hasNatural)assertTrue(choice.slip()>=1&&choice.slip()<=4,role+" should stay in natural pull-in range");
+                    else if(hasNatural)assertEquals(minSlip,choice.slip(),role+" should obey the actual press position inside 0..4 frames");
                     else assertTrue(choice.slip()>=minSlip&&choice.slip()<=Math.min(20,minSlip+2),role+" should use required long fallback");
                 }
             }
+        }
+    }
+    @Test void bigRightFirstCanBeAimedByVisibleSevenPosition(){
+        var blank=new StopTriplet(0,0,0);
+        assertEquals(2,SOLVER.choose(DisplayRole.BIG_ENTRY,0,blank,Reel.RIGHT,2,false).stopIndex(),"pressing on the bottom-row stop should keep SEVEN bottom");
+        assertEquals(3,SOLVER.choose(DisplayRole.BIG_ENTRY,0,blank,Reel.RIGHT,3,false).stopIndex(),"pressing on the center-row stop should keep SEVEN center");
+        for(int press=4;press<=8;press++){
+            var choice=SOLVER.choose(DisplayRole.BIG_ENTRY,0,blank,Reel.RIGHT,press,false);
+            assertEquals(4,choice.stopIndex(),"after SEVEN passes, the natural pull-in should place it on the top row at press="+press);
+            assertEquals(press-4,choice.slip());
         }
     }
     @Test void ordinaryPressesCanFinishEveryPaylineForLineRoles(){
