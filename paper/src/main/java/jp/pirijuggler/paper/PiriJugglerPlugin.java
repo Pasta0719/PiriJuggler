@@ -14,6 +14,7 @@ import jp.pirijuggler.paper.economy.MedalRecoveryListener;
 import jp.pirijuggler.paper.economy.PrizeService;
 import jp.pirijuggler.paper.data.DataLampPublisher;
 import jp.pirijuggler.paper.data.PublicDataCommand;
+import jp.pirijuggler.paper.data.MachineDataSimulationService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -37,6 +38,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
     private ReelEngine reels;
     private DataLampPublisher dataLamp;
     private PublicDataCommand publicData;
+    private MachineDataSimulationService machineSimulation;
 
     @Override public void onEnable() {
         mainThread = new PaperMainThread(this);
@@ -58,10 +60,11 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
                     machines = new MachineService(this, result.values());
                     dataLamp = new DataLampPublisher(this);
                     publicData = new PublicDataCommand(this);
+                    machineSimulation = new MachineDataSimulationService(this,result.values());
                     prizes = new PrizeService(this, result.values());
                     EconomyStartupRecovery.reconcile(this);
                     Objects.requireNonNull(getCommand("piri")).setExecutor((sender, command, label, args) ->
-                            publicData.handle(sender, args) || prizes.handle(sender, args) || machines.onCommand(sender, command, label, args));
+                            machineSimulation.handle(sender,args) || publicData.handle(sender, args) || prizes.handle(sender, args) || machines.onCommand(sender, command, label, args));
                 }
             }
         } catch (IOException | RuntimeException exception) {
