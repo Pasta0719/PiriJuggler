@@ -45,6 +45,31 @@ public final class PrizeService implements Listener {
         int count(PrizeItem.Type type) { return switch (type) { case SMALL -> small; case MEDIUM -> medium; case LARGE -> large; }; }
         boolean empty() { return small == 0 && medium == 0 && large == 0; }
     }
+    private record PrizeCapacity(int emptySlots, int smallRoom, int mediumRoom, int largeRoom) {
+        int room(PrizeItem.Type type) {
+            return switch (type) {
+                case SMALL -> smallRoom;
+                case MEDIUM -> mediumRoom;
+                case LARGE -> largeRoom;
+            };
+        }
+
+        int maxCount(PrizeItem.Type type) {
+            return Math.addExact(room(type), Math.multiplyExact(emptySlots, 64));
+        }
+
+        boolean fits(PrizePlan plan) {
+            int slots = slotsNeeded(plan.small(), smallRoom)
+                    + slotsNeeded(plan.medium(), mediumRoom)
+                    + slotsNeeded(plan.large(), largeRoom);
+            return slots <= emptySlots;
+        }
+
+        private static int slotsNeeded(int count, int existingRoom) {
+            int overflow = Math.max(0, count - existingRoom);
+            return (overflow + 63) / 64;
+        }
+    }
     private record MedalMutation(String transactionId, List<Held> before, UUID remainderId, int remainderAmount,
                                  int destinationSlot, PrizePlan prizes, int cost) { }
     private record PrizeRemoval(PrizeItem.Type type, int count, double vaultAmount) { }
@@ -160,8 +185,15 @@ public final class PrizeService implements Listener {
         if (requested == null) {
             plan = maximumPlan(player, held, total);
         } else if (max) {
-            int maximum = total / defs.get(requested).medalCost();
-            while (maximum > 0 && !fitsAfterMedals(player, held, singlePlan(requested, maximum), total - maximum * defs.get(requested).medalCost())) maximum--;
+            int cost = defs.get(requested).medalCost();
+            int affordable = total / cost;
+            int exactRemainder = total - affordable * cost;
+            PrizeCapacity capacity = prizeCapacity(player, held, exactRemainder > 0);
+            int maximum = Math.min(affordable, capacity.maxCount(requested));
+            if (maximum < affordable && exactRemainder == 0) {
+                capacity = prizeCapacity(player, held, true);
+                maximum = Math.min(affordable, capacity.maxCount(requested));
+            }
             plan = singlePlan(requested, maximum);
         } else {
             plan = singlePlan(requested, 1);
@@ -188,23 +220,24 @@ public final class PrizeService implements Listener {
         int largeCost = defs.get(PrizeItem.Type.LARGE).medalCost();
         int mediumCost = defs.get(PrizeItem.Type.MEDIUM).medalCost();
         int smallCost = defs.get(PrizeItem.Type.SMALL).medalCost();
-        int maxLarge = Math.min(medals / largeCost, 2304);
+        PrizeCapacity withRemainder = prizeCapacity(player, held, true);
+        PrizeCapacity withoutRemainder = prizeCapacity(player, held, false);
+        int maxLarge = Math.min(medals / largeCost, withoutRemainder.maxCount(PrizeItem.Type.LARGE));
         for (int large = maxLarge; large >= 0; large--) {
             int remainingAfterLarge = medals - large * largeCost;
-            int maxMedium = Math.min(remainingAfterLarge / mediumCost, 2304);
+            int maxMedium = Math.min(remainingAfterLarge / mediumCost, withoutRemainder.maxCount(PrizeItem.Type.MEDIUM));
             for (int medium = maxMedium; medium >= 0; medium--) {
                 int rest = remainingAfterLarge - medium * mediumCost;
-                int small = Math.min(rest / smallCost, 2304);
-                PrizePlan candidate = new PrizePlan(small, medium, large);
-                int cost = candidate.totalCost(defs);
+                int small = Math.min(rest / smallCost, withoutRemainder.maxCount(PrizeItem.Type.SMALL));
+                int cost = large * largeCost + medium * mediumCost + small * smallCost;
                 if (cost < bestCost) continue;
-                int remainder = medals - cost;
-                if (!fitsAfterMedals(player, held, candidate, remainder)) continue;
+                PrizePlan candidate = new PrizePlan(small, medium, large);
+                PrizeCapacity capacity = cost == medals ? withoutRemainder : withRemainder;
+                if (!capacity.fits(candidate)) continue;
                 if (cost > bestCost || betterTie(candidate, best)) {
                     best = candidate;
                     bestCost = cost;
                 }
-                // For fixed large/medium, largest small has maximum spend, so no additional small scan is needed.
             }
         }
         return best;
@@ -214,6 +247,37 @@ public final class PrizeService implements Listener {
         if (a.large() != b.large()) return a.large() > b.large();
         if (a.medium() != b.medium()) return a.medium() > b.medium();
         return a.small() > b.small();
+    }
+
+    private PrizeCapacity prizeCapacity(Player player, List<Held> held, boolean hasRemainder) {
+        ItemStack[] contents = player.getInventory().getStorageContents();
+        boolean[] medalSlots = new boolean[contents.length];
+        for (Held item : held) medalSlots[item.slot()] = true;
+        int remainderSlot = hasRemainder ? held.getFirst().slot() : -1;
+        int emptySlots = 0;
+        int smallRoom = 0;
+        int mediumRoom = 0;
+        int largeRoom = 0;
+        for (int i = 0; i < contents.length; i++) {
+            if (medalSlots[i]) {
+                if (i != remainderSlot) emptySlots++;
+                continue;
+            }
+            ItemStack item = contents[i];
+            if (item == null || item.isEmpty()) {
+                emptySlots++;
+                continue;
+            }
+            PrizeItem.Type type = PrizeItem.read(item);
+            if (type == null) continue;
+            int room = Math.max(0, 64 - item.getAmount());
+            switch (type) {
+                case SMALL -> smallRoom += room;
+                case MEDIUM -> mediumRoom += room;
+                case LARGE -> largeRoom += room;
+            }
+        }
+        return new PrizeCapacity(emptySlots, smallRoom, mediumRoom, largeRoom);
     }
 
     private boolean fitsAfterMedals(Player player, List<Held> held, PrizePlan plan, int remainder) {
