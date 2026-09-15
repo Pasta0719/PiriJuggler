@@ -17,11 +17,12 @@ public final class StopCatalogue {
         public int baseLines(){return Integer.bitCount(winningGrapeLines)+Integer.bitCount(winningBellLines)+Integer.bitCount(winningPieroLines)+Integer.bitCount(winningReplayLines)+Integer.bitCount(winningBigLines)+Integer.bitCount(winningRegLines);}
         public int totalLines(){return baseLines()+Integer.bitCount(winningReachLines);}
         public boolean anyCherry(){return leftTopCherry||leftMiddleCherry||leftBottomCherry;}
+        public boolean hasBonusSymbolPair(){return bonusSymbolPairLines(stops)!=0;}
         public boolean valid(DisplayRole role){return switch(role){
             case MISS->baseLines()==0&&winningReachLines==0&&!anyCherry();
             case BONUS->!anyCherry()&&baseLines()==0&&Integer.bitCount(winningReachLines)==1;
             case BONUS_CHERRY->baseLines()==0&&Integer.bitCount(winningReachLines)==1&&!leftMiddleCherry&&(leftTopCherry^leftBottomCherry);
-            case CHERRY->baseLines()==0&&winningReachLines==0&&!leftMiddleCherry&&(leftTopCherry^leftBottomCherry);
+            case CHERRY->baseLines()==0&&winningReachLines==0&&!hasBonusSymbolPair()&&!leftMiddleCherry&&(leftTopCherry^leftBottomCherry);
             case PREMIUM_B->baseLines()==0&&winningReachLines==0&&leftMiddleCherry&&!leftTopCherry&&!leftBottomCherry;
             default->winningReachLines==0&&!anyCherry()&&baseLines()==1&&Integer.bitCount(lineMask(role))==1;};}
         public int targetRank(DisplayRole role){if(!valid(role))throw new IllegalArgumentException("Not a strict candidate");return switch(role){case MISS->5;case BONUS,BONUS_CHERRY->Integer.numberOfTrailingZeros(winningReachLines);case CHERRY->leftTopCherry?1:2;case PREMIUM_B->0;default->Integer.numberOfTrailingZeros(lineMask(role));};}
@@ -47,6 +48,18 @@ public final class StopCatalogue {
     }
     private static int winning(StopTriplet stops,Symbol left,Symbol center,Symbol right){int bits=0;for(var line:Payline.values())if(FixedReels.row(Reel.LEFT,stops.left(),line.row(Reel.LEFT))==left&&FixedReels.row(Reel.CENTER,stops.center(),line.row(Reel.CENTER))==center&&FixedReels.row(Reel.RIGHT,stops.right(),line.row(Reel.RIGHT))==right)bits|=1<<line.ordinal();return bits;}
     public static int reachLines(StopTriplet stops){int bits=0;for(var pattern:REACH_PATTERNS)bits|=winning(stops,pattern[0],pattern[1],pattern[2]);return bits;}
+    public static int bonusSymbolPairLines(StopTriplet stops){
+        int bits=0;
+        for(var line:Payline.values()){
+            int count=0;
+            for(var reel:Reel.values()){
+                Symbol symbol=FixedReels.row(reel,stops.stop(reel),line.row(reel));
+                if(symbol==SEVEN||symbol==BAR)count++;
+            }
+            if(count>=2)bits|=1<<line.ordinal();
+        }
+        return bits;
+    }
     public static boolean isReachPattern(Symbol left,Symbol center,Symbol right){for(var pattern:REACH_PATTERNS)if(pattern[0]==left&&pattern[1]==center&&pattern[2]==right)return true;return false;}
     public static int sevenTenpaiLines(StopTriplet stops,int mask){
         if(Integer.bitCount(mask)!=2||mask<0||mask>7)throw new IllegalArgumentException("Tenpai requires exactly two stopped reels");
