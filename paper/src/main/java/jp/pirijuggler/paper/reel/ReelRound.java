@@ -28,7 +28,7 @@ public final class ReelRound {
     }
     private static boolean defaultRightFirstTellRestriction(DisplayRole role,String mode){
         if(!"NORMAL".equals(mode))return false;
-        return switch(role){case GRAPE,BONUS,BONUS_CHERRY,PIERO_BONUS->false;default->true;};
+        return switch(role){case GRAPE,BONUS,BONUS_CHERRY,PIERO_BONUS,PREMIUM_B->false;default->true;};
     }
     /** Call immediately before sending this envelope, using System.nanoTime on Paper's thread. */
     public Envelope begin(long now){
