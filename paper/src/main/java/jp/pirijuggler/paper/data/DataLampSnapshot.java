@@ -23,11 +23,14 @@ public final class DataLampSnapshot {
         }
 
         JsonArray history=new JsonArray();
-        try(PreparedStatement ps=connection.prepareStatement("SELECT bonus_type,games,occurred_at FROM bonus_history WHERE machine_id=? AND business_period_id=? ORDER BY id DESC LIMIT 10")){
+        var chainGames=new ArrayList<Long>();
+        try(PreparedStatement ps=connection.prepareStatement("SELECT bonus_type,games,occurred_at FROM bonus_history WHERE machine_id=? AND business_period_id=? ORDER BY id DESC")){
             ps.setInt(1,machineId);ps.setString(2,businessPeriodId);
             try(ResultSet rs=ps.executeQuery()){
+                int shown=0;
                 while(rs.next()){
-                    JsonObject item=new JsonObject();item.addProperty("type",rs.getString(1));item.addProperty("games",rs.getLong(2));item.addProperty("occurredAt",rs.getLong(3));history.add(item);
+                    String type=rs.getString(1);long games=rs.getLong(2),occurredAt=rs.getLong(3);chainGames.add(games);
+                    if(shown<10){JsonObject item=new JsonObject();item.addProperty("type",type);item.addProperty("games",games);item.addProperty("occurredAt",occurredAt);history.add(item);shown++;}
                 }
             }
         }
@@ -48,6 +51,13 @@ public final class DataLampSnapshot {
         JsonArray graph=new JsonArray();
         for(Lttb.Point point:display){JsonObject item=new JsonObject();item.addProperty("game",point.x());item.addProperty("difference",point.y());graph.add(item);}
 
+        boolean piriChain=completedBonus&&currentGames<=100;
+        int piriChainCount=0;
+        if(piriChain&&!chainGames.isEmpty()){
+            piriChainCount=1;
+            for(int i=0;i+1<chainGames.size()&&chainGames.get(i)<=100;i++)piriChainCount++;
+        }
+
         JsonObject result=new JsonObject();
         result.addProperty("machineId",machineId);
         result.addProperty("totalGames",totalGames);
@@ -56,7 +66,8 @@ public final class DataLampSnapshot {
         result.addProperty("currentGames",currentGames);
         result.addProperty("todayDifference",todayDifference);
         result.addProperty("todayMaxDifference",todayMaxDifference);
-        result.addProperty("piriChain",completedBonus&&currentGames<=100);
+        result.addProperty("piriChain",piriChain);
+        result.addProperty("piriChainCount",piriChainCount);
         result.add("history",history);
         result.add("graph",graph);
         return result;
