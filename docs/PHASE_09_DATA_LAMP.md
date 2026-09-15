@@ -23,6 +23,16 @@ Important boundaries:
 - History is current-period only, newest to oldest, max 10.
 - The 100/101 Piri Chain boundary is inclusive at 100 and off at 101.
 
+## User-approved Piri Chain streak display
+
+While Piri Chain is active, the data lamp also displays the current streak number (`1連目`, `2連目`, ...).
+
+- The streak is derived from current-period `bonus_history`; no new DB column or persistent counter is added.
+- Consecutive bonuses stay in the same streak only when the newer bonus was won within 100 normal games of the previous bonus end.
+- When `currentGames` becomes 101, Piri Chain turns off and the published streak count becomes `0`.
+- A later bonus starts a fresh streak at `1連目`; the prior streak length is not archived separately.
+- The visible history remains max 10 entries, but streak derivation may scan older current-period history so streaks longer than 10 are still counted correctly.
+
 ## User-approved direct bonus entry compatibility
 
 The current product intentionally allows a bonus-winning normal game to enter BIG/REG directly when the player actually stops the reels on the entry symbols. This is newer than the original SPEC §§35–36 flow and is therefore treated as an explicit product override.
