@@ -39,7 +39,7 @@ public final class SlotScreen extends Screen {
         c.fill(0,0,width,height,color("SCREEN_OUTSIDE"));var v=SlotLayout.Viewport.fit(width,height);
         c.getMatrices().push();c.getMatrices().translate(v.x(),v.y(),0);c.getMatrices().scale((float)v.scale(),(float)v.scale(),1);
         panel(c,SlotLayout.CABINET,color("CABINET_BG"));
-        text(c,"PIRI JUGGLER",960,238,3,true);
+        text(c,"PIRI JUGGLER",960,278,1.8f,true);
         panel(c,SlotLayout.DATA,color("DISPLAY_BG"));data(c,v.logicalX(mouseX),v.logicalY(mouseY));
         c.fill(670,300,1570,690,color("REEL_SEPARATOR"));
         for(int reel=0;reel<3;reel++){
@@ -66,56 +66,54 @@ public final class SlotScreen extends Screen {
         JsonObject data=view.dataLamp();
         String[] labels={"台番","現在G","BIG","REG","TOTAL G","差枚","MAX差枚"};
         String[] fields={null,"currentGames","bigCount","regCount","totalGames","todayDifference","todayMaxDifference"};
-        int start=348,cell=176,top=27,bottom=99;
-        c.fill(342,bottom,1578,bottom+2,color("CABINET_EDGE"));
+        int start=235,cell=207,top=28,bottom=122;
+        c.fill(226,bottom,1694,bottom+3,color("CABINET_EDGE"));
         for(int i=0;i<labels.length;i++){
-            int left=start+i*cell,center=left+79;
-            if(i>0)c.fill(left-9,top,left-6,bottom-4,color("BUTTON_METAL_DARK"));
+            int left=start+i*cell,center=left+94;
+            if(i>0)c.fill(left-10,top,left-7,bottom-7,color("BUTTON_METAL_DARK"));
             int tint=i==2?color("DISPLAY_BIG"):i==3?color("DISPLAY_REG"):color("DISPLAY_WHITE");
-            text(c,labels[i],center,28,1.85f,true,tint);
+            text(c,labels[i],center,28,2.0f,true,tint);
             String number=i==0?Integer.toString(view.machineId()):data==null||!data.has(fields[i])?null:data.get(fields[i]).getAsString();
-            if(number==null)text(c,"-",center,58,2.75f,true,tint);else digitsFitCentered(c,number,center,54,154,.88f,tint);
+            if(number==null)text(c,"-",center,67,3.1f,true,tint);else digitsFitCentered(c,number,center,60,184,1.02f,tint);
         }
         if(data==null)return;
 
-        c.fill(766,106,769,195,color("BUTTON_METAL_DARK"));
-        c.fill(1228,106,1231,195,color("BUTTON_METAL_DARK"));
+        c.fill(714,138,717,254,color("BUTTON_METAL_DARK"));
+        c.fill(1260,138,1263,254,color("BUTTON_METAL_DARK"));
 
-        text(c,"差枚グラフ",352,106,1.45f,false,color("DISPLAY_WHITE"));
-        drawGraph(c,data.has("graph")?data.getAsJsonArray("graph"):new JsonArray(),352,128,398,62);
+        text(c,"差枚グラフ",235,138,1.65f,false,color("DISPLAY_WHITE"));
+        drawGraph(c,data.has("graph")?data.getAsJsonArray("graph"):new JsonArray(),235,168,460,76);
 
-        text(c,"ボーナス履歴",788,106,1.45f,false,color("DISPLAY_WHITE"));
-        text(c,"新 → 古",1170,108,1.00f,true,color("DISPLAY_WHITE"));
+        text(c,"ボーナス履歴",742,138,1.65f,false,color("DISPLAY_WHITE"));
+        text(c,"新 → 古",1220,141,1.05f,true,color("DISPLAY_WHITE"));
         JsonArray history=data.has("history")?data.getAsJsonArray("history"):new JsonArray();
         String hoverTime=null;
         for(int i=0;i<Math.min(10,history.size());i++){
-            JsonObject item=history.get(i).getAsJsonObject();int col=i%5,row=i/5,x=790+col*84,y=132+row*30;String type=item.get("type").getAsString();
+            JsonObject item=history.get(i).getAsJsonObject();int col=i%5,row=i/5,x=745+col*98,y=177+row*39;String type=item.get("type").getAsString();
             int tint="BIG".equals(type)?color("DISPLAY_BIG"):color("DISPLAY_REG");
-            text(c,"BIG".equals(type)?"B":"R",x,y,1.25f,false,tint);
-            text(c,item.get("games").getAsString()+"G",x+18,y,1.15f,false,color("DISPLAY_WHITE"));
-            if(mx>=x-4&&mx<x+78&&my>=y-3&&my<y+24&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
+            text(c,"BIG".equals(type)?"B":"R",x,y,1.45f,false,tint);
+            text(c,item.get("games").getAsString()+"G",x+23,y,1.35f,false,color("DISPLAY_WHITE"));
+            if(mx>=x-4&&mx<x+92&&my>=y-4&&my<y+29&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
         }
-        if(hoverTime!=null)text(c,hoverTime,1000,190,.88f,true,color("DISPLAY_WHITE"));
+        if(hoverTime!=null)text(c,995,248,.95f,true,color("DISPLAY_WHITE"));
 
         long total=data.has("totalGames")?data.get("totalGames").getAsLong():0;
         long big=data.has("bigCount")?data.get("bigCount").getAsLong():0;
         long reg=data.has("regCount")?data.get("regCount").getAsLong():0;
-        text(c,"実績確率",1246,106,1.45f,false,color("DISPLAY_WHITE"));
-        int[] px={1284,1382,1487};
-        String[] pl={"BIG","REG","合算"};
-        String[] pv={probability(total,big),probability(total,reg),probability(total,big+reg)};
-        int[] pc={color("DISPLAY_BIG"),color("DISPLAY_REG"),color("DISPLAY_WHITE")};
-        for(int i=0;i<3;i++){
-            text(c,pl[i],px[i],128,1.18f,true,pc[i]);
-            text(c,pv[i],px[i],148,1.55f,true,pc[i]);
-        }
+        text(c,"実績確率",1290,138,1.65f,false,color("DISPLAY_WHITE"));
+        text(c,"BIG",1290,170,1.35f,false,color("DISPLAY_BIG"));
+        text(c,probability(total,big),1665,170,1.75f,true,color("DISPLAY_BIG"));
+        text(c,"REG",1290,199,1.35f,false,color("DISPLAY_REG"));
+        text(c,probability(total,reg),1665,199,1.75f,true,color("DISPLAY_REG"));
+        text(c,"合算",1290,228,1.35f,false,color("DISPLAY_WHITE"));
+        text(c,probability(total,big+reg),1665,228,1.75f,true,color("DISPLAY_WHITE"));
 
         if(data.has("piriChain")&&data.get("piriChain").getAsBoolean()){
             int chain=data.has("piriChainCount")?data.get("piriChainCount").getAsInt():1;
-            rounded(c,1246,168,315,30,8,color("DISPLAY_GREEN"));
-            rounded(c,1249,171,309,24,6,color("DISPLAY_BG"));
-            text(c,"ピリ連中",1308,174,1.45f,true,color("DISPLAY_WHITE"));
-            text(c,chain+"連目",1482,171,2.05f,true,color("DISPLAY_GREEN"));
+            rounded(c,1286,245,394,22,7,color("DISPLAY_GREEN"));
+            rounded(c,1289,248,388,16,5,color("DISPLAY_BG"));
+            text(c,"ピリ連中",1365,248,1.35f,true,color("DISPLAY_WHITE"));
+            text(c,chain+"連目",1600,244,1.9f,true,color("DISPLAY_GREEN"));
         }
     }
     private static String probability(long games,long hits){
