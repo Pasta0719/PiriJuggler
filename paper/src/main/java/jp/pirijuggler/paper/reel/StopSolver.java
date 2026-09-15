@@ -13,26 +13,30 @@ public final class StopSolver {
             DisplayRole.BIG_ENTRY, DisplayRole.REG_ENTRY);
 
     public record Choice(StopTriplet candidate,int targetRank,int pressedIndex,int stopIndex,int slip,int durationMs){}
-    private record Key(DisplayRole role,int fixedKey,Reel reel,boolean nonTenpai){}
+    private record Key(DisplayRole role,int fixedKey,Reel reel,boolean nonTenpai,boolean forbidRightFirstGrapeSevenBar){}
     private final StopCatalogue catalogue;
     private final ConcurrentHashMap<Key,Choice[]> cache=new ConcurrentHashMap<>();
     public StopSolver(StopCatalogue catalogue){this.catalogue=catalogue;}
     public StopCatalogue catalogue(){return catalogue;}
     public Choice choose(DisplayRole role,int stoppedMask,StopTriplet stopped,Reel reel,int pressedIndex,boolean premiumF){
+        return choose(role,stoppedMask,stopped,reel,pressedIndex,premiumF,false);
+    }
+    public Choice choose(DisplayRole role,int stoppedMask,StopTriplet stopped,Reel reel,int pressedIndex,boolean premiumF,boolean forbidRightFirstGrapeSevenBar){
         if(pressedIndex<0||pressedIndex>=21||stoppedMask<0||stoppedMask>7||(stoppedMask&reel.bit())!=0)throw new IllegalArgumentException("Invalid STOP conditions");
         if(premiumF&&role!=DisplayRole.BONUS&&role!=DisplayRole.BONUS_CHERRY&&role!=DisplayRole.PIERO)throw new IllegalArgumentException("Invalid premium F base");
         boolean filter=premiumF&&Integer.bitCount(stoppedMask)==1;
-        var key=new Key(role,stopped.fixedKey(stoppedMask),reel,filter);
-        return cache.computeIfAbsent(key,ignored->choices(role,stoppedMask,stopped,reel,filter))[pressedIndex];
+        var key=new Key(role,stopped.fixedKey(stoppedMask),reel,filter,forbidRightFirstGrapeSevenBar);
+        return cache.computeIfAbsent(key,ignored->choices(role,stoppedMask,stopped,reel,filter,forbidRightFirstGrapeSevenBar))[pressedIndex];
     }
 
-    private Choice[] choices(DisplayRole role,int mask,StopTriplet stopped,Reel reel,boolean filter){
+    private Choice[] choices(DisplayRole role,int mask,StopTriplet stopped,Reel reel,boolean filter,boolean forbidRightFirstGrapeSevenBar){
         var candidates=new ArrayList<StopCatalogue.Evaluation>();
         for(var candidate:catalogue.candidates(role,mask,stopped)){
             if(filter&&StopCatalogue.sevenTenpaiLines(candidate.stops(),mask|reel.bit())!=0)continue;
+            if(forbidRightFirstGrapeSevenBar&&mask==0&&reel==Reel.RIGHT&&StopCatalogue.isRightGrapeSevenBarStop(candidate.stops().right()))continue;
             candidates.add(candidate);
         }
-        if(candidates.isEmpty())throw new IllegalStateException("No candidate: role="+role+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" premiumF="+filter);
+        if(candidates.isEmpty())throw new IllegalStateException("No candidate: role="+role+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" premiumF="+filter+" forbidRightFirstGrapeSevenBar="+forbidRightFirstGrapeSevenBar);
 
         Choice[] best=new Choice[21];
         for(int p=0;p<21;p++){
@@ -78,16 +82,12 @@ public final class StopSolver {
                 if(selected==null){
                     better=true;
                 }else if(naturalSelection){
-                    // In the normal 0..4-frame pull-in range, the player's actual press position wins first.
-                    // This makes visible symbols genuinely aimable; line variety only breaks otherwise-equal stops.
                     better=slip<selectedSlip
                             ||slip==selectedSlip&&lineDistance<selectedLineDistance
                             ||slip==selectedSlip&&lineDistance==selectedLineDistance&&lineDirection<selectedLineDirection
                             ||slip==selectedSlip&&lineDistance==selectedLineDistance&&lineDirection==selectedLineDirection&&rank<selectedRank
                             ||slip==selectedSlip&&lineDistance==selectedLineDistance&&lineDirection==selectedLineDirection&&rank==selectedRank&&candidate.stops().id()<selected.stops().id();
                 }else{
-                    // If no natural stop can preserve the role, accept the long pull-in and use its small
-                    // fallback window to keep the five paylines from collapsing to one fixed shape.
                     better=lineDistance<selectedLineDistance
                             ||lineDistance==selectedLineDistance&&slip<selectedSlip
                             ||lineDistance==selectedLineDistance&&slip==selectedSlip&&lineDirection<selectedLineDirection
