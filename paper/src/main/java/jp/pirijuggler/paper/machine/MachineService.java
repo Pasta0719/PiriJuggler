@@ -87,11 +87,11 @@ public final class MachineService implements Listener, CommandExecutor {
         if (!sender.isOp()) { tell(sender, "NOT_OP"); return true; }
         if (!ready()) { tell(sender, "DB_ERROR"); return true; }
         try {
-            if (args.length==3 && args[0].equalsIgnoreCase("simulator")) {
+            if (args.length==3 && (args[0].equalsIgnoreCase("simulator") || args[0].equalsIgnoreCase("sim"))) {
                 int setting=Integer.parseInt(args[1]);long count=Long.parseLong(args[2]);
                 if(setting<1||setting>6||count<1||count>100_000_000L)throw new DomainException("INVALID_STATE");
                 if(simulating)throw new DomainException("BUSY");
-                simulating=true;var rng=random.runtimeSimulation();tell(sender,"SIMULATOR_STARTED");
+                simulating=true;var rng=random.runtimeSimulation();tell(sender,"SIMULATOR_STARTED setting="+setting+" games="+count);
                 plugin.executors().simulator(()->Simulator.run(weights,setting,count,rng),(result,error)->{
                     try {if(!stopped){if(error!=null)failure(sender,error);else tell(sender,"PIRI_SIMULATOR "+new Gson().toJson(result));}}
                     finally {simulating=false;}
@@ -103,7 +103,7 @@ public final class MachineService implements Listener, CommandExecutor {
                 if (target.getInventory().firstEmpty() < 0) throw new DomainException("INVENTORY_FULL");
                 target.getInventory().addItem(machineKey()); tell(sender, "KEY_GIVEN " + target.getName()); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create|redefine <id>|remove <id>|list|info <id>, /piri key give [player]");
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri sim <setting> <games>, /piri machine create|redefine <id>|remove <id>|list|info <id>|setting <id> <1-6>, /piri key give [player]");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
@@ -111,6 +111,25 @@ public final class MachineService implements Listener, CommandExecutor {
             if (action.equals("create") && args.length == 2) {
                 Machine.Location target = target(sender);
                 submit(sender, null, 0, () -> database.create(target, System.currentTimeMillis()), id -> tell(sender, "MACHINE_CREATED " + id)); return true;
+            }
+            if (action.equals("setting") && args.length == 4) {
+                int id=Integer.parseInt(args[2]);int newSetting=Integer.parseInt(args[3]);
+                if(newSetting<1||newSetting>6)throw new DomainException("INVALID_STATE");
+                Machine machine=state.machine(id);if(machine==null)throw new DomainException("INVALID_STATE");
+                if(busy(id))throw new DomainException("MACHINE_OCCUPIED");
+                int oldSetting=machine.setting();String period=state.period(),profile=state.profile();
+                String actor=sender instanceof Player player?player.getUniqueId().toString():null;
+                long now=System.currentTimeMillis();
+                submit(sender,null,id,()->{
+                    database.transaction(()->{
+                        database.sql("UPDATE machines SET setting=?,updated_at=? WHERE machine_id=? AND deleted=0",newSetting,now,id);
+                        database.sql("INSERT INTO setting_history(machine_id,business_period_id,changed_at,old_setting,new_setting,reason,actor_uuid,profile_name) VALUES(?,?,?,?,?,?,?,?)",
+                                id,period,now,oldSetting,newSetting,"MANUAL_COMMAND",actor,profile);
+                        return null;
+                    });
+                    return newSetting;
+                },done->tell(sender,"MACHINE_SETTING id="+id+" old="+oldSetting+" new="+done));
+                return true;
             }
             if (args.length != 3) throw new DomainException("INVALID_STATE");
             int id = Integer.parseInt(args[2]); Machine machine = state.machine(id);
