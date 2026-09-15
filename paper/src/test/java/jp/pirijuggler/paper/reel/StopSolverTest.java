@@ -12,7 +12,7 @@ class StopSolverTest {
         assertEquals(9261,CATALOGUE.evaluations().size());assertEquals(9261,CATALOGUE.evaluations().stream().map(e->e.stops().id()).distinct().count());
         var expected=Map.ofEntries(
                 Map.entry(DisplayRole.GRAPE,750),Map.entry(DisplayRole.BELL,50),Map.entry(DisplayRole.PIERO,20),Map.entry(DisplayRole.REPLAY,525),
-                Map.entry(DisplayRole.CHERRY,1502),Map.entry(DisplayRole.MISS,5126),Map.entry(DisplayRole.BONUS,124),Map.entry(DisplayRole.BONUS_CHERRY,12),
+                Map.entry(DisplayRole.CHERRY,1287),Map.entry(DisplayRole.MISS,5126),Map.entry(DisplayRole.BONUS,124),Map.entry(DisplayRole.BONUS_CHERRY,12),
                 Map.entry(DisplayRole.BIG_ENTRY,10),Map.entry(DisplayRole.REG_ENTRY,10),Map.entry(DisplayRole.PREMIUM_B,758));
         assertEquals(expected,CATALOGUE.counts());
         var lock=JsonParser.parseString(Files.readString(Path.of(System.getProperty("piri.specRoot"),"docs/spec-lock.json"))).getAsJsonObject();
@@ -21,11 +21,12 @@ class StopSolverTest {
     }
     // Independent oracle uses literal row triples and named reach patterns, not catalogue masks.
     private static Set<DisplayRole> oracle(StopTriplet s){
-        int[][] rows={{0,0,0},{-1,-1,-1},{1,1,1},{-1,0,1},{1,0,-1}};var wins=new EnumMap<DisplayRole,Integer>(DisplayRole.class);int reach=0;
+        int[][] rows={{0,0,0},{-1,-1,-1},{1,1,1},{-1,0,1},{1,0,-1}};var wins=new EnumMap<DisplayRole,Integer>(DisplayRole.class);int reach=0;boolean bonusPair=false;
         for(int[] row:rows){
             Symbol left=FixedReels.row(Reel.LEFT,s.left(),row[0]),center=FixedReels.row(Reel.CENTER,s.center(),row[1]),right=FixedReels.row(Reel.RIGHT,s.right(),row[2]);
             String shape=left+"/"+center+"/"+right;DisplayRole r=switch(shape){case "GRAPE/GRAPE/GRAPE"->DisplayRole.GRAPE;case "BELL/BELL/BELL"->DisplayRole.BELL;case "PIERO/PIERO/PIERO"->DisplayRole.PIERO;case "REPLAY/REPLAY/REPLAY"->DisplayRole.REPLAY;case "SEVEN/SEVEN/SEVEN"->DisplayRole.BIG_ENTRY;case "SEVEN/SEVEN/BAR"->DisplayRole.REG_ENTRY;default->null;};if(r!=null)wins.merge(r,1,Integer::sum);
             if(StopCatalogue.isReachPattern(left,center,right))reach++;
+            int bonusSymbols=(left==Symbol.SEVEN||left==Symbol.BAR?1:0)+(center==Symbol.SEVEN||center==Symbol.BAR?1:0)+(right==Symbol.SEVEN||right==Symbol.BAR?1:0);if(bonusSymbols>=2)bonusPair=true;
         }
         boolean top=FixedReels.row(Reel.LEFT,s.left(),-1)==Symbol.CHERRY,middle=FixedReels.row(Reel.LEFT,s.left(),0)==Symbol.CHERRY,bottom=FixedReels.row(Reel.LEFT,s.left(),1)==Symbol.CHERRY;var result=EnumSet.noneOf(DisplayRole.class);
         boolean noCherry=!top&&!middle&&!bottom;
@@ -33,7 +34,7 @@ class StopSolverTest {
         if(noCherry&&wins.isEmpty()&&reach==1)result.add(DisplayRole.BONUS);
         if(wins.isEmpty()&&reach==1&&!middle&&(top^bottom))result.add(DisplayRole.BONUS_CHERRY);
         if(noCherry&&reach==0&&wins.size()==1&&wins.values().iterator().next()==1)result.add(wins.keySet().iterator().next());
-        if(wins.isEmpty()&&reach==0){if(!middle&&(top^bottom))result.add(DisplayRole.CHERRY);if(middle&&!top&&!bottom)result.add(DisplayRole.PREMIUM_B);}return result;
+        if(wins.isEmpty()&&reach==0){if(!bonusPair&&!middle&&(top^bottom))result.add(DisplayRole.CHERRY);if(middle&&!top&&!bottom)result.add(DisplayRole.PREMIUM_B);}return result;
     }
     @Test void allOrdersAndAllPressedSequencesCompleteIncludingPremiumF(){
         var report=ReelVerification.verify(SOLVER);assertEquals(611226,report.allSequences());assertEquals(166698,report.premiumFSequences());assertEquals(7938,report.premiumFSecondChecks());
@@ -45,6 +46,9 @@ class StopSolverTest {
         for(var e:CATALOGUE.candidates(DisplayRole.BONUS_CHERRY)){
             assertEquals(1,Integer.bitCount(e.winningReachLines()));assertFalse(e.leftMiddleCherry());assertTrue(e.leftTopCherry()^e.leftBottomCherry());
         }
+    }
+    @Test void normalCherryNeverLeavesTwoBonusSymbolsOnAnyPayline(){
+        for(var e:CATALOGUE.candidates(DisplayRole.CHERRY))assertEquals(0,StopCatalogue.bonusSymbolPairLines(e.stops()),e.stops().toString());
     }
     @Test void stopChoicesPreferTheNearestNaturalStopAndFallBackLongOnlyWhenRequired(){
         for(var role:DisplayRole.values()){
