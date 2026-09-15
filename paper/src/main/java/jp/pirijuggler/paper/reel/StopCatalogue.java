@@ -13,7 +13,7 @@ public final class StopCatalogue {
     public record Evaluation(StopTriplet stops,int winningGrapeLines,int winningBellLines,int winningPieroLines,int winningReplayLines,
                              boolean leftTopCherry,boolean leftMiddleCherry,boolean leftBottomCherry,int winningBigLines,int winningRegLines,
                              int winningBarConfirmationLines,int winningReachLines) {
-        public int lineMask(DisplayRole role){return switch(role){case GRAPE->winningGrapeLines;case BELL->winningBellLines;case PIERO->winningPieroLines;case REPLAY->winningReplayLines;case BIG_ENTRY->winningBigLines;case REG_ENTRY->winningRegLines;case BONUS,BONUS_CHERRY->winningReachLines;default->0;};}
+        public int lineMask(DisplayRole role){return switch(role){case GRAPE->winningGrapeLines;case BELL->winningBellLines;case PIERO,PIERO_BONUS->winningPieroLines;case REPLAY->winningReplayLines;case BIG_ENTRY->winningBigLines;case REG_ENTRY->winningRegLines;case BONUS,BONUS_CHERRY->winningReachLines;default->0;};}
         public int baseLines(){return Integer.bitCount(winningGrapeLines)+Integer.bitCount(winningBellLines)+Integer.bitCount(winningPieroLines)+Integer.bitCount(winningReplayLines)+Integer.bitCount(winningBigLines)+Integer.bitCount(winningRegLines);}
         public int totalLines(){return baseLines()+Integer.bitCount(winningReachLines);}
         public boolean anyCherry(){return leftTopCherry||leftMiddleCherry||leftBottomCherry;}
