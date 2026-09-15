@@ -8,14 +8,18 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BarConfirmationTest extends GameFixture {
-    @Test void formalReachEyesAreForbiddenForEveryNonBonusCandidateOnAllFivePaylines(){
-        int[] perLine=new int[5];int raw=0,strict=0;
+    @Test void formalReachEyesAreReservedForBonusCandidatesOnAllFivePaylines(){
+        int[] perLine=new int[5];int raw=0,pure=0,cherry=0;
         for(var e:SOLVER.catalogue().evaluations()){
             int reach=StopCatalogue.reachLines(e.stops());assertEquals(reach,e.winningReachLines());
-            if(reach!=0){raw++;for(var line:Payline.values())if((reach&(1<<line.ordinal()))!=0)perLine[line.ordinal()]++;for(var role:DisplayRole.values())if(role!=DisplayRole.BONUS)assertFalse(e.valid(role),e.stops()+" "+role);if(e.valid(DisplayRole.BONUS))strict++;}
+            if(reach!=0){
+                raw++;for(var line:Payline.values())if((reach&(1<<line.ordinal()))!=0)perLine[line.ordinal()]++;
+                for(var role:DisplayRole.values())if(role!=DisplayRole.BONUS&&role!=DisplayRole.BONUS_CHERRY)assertFalse(e.valid(role),e.stops()+" "+role);
+                if(e.valid(DisplayRole.BONUS))pure++;if(e.valid(DisplayRole.BONUS_CHERRY))cherry++;
+            }
         }
-        assertEquals(160,raw);assertEquals(124,strict);for(int count:perLine)assertTrue(count>0);
-        assertEquals(5126,SOLVER.catalogue().candidates(DisplayRole.MISS).size());assertEquals(1502,SOLVER.catalogue().candidates(DisplayRole.CHERRY).size());assertEquals(5250,SOLVER.catalogue().candidates(DisplayRole.BONUS).size());
+        assertEquals(160,raw);assertEquals(124,pure);assertEquals(12,cherry);for(int count:perLine)assertTrue(count>0);
+        assertEquals(5126,SOLVER.catalogue().candidates(DisplayRole.MISS).size());assertEquals(1287,SOLVER.catalogue().candidates(DisplayRole.CHERRY).size());assertEquals(124,SOLVER.catalogue().candidates(DisplayRole.BONUS).size());assertEquals(12,SOLVER.catalogue().candidates(DisplayRole.BONUS_CHERRY).size());
         assertFalse(StopCatalogue.isReachPattern(Symbol.SEVEN,Symbol.SEVEN,Symbol.SEVEN));assertFalse(StopCatalogue.isReachPattern(Symbol.SEVEN,Symbol.SEVEN,Symbol.BAR));
         assertTrue(StopCatalogue.isReachPattern(Symbol.BAR,Symbol.BAR,Symbol.BAR));assertTrue(StopCatalogue.isReachPattern(Symbol.PIERO,Symbol.BAR,Symbol.PIERO));
     }
