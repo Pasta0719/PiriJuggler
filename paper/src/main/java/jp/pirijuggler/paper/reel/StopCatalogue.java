@@ -60,6 +60,11 @@ public final class StopCatalogue {
         }
         return bits;
     }
+    public static boolean isRightGrapeSevenBarStop(int stopIndex){
+        return FixedReels.row(Reel.RIGHT,stopIndex,-1)==GRAPE
+                &&FixedReels.row(Reel.RIGHT,stopIndex,0)==SEVEN
+                &&FixedReels.row(Reel.RIGHT,stopIndex,1)==BAR;
+    }
     public static boolean isReachPattern(Symbol left,Symbol center,Symbol right){for(var pattern:REACH_PATTERNS)if(pattern[0]==left&&pattern[1]==center&&pattern[2]==right)return true;return false;}
     public static int sevenTenpaiLines(StopTriplet stops,int mask){
         if(Integer.bitCount(mask)!=2||mask<0||mask>7)throw new IllegalArgumentException("Tenpai requires exactly two stopped reels");
