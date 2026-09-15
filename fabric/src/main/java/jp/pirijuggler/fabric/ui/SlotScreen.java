@@ -64,47 +64,59 @@ public final class SlotScreen extends Screen {
     private String errorText(){if(view.error().isEmpty())return "";try{return ErrorMessages.japanese(ErrorCode.valueOf(view.error()));}catch(IllegalArgumentException e){return view.error();}}
     private void data(DrawContext c,double mx,double my){
         JsonObject data=view.dataLamp();
-        String[] labels={"台 番","現在ゲーム","BIG 回数","REG 回数","トータルG","差 枚","MAX差枚"};
+        String[] labels={"台番","現在G","BIG","REG","TOTAL G","差枚","MAX差枚"};
         String[] fields={null,"currentGames","bigCount","regCount","totalGames","todayDifference","todayMaxDifference"};
-        String[] units={"","G","回","回","G","枚","枚"};
-        int start=350,cell=174,top=27,bottom=101;
+        int start=348,cell=176,top=28,bottom=98;
         c.fill(342,bottom,1578,bottom+2,color("CABINET_EDGE"));
         for(int i=0;i<labels.length;i++){
-            int left=start+i*cell,center=left+78;
-            if(i>0)c.fill(left-9,top,left-7,bottom-7,color("BUTTON_METAL_DARK"));
+            int left=start+i*cell,center=left+79;
+            if(i>0)c.fill(left-9,top,left-7,bottom-5,color("BUTTON_METAL_DARK"));
             int tint=i==2?color("DISPLAY_BIG"):i==3?color("DISPLAY_REG"):color("DISPLAY_WHITE");
-            text(c,labels[i],center,31,1.45f,true,tint);
+            text(c,labels[i],center,30,1.65f,true,tint);
             String number=i==0?Integer.toString(view.machineId()):data==null||!data.has(fields[i])?null:data.get(fields[i]).getAsString();
-            if(number==null)text(c,"-",center,58,2.35f,true,tint);else digitsFitCentered(c,number,center,57,145,.62f,tint);
-            if(!units[i].isEmpty())text(c,units[i],center,88,.82f,true,color("DISPLAY_WHITE"));
+            if(number==null)text(c,"-",center,60,2.5f,true,tint);else digitsFitCentered(c,number,center,56,150,.78f,tint);
         }
         if(data==null)return;
+
+        // Three clearly separated blocks: graph / history / probability + Piri Chain.
+        c.fill(766,106,768,194,color("BUTTON_METAL_DARK"));
+        c.fill(1228,106,1230,194,color("BUTTON_METAL_DARK"));
+
+        text(c,"差枚グラフ",352,107,1.30f,false,color("DISPLAY_WHITE"));
+        drawGraph(c,data.has("graph")?data.getAsJsonArray("graph"):new JsonArray(),352,131,398,55);
+
+        text(c,"ボーナス履歴",788,107,1.30f,false,color("DISPLAY_WHITE"));
+        text(c,"新 → 古",1166,110,.82f,true,color("DISPLAY_WHITE"));
+        JsonArray history=data.has("history")?data.getAsJsonArray("history"):new JsonArray();
+        String hoverTime=null;
+        for(int i=0;i<Math.min(10,history.size());i++){
+            JsonObject item=history.get(i).getAsJsonObject();int x=790+i*42;String type=item.get("type").getAsString();
+            int tint="BIG".equals(type)?color("DISPLAY_BIG"):color("DISPLAY_REG");
+            text(c,"BIG".equals(type)?"B":"R",x+20,132,1.35f,true,tint);
+            text(c,item.get("games").getAsString()+"G",x+20,159,.90f,true,color("DISPLAY_WHITE"));
+            if(mx>=x&&mx<x+40&&my>=126&&my<184&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
+        }
+        if(hoverTime!=null)text(c,hoverTime,1000,186,.82f,true,color("DISPLAY_WHITE"));
 
         long total=data.has("totalGames")?data.get("totalGames").getAsLong():0;
         long big=data.has("bigCount")?data.get("bigCount").getAsLong():0;
         long reg=data.has("regCount")?data.get("regCount").getAsLong():0;
-        text(c,"BIG確率 "+probability(total,big),702,104,.92f,true,color("DISPLAY_BIG"));
-        text(c,"REG確率 "+probability(total,reg),875,104,.92f,true,color("DISPLAY_REG"));
-        text(c,"合算 "+probability(total,big+reg),1048,104,.92f,true,color("DISPLAY_WHITE"));
-
-        text(c,"差枚グラフ",350,108,1.05f,false);drawGraph(c,data.has("graph")?data.getAsJsonArray("graph"):new JsonArray(),350,124,400,60);
-        text(c,"ボーナス履歴  新しい → 古い",775,119,1.05f,false);
-        JsonArray history=data.has("history")?data.getAsJsonArray("history"):new JsonArray();
-        String hoverTime=null;
-        for(int i=0;i<Math.min(10,history.size());i++){
-            JsonObject item=history.get(i).getAsJsonObject();int x=775+i*54;String type=item.get("type").getAsString();
-            int tint="BIG".equals(type)?color("DISPLAY_BIG"):color("DISPLAY_REG");text(c,"BIG".equals(type)?"B":"R",x+24,136,1.15f,true,tint);
-            digitsFitCentered(c,item.get("games").getAsString(),x+25,157,48,.30f,tint);
-            text(c,"G",x+25,181,.70f,true,color("DISPLAY_WHITE"));
-            if(mx>=x&&mx<x+52&&my>=132&&my<190&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
+        text(c,"ボーナス確率",1246,107,1.30f,false,color("DISPLAY_WHITE"));
+        int[] px={1282,1378,1480};
+        String[] pl={"BIG","REG","合算"};
+        String[] pv={probability(total,big),probability(total,reg),probability(total,big+reg)};
+        int[] pc={color("DISPLAY_BIG"),color("DISPLAY_REG"),color("DISPLAY_WHITE")};
+        for(int i=0;i<3;i++){
+            text(c,pl[i],px[i],129,1.05f,true,pc[i]);
+            text(c,pv[i],px[i],149,1.35f,true,pc[i]);
         }
-        if(hoverTime!=null)text(c,hoverTime,1045,190,.9f,true);
+
         if(data.has("piriChain")&&data.get("piriChain").getAsBoolean()){
             int chain=data.has("piriChainCount")?data.get("piriChainCount").getAsInt():1;
-            rounded(c,1332,111,238,76,12,color("DISPLAY_GREEN"));
-            rounded(c,1336,115,230,68,9,color("DISPLAY_BG"));
-            text(c,"ピリ連",1451,120,1.85f,true,color("DISPLAY_WHITE"));
-            text(c,chain+"連目",1451,149,2.45f,true,color("DISPLAY_GREEN"));
+            rounded(c,1246,168,315,28,8,color("DISPLAY_GREEN"));
+            rounded(c,1249,171,309,22,6,color("DISPLAY_BG"));
+            text(c,"ピリ連中",1305,174,1.22f,true,color("DISPLAY_WHITE"));
+            text(c,chain+"連目",1482,171,1.85f,true,color("DISPLAY_GREEN"));
         }
     }
     private static String probability(long games,long hits){
@@ -152,7 +164,7 @@ public final class SlotScreen extends Screen {
     }
     private static void digits(DrawContext c,String value,float x,float y,float scale,int active){
         c.getMatrices().push();c.getMatrices().translate(x,y,0);c.getMatrices().scale(scale,scale,1);
-        for(int i=0;i<value.length();i++)for(int s=0;s<7;s++){int[] r=SevenSegment.RECTANGLES[s];int tint=SevenSegment.active(value.charAt(i),s)?active:active&0xffffff|Math.round(255*.08f)<<24;c.fill(i*48+r[0],r[1],i*48+r[0]+r[2],r[1]+r[3],tint);}c.getMatrices().pop();
+        for(int i=0;i<value.length();i++)for(int s=0;s<7;s++)if(SevenSegment.active(value.charAt(i),s)){int[] r=SevenSegment.RECTANGLES[s];c.fill(i*48+r[0],r[1],i*48+r[0]+r[2],r[1]+r[3],active);}c.getMatrices().pop();
     }
     private void texture(DrawContext c,String path,double x,double y,int w,int h,int tw,int th,float alpha){
         Identifier id=Identifier.of("piri","textures/"+path);client.getTextureManager().bindTexture(id);client.getTextureManager().getTexture(id).setFilter(true,false);
