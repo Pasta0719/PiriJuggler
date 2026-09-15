@@ -9,7 +9,7 @@ public final class StopSolver {
     private static final int NATURAL_MAX_SLIP = 4;
     private static final int FALLBACK_LINE_SLIP_WINDOW = 2;
     private static final EnumSet<DisplayRole> DIVERSIFIED_LINE_ROLES = EnumSet.of(
-            DisplayRole.GRAPE, DisplayRole.BELL, DisplayRole.PIERO, DisplayRole.REPLAY,
+            DisplayRole.GRAPE, DisplayRole.BELL, DisplayRole.PIERO, DisplayRole.PIERO_BONUS, DisplayRole.REPLAY,
             DisplayRole.BIG_ENTRY, DisplayRole.REG_ENTRY);
 
     public record Choice(StopTriplet candidate,int targetRank,int pressedIndex,int stopIndex,int slip,int durationMs){}
@@ -23,7 +23,7 @@ public final class StopSolver {
     }
     public Choice choose(DisplayRole role,int stoppedMask,StopTriplet stopped,Reel reel,int pressedIndex,boolean premiumF,boolean forbidRightFirstGrapeSevenBar){
         if(pressedIndex<0||pressedIndex>=21||stoppedMask<0||stoppedMask>7||(stoppedMask&reel.bit())!=0)throw new IllegalArgumentException("Invalid STOP conditions");
-        if(premiumF&&role!=DisplayRole.BONUS&&role!=DisplayRole.BONUS_CHERRY&&role!=DisplayRole.PIERO)throw new IllegalArgumentException("Invalid premium F base");
+        if(premiumF&&role!=DisplayRole.BONUS&&role!=DisplayRole.BONUS_CHERRY&&role!=DisplayRole.PIERO_BONUS)throw new IllegalArgumentException("Invalid premium F base");
         boolean filter=premiumF&&Integer.bitCount(stoppedMask)==1;
         var key=new Key(role,stopped.fixedKey(stoppedMask),reel,filter,forbidRightFirstGrapeSevenBar);
         return cache.computeIfAbsent(key,ignored->choices(role,stoppedMask,stopped,reel,filter,forbidRightFirstGrapeSevenBar))[pressedIndex];
