@@ -39,8 +39,11 @@ public final class SlotScreen extends Screen {
         c.fill(0,0,width,height,color("SCREEN_OUTSIDE"));var v=SlotLayout.Viewport.fit(width,height);
         c.getMatrices().push();c.getMatrices().translate(v.x(),v.y(),0);c.getMatrices().scale((float)v.scale(),(float)v.scale(),1);
         panel(c,SlotLayout.CABINET,color("CABINET_BG"));
-        text(c,"PIRI JUGGLER",960,278,1.8f,true);
-        panel(c,SlotLayout.DATA,color("DISPLAY_BG"));data(c,v.logicalX(mouseX),v.logicalY(mouseY));
+        panel(c,SlotLayout.DATA,color("DISPLAY_BG"));
+        panel(c,SlotLayout.DATA_LEFT,color("DISPLAY_BG"));
+        panel(c,SlotLayout.DATA_RIGHT,color("DISPLAY_BG"));
+        data(c,v.logicalX(mouseX),v.logicalY(mouseY));
+        text(c,"PIRI JUGGLER",960,283,1.35f,true);
         c.fill(670,300,1570,690,color("REEL_SEPARATOR"));
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;c.fill(x,300,x+270,690,color("REEL_BG"));
@@ -64,71 +67,85 @@ public final class SlotScreen extends Screen {
     private String errorText(){if(view.error().isEmpty())return "";try{return ErrorMessages.japanese(ErrorCode.valueOf(view.error()));}catch(IllegalArgumentException e){return view.error();}}
     private void data(DrawContext c,double mx,double my){
         JsonObject data=view.dataLamp();
-        String[] labels={"台番","現在G","BIG","REG","TOTAL G","差枚","MAX差枚"};
-        String[] fields={null,"currentGames","bigCount","regCount","totalGames","todayDifference","todayMaxDifference"};
-        int start=235,cell=207,top=28,bottom=122;
-        c.fill(226,bottom,1694,bottom+3,color("CABINET_EDGE"));
-        for(int i=0;i<labels.length;i++){
-            int left=start+i*cell,center=left+94;
-            if(i>0)c.fill(left-10,top,left-7,bottom-7,color("BUTTON_METAL_DARK"));
-            int tint=i==2?color("DISPLAY_BIG"):i==3?color("DISPLAY_REG"):color("DISPLAY_WHITE");
-            text(c,labels[i],center,28,2.0f,true,tint);
-            String number=i==0?Integer.toString(view.machineId()):data==null||!data.has(fields[i])?null:data.get(fields[i]).getAsString();
-            if(number==null)text(c,"-",center,67,3.1f,true,tint);else digitsFitCentered(c,number,center,60,184,1.02f,tint);
-        }
-        if(data==null)return;
+        long total=data!=null&&data.has("totalGames")?data.get("totalGames").getAsLong():0;
+        long big=data!=null&&data.has("bigCount")?data.get("bigCount").getAsLong():0;
+        long reg=data!=null&&data.has("regCount")?data.get("regCount").getAsLong():0;
+        long current=data!=null&&data.has("currentGames")?data.get("currentGames").getAsLong():0;
+        long diff=data!=null&&data.has("todayDifference")?data.get("todayDifference").getAsLong():0;
+        long maxDiff=data!=null&&data.has("todayMaxDifference")?data.get("todayMaxDifference").getAsLong():0;
 
-        c.fill(714,138,717,254,color("BUTTON_METAL_DARK"));
-        c.fill(1260,138,1263,254,color("BUTTON_METAL_DARK"));
+        // Machine number is intentionally de-emphasized.
+        text(c,"台番 "+view.machineId(),38,27,1.55f,false,color("DISPLAY_WHITE"));
 
-        text(c,"差枚グラフ",235,138,1.65f,false,color("DISPLAY_WHITE"));
-        drawGraph(c,data.has("graph")?data.getAsJsonArray("graph"):new JsonArray(),235,168,460,76);
+        // Top-left: the graph gets a genuinely wide landscape area.
+        text(c,"差枚グラフ",55,55,2.15f,false,color("DISPLAY_WHITE"));
+        JsonArray graph=data!=null&&data.has("graph")?data.getAsJsonArray("graph"):new JsonArray();
+        drawGraph(c,graph,55,92,825,142,total);
+        text(c,"1G",55,241,1.20f,false,color("DISPLAY_WHITE"));
+        text(c,total>0?total+"G":"-",880,241,1.20f,true,color("DISPLAY_WHITE"));
 
-        text(c,"ボーナス履歴",742,138,1.65f,false,color("DISPLAY_WHITE"));
-        text(c,"新 → 古",1220,141,1.05f,true,color("DISPLAY_WHITE"));
-        JsonArray history=data.has("history")?data.getAsJsonArray("history"):new JsonArray();
+        // Top-right: only the important headline values, with labels and digits both large enough to read.
+        drawMetric(c,"現在G",Long.toString(current),1060,43,245,color("DISPLAY_WHITE"));
+        drawMetric(c,"トータルG",Long.toString(total),1370,43,245,color("DISPLAY_WHITE"));
+        drawMetric(c,"最大差枚",signed(maxDiff),1680,43,245,color("DISPLAY_WHITE"));
+        drawMetric(c,"BIG回数",Long.toString(big),1210,145,255,color("DISPLAY_BIG"));
+        drawMetric(c,"REG回数",Long.toString(reg),1540,145,255,color("DISPLAY_REG"));
+
+        // Left side: current difference and the ten newest bonus-history entries.
+        text(c,"差枚",42,345,2.05f,false,color("DISPLAY_WHITE"));
+        digitsFitCentered(c,signed(diff),156,382,220,1.05f,diff>=0?color("DISPLAY_GREEN"):color("DISPLAY_WHITE"));
+        c.fill(38,433,274,436,color("BUTTON_METAL_DARK"));
+        text(c,"ボーナス履歴",42,454,1.90f,false,color("DISPLAY_WHITE"));
+        text(c,"新しい順",42,482,1.20f,false,color("DISPLAY_WHITE"));
+        JsonArray history=data!=null&&data.has("history")?data.getAsJsonArray("history"):new JsonArray();
         String hoverTime=null;
         for(int i=0;i<Math.min(10,history.size());i++){
-            JsonObject item=history.get(i).getAsJsonObject();int col=i%5,row=i/5,x=745+col*98,y=177+row*39;String type=item.get("type").getAsString();
+            JsonObject item=history.get(i).getAsJsonObject();String type=item.get("type").getAsString();int y=510+i*22;
             int tint="BIG".equals(type)?color("DISPLAY_BIG"):color("DISPLAY_REG");
-            text(c,"BIG".equals(type)?"B":"R",x,y,1.45f,false,tint);
-            text(c,item.get("games").getAsString()+"G",x+23,y,1.35f,false,color("DISPLAY_WHITE"));
-            if(mx>=x-4&&mx<x+92&&my>=y-4&&my<y+29&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
+            text(c,type,44,y,1.42f,false,tint);
+            text(c,item.get("games").getAsString()+"G",139,y,1.42f,false,color("DISPLAY_WHITE"));
+            if(mx>=34&&mx<278&&my>=y-3&&my<y+19&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
         }
-        if(hoverTime!=null)text(c,hoverTime,995,248,.95f,true,color("DISPLAY_WHITE"));
+        if(hoverTime!=null)text(c,hoverTime,156,735,1.00f,true,color("DISPLAY_WHITE"));
 
-        long total=data.has("totalGames")?data.get("totalGames").getAsLong():0;
-        long big=data.has("bigCount")?data.get("bigCount").getAsLong():0;
-        long reg=data.has("regCount")?data.get("regCount").getAsLong():0;
-        text(c,"実績確率",1290,138,1.65f,false,color("DISPLAY_WHITE"));
-        text(c,"BIG",1290,170,1.35f,false,color("DISPLAY_BIG"));
-        text(c,probability(total,big),1665,170,1.75f,true,color("DISPLAY_BIG"));
-        text(c,"REG",1290,199,1.35f,false,color("DISPLAY_REG"));
-        text(c,probability(total,reg),1665,199,1.75f,true,color("DISPLAY_REG"));
-        text(c,"合算",1290,228,1.35f,false,color("DISPLAY_WHITE"));
-        text(c,probability(total,big+reg),1665,228,1.75f,true,color("DISPLAY_WHITE"));
-
-        if(data.has("piriChain")&&data.get("piriChain").getAsBoolean()){
+        // Right side: observed probabilities, then the Piri-chain challenge state below them.
+        text(c,"実績確率",1672,345,1.90f,false,color("DISPLAY_WHITE"));
+        drawProbability(c,"BIG確率",probability(total,big),1672,385,color("DISPLAY_BIG"));
+        drawProbability(c,"REG確率",probability(total,reg),1672,455,color("DISPLAY_REG"));
+        drawProbability(c,"合算確率",probability(total,big+reg),1672,525,color("DISPLAY_WHITE"));
+        c.fill(1666,590,1882,593,color("BUTTON_METAL_DARK"));
+        if(data!=null&&data.has("piriChain")&&data.get("piriChain").getAsBoolean()){
             int chain=data.has("piriChainCount")?data.get("piriChainCount").getAsInt():1;
-            rounded(c,1286,245,394,22,7,color("DISPLAY_GREEN"));
-            rounded(c,1289,248,388,16,5,color("DISPLAY_BG"));
-            text(c,"ピリ連中",1365,248,1.35f,true,color("DISPLAY_WHITE"));
-            text(c,chain+"連目",1600,244,1.9f,true,color("DISPLAY_GREEN"));
+            rounded(c,1664,615,220,102,12,color("DISPLAY_GREEN"));
+            rounded(c,1669,620,210,92,9,color("DISPLAY_BG"));
+            text(c,"ピリ連チャレンジ中",1774,632,1.55f,true,color("DISPLAY_WHITE"));
+            text(c,chain+"連目",1774,671,2.75f,true,color("DISPLAY_GREEN"));
         }
     }
+    private void drawMetric(DrawContext c,String label,String value,float center,float y,float maxWidth,int tint){
+        text(c,label,center,y,1.95f,true,tint);
+        digitsFitCentered(c,value,center,y+34,maxWidth,1.10f,tint);
+    }
+    private void drawProbability(DrawContext c,String label,String value,float x,float y,int tint){
+        text(c,label,x,y,1.55f,false,tint);
+        text(c,value,1776,y+27,2.10f,true,tint);
+    }
+    private static String signed(long value){return value>0?"+"+value:Long.toString(value);}
     private static String probability(long games,long hits){
         if(games<=0||hits<=0)return "---";
         return "1/"+Math.max(1,Math.round(games/(double)hits));
     }
-    private void drawGraph(DrawContext c,JsonArray graph,float x,float y,float w,float h){
-        if(graph.isEmpty())return;
-        long min=Long.MAX_VALUE,max=Long.MIN_VALUE,minX=Long.MAX_VALUE,maxX=Long.MIN_VALUE;
-        for(JsonElement element:graph){JsonObject p=element.getAsJsonObject();long px=p.get("game").getAsLong(),py=p.get("difference").getAsLong();min=Math.min(min,py);max=Math.max(max,py);minX=Math.min(minX,px);maxX=Math.max(maxX,px);}
+    private void drawGraph(DrawContext c,JsonArray graph,float x,float y,float w,float h,long totalGames){
+        if(graph.isEmpty()||totalGames<1)return;
+        long min=Long.MAX_VALUE,max=Long.MIN_VALUE;
+        for(JsonElement element:graph){JsonObject p=element.getAsJsonObject();long px=p.get("game").getAsLong();if(px<1||px>totalGames)continue;long py=p.get("difference").getAsLong();min=Math.min(min,py);max=Math.max(max,py);}
+        if(min==Long.MAX_VALUE)return;
         double low,high;if(min==max){low=min-200.0;high=max+200.0;}else if(max-min<400){double mid=(min+max)/2.0;low=mid-200;high=mid+200;}else{double pad=(max-min)*.05;low=min-pad;high=max+pad;}
         if(low<=0&&high>=0){float zy=(float)(y+h-(0-low)/(high-low)*h);c.fill((int)x,(int)zy,(int)(x+w),(int)Math.ceil(zy+1),color("GRAPH_ZERO"));}
         float lastX=0,lastY=0;boolean first=true;
-        for(JsonElement element:graph){JsonObject p=element.getAsJsonObject();long px=p.get("game").getAsLong(),py=p.get("difference").getAsLong();float sx=maxX==minX?x:(float)(x+(px-minX)/(double)(maxX-minX)*w);float sy=(float)(y+h-(py-low)/(high-low)*h);
-            if(first){c.fill((int)sx-1,(int)sy-1,(int)sx+2,(int)sy+2,color("GRAPH_LINE"));first=false;}else line(c,lastX,lastY,sx,sy,1.5f,color("GRAPH_LINE"));lastX=sx;lastY=sy;}
+        for(JsonElement element:graph){JsonObject p=element.getAsJsonObject();long px=p.get("game").getAsLong();if(px<1||px>totalGames)continue;long py=p.get("difference").getAsLong();
+            float sx=totalGames<=1?x+w:(float)(x+(px-1)/(double)(totalGames-1)*w);float sy=(float)(y+h-(py-low)/(high-low)*h);
+            if(first){c.fill((int)sx-2,(int)sy-2,(int)sx+3,(int)sy+3,color("GRAPH_LINE"));first=false;}else line(c,lastX,lastY,sx,sy,2.0f,color("GRAPH_LINE"));lastX=sx;lastY=sy;}
     }
     private void drawControl(DrawContext c,SlotLayout.Control control,double mx,double my){
         var r=control.rect();boolean hover=r.contains(mx,my),down=pressed.equals(control.name());
