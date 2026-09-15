@@ -1,5 +1,6 @@
 package jp.pirijuggler.fabric.ui;
 
+import com.google.gson.*;
 import com.mojang.blaze3d.systems.RenderSystem;
 import jp.pirijuggler.common.protocol.*;
 import jp.pirijuggler.fabric.ErrorMessages;
@@ -9,9 +10,12 @@ import net.minecraft.client.render.*;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import static jp.pirijuggler.fabric.ui.UiConstants.color;
 
 public final class SlotScreen extends Screen {
+    private static final DateTimeFormatter HISTORY_TIME=DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("Asia/Tokyo"));
     private final SlotViewState view;private final SlotInput input;private String pressed="";private long leverAt=Long.MIN_VALUE;
     public SlotScreen(SlotViewState view,SlotInput input){super(Text.literal("Piri Juggler"));this.view=view;this.input=input;}
     @Override public boolean shouldPause(){return false;}
@@ -36,11 +40,10 @@ public final class SlotScreen extends Screen {
         c.getMatrices().push();c.getMatrices().translate(v.x(),v.y(),0);c.getMatrices().scale((float)v.scale(),(float)v.scale(),1);
         panel(c,SlotLayout.CABINET,color("CABINET_BG"));
         text(c,"PIRI JUGGLER",960,238,3,true);
-        panel(c,SlotLayout.DATA,color("DISPLAY_BG"));data(c);
+        panel(c,SlotLayout.DATA,color("DISPLAY_BG"));data(c,v.logicalX(mouseX),v.logicalY(mouseY));
         c.fill(670,300,1570,690,color("REEL_SEPARATOR"));
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;c.fill(x,300,x+270,690,color("REEL_BG"));
-            // DrawContext's scissor coordinates are GUI coordinates, independent of its matrix.
             var clip=v.clip(new SlotLayout.Rect(x,300,270,390));c.enableScissor(clip.x(),clip.y(),clip.x()+clip.w(),clip.y()+clip.h());
             double phase=view.phase(reel);int middle=(int)Math.floor(phase);double fraction=phase-middle;
             for(int row=-2;row<=2;row++)texture(c,"symbols/"+UiConstants.symbol(reel,middle+row)+".png",x+(270-130)/2.0,430+(row-fraction)*130,130,130,256,256,1);
@@ -59,11 +62,41 @@ public final class SlotScreen extends Screen {
         c.getMatrices().pop();
     }
     private String errorText(){if(view.error().isEmpty())return "";try{return ErrorMessages.japanese(ErrorCode.valueOf(view.error()));}catch(IllegalArgumentException e){return view.error();}}
-    private void data(DrawContext c){
-        text(c,"No.",356,42,2,false);digits(c,Integer.toString(view.machineId()),356,90,.65f,color("DISPLAY_WHITE"));
-        String[] fields={"currentGames","bigCount","regCount","totalGames"},labels={"G","BIG","REG","TOTAL G"};
-        var data=view.dataLamp();
-        for(int i=0;i<4;i++){int x=555+i*240;text(c,labels[i],x,42,2,false);String number=data==null||!data.has(fields[i])?"-":data.get(fields[i]).getAsString();digits(c,number,x,90,.75f,color(i==1?"DISPLAY_BIG":i==2?"DISPLAY_REG":"DISPLAY_WHITE"));}
+    private void data(DrawContext c,double mx,double my){
+        JsonObject data=view.dataLamp();
+        String[] labels={"No.","G","BIG","REG","TOTAL G","DIFF","MAX"};
+        String[] fields={null,"currentGames","bigCount","regCount","totalGames","todayDifference","todayMaxDifference"};
+        int start=350,cell=174;
+        for(int i=0;i<labels.length;i++){
+            int left=start+i*cell,right=left+156;text(c,labels[i],left,31,1.35f,false);
+            String number=i==0?Integer.toString(view.machineId()):data==null||!data.has(fields[i])?null:data.get(fields[i]).getAsString();
+            int tint=i==2?color("DISPLAY_BIG"):i==3?color("DISPLAY_REG"):color("DISPLAY_WHITE");
+            if(number==null)text(c,"-",right-12,62,2,false);else digitsFit(c,number,right,55,150,.42f,tint);
+        }
+        if(data==null)return;
+
+        text(c,"DIFF GRAPH",350,105,1.05f,false);drawGraph(c,data.has("graph")?data.getAsJsonArray("graph"):new JsonArray(),350,120,400,68);
+        text(c,"HISTORY",775,105,1.05f,false);
+        JsonArray history=data.has("history")?data.getAsJsonArray("history"):new JsonArray();
+        String hoverTime=null;
+        for(int i=0;i<Math.min(10,history.size());i++){
+            JsonObject item=history.get(i).getAsJsonObject();int x=775+i*54;String type=item.get("type").getAsString();
+            int tint="BIG".equals(type)?color("DISPLAY_BIG"):color("DISPLAY_REG");text(c,"BIG".equals(type)?"B":"R",x+24,120,1.1f,true);
+            digitsFit(c,item.get("games").getAsString(),x+50,143,48,.23f,tint);
+            if(mx>=x&&mx<x+52&&my>=116&&my<184&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
+        }
+        if(hoverTime!=null)text(c,hoverTime,1045,188,.9f,true);
+        if(data.has("piriChain")&&data.get("piriChain").getAsBoolean())text(c,"ピリ連チャレンジ中",1460,144,1.1f,true,color("DISPLAY_GREEN"));
+    }
+    private void drawGraph(DrawContext c,JsonArray graph,float x,float y,float w,float h){
+        if(graph.isEmpty())return;
+        long min=Long.MAX_VALUE,max=Long.MIN_VALUE,minX=Long.MAX_VALUE,maxX=Long.MIN_VALUE;
+        for(JsonElement element:graph){JsonObject p=element.getAsJsonObject();long px=p.get("game").getAsLong(),py=p.get("difference").getAsLong();min=Math.min(min,py);max=Math.max(max,py);minX=Math.min(minX,px);maxX=Math.max(maxX,px);}
+        double low,high;if(min==max){low=min-200.0;high=max+200.0;}else if(max-min<400){double mid=(min+max)/2.0;low=mid-200;high=mid+200;}else{double pad=(max-min)*.05;low=min-pad;high=max+pad;}
+        if(low<=0&&high>=0){float zy=(float)(y+h-(0-low)/(high-low)*h);c.fill((int)x,(int)zy,(int)(x+w),(int)Math.ceil(zy+1),color("GRAPH_ZERO"));}
+        float lastX=0,lastY=0;boolean first=true;
+        for(JsonElement element:graph){JsonObject p=element.getAsJsonObject();long px=p.get("game").getAsLong(),py=p.get("difference").getAsLong();float sx=maxX==minX?x:(float)(x+(px-minX)/(double)(maxX-minX)*w);float sy=(float)(y+h-(py-low)/(high-low)*h);
+            if(first){c.fill((int)sx-1,(int)sy-1,(int)sx+2,(int)sy+2,color("GRAPH_LINE"));first=false;}else line(c,lastX,lastY,sx,sy,1.5f,color("GRAPH_LINE"));lastX=sx;lastY=sy;}
     }
     private void drawControl(DrawContext c,SlotLayout.Control control,double mx,double my){
         var r=control.rect();boolean hover=r.contains(mx,my),down=pressed.equals(control.name());
@@ -83,9 +116,13 @@ public final class SlotScreen extends Screen {
             text(c,control.name(),r.x()+r.w()/2,r.y()+r.h()/2-9,control.name().equals("CASH OUT")?1.5f:2,true);
         }
     }
-    private void text(DrawContext c,String value,float x,float y,float scale,boolean centered){
+    private void text(DrawContext c,String value,float x,float y,float scale,boolean centered){text(c,value,x,y,scale,centered,color("TEXT_MAIN"));}
+    private void text(DrawContext c,String value,float x,float y,float scale,boolean centered,int tint){
         c.getMatrices().push();c.getMatrices().translate(x,y,0);c.getMatrices().scale(scale,scale,1);int left=centered?-textRenderer.getWidth(value)/2:0;
-        c.drawText(textRenderer,value,left+1,1,color("TEXT_SHADOW"),false);c.drawText(textRenderer,value,left,0,color("TEXT_MAIN"),false);c.getMatrices().pop();
+        c.drawText(textRenderer,value,left+1,1,color("TEXT_SHADOW"),false);c.drawText(textRenderer,value,left,0,tint,false);c.getMatrices().pop();
+    }
+    private static void digitsFit(DrawContext c,String value,float right,float y,float maxWidth,float baseScale,int active){
+        float logical=value.isEmpty()?0:(value.length()-1)*48+40;float scale=baseScale;if(logical>0){float fit=maxWidth/logical;if(fit<scale)scale=Math.max(.45f,fit);if(logical*scale>maxWidth)scale=fit;}float x=right-logical*scale;digits(c,value,x,y,scale,active);
     }
     private static void digits(DrawContext c,String value,float x,float y,float scale,int active){
         c.getMatrices().push();c.getMatrices().translate(x,y,0);c.getMatrices().scale(scale,scale,1);
@@ -94,6 +131,11 @@ public final class SlotScreen extends Screen {
     private void texture(DrawContext c,String path,double x,double y,int w,int h,int tw,int th,float alpha){
         Identifier id=Identifier.of("piri","textures/"+path);client.getTextureManager().bindTexture(id);client.getTextureManager().getTexture(id).setFilter(true,false);
         c.getMatrices().push();c.getMatrices().translate(x,y,0);c.getMatrices().scale(w/(float)tw,h/(float)th,1);c.setShaderColor(1,1,1,alpha);c.drawTexture(id,0,0,0,0,tw,th,tw,th);c.setShaderColor(1,1,1,1);c.getMatrices().pop();
+    }
+    private static void line(DrawContext c,float x1,float y1,float x2,float y2,float width,int tint){
+        float dx=x2-x1,dy=y2-y1,len=(float)Math.sqrt(dx*dx+dy*dy);if(len==0){c.fill((int)x1-1,(int)y1-1,(int)x1+2,(int)y1+2,tint);return;}float nx=-dy/len*width/2,ny=dx/len*width/2;
+        c.draw();RenderSystem.enableBlend();RenderSystem.defaultBlendFunc();RenderSystem.disableCull();RenderSystem.setShader(GameRenderer::getPositionColorProgram);var matrix=c.getMatrices().peek().getPositionMatrix();
+        var b=Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP,VertexFormats.POSITION_COLOR);b.vertex(matrix,x1+nx,y1+ny,0).color(tint);b.vertex(matrix,x1-nx,y1-ny,0).color(tint);b.vertex(matrix,x2+nx,y2+ny,0).color(tint);b.vertex(matrix,x2-nx,y2-ny,0).color(tint);BufferRenderer.drawWithGlobalProgram(b.end());RenderSystem.enableCull();RenderSystem.disableBlend();
     }
     private static void panel(DrawContext c,SlotLayout.Rect r,int fill){rounded(c,r.x(),r.y(),r.w(),r.h(),18,color("CABINET_EDGE"));rounded(c,r.x()+4,r.y()+4,r.w()-8,r.h()-8,12,fill);}
     private static void rounded(DrawContext c,float x,float y,float w,float h,float radius,int tint){
