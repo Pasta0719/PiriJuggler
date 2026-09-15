@@ -34,19 +34,22 @@ class StopSolverTest {
     @Test void allOrdersAndAllPressedSequencesCompleteIncludingPremiumF(){
         var report=ReelVerification.verify(SOLVER);assertEquals(555660,report.allSequences());assertEquals(166698,report.premiumFSequences());assertEquals(7938,report.premiumFSecondChecks());
     }
-    @Test void stopChoicesStayDeterministicAndOnlyTradeAtMostTwoFramesForLineVariety(){
+    @Test void stopChoicesPreferNaturalOneToFourFramesAndFallBackLongOnlyWhenRequired(){
         for(var role:DisplayRole.values()){
             var seen=new HashSet<Integer>();
             for(var e:CATALOGUE.candidates(role))for(int mask=0;mask<7;mask++)if(seen.add(e.stops().fixedKey(mask))){
                 final int fixedMask=mask;var candidates=CATALOGUE.candidates(role,mask,e.stops());
                 for(var reel:Reel.values())if((mask&reel.bit())==0)for(int p=0;p<21;p++){
-                    final int press=p;int minSlip=candidates.stream().mapToInt(c->ReelMotion.slip(c.stops().stop(reel),press)).min().orElseThrow();
+                    final int press=p;
+                    int minSlip=candidates.stream().mapToInt(c->ReelMotion.slip(c.stops().stop(reel),press)).min().orElseThrow();
+                    boolean hasNatural=candidates.stream().anyMatch(c->{int slip=ReelMotion.slip(c.stops().stop(reel),press);return slip>=1&&slip<=4;});
                     var choice=SOLVER.choose(role,fixedMask,e.stops(),reel,p,false);
                     assertTrue(candidates.stream().anyMatch(c->c.stops().equals(choice.candidate())));
                     assertSame(choice,SOLVER.choose(role,fixedMask,e.stops(),reel,p,false));
-                    if(DIVERSIFIED.contains(role)&&minSlip>0){assertTrue(choice.slip()>=minSlip&&choice.slip()<=Math.min(20,minSlip+2),role+" min="+minSlip+" actual="+choice.slip());}
-                    else assertEquals(minSlip,choice.slip(),role+" press="+p);
-                    if(minSlip==0)assertEquals(0,choice.slip(),"Exact eye-stop must remain exact");
+                    if(!DIVERSIFIED.contains(role))assertEquals(minSlip,choice.slip(),role+" press="+p);
+                    else if(minSlip==0)assertEquals(0,choice.slip(),"Exact eye-stop must remain exact");
+                    else if(hasNatural)assertTrue(choice.slip()>=1&&choice.slip()<=4,role+" should stay in natural pull-in range");
+                    else assertTrue(choice.slip()>=minSlip&&choice.slip()<=Math.min(20,minSlip+2),role+" should use required long fallback");
                 }
             }
         }
