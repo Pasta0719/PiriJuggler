@@ -20,7 +20,7 @@ public final class StopSolver {
     public StopCatalogue catalogue(){return catalogue;}
     public Choice choose(DisplayRole role,int stoppedMask,StopTriplet stopped,Reel reel,int pressedIndex,boolean premiumF){
         if(pressedIndex<0||pressedIndex>=21||stoppedMask<0||stoppedMask>7||(stoppedMask&reel.bit())!=0)throw new IllegalArgumentException("Invalid STOP conditions");
-        if(premiumF&&role!=DisplayRole.BONUS&&role!=DisplayRole.CHERRY&&role!=DisplayRole.PIERO)throw new IllegalArgumentException("Invalid premium F base");
+        if(premiumF&&role!=DisplayRole.BONUS&&role!=DisplayRole.BONUS_CHERRY&&role!=DisplayRole.PIERO)throw new IllegalArgumentException("Invalid premium F base");
         boolean filter=premiumF&&Integer.bitCount(stoppedMask)==1;
         var key=new Key(role,stopped.fixedKey(stoppedMask),reel,filter);
         return cache.computeIfAbsent(key,ignored->choices(role,stoppedMask,stopped,reel,filter))[pressedIndex];
