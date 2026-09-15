@@ -43,7 +43,6 @@ public final class SlotScreen extends Screen {
         panel(c,SlotLayout.DATA_LEFT,color("DISPLAY_BG"));
         panel(c,SlotLayout.DATA_RIGHT,color("DISPLAY_BG"));
         data(c,v.logicalX(mouseX),v.logicalY(mouseY));
-        text(c,"PIRI JUGGLER",960,283,1.35f,true);
         c.fill(670,300,1570,690,color("REEL_SEPARATOR"));
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;c.fill(x,300,x+270,690,color("REEL_BG"));
@@ -90,19 +89,19 @@ public final class SlotScreen extends Screen {
 
         text(c,"DIFF",42,345,1.65f,false,color("DISPLAY_WHITE"));
         digitsFitCentered(c,signed(diff),156,382,188,.78f,diff>=0?color("DISPLAY_GREEN"):color("DISPLAY_WHITE"));
-        c.fill(38,433,274,436,color("BUTTON_METAL_DARK"));
-        text(c,"BONUS HISTORY",42,454,1.55f,false,color("DISPLAY_WHITE"));
-        text(c,"NEWEST",42,481,1.05f,false,color("DISPLAY_WHITE"));
+        c.fill(38,448,274,451,color("BUTTON_METAL_DARK"));
+        text(c,"BONUS HISTORY",42,465,1.55f,false,color("DISPLAY_WHITE"));
+        text(c,"NEWEST",42,492,1.05f,false,color("DISPLAY_WHITE"));
         JsonArray history=data!=null&&data.has("history")?data.getAsJsonArray("history"):new JsonArray();
         String hoverTime=null;
         for(int i=0;i<Math.min(10,history.size());i++){
-            JsonObject item=history.get(i).getAsJsonObject();String type=item.get("type").getAsString();int y=510+i*22;
+            JsonObject item=history.get(i).getAsJsonObject();String type=item.get("type").getAsString();int y=521+i*22;
             int tint="BIG".equals(type)?color("DISPLAY_BIG"):color("DISPLAY_REG");
             text(c,type,44,y,1.22f,false,tint);
             text(c,item.get("games").getAsString()+"G",139,y,1.22f,false,color("DISPLAY_WHITE"));
             if(mx>=34&&mx<278&&my>=y-3&&my<y+19&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
         }
-        if(hoverTime!=null)text(c,hoverTime,156,735,.90f,true,color("DISPLAY_WHITE"));
+        if(hoverTime!=null)text(c,hoverTime,156,746,.90f,true,color("DISPLAY_WHITE"));
 
         text(c,"ODDS",1672,345,1.65f,false,color("DISPLAY_WHITE"));
         drawProbability(c,"BIG ODDS",probability(total,big),1672,385,color("DISPLAY_BIG"));
