@@ -21,10 +21,14 @@
 - graph/LTTB
 - piri-chain
 - data lamp UI
+- public remote machine data: `/piri data` で全稼働台の当日実績一覧、`/piri data <machineId>` で当日実績・直近bonus history詳細をチャット表示
+- public remote dataに設定値そのものは表示しない
 
 ## 追加完了条件
 - current period only
 - 100/101 boundary
+- `/piri data` は台へ着席・物理アクセスせず一般プレイヤーが使用可能
+- `/piri data <machineId>` は total/current G、BIG/REG/合算実績確率、差枚、最大差枚、直近bonus historyを表示
 - Phase09 runtime acceptance全部PASS
 
 
