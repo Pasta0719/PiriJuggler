@@ -51,14 +51,15 @@ class StopSolverTest {
         for(var e:CATALOGUE.candidates(DisplayRole.CHERRY))assertEquals(0,StopCatalogue.bonusSymbolPairLines(e.stops()),e.stops().toString());
     }
     @Test void rightFirstGrapeSevenBarIsReservedForGrapeOrBonus(){
+        assertEquals(1,java.util.stream.IntStream.range(0,21).filter(StopCatalogue::isRightGrapeSevenBarStop).count());
         assertTrue(StopCatalogue.isRightGrapeSevenBarStop(3));
-        for(int stop=0,count=0;stop<21;stop++)if(StopCatalogue.isRightGrapeSevenBarStop(stop))count++;
         var blank=new StopTriplet(0,0,0);
-        var forbidden=EnumSet.of(DisplayRole.BELL,DisplayRole.PIERO,DisplayRole.REPLAY,DisplayRole.CHERRY,DisplayRole.MISS,DisplayRole.PREMIUM_B);
+        var forbidden=EnumSet.of(DisplayRole.BELL,DisplayRole.PIERO,DisplayRole.REPLAY,DisplayRole.CHERRY,DisplayRole.MISS);
         for(var role:forbidden)for(int press=0;press<21;press++)assertFalse(StopCatalogue.isRightGrapeSevenBarStop(SOLVER.choose(role,0,blank,Reel.RIGHT,press,false,true).stopIndex()),role+" press="+press);
         assertEquals(3,SOLVER.choose(DisplayRole.GRAPE,0,blank,Reel.RIGHT,3,false,false).stopIndex());
         assertEquals(3,SOLVER.choose(DisplayRole.BONUS,0,blank,Reel.RIGHT,3,false,false).stopIndex());
         assertEquals(3,SOLVER.choose(DisplayRole.BONUS_CHERRY,0,blank,Reel.RIGHT,3,false,false).stopIndex());
+        assertEquals(3,SOLVER.choose(DisplayRole.PREMIUM_B,0,blank,Reel.RIGHT,3,false,false).stopIndex());
     }
     @Test void stopChoicesPreferTheNearestNaturalStopAndFallBackLongOnlyWhenRequired(){
         for(var role:DisplayRole.values()){
