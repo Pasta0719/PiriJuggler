@@ -198,7 +198,14 @@ public final class PrizeService implements Listener {
         } else {
             plan = singlePlan(requested, 1);
         }
-        if (plan.empty()) { pending.remove(owner); player.sendMessage("NOT_ENOUGH_MEDALS"); return; }
+        if (plan.empty()) {
+            pending.remove(owner);
+            int minimumCost = requested == null
+                    ? Math.min(defs.get(PrizeItem.Type.SMALL).medalCost(), Math.min(defs.get(PrizeItem.Type.MEDIUM).medalCost(), defs.get(PrizeItem.Type.LARGE).medalCost()))
+                    : defs.get(requested).medalCost();
+            player.sendMessage(total >= minimumCost ? "INVENTORY_FULL" : "NOT_ENOUGH_MEDALS");
+            return;
+        }
         int cost = plan.totalCost(defs);
         if (cost > total) { pending.remove(owner); player.sendMessage("NOT_ENOUGH_MEDALS"); return; }
         if (!fitsAfterMedals(player, held, plan, total - cost)) { pending.remove(owner); player.sendMessage("INVENTORY_FULL"); return; }
@@ -213,34 +220,57 @@ public final class PrizeService implements Listener {
         };
     }
 
-    /** Exact search over bounded inventory capacity. Tie order: large, then medium, then small. */
+    /** Exact bounded search over shared inventory slots. Tie order: large, then medium, then small. */
     private PrizePlan maximumPlan(Player player, List<Held> held, int medals) {
+        PrizePlan best = maximumPlanForCapacity(prizeCapacity(player, held, true), medals);
+
+        // Spending every medal removes the medal token completely, so its slot is also available for prizes.
+        PrizePlan exact = maximumPlanForCapacity(prizeCapacity(player, held, false), medals);
+        if (exact.totalCost(defs) == medals && betterPlan(exact, best)) best = exact;
+        return best;
+    }
+
+    /**
+     * Search by assigning the small number of empty inventory slots to prize types first.
+     * Existing partial stacks are free capacity and do not consume an empty slot.
+     * Phase08 costs are 50/200/450, so for a fixed large count taking the maximum medium
+     * count cannot reduce spend; remaining medals are then filled with small prizes.
+     */
+    private PrizePlan maximumPlanForCapacity(PrizeCapacity capacity, int medals) {
         PrizePlan best = new PrizePlan(0, 0, 0);
-        int bestCost = 0;
-        int largeCost = defs.get(PrizeItem.Type.LARGE).medalCost();
-        int mediumCost = defs.get(PrizeItem.Type.MEDIUM).medalCost();
         int smallCost = defs.get(PrizeItem.Type.SMALL).medalCost();
-        PrizeCapacity withRemainder = prizeCapacity(player, held, true);
-        PrizeCapacity withoutRemainder = prizeCapacity(player, held, false);
-        int maxLarge = Math.min(medals / largeCost, withoutRemainder.maxCount(PrizeItem.Type.LARGE));
-        for (int large = maxLarge; large >= 0; large--) {
-            int remainingAfterLarge = medals - large * largeCost;
-            int maxMedium = Math.min(remainingAfterLarge / mediumCost, withoutRemainder.maxCount(PrizeItem.Type.MEDIUM));
-            for (int medium = maxMedium; medium >= 0; medium--) {
-                int rest = remainingAfterLarge - medium * mediumCost;
-                int small = Math.min(rest / smallCost, withoutRemainder.maxCount(PrizeItem.Type.SMALL));
-                int cost = large * largeCost + medium * mediumCost + small * smallCost;
-                if (cost < bestCost) continue;
-                PrizePlan candidate = new PrizePlan(small, medium, large);
-                PrizeCapacity capacity = cost == medals ? withoutRemainder : withRemainder;
-                if (!capacity.fits(candidate)) continue;
-                if (cost > bestCost || betterTie(candidate, best)) {
-                    best = candidate;
-                    bestCost = cost;
+        int mediumCost = defs.get(PrizeItem.Type.MEDIUM).medalCost();
+        int largeCost = defs.get(PrizeItem.Type.LARGE).medalCost();
+        if (smallCost <= 0 || mediumCost <= 0 || largeCost <= 0 || mediumCost % smallCost != 0) {
+            throw new IllegalStateException("INVALID_PRIZE_CONFIG");
+        }
+
+        int empty = capacity.emptySlots();
+        for (int largeSlots = 0; largeSlots <= empty; largeSlots++) {
+            for (int mediumSlots = 0; mediumSlots <= empty - largeSlots; mediumSlots++) {
+                int smallSlots = empty - largeSlots - mediumSlots;
+                int maxLarge = Math.addExact(capacity.largeRoom(), Math.multiplyExact(largeSlots, 64));
+                int maxMedium = Math.addExact(capacity.mediumRoom(), Math.multiplyExact(mediumSlots, 64));
+                int maxSmall = Math.addExact(capacity.smallRoom(), Math.multiplyExact(smallSlots, 64));
+                int affordableLarge = Math.min(maxLarge, medals / largeCost);
+
+                for (int large = affordableLarge; large >= 0; large--) {
+                    int restAfterLarge = medals - large * largeCost;
+                    int medium = Math.min(maxMedium, restAfterLarge / mediumCost);
+                    int restAfterMedium = restAfterLarge - medium * mediumCost;
+                    int small = Math.min(maxSmall, restAfterMedium / smallCost);
+                    PrizePlan candidate = new PrizePlan(small, medium, large);
+                    if (betterPlan(candidate, best)) best = candidate;
                 }
             }
         }
         return best;
+    }
+
+    private boolean betterPlan(PrizePlan candidate, PrizePlan current) {
+        int candidateCost = candidate.totalCost(defs);
+        int currentCost = current.totalCost(defs);
+        return candidateCost > currentCost || (candidateCost == currentCost && betterTie(candidate, current));
     }
 
     private static boolean betterTie(PrizePlan a, PrizePlan b) {
