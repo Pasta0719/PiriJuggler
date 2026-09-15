@@ -7,11 +7,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 class StopSolverTest {
     private static final StopCatalogue CATALOGUE=new StopCatalogue();private static final StopSolver SOLVER=new StopSolver(CATALOGUE);
-    private static final Set<DisplayRole> DIVERSIFIED=EnumSet.of(DisplayRole.GRAPE,DisplayRole.BELL,DisplayRole.PIERO,DisplayRole.REPLAY,DisplayRole.BIG_ENTRY,DisplayRole.REG_ENTRY);
+    private static final Set<DisplayRole> DIVERSIFIED=EnumSet.of(DisplayRole.GRAPE,DisplayRole.BELL,DisplayRole.PIERO,DisplayRole.PIERO_BONUS,DisplayRole.REPLAY,DisplayRole.BIG_ENTRY,DisplayRole.REG_ENTRY);
     @Test void everyTripletAndExactStrictCountsMatchIndependentEnumeration() throws Exception {
         assertEquals(9261,CATALOGUE.evaluations().size());assertEquals(9261,CATALOGUE.evaluations().stream().map(e->e.stops().id()).distinct().count());
         var expected=Map.ofEntries(
-                Map.entry(DisplayRole.GRAPE,750),Map.entry(DisplayRole.BELL,50),Map.entry(DisplayRole.PIERO,20),Map.entry(DisplayRole.REPLAY,525),
+                Map.entry(DisplayRole.GRAPE,750),Map.entry(DisplayRole.BELL,50),Map.entry(DisplayRole.PIERO,20),Map.entry(DisplayRole.PIERO_BONUS,20),Map.entry(DisplayRole.REPLAY,525),
                 Map.entry(DisplayRole.CHERRY,1287),Map.entry(DisplayRole.MISS,5126),Map.entry(DisplayRole.BONUS,124),Map.entry(DisplayRole.BONUS_CHERRY,12),
                 Map.entry(DisplayRole.BIG_ENTRY,10),Map.entry(DisplayRole.REG_ENTRY,10),Map.entry(DisplayRole.PREMIUM_B,758));
         assertEquals(expected,CATALOGUE.counts());
@@ -33,11 +33,11 @@ class StopSolverTest {
         if(noCherry&&wins.isEmpty()&&reach==0)result.add(DisplayRole.MISS);
         if(noCherry&&wins.isEmpty()&&reach==1)result.add(DisplayRole.BONUS);
         if(wins.isEmpty()&&reach==1&&!middle&&(top^bottom))result.add(DisplayRole.BONUS_CHERRY);
-        if(noCherry&&reach==0&&wins.size()==1&&wins.values().iterator().next()==1)result.add(wins.keySet().iterator().next());
+        if(noCherry&&reach==0&&wins.size()==1&&wins.values().iterator().next()==1){DisplayRole win=wins.keySet().iterator().next();result.add(win);if(win==DisplayRole.PIERO)result.add(DisplayRole.PIERO_BONUS);}
         if(wins.isEmpty()&&reach==0){if(!bonusPair&&!middle&&(top^bottom))result.add(DisplayRole.CHERRY);if(middle&&!top&&!bottom)result.add(DisplayRole.PREMIUM_B);}return result;
     }
     @Test void allOrdersAndAllPressedSequencesCompleteIncludingPremiumF(){
-        var report=ReelVerification.verify(SOLVER);assertEquals(611226,report.allSequences());assertEquals(166698,report.premiumFSequences());assertEquals(7938,report.premiumFSecondChecks());
+        var report=ReelVerification.verify(SOLVER);assertEquals(666792,report.allSequences());assertEquals(166698,report.premiumFSequences());assertEquals(7938,report.premiumFSecondChecks());
     }
     @Test void pureBonusAlwaysHasOneReachLineAndNoCherryWhileCherryBonusHasBoth(){
         for(var e:CATALOGUE.candidates(DisplayRole.BONUS)){
@@ -49,6 +49,16 @@ class StopSolverTest {
     }
     @Test void normalCherryNeverLeavesTwoBonusSymbolsOnAnyPayline(){
         for(var e:CATALOGUE.candidates(DisplayRole.CHERRY))assertEquals(0,StopCatalogue.bonusSymbolPairLines(e.stops()),e.stops().toString());
+    }
+    @Test void rightFirstGrapeSevenBarIsReservedForGrapeOrBonus(){
+        assertTrue(StopCatalogue.isRightGrapeSevenBarStop(3));
+        for(int stop=0,count=0;stop<21;stop++)if(StopCatalogue.isRightGrapeSevenBarStop(stop))count++;
+        var blank=new StopTriplet(0,0,0);
+        var forbidden=EnumSet.of(DisplayRole.BELL,DisplayRole.PIERO,DisplayRole.REPLAY,DisplayRole.CHERRY,DisplayRole.MISS,DisplayRole.PREMIUM_B);
+        for(var role:forbidden)for(int press=0;press<21;press++)assertFalse(StopCatalogue.isRightGrapeSevenBarStop(SOLVER.choose(role,0,blank,Reel.RIGHT,press,false,true).stopIndex()),role+" press="+press);
+        assertEquals(3,SOLVER.choose(DisplayRole.GRAPE,0,blank,Reel.RIGHT,3,false,false).stopIndex());
+        assertEquals(3,SOLVER.choose(DisplayRole.BONUS,0,blank,Reel.RIGHT,3,false,false).stopIndex());
+        assertEquals(3,SOLVER.choose(DisplayRole.BONUS_CHERRY,0,blank,Reel.RIGHT,3,false,false).stopIndex());
     }
     @Test void stopChoicesPreferTheNearestNaturalStopAndFallBackLongOnlyWhenRequired(){
         for(var role:DisplayRole.values()){
@@ -98,7 +108,7 @@ class StopSolverTest {
         for(var role:InternalRole.values())assertFalse(CATALOGUE.candidates(role.display(false)).isEmpty());
         assertEquals(DisplayRole.BONUS,InternalRole.BIG.display(false));assertEquals(DisplayRole.BONUS,InternalRole.REG.display(false));
         assertEquals(DisplayRole.BONUS_CHERRY,InternalRole.CHERRY_BIG.display(false));assertEquals(DisplayRole.BONUS_CHERRY,InternalRole.CHERRY_REG.display(false));
-        assertEquals(DisplayRole.PIERO,InternalRole.PIERO_REG.display(false));
+        assertEquals(DisplayRole.PIERO_BONUS,InternalRole.PIERO_BIG.display(false));assertEquals(DisplayRole.PIERO_BONUS,InternalRole.PIERO_REG.display(false));assertEquals(DisplayRole.PIERO,InternalRole.PIERO.display(false));
         for(var role:InternalRole.values())if(role!=InternalRole.CHERRY_BIG)assertThrows(IllegalArgumentException.class,()->role.display(true));assertEquals(DisplayRole.PREMIUM_B,InternalRole.CHERRY_BIG.display(true));
         for(var role:List.of(InternalRole.BIG,InternalRole.CHERRY_BIG,InternalRole.PIERO_BIG))assertTrue(role.premiumFEligible());for(var role:List.of(InternalRole.REG,InternalRole.CHERRY_REG,InternalRole.PIERO_REG))assertFalse(role.premiumFEligible());
     }
