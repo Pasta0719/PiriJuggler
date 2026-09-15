@@ -74,61 +74,56 @@ public final class SlotScreen extends Screen {
         long diff=data!=null&&data.has("todayDifference")?data.get("todayDifference").getAsLong():0;
         long maxDiff=data!=null&&data.has("todayMaxDifference")?data.get("todayMaxDifference").getAsLong():0;
 
-        // Machine number is intentionally de-emphasized.
-        text(c,"台番 "+view.machineId(),38,27,1.55f,false,color("DISPLAY_WHITE"));
+        text(c,"MACHINE "+view.machineId(),38,27,1.35f,false,color("DISPLAY_WHITE"));
 
-        // Top-left: the graph gets a genuinely wide landscape area.
-        text(c,"差枚グラフ",55,55,2.15f,false,color("DISPLAY_WHITE"));
+        text(c,"DIFF GRAPH",55,55,1.75f,false,color("DISPLAY_WHITE"));
         JsonArray graph=data!=null&&data.has("graph")?data.getAsJsonArray("graph"):new JsonArray();
-        drawGraph(c,graph,55,92,825,142,total);
-        text(c,"1G",55,241,1.20f,false,color("DISPLAY_WHITE"));
-        text(c,total>0?total+"G":"-",880,241,1.20f,true,color("DISPLAY_WHITE"));
+        drawGraph(c,graph,55,88,825,146,total);
+        text(c,"1G",55,241,1.10f,false,color("DISPLAY_WHITE"));
+        text(c,total>0?total+"G":"-",880,241,1.10f,true,color("DISPLAY_WHITE"));
 
-        // Top-right: only the important headline values, with labels and digits both large enough to read.
-        drawMetric(c,"現在G",Long.toString(current),1060,43,245,color("DISPLAY_WHITE"));
-        drawMetric(c,"トータルG",Long.toString(total),1370,43,245,color("DISPLAY_WHITE"));
-        drawMetric(c,"最大差枚",signed(maxDiff),1680,43,245,color("DISPLAY_WHITE"));
-        drawMetric(c,"BIG回数",Long.toString(big),1210,145,255,color("DISPLAY_BIG"));
-        drawMetric(c,"REG回数",Long.toString(reg),1540,145,255,color("DISPLAY_REG"));
+        drawMetric(c,"CURRENT G",Long.toString(current),1060,43,205,color("DISPLAY_WHITE"));
+        drawMetric(c,"TOTAL G",Long.toString(total),1370,43,205,color("DISPLAY_WHITE"));
+        drawMetric(c,"MAX DIFF",signed(maxDiff),1680,43,205,color("DISPLAY_WHITE"));
+        drawMetric(c,"BIG",Long.toString(big),1210,145,205,color("DISPLAY_BIG"));
+        drawMetric(c,"REG",Long.toString(reg),1540,145,205,color("DISPLAY_REG"));
 
-        // Left side: current difference and the ten newest bonus-history entries.
-        text(c,"差枚",42,345,2.05f,false,color("DISPLAY_WHITE"));
-        digitsFitCentered(c,signed(diff),156,382,220,1.05f,diff>=0?color("DISPLAY_GREEN"):color("DISPLAY_WHITE"));
+        text(c,"DIFF",42,345,1.65f,false,color("DISPLAY_WHITE"));
+        digitsFitCentered(c,signed(diff),156,382,188,.78f,diff>=0?color("DISPLAY_GREEN"):color("DISPLAY_WHITE"));
         c.fill(38,433,274,436,color("BUTTON_METAL_DARK"));
-        text(c,"ボーナス履歴",42,454,1.90f,false,color("DISPLAY_WHITE"));
-        text(c,"新しい順",42,482,1.20f,false,color("DISPLAY_WHITE"));
+        text(c,"BONUS HISTORY",42,454,1.55f,false,color("DISPLAY_WHITE"));
+        text(c,"NEWEST",42,481,1.05f,false,color("DISPLAY_WHITE"));
         JsonArray history=data!=null&&data.has("history")?data.getAsJsonArray("history"):new JsonArray();
         String hoverTime=null;
         for(int i=0;i<Math.min(10,history.size());i++){
             JsonObject item=history.get(i).getAsJsonObject();String type=item.get("type").getAsString();int y=510+i*22;
             int tint="BIG".equals(type)?color("DISPLAY_BIG"):color("DISPLAY_REG");
-            text(c,type,44,y,1.42f,false,tint);
-            text(c,item.get("games").getAsString()+"G",139,y,1.42f,false,color("DISPLAY_WHITE"));
+            text(c,type,44,y,1.22f,false,tint);
+            text(c,item.get("games").getAsString()+"G",139,y,1.22f,false,color("DISPLAY_WHITE"));
             if(mx>=34&&mx<278&&my>=y-3&&my<y+19&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
         }
-        if(hoverTime!=null)text(c,hoverTime,156,735,1.00f,true,color("DISPLAY_WHITE"));
+        if(hoverTime!=null)text(c,hoverTime,156,735,.90f,true,color("DISPLAY_WHITE"));
 
-        // Right side: observed probabilities, then the Piri-chain challenge state below them.
-        text(c,"実績確率",1672,345,1.90f,false,color("DISPLAY_WHITE"));
-        drawProbability(c,"BIG確率",probability(total,big),1672,385,color("DISPLAY_BIG"));
-        drawProbability(c,"REG確率",probability(total,reg),1672,455,color("DISPLAY_REG"));
-        drawProbability(c,"合算確率",probability(total,big+reg),1672,525,color("DISPLAY_WHITE"));
+        text(c,"ODDS",1672,345,1.65f,false,color("DISPLAY_WHITE"));
+        drawProbability(c,"BIG ODDS",probability(total,big),1672,385,color("DISPLAY_BIG"));
+        drawProbability(c,"REG ODDS",probability(total,reg),1672,455,color("DISPLAY_REG"));
+        drawProbability(c,"COMBINED",probability(total,big+reg),1672,525,color("DISPLAY_WHITE"));
         c.fill(1666,590,1882,593,color("BUTTON_METAL_DARK"));
         if(data!=null&&data.has("piriChain")&&data.get("piriChain").getAsBoolean()){
             int chain=data.has("piriChainCount")?data.get("piriChainCount").getAsInt():1;
             rounded(c,1664,615,220,102,12,color("DISPLAY_GREEN"));
             rounded(c,1669,620,210,92,9,color("DISPLAY_BG"));
-            text(c,"ピリ連チャレンジ中",1774,632,1.55f,true,color("DISPLAY_WHITE"));
-            text(c,chain+"連目",1774,671,2.75f,true,color("DISPLAY_GREEN"));
+            text(c,"PIRI CHAIN",1774,633,1.45f,true,color("DISPLAY_WHITE"));
+            text(c,"CHAIN x"+chain,1774,670,1.80f,true,color("DISPLAY_GREEN"));
         }
     }
     private void drawMetric(DrawContext c,String label,String value,float center,float y,float maxWidth,int tint){
-        text(c,label,center,y,1.95f,true,tint);
-        digitsFitCentered(c,value,center,y+34,maxWidth,1.10f,tint);
+        text(c,label,center,y,1.55f,true,tint);
+        digitsFitCentered(c,value,center,y+31,maxWidth,.72f,tint);
     }
     private void drawProbability(DrawContext c,String label,String value,float x,float y,int tint){
-        text(c,label,x,y,1.55f,false,tint);
-        text(c,value,1776,y+27,2.10f,true,tint);
+        text(c,label,x,y,1.30f,false,tint);
+        text(c,value,1776,y+25,1.60f,true,tint);
     }
     private static String signed(long value){return value>0?"+"+value:Long.toString(value);}
     private static String probability(long games,long hits){
