@@ -16,14 +16,18 @@ class DataLampSnapshotTest {
             for(int i=1;i<=12;i++)c.createStatement().execute("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(1,'current','"+(i%2==0?"BIG":"REG")+"',"+i+","+(1000+i)+")");
             c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'old',0,9999,1)");
             c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'current',0,0,1)");
-            c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'current',120,-3,2)");
-            c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'current',120,45,3)");
+            c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'current',1,-3,2)");
+            c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'current',120,-3,3)");
+            c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'current',120,45,4)");
 
             var json=DataLampSnapshot.read(c,1,"current");
             assertEquals(120,json.get("totalGames").getAsLong());assertEquals(3,json.get("bigCount").getAsLong());assertEquals(2,json.get("regCount").getAsLong());
             assertEquals(100,json.get("currentGames").getAsLong());assertEquals(45,json.get("todayDifference").getAsLong());assertEquals(300,json.get("todayMaxDifference").getAsLong());assertTrue(json.get("piriChain").getAsBoolean());assertEquals(12,json.get("piriChainCount").getAsInt());
             assertEquals(10,json.getAsJsonArray("history").size());assertEquals(12,json.getAsJsonArray("history").get(0).getAsJsonObject().get("games").getAsLong());assertEquals(3,json.getAsJsonArray("history").get(9).getAsJsonObject().get("games").getAsLong());
-            assertEquals(3,json.getAsJsonArray("graph").size());assertEquals(0,json.getAsJsonArray("graph").get(0).getAsJsonObject().get("difference").getAsLong());assertEquals(45,json.getAsJsonArray("graph").get(2).getAsJsonObject().get("difference").getAsLong());
+            assertEquals(3,json.getAsJsonArray("graph").size());
+            assertEquals(1,json.getAsJsonArray("graph").get(0).getAsJsonObject().get("game").getAsLong(),"visible graph starts at 1G, not the initialization point");
+            assertEquals(120,json.getAsJsonArray("graph").get(2).getAsJsonObject().get("game").getAsLong(),"visible graph reaches the current total game");
+            assertEquals(45,json.getAsJsonArray("graph").get(2).getAsJsonObject().get("difference").getAsLong());
 
             c.createStatement().execute("UPDATE machine_period_stats SET current_games=101 WHERE machine_id=1 AND business_period_id='current'");
             var ended=DataLampSnapshot.read(c,1,"current");assertFalse(ended.get("piriChain").getAsBoolean(),"101G must turn Piri Chain off");assertEquals(0,ended.get("piriChainCount").getAsInt(),"ended chain count is transient and resets to zero");
@@ -41,8 +45,9 @@ class DataLampSnapshotTest {
             c.createStatement().execute("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(1,'p','BIG',40,3)");
             c.createStatement().execute("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(1,'p','BIG',20,4)");
             c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'p',0,0,1)");
-            c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'p',480,-3,2)");
-            c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'p',480,10,3)");
+            c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'p',1,-3,2)");
+            c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'p',480,-3,3)");
+            c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'p',480,10,4)");
             var json=DataLampSnapshot.read(c,1,"p");assertTrue(json.get("piriChain").getAsBoolean());assertEquals(4,json.get("piriChainCount").getAsInt());
         }
     }
@@ -53,7 +58,7 @@ class DataLampSnapshotTest {
             c.createStatement().execute("CREATE TABLE bonus_history(id INTEGER PRIMARY KEY AUTOINCREMENT,machine_id INTEGER,business_period_id TEXT,bonus_type TEXT,games INTEGER,occurred_at INTEGER)");
             c.createStatement().execute("CREATE TABLE graph_points(id INTEGER PRIMARY KEY AUTOINCREMENT,machine_id INTEGER,business_period_id TEXT,game INTEGER,difference INTEGER,occurred_at INTEGER)");
             c.createStatement().execute("INSERT INTO machine_period_stats VALUES(1,'p',0,0,0,0,0,0)");c.createStatement().execute("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(1,'p',0,0,1)");
-            var json=DataLampSnapshot.read(c,1,"p");assertFalse(json.get("piriChain").getAsBoolean());assertEquals(0,json.get("piriChainCount").getAsInt());
+            var json=DataLampSnapshot.read(c,1,"p");assertFalse(json.get("piriChain").getAsBoolean());assertEquals(0,json.get("piriChainCount").getAsInt());assertTrue(json.getAsJsonArray("graph").isEmpty());
         }
     }
 }
