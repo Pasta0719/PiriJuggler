@@ -86,7 +86,10 @@ public final class SlotScreen extends Screen {
             if(mx>=x&&mx<x+52&&my>=116&&my<184&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
         }
         if(hoverTime!=null)text(c,hoverTime,1045,188,.9f,true);
-        if(data.has("piriChain")&&data.get("piriChain").getAsBoolean())text(c,"ピリ連チャレンジ中",1460,144,1.1f,true,color("DISPLAY_GREEN"));
+        if(data.has("piriChain")&&data.get("piriChain").getAsBoolean()){
+            int chain=data.has("piriChainCount")?data.get("piriChainCount").getAsInt():1;
+            text(c,"ピリ連チャレンジ中  "+chain+"連目",1460,144,1.1f,true,color("DISPLAY_GREEN"));
+        }
     }
     private void drawGraph(DrawContext c,JsonArray graph,float x,float y,float w,float h){
         if(graph.isEmpty())return;
