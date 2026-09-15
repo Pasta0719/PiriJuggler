@@ -50,21 +50,18 @@ public final class StopSolver {
                 minAllowedSlip=minSlip;
                 maxAllowedSlip=minSlip;
             }else if(minSlip==0){
-                // A true eye-stop is already the most natural answer. Never slide past it just to change the line.
                 minAllowedSlip=0;
                 maxAllowedSlip=0;
             }else if(hasNatural){
-                // Prefer any physically natural 1..4 frame pull-in and use that room to diversify the final payline.
                 minAllowedSlip=1;
                 maxAllowedSlip=NATURAL_MAX_SLIP;
             }else{
-                // No natural pull-in can preserve the role. Give up on short slip and allow the required long pull-in,
-                // while still permitting a very small window so all five paylines are not collapsed to one shape.
                 minAllowedSlip=minSlip;
                 maxAllowedSlip=Math.min(20,minSlip+FALLBACK_LINE_SLIP_WINDOW);
             }
 
             int preferredLine=preferredLine(mask,stopped,reel,p);
+            boolean naturalSelection=DIVERSIFIED_LINE_ROLES.contains(role)&&(minSlip==0||hasNatural);
             StopCatalogue.Evaluation selected=null;
             int selectedSlip=Integer.MAX_VALUE;
             int selectedLineDistance=Integer.MAX_VALUE;
@@ -77,12 +74,27 @@ public final class StopSolver {
                 int rank=candidate.targetRank(role);
                 int lineDistance=DIVERSIFIED_LINE_ROLES.contains(role)?lineDistance(rank,preferredLine):0;
                 int lineDirection=DIVERSIFIED_LINE_ROLES.contains(role)&&rank<5?Math.floorMod(rank-preferredLine,5):rank;
-                if(selected==null
-                        ||lineDistance<selectedLineDistance
-                        ||lineDistance==selectedLineDistance&&slip<selectedSlip
-                        ||lineDistance==selectedLineDistance&&slip==selectedSlip&&lineDirection<selectedLineDirection
-                        ||lineDistance==selectedLineDistance&&slip==selectedSlip&&lineDirection==selectedLineDirection&&rank<selectedRank
-                        ||lineDistance==selectedLineDistance&&slip==selectedSlip&&lineDirection==selectedLineDirection&&rank==selectedRank&&candidate.stops().id()<selected.stops().id()){
+                boolean better;
+                if(selected==null){
+                    better=true;
+                }else if(naturalSelection){
+                    // In the normal 0..4-frame pull-in range, the player's actual press position wins first.
+                    // This makes visible symbols genuinely aimable; line variety only breaks otherwise-equal stops.
+                    better=slip<selectedSlip
+                            ||slip==selectedSlip&&lineDistance<selectedLineDistance
+                            ||slip==selectedSlip&&lineDistance==selectedLineDistance&&lineDirection<selectedLineDirection
+                            ||slip==selectedSlip&&lineDistance==selectedLineDistance&&lineDirection==selectedLineDirection&&rank<selectedRank
+                            ||slip==selectedSlip&&lineDistance==selectedLineDistance&&lineDirection==selectedLineDirection&&rank==selectedRank&&candidate.stops().id()<selected.stops().id();
+                }else{
+                    // If no natural stop can preserve the role, accept the long pull-in and use its small
+                    // fallback window to keep the five paylines from collapsing to one fixed shape.
+                    better=lineDistance<selectedLineDistance
+                            ||lineDistance==selectedLineDistance&&slip<selectedSlip
+                            ||lineDistance==selectedLineDistance&&slip==selectedSlip&&lineDirection<selectedLineDirection
+                            ||lineDistance==selectedLineDistance&&slip==selectedSlip&&lineDirection==selectedLineDirection&&rank<selectedRank
+                            ||lineDistance==selectedLineDistance&&slip==selectedSlip&&lineDirection==selectedLineDirection&&rank==selectedRank&&candidate.stops().id()<selected.stops().id();
+                }
+                if(better){
                     selected=candidate;
                     selectedSlip=slip;
                     selectedLineDistance=lineDistance;
