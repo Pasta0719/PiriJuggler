@@ -43,10 +43,13 @@ public final class DataLampSnapshot {
                 while(rs.next()){
                     long game=rs.getLong(1),difference=rs.getLong(2);
                     if(previousGame!=null&&previousGame==game)completedBonus=true;
-                    previousGame=game;raw.add(new Lttb.Point(game,difference));
+                    previousGame=game;
+                    // game=0 is the period-initialization baseline. The visible graph is explicitly 1G through the current game.
+                    if(game>=1&&game<=totalGames)raw.add(new Lttb.Point(game,difference));
                 }
             }
         }
+        // LTTB only reduces rendering density. It keeps the first/last points and therefore the whole 1G..current range.
         List<Lttb.Point> display=Lttb.downsample(raw,300);
         JsonArray graph=new JsonArray();
         for(Lttb.Point point:display){JsonObject item=new JsonObject();item.addProperty("game",point.x());item.addProperty("difference",point.y());graph.add(item);}
