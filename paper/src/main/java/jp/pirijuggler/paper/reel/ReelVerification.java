@@ -12,7 +12,7 @@ public final class ReelVerification {
         if(catalogue.candidates(DisplayRole.BONUS_CHERRY).size()!=12)throw new IllegalStateException("Expected 12 cherry-bonus reach triplets");
         int normal=0,premium=0,seconds=0;
         for(var role:DisplayRole.values())normal+=verifySequences(solver,role,false);
-        for(var role:List.of(DisplayRole.BONUS,DisplayRole.BONUS_CHERRY,DisplayRole.PIERO)){premium+=verifySequences(solver,role,true);seconds+=6*21*21;}
+        for(var role:List.of(DisplayRole.BONUS,DisplayRole.BONUS_CHERRY,DisplayRole.PIERO_BONUS)){premium+=verifySequences(solver,role,true);seconds+=6*21*21;}
         return new Report(catalogue.counts(),normal,seconds,premium);
     }
     private static int verifySequences(StopSolver solver,DisplayRole role,boolean premium){
