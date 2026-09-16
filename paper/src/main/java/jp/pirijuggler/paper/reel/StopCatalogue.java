@@ -23,7 +23,7 @@ public final class StopCatalogue {
             case BONUS->!anyCherry()&&baseLines()==0&&Integer.bitCount(winningReachLines)==1;
             case BONUS_CHERRY->baseLines()==0&&Integer.bitCount(winningReachLines)==1&&!leftMiddleCherry&&(leftTopCherry^leftBottomCherry);
             case CHERRY->baseLines()==0&&winningReachLines==0&&!hasBonusSymbolPair()&&!leftMiddleCherry&&(leftTopCherry^leftBottomCherry);
-            case PREMIUM_B->baseLines()==0&&winningReachLines==0&&leftMiddleCherry&&!leftTopCherry&&!leftBottomCherry;
+            case PREMIUM_B->baseLines()==0&&Integer.bitCount(winningReachLines)<=1&&leftMiddleCherry&&!leftTopCherry&&!leftBottomCherry;
             default->winningReachLines==0&&!anyCherry()&&baseLines()==1&&Integer.bitCount(lineMask(role))==1;};}
         public int targetRank(DisplayRole role){if(!valid(role))throw new IllegalArgumentException("Not a strict candidate");return switch(role){case MISS->5;case BONUS,BONUS_CHERRY->Integer.numberOfTrailingZeros(winningReachLines);case CHERRY->leftTopCherry?1:2;case PREMIUM_B->0;default->Integer.numberOfTrailingZeros(lineMask(role));};}
     }
