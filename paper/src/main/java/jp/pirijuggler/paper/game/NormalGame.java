@@ -207,16 +207,16 @@ public final class NormalGame {
         for(var reel:Reel.values()) {String name=reel.name().toLowerCase(Locale.ROOT);values.put("phase_"+name,(mask&reel.bit())!=0?((Number)values.get("display_"+name+"_stop")).doubleValue():ReelMotion.phase(motion.profile,starts[reel.ordinal()],Math.max(0,(now-motion.started)/1e9)));}
     }
     private ReelRound round(Session s,Motion m) {
-        DisplayRole role;DisplayRole alternateRole=null;boolean premiumF=false;String mode;
+        DisplayRole role;DisplayRole alternateRole=null;boolean premiumF=false;boolean premiumEffect=false;String mode;
         switch(s.state()){
-            case NORMAL_SPINNING -> {InternalRole internal=InternalRole.valueOf(s.text("internal_role"));PremiumPolicy.Type p=premiumType(s);role=internal.display(p==PremiumPolicy.Type.B);premiumF=p==PremiumPolicy.Type.F;alternateRole=directEntryRole(internal,p);mode="NORMAL";}
+            case NORMAL_SPINNING -> {InternalRole internal=InternalRole.valueOf(s.text("internal_role"));PremiumPolicy.Type p=premiumType(s);role=internal.display(p==PremiumPolicy.Type.B);premiumF=p==PremiumPolicy.Type.F;premiumEffect=p!=null;alternateRole=directEntryRole(internal,p);mode="NORMAL";}
             case BONUS_ENTRY_SPINNING_BIG -> {role=DisplayRole.BIG_ENTRY;mode="BONUS_ENTRY";}
             case BONUS_ENTRY_SPINNING_REG -> {role=DisplayRole.REG_ENTRY;mode="BONUS_ENTRY";}
             case BIG_SPINNING -> {role=DisplayRole.valueOf(s.text("internal_role"));mode="BIG";}
             case REG_SPINNING -> {role=DisplayRole.valueOf(s.text("internal_role"));mode="REG";}
             default -> throw new IllegalArgumentException("Not spinning: "+s.state());
         }
-        return new ReelRound(solver,new ReelRound.Identity(s.player(),s.id(),s.machine(),m.spin),role,alternateRole,premiumF,m.profile,mode,m.starts(),new StopTriplet((int)s.number("display_left_stop"),(int)s.number("display_center_stop"),(int)s.number("display_right_stop")),(int)s.number("stopped_mask"),s.sequence(),main);
+        return new ReelRound(solver,new ReelRound.Identity(s.player(),s.id(),s.machine(),m.spin),role,alternateRole,premiumF,premiumEffect,m.profile,mode,m.starts(),new StopTriplet((int)s.number("display_left_stop"),(int)s.number("display_center_stop"),(int)s.number("display_right_stop")),(int)s.number("stopped_mask"),s.sequence(),main);
     }
     private static double phase(Session s,String name){return ((Number)s.snapshot().get("phase_"+name)).doubleValue();}
     public static GameRules.Balance balance(Session s){return new GameRules.Balance(Math.toIntExact(s.number("credit")),s.number("held_medals"));}
