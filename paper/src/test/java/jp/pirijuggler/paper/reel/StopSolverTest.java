@@ -13,7 +13,7 @@ class StopSolverTest {
         var expected=Map.ofEntries(
                 Map.entry(DisplayRole.GRAPE,750),Map.entry(DisplayRole.BELL,50),Map.entry(DisplayRole.PIERO,20),Map.entry(DisplayRole.PIERO_BONUS,20),Map.entry(DisplayRole.REPLAY,525),
                 Map.entry(DisplayRole.CHERRY,1287),Map.entry(DisplayRole.MISS,5126),Map.entry(DisplayRole.BONUS,124),Map.entry(DisplayRole.BONUS_CHERRY,12),
-                Map.entry(DisplayRole.BIG_ENTRY,10),Map.entry(DisplayRole.REG_ENTRY,10),Map.entry(DisplayRole.PREMIUM_B,758));
+                Map.entry(DisplayRole.BIG_ENTRY,10),Map.entry(DisplayRole.REG_ENTRY,10),Map.entry(DisplayRole.PREMIUM_B,782));
         assertEquals(expected,CATALOGUE.counts());
         var lock=JsonParser.parseString(Files.readString(Path.of(System.getProperty("piri.specRoot"),"docs/spec-lock.json"))).getAsJsonObject();
         for(var role:DisplayRole.values()){assertTrue(CATALOGUE.candidates(role).size()>=role.minimum());for(var candidate:CATALOGUE.candidates(role))assertTrue(oracle(candidate.stops()).contains(role),candidate.stops()+" "+role);}
@@ -34,7 +34,9 @@ class StopSolverTest {
         if(noCherry&&wins.isEmpty()&&reach==1)result.add(DisplayRole.BONUS);
         if(wins.isEmpty()&&reach==1&&!middle&&(top^bottom))result.add(DisplayRole.BONUS_CHERRY);
         if(noCherry&&reach==0&&wins.size()==1&&wins.values().iterator().next()==1){DisplayRole win=wins.keySet().iterator().next();result.add(win);if(win==DisplayRole.PIERO)result.add(DisplayRole.PIERO_BONUS);}
-        if(wins.isEmpty()&&reach==0){if(!bonusPair&&!middle&&(top^bottom))result.add(DisplayRole.CHERRY);if(middle&&!top&&!bottom)result.add(DisplayRole.PREMIUM_B);}return result;
+        if(wins.isEmpty()&&reach==0&&!bonusPair&&!middle&&(top^bottom))result.add(DisplayRole.CHERRY);
+        if(wins.isEmpty()&&reach<=1&&middle&&!top&&!bottom)result.add(DisplayRole.PREMIUM_B);
+        return result;
     }
     @Test void allOrdersAndAllPressedSequencesCompleteIncludingPremiumF(){
         var report=ReelVerification.verify(SOLVER);assertEquals(666792,report.allSequences());assertEquals(166698,report.premiumFSequences());assertEquals(7938,report.premiumFSecondChecks());
@@ -46,6 +48,24 @@ class StopSolverTest {
         for(var e:CATALOGUE.candidates(DisplayRole.BONUS_CHERRY)){
             assertEquals(1,Integer.bitCount(e.winningReachLines()));assertFalse(e.leftMiddleCherry());assertTrue(e.leftTopCherry()^e.leftBottomCherry());
         }
+    }
+    @Test void premiumBMayAlsoCarryOneBonusReachLine(){
+        assertTrue(CATALOGUE.candidates(DisplayRole.PREMIUM_B).stream().anyMatch(e->e.winningReachLines()!=0));
+        assertTrue(CATALOGUE.candidates(DisplayRole.PREMIUM_B).stream().anyMatch(e->e.winningBarConfirmationLines()!=0));
+        for(var e:CATALOGUE.candidates(DisplayRole.PREMIUM_B)){
+            assertTrue(Integer.bitCount(e.winningReachLines())<=1);
+            assertTrue(e.leftMiddleCherry());assertFalse(e.leftTopCherry());assertFalse(e.leftBottomCherry());
+        }
+    }
+    @Test void nonPremiumBonusControlNeverFinishesOnBarBarBarButPremiumMay(){
+        var blank=new StopTriplet(0,0,0);boolean premiumBarSeen=false;
+        for(var order:ReelVerification.orders())for(int p1=0;p1<21;p1++)for(int p2=0;p2<21;p2++)for(int p3=0;p3<21;p3++){
+            int[] presses={p1,p2,p3};StopTriplet ordinary=blank;int mask=0;
+            for(int i=0;i<3;i++){Reel reel=order.get(i);var c=SOLVER.choose(DisplayRole.BONUS,mask,ordinary,reel,presses[i],false);ordinary=ordinary.with(reel,c.stopIndex());mask|=reel.bit();}
+            assertEquals(0,CATALOGUE.evaluation(ordinary).winningBarConfirmationLines(),"ordinary "+order+" "+p1+","+p2+","+p3);
+            if(!premiumBarSeen){StopTriplet premium=blank;mask=0;for(int i=0;i<3;i++){Reel reel=order.get(i);var c=SOLVER.choose(DisplayRole.BONUS,null,mask,premium,reel,presses[i],false,true,false);premium=premium.with(reel,c.stopIndex());mask|=reel.bit();}premiumBarSeen=CATALOGUE.evaluation(premium).winningBarConfirmationLines()!=0;}
+        }
+        assertTrue(premiumBarSeen,"premium control should retain a BAR-BAR-BAR path");
     }
     @Test void normalCherryNeverLeavesTwoBonusSymbolsOnAnyPayline(){
         for(var e:CATALOGUE.candidates(DisplayRole.CHERRY))assertEquals(0,StopCatalogue.bonusSymbolPairLines(e.stops()),e.stops().toString());
@@ -65,7 +85,8 @@ class StopSolverTest {
         for(var role:DisplayRole.values()){
             var seen=new HashSet<Integer>();
             for(var e:CATALOGUE.candidates(role))for(int mask=0;mask<7;mask++)if(seen.add(e.stops().fixedKey(mask))){
-                final int fixedMask=mask;var candidates=CATALOGUE.candidates(role,mask,e.stops());
+                final int fixedMask=mask;var candidates=CATALOGUE.candidates(role,mask,e.stops()).stream().filter(c->role==DisplayRole.PREMIUM_B||c.winningBarConfirmationLines()==0).toList();
+                if(candidates.isEmpty())continue;
                 for(var reel:Reel.values())if((mask&reel.bit())==0)for(int p=0;p<21;p++){
                     final int press=p;
                     int minSlip=candidates.stream().mapToInt(c->ReelMotion.slip(c.stops().stop(reel),press)).min().orElseThrow();
