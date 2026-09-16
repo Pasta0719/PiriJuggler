@@ -52,8 +52,19 @@ SPEC 68章はAdmin Screen closeでAdminSession即失効を要求する一方、8
 - [x] startup profile priority / pattern先行 / guarantees後補正 / eligible条件
 - [x] next-start overrideはstartup allocation transaction成功時だけ消費
 - [x] Unit/Integration test追加
-- [ ] local Gradle test/build PASS確認
+- [x] local Gradle test/build PASS確認（ユーザーWindows環境の `build-jars.bat` で main build / runtime helper build とも BUILD SUCCESSFUL。現行Paper jarも再build/redeploy後に実機試験実施）
 - [ ] Phase10 Runtime Acceptance PASS
+
+## Runtime確認済み — 2026-09-16
+- [x] OP + machine key Admin Screen actual open
+- [x] busy machine mutation reject（occupied中の `/piri setting 1 6` が `MACHINE_OCCUPIED`、離席後もsetting不変）
+- [x] setting change history（MANUAL row確認）
+- [x] true server restart / startup allocation path（新しい `SERVER_START` history確認。businessPeriodId UUIDそのものはAdmin UI非表示）
+- [x] special date profile（test configで実profile切替確認、試験後 `special_dates: {}` に復元済み）
+- [x] manual next override priority + one-shot consumption
+- [ ] Admin Screen close直後の「古いadminSessionIdを使ったmutating packet拒否」のlive Minecraft直接観測
+
+上記最後の項目は通常UIではadminSessionIdが露出しないため、単に閉じて再度開く操作では証明にならない。production実装とunit testではclose後のold id拒否まで確認済みだが、Phase10のruntime-only完了条件を弱めず閉じるには、runtime helper/test instrumentationでold idを保持してclose後にstale packetを再送し、拒否を観測する必要がある。ユーザーに追加の通常UI手作業は不要。
 
 ## 追加完了条件
 - pattern then guarantees
