@@ -22,4 +22,16 @@ class ClientSessionTest {
         state.receive(Envelope.current(PacketType.OPEN_MACHINE,payload),false); assertNull(state.sessionId());
         state.receive(Envelope.current(PacketType.OPEN_MACHINE,payload),true); state.reset(); assertNull(state.sessionId());
     }
+
+    @Test void adminStateStartsAtSequenceOneAndRefreshKeepsSequence() {
+        ClientSession state=new ClientSession();UUID id=UUID.randomUUID();JsonObject admin=new JsonObject();
+        admin.addProperty("adminSessionId",id.toString());admin.addProperty("machineId",7);admin.addProperty("setting",3);
+        state.receive(Envelope.current(PacketType.ADMIN_STATE,admin),true);
+        assertEquals(id,state.adminSessionId());assertEquals(7,state.adminMachineId());assertEquals(1,state.takeAdminSequence());
+        admin.addProperty("setting",4);state.receive(Envelope.current(PacketType.ADMIN_STATE,admin),true);
+        assertEquals(2,state.takeAdminSequence());assertEquals(4,state.adminState().get("setting").getAsInt());
+        JsonObject reopened=admin.deepCopy();reopened.addProperty("adminSessionId",UUID.randomUUID().toString());
+        state.receive(Envelope.current(PacketType.ADMIN_STATE,reopened),true);assertEquals(1,state.takeAdminSequence());
+        state.clearAdmin();assertNull(state.adminSessionId());assertNull(state.adminState());
+    }
 }
