@@ -1,0 +1,18 @@
+{
+  "approved": [
+    {
+      "date": "2026-09-16",
+      "phase": 10,
+      "reason": "AdminSession must expire immediately when the Admin Screen closes, but the base SPEC defines no client-to-server close packet for the admin session.",
+      "packetIds": {
+        "ADMIN_CLOSE": 16
+      },
+      "payload": {
+        "adminSessionId": "uuid",
+        "machineId": 1,
+        "adminSequence": 1
+      },
+      "semantics": "Validate OP, owner, machineId and sequence exactly like every admin packet, then invalidate the memory-only AdminSession immediately. CLOSE_REQUEST remains gameplay-session-only."
+    }
+  ]
+}
