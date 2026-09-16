@@ -36,7 +36,8 @@ class StartupAllocationIntegrationTest {
         db.create(new Machine.Location(UUID.randomUUID(),"world",0,64,0,"NORTH"),NOW);
         db.sql("INSERT INTO metadata(key,value) VALUES('next_start_profile','missing-profile')");db.close();
 
-        db=new PiriDatabase(file);assertThrows(IllegalArgumentException.class,()->db.open(2,NOW+1,config,new SplittableRandom(2),ignored->{}));
+        PiriDatabase failedDb=new PiriDatabase(file);
+        assertThrows(IllegalArgumentException.class,()->failedDb.open(2,NOW+1,config,new SplittableRandom(2),ignored->{}));
         try(var connection=DriverManager.getConnection("jdbc:sqlite:"+file.toAbsolutePath())){
             try(var s=connection.prepareStatement("SELECT value FROM metadata WHERE key='next_start_profile'");var r=s.executeQuery()){
                 assertTrue(r.next());assertEquals("missing-profile",r.getString(1));
