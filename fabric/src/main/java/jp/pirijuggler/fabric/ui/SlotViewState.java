@@ -8,7 +8,7 @@ import jp.pirijuggler.common.reel.ReelMotion;
 
 /** Public packets only; visual interpolation never computes a winning result. */
 public final class SlotViewState {
-    private static final long NEXT_GAME_DELAY_NANOS=1_700_000_000L;
+    private static final long MIN_GAME_INTERVAL_NANOS=2_000_000_000L;
     private final LongSupplier time;
     private final double[] starts=new double[3],rest=new double[3];
     private final Stop[] stops=new Stop[3];
@@ -46,11 +46,7 @@ public final class SlotViewState {
                     stops[reel]=new Stop(from,endpoint,now,visualMs*1_000_000L);rest[reel]=target;
                 }
                 if(b.has("nextStopHints"))stopHints=b.getAsJsonObject("nextStopHints").deepCopy();
-                if(allStopped()){
-                    long finalStopComplete=now;
-                    for(var stop:stops)finalStopComplete=Math.max(finalStopComplete,stop.at()+stop.duration());
-                    nextGameAt=finalStopComplete+NEXT_GAME_DELAY_NANOS;
-                }
+                if(allStopped())nextGameAt=spinAt+MIN_GAME_INTERVAL_NANOS;
             }}
             case NOTICE -> {if(matchesSpin(b)){notice="ON".equals(b.get("lamp").getAsString());blink="FAST_BLINK_1S".equals(b.get("pattern").getAsString());noticeAt=now;}}
             case DATA_LAMP -> {if(b.has("machineId")&&b.get("machineId").getAsInt()==machine)dataLamp=b.deepCopy();}
