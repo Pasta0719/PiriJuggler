@@ -2,8 +2,11 @@ package jp.pirijuggler.paper.economy;
 
 import jp.pirijuggler.paper.config.ConfigValidation;
 import jp.pirijuggler.paper.database.PiriDatabase;
+import jp.pirijuggler.paper.database.RecoveryStore;
 import jp.pirijuggler.paper.machine.DomainException;
 import jp.pirijuggler.paper.machine.Machine;
+import jp.pirijuggler.paper.reel.StopCatalogue;
+import jp.pirijuggler.paper.reel.StopSolver;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.*;
@@ -13,10 +16,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class EconomyStoreTest {
     @TempDir Path directory;
     PiriDatabase db; EconomyStore store; UUID player=UUID.randomUUID(), world=UUID.randomUUID();
-    int machine; static final long NOW=1_700_000_000_000L;
+    int machine; static final long NOW=1_700_000_000_000L; Map<String,Object> config;
 
     @BeforeEach void open() throws Exception {
-        Map<String,Object> config;
         try(var reader=Files.newBufferedReader(Path.of(System.getProperty("piri.specRoot"),"paper/src/main/resources/config.yml"))){config=ConfigValidation.load(reader).values();}
         db=new PiriDatabase(directory.resolve("piri.db"));db.open(1,NOW,config,new SplittableRandom(1),ignored->{});
         machine=db.create(new Machine.Location(world,"world",0,64,0,"NORTH"),NOW);db.seat(player,machine,NOW);store=new EconomyStore(db);
@@ -65,6 +67,25 @@ class EconomyStoreTest {
         var plan=store.prepareCashout(player,session.id(),machine,1,NOW+1);
         store.finishCashout(player,plan.transactionId(),Set.of(),NOW+2);
         assertEquals(662,((Number)db.rows("SELECT pending_medals FROM player_wallet WHERE player_uuid=?",player.toString()).getFirst().get("pending_medals")).intValue());
+    }
+
+    @Test void recoveryCashoutForceSettlesGraceAndCombinesWalletPending() throws Exception {
+        db.sql("UPDATE player_sessions SET game_state='BONUS_PENDING_REG',credit=20,held_medals=30,bonus_type='REG'");
+        db.disconnect(player,NOW+1,60_000);db.sql("INSERT INTO player_wallet(player_uuid,pending_medals,updated_at) VALUES(?,?,?)",player.toString(),7,NOW);
+        var status=store.recoveryStatus(player);assertEquals("SUSPENDED_GRACE",status.lifecycle());assertEquals(7,status.pending());
+        var plan=store.prepareRecoveryCashout(player,new RecoveryStore(db,config,new StopSolver(new StopCatalogue())),NOW+2);
+        assertEquals(152,plan.amount());assertEquals(1,plan.bundles().size());assertEquals(152,plan.bundles().getFirst().amount());
+        assertNull(db.state().session(player));assertTrue(db.rows("SELECT * FROM player_wallet WHERE player_uuid=?",player.toString()).isEmpty());
+        UUID delivered=plan.bundles().getFirst().id();store.finishRecoveryCashout(player,plan.transactionId(),Set.of(delivered),NOW+3);
+        assertTrue(store.validActiveBundle(delivered,152));assertEquals("COMPLETED",db.rows("SELECT status FROM cashout_transactions WHERE transaction_id=?",plan.transactionId()).getFirst().get("status"));
+    }
+
+    @Test void recoveryCashoutRejectsActiveSessionAndUndeliveredReturnsToWallet() throws Exception {
+        code("INVALID_STATE",()->store.prepareRecoveryCashout(player,new RecoveryStore(db,config,new StopSolver(new StopCatalogue())),NOW+1));
+        db.sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',credit=5,held_medals=6");
+        var plan=store.prepareRecoveryCashout(player,new RecoveryStore(db,config,new StopSolver(new StopCatalogue())),NOW+2);
+        store.finishRecoveryCashout(player,plan.transactionId(),Set.of(),NOW+3);
+        assertEquals(11,((Number)db.rows("SELECT pending_medals FROM player_wallet WHERE player_uuid=?",player.toString()).getFirst().get("pending_medals")).longValue());
     }
 
     @Test void insertionPartiallyConsumesLegacyTokenAndCreatesUnlimitedRemainder() throws Exception {
