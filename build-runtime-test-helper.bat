@@ -7,9 +7,13 @@ if not "%piriBuildExit%"=="0" goto :done
 if not exist "dist\test-only" mkdir "dist\test-only"
 for %%F in ("runtime-test-support\paper\build\libs\piri-runtime-test-paper-*.jar") do copy /Y "%%~fF" "dist\test-only\piri-runtime-test-paper.jar" >nul
 for %%F in ("runtime-test-support\vault\build\libs\piri-runtime-test-vault-*.jar") do copy /Y "%%~fF" "dist\test-only\piri-runtime-test-vault.jar" >nul
-for %%F in ("runtime-test-support\client\build\libs\piri-runtime-test-client-*.jar") do (
-  echo %%~nxF | findstr /I /V /C:"-sources.jar" >nul && copy /Y "%%~fF" "dist\test-only\piri-runtime-test-client.jar" >nul
+set "clientJar=runtime-test-support\client\build\libs\piri-runtime-test-client-1.0.0.jar"
+if not exist "%clientJar%" (
+  echo Runtime test client remapped jar missing: %clientJar%
+  set "piriBuildExit=1"
+  goto :done
 )
+copy /Y "%clientJar%" "dist\test-only\piri-runtime-test-client.jar" >nul
 echo Runtime test helper built: dist\test-only\piri-runtime-test-paper.jar
 echo Runtime test client helper built: dist\test-only\piri-runtime-test-client.jar
 echo Runtime test Vault provider built: dist\test-only\piri-runtime-test-vault.jar
