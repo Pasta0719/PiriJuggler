@@ -11,16 +11,22 @@ public final class SlotUi {
     private static SlotViewState view;private static SlotInput input;
     private static final Map<Long,String> ACCEPT_SOUNDS=new LinkedHashMap<>();
     private static long pendingBigBgmAt=-1L;
+    private static Envelope queuedLever;private static Consumer<Envelope> outbound;
     public static boolean hidesHud(){var screen=MinecraftClient.getInstance().currentScreen;return screen instanceof SlotScreen||screen instanceof SlotChatScreen||screen instanceof AdminScreen;}
     public static void receive(Envelope packet,ClientSession session,Consumer<Envelope> sender){
         var client=MinecraftClient.getInstance();var b=packet.payload();
         if(packet.packetType()==PacketType.OPEN_MACHINE){
-            reset();view=new SlotViewState(System::nanoTime);input=new SlotInput(session,envelope->{
+            reset();outbound=sender;view=new SlotViewState(System::nanoTime);input=new SlotInput(session,envelope->{
                 int pressed=view.localInput(envelope.packetType());
                 if(pressed>=0){envelope.payload().addProperty("pressedIndex",pressed);PiriSounds.queue("stop",1,0);}
                 if(envelope.packetType()==PacketType.SPACE_ACTION){String state=view.value("gameState");String sound=state.contains("BETTED")||state.equals("REPLAY_READY")?"lever":state.contains("SPINNING")?"stop":"bet";ACCEPT_SOUNDS.put(envelope.payload().get("clientSequence").getAsLong(),sound);if(ACCEPT_SOUNDS.size()>128)ACCEPT_SOUNDS.remove(ACCEPT_SOUNDS.keySet().iterator().next());}
+                if(envelope.packetType()==PacketType.CLOSE_REQUEST)queuedLever=null;
+                if(envelope.packetType()==PacketType.SPACE_ACTION&&view.shouldQueueLever()){
+                    if(queuedLever==null)queuedLever=envelope;
+                    return;
+                }
                 sender.accept(envelope);
-            },System::nanoTime,view::canSend);view.receive(packet);
+            },System::nanoTime,action->view.canSend(action)&&!(action==PacketType.SPACE_ACTION&&queuedLever!=null));view.receive(packet);
             String state=view.value("gameState");if(state.startsWith("BIG_"))PiriSounds.startLoop("big_bgm");else if(state.startsWith("REG_"))PiriSounds.startLoop("reg_bgm");
             client.setScreen(new SlotScreen(view,input));return;
         }
@@ -43,16 +49,17 @@ public final class SlotUi {
             }
             case PUBLIC_STATE -> {if(view.matches(b)&&"SEATED_READY".equals(b.get("gameState").getAsString())){pendingBigBgmAt=-1L;PiriSounds.stopLoop();}}
             case ACTION_ACCEPTED -> {String sound=ACCEPT_SOUNDS.remove(b.get("clientSequence").getAsLong());if("bet".equals(sound))PiriSounds.queue(sound,1,0);}
-            case ACTION_REJECTED,ERROR -> {ACCEPT_SOUNDS.clear();PiriSounds.queue("error",1,0);}
+            case ACTION_REJECTED,ERROR -> {ACCEPT_SOUNDS.clear();queuedLever=null;PiriSounds.queue("error",1,0);}
             default -> {}
         }
         view.receive(packet);
         if((packet.packetType()==PacketType.SESSION_END||packet.packetType()==PacketType.SESSION_SUSPENDED)&&session.sessionId()==null){if(hidesHud())client.setScreen(null);reset();}
     }
     public static void tick(){
+        if(queuedLever!=null&&view!=null&&view.queuedLeverReady()&&outbound!=null){Envelope lever=queuedLever;queuedLever=null;outbound.accept(lever);}
         if(pendingBigBgmAt>=0&&System.nanoTime()>=pendingBigBgmAt){pendingBigBgmAt=-1L;PiriSounds.startLoop("big_bgm");}
         PiriSounds.tick();if(input!=null&&input.closeExpired()&&hidesHud())MinecraftClient.getInstance().setScreen(null);
     }
-    public static void reset(){view=null;input=null;ACCEPT_SOUNDS.clear();pendingBigBgmAt=-1L;PiriSounds.reset();}
+    public static void reset(){view=null;input=null;queuedLever=null;outbound=null;ACCEPT_SOUNDS.clear();pendingBigBgmAt=-1L;PiriSounds.reset();}
     private SlotUi(){}
 }
