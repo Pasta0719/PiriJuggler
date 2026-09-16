@@ -25,6 +25,9 @@ public final class RuntimeObserver extends JavaPlugin {
         var vaultFaultCommand=getCommand("pirivaultfault");
         if(vaultFaultCommand==null)throw new IllegalStateException("pirivaultfault command missing");
         vaultFaultCommand.setExecutor(new VaultFaultCommand());
+        var securityCommand=getCommand("pirisecurity");
+        if(securityCommand==null)throw new IllegalStateException("pirisecurity command missing");
+        securityCommand.setExecutor(new SecurityNegativeCommand(this));
 
         if ("phase05".equals(System.getProperty("piri.runtime.phase"))) {new Phase02Observer(this);new Phase05Fixture(this);getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase05");return;}
         if ("phase04".equals(System.getProperty("piri.runtime.phase"))) {
