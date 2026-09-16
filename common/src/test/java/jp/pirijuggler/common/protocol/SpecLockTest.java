@@ -26,7 +26,15 @@ class SpecLockTest {
         assertEquals(lock.get("maxPayloadBytes").getAsInt(), Protocol.MAX_PAYLOAD_BYTES);
         assertEquals(lock.get("modVersion").getAsString(), Protocol.MOD_VERSION);
         assertEquals(lock.get("serverVersion").getAsString(), Protocol.SERVER_VERSION);
-        JsonObject packetIds = lock.getAsJsonObject("packetIds");
+        JsonObject packetIds = lock.getAsJsonObject("packetIds").deepCopy();
+        JsonObject amendments = JsonParser.parseString(Files.readString(ROOT.resolve("docs/spec-amendments.json"))).getAsJsonObject();
+        for (var amendment : amendments.getAsJsonArray("approved")) {
+            JsonObject ids = amendment.getAsJsonObject().getAsJsonObject("packetIds");
+            for (var entry : ids.entrySet()) {
+                assertFalse(packetIds.has(entry.getKey()), "amendment duplicates base SPEC packet: " + entry.getKey());
+                packetIds.add(entry.getKey(), entry.getValue());
+            }
+        }
         assertEquals(PacketType.values().length, packetIds.size());
         for (PacketType type : PacketType.values()) assertEquals(packetIds.get(type.name()).getAsInt(), type.id());
         var errors = lock.getAsJsonArray("errorCodes").asList().stream().map(e -> e.getAsString()).toList();
