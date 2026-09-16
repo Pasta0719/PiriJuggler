@@ -48,7 +48,11 @@ public final class SlotScreen extends Screen {
             int x=670+315*reel;c.fill(x,300,x+270,690,color("REEL_BG"));
             var clip=v.clip(new SlotLayout.Rect(x,300,270,390));c.enableScissor(clip.x(),clip.y(),clip.x()+clip.w(),clip.y()+clip.h());
             double phase=view.phase(reel);int middle=(int)Math.floor(phase);double fraction=phase-middle;
-            for(int row=-2;row<=2;row++)texture(c,"symbols/"+UiConstants.symbol(reel,middle+row)+".png",x+(270-130)/2.0,430+(row-fraction)*130,130,130,256,256,1);
+            for(int row=-2;row<=2;row++){
+                String symbol=UiConstants.symbol(reel,middle+row);
+                int symbolWidth=(symbol.equals("seven")||symbol.equals("bar"))?150:130;
+                texture(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,430+(row-fraction)*130,symbolWidth,130,256,256,1);
+            }
             c.disableScissor();
         }
         var lamp=SlotLayout.LAMP;String name="lamp/piri_chance_"+(view.lampOn()?"on":"off")+".png";
