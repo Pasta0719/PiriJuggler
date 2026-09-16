@@ -50,8 +50,10 @@ public final class SlotScreen extends Screen {
             double phase=view.phase(reel);int middle=(int)Math.floor(phase);double fraction=phase-middle;
             for(int row=-2;row<=2;row++){
                 String symbol=UiConstants.symbol(reel,middle+row);
-                int symbolWidth=(symbol.equals("seven")||symbol.equals("bar"))?150:130;
-                texture(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,430+(row-fraction)*130,symbolWidth,130,256,256,1);
+                boolean wide=symbol.equals("seven")||symbol.equals("bar");
+                int textureWidth=wide?320:256,textureHeight=256,symbolHeight=130;
+                int symbolWidth=Math.round(symbolHeight*(textureWidth/(float)textureHeight));
+                texture(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,430+(row-fraction)*130,symbolWidth,symbolHeight,textureWidth,textureHeight,1);
             }
             c.disableScissor();
         }
