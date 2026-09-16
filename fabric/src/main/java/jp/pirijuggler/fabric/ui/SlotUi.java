@@ -26,7 +26,9 @@ public final class SlotUi {
                     return;
                 }
                 sender.accept(envelope);
-            },System::nanoTime,action->view.canSend(action)&&!(action==PacketType.SPACE_ACTION&&queuedLever!=null));view.receive(packet);
+            },System::nanoTime,action->view.canSend(action)
+                    &&!(action==PacketType.SPACE_ACTION&&queuedLever!=null)
+                    &&(view.nextGameRemainingNanos()==0||action==PacketType.SPACE_ACTION||action==PacketType.CLOSE_REQUEST));view.receive(packet);
             String state=view.value("gameState");if(state.startsWith("BIG_"))PiriSounds.startLoop("big_bgm");else if(state.startsWith("REG_"))PiriSounds.startLoop("reg_bgm");
             client.setScreen(new SlotScreen(view,input));return;
         }
