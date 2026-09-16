@@ -102,7 +102,7 @@ class PiriDatabaseTest {
         Session safe=db.state().session(player);assertEquals(Session.Lifecycle.SUSPENDED_SAFE,safe.lifecycle());assertEquals(Session.GameState.SEATED_READY,safe.state());assertFalse(db.state().busy(id));
         assertEquals(50,safe.number("credit"));assertEquals(199,safe.number("held_medals"));assertEquals(1,((Number)db.rows("SELECT big_count FROM machine_period_stats").getFirst().get("big_count")).longValue());
         String old=db.state().period();
-        db.sql("UPDATE player_sessions SET lifecycle='ACTIVE',game_state='BONUS_PENDING_REG',credit=10,held_medals=0,bonus_type='REG'");
+        db.sql("UPDATE player_sessions SET lifecycle='ACTIVE',game_state='BONUS_PENDING_REG',credit=10,held_medals=0,bonus_type='REG',last_client_sequence=1");
         db.close();db=new PiriDatabase(directory.resolve("piri.db"));db.open(2,NOW+100,config,new SplittableRandom(2),ignored->{});
         Session restarted=db.state().session(player);assertEquals(Session.Lifecycle.SUSPENDED_SAFE,restarted.lifecycle());assertEquals(Session.GameState.SEATED_READY,restarted.state());assertNotEquals(old,db.state().period());
         assertEquals(1,((Number)db.rows("SELECT reg_count FROM machine_period_stats WHERE business_period_id=?",old).getFirst().get("reg_count")).longValue());
