@@ -30,7 +30,7 @@ import java.util.UUID;
 import jp.pirijuggler.paper.reel.ReelEngine;
 
 public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessageListener, Listener {
-    private static final String BUILD_IDENTITY = "PHASE11_FORCE_SETTLEMENT_20260917_A";
+    private static final String BUILD_IDENTITY = "PHASE11_FORCE_SETTLEMENT_20260917_B";
     private PaperMainThread mainThread;
     private TaskExecutors executors;
     private ServerHandshake handshake;
@@ -47,6 +47,14 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
         handshake = new ServerHandshake(mainThread);
         executors = new TaskExecutors(mainThread);
         getLogger().info("PIRI_BUILD_IDENTITY " + BUILD_IDENTITY + " source=" + codeSource(PiriJugglerPlugin.class));
+
+        var buildInfoCommand = getCommand("piribuildinfo");
+        if (buildInfoCommand == null) throw new IllegalStateException("piribuildinfo command missing");
+        buildInfoCommand.setExecutor((sender, command, label, args) -> {
+            sendBuildIdentity(sender);
+            return true;
+        });
+
         try {
             reels = new ReelEngine();
             getLogger().info("PIRI_REELS_READY " + reels.verification());
@@ -89,11 +97,15 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
 
     private boolean handleBuildIdentity(CommandSender sender,String[] args) {
         if(args.length!=1||!args[0].equalsIgnoreCase("buildinfo"))return false;
+        sendBuildIdentity(sender);
+        return true;
+    }
+
+    private void sendBuildIdentity(CommandSender sender) {
         sender.sendMessage("PIRI_BUILD_IDENTITY " + BUILD_IDENTITY);
         sender.sendMessage("PLUGIN_SOURCE " + codeSource(PiriJugglerPlugin.class));
         sender.sendMessage("DATABASE_SOURCE " + codeSource(jp.pirijuggler.paper.database.PiriDatabase.class));
         sender.sendMessage("PLUGIN_VERSION " + getDescription().getVersion());
-        return true;
     }
 
     private static String codeSource(Class<?> type) {
