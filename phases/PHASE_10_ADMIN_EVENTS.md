@@ -1,5 +1,7 @@
 # PHASE 10 — Admin / Settings / Startup Allocation / Events
 
+Status: IN_PROGRESS
+
 ## 読むもの
 - `../SPEC.md` sections: 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 86, 87, 94, 97, 100, 102, 103, 104, 106, 135, 137
 - `../RUNTIME_ACCEPTANCE.md` Phase10
