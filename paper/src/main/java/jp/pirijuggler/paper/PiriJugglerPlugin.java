@@ -15,6 +15,7 @@ import jp.pirijuggler.paper.economy.PrizeService;
 import jp.pirijuggler.paper.data.DataLampPublisher;
 import jp.pirijuggler.paper.data.PublicDataCommand;
 import jp.pirijuggler.paper.data.MachineDataSimulationService;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -29,6 +30,7 @@ import java.util.UUID;
 import jp.pirijuggler.paper.reel.ReelEngine;
 
 public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessageListener, Listener {
+    private static final String BUILD_IDENTITY = "PHASE11_FORCE_SETTLEMENT_20260917_A";
     private PaperMainThread mainThread;
     private TaskExecutors executors;
     private ServerHandshake handshake;
@@ -44,6 +46,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
         mainThread = new PaperMainThread(this);
         handshake = new ServerHandshake(mainThread);
         executors = new TaskExecutors(mainThread);
+        getLogger().info("PIRI_BUILD_IDENTITY " + BUILD_IDENTITY + " source=" + codeSource(PiriJugglerPlugin.class));
         try {
             reels = new ReelEngine();
             getLogger().info("PIRI_REELS_READY " + reels.verification());
@@ -64,7 +67,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
                     prizes = new PrizeService(this, result.values());
                     EconomyStartupRecovery.reconcile(this);
                     Objects.requireNonNull(getCommand("piri")).setExecutor((sender, command, label, args) ->
-                            machineSimulation.handle(sender,args) || publicData.handle(sender, args) || prizes.handle(sender, args) || machines.onCommand(sender, command, label, args));
+                            handleBuildIdentity(sender,args) || machineSimulation.handle(sender,args) || publicData.handle(sender, args) || prizes.handle(sender, args) || machines.onCommand(sender, command, label, args));
                 }
             }
         } catch (IOException | RuntimeException exception) {
@@ -82,6 +85,24 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(new MedalRecoveryListener(this), this);
         getLogger().info("Protocol " + Protocol.VERSION + "; configuration " + (configurationValid ? "valid" : "invalid; gameplay disabled"));
+    }
+
+    private boolean handleBuildIdentity(CommandSender sender,String[] args) {
+        if(args.length!=1||!args[0].equalsIgnoreCase("buildinfo"))return false;
+        sender.sendMessage("PIRI_BUILD_IDENTITY " + BUILD_IDENTITY);
+        sender.sendMessage("PLUGIN_SOURCE " + codeSource(PiriJugglerPlugin.class));
+        sender.sendMessage("DATABASE_SOURCE " + codeSource(jp.pirijuggler.paper.database.PiriDatabase.class));
+        sender.sendMessage("PLUGIN_VERSION " + getDescription().getVersion());
+        return true;
+    }
+
+    private static String codeSource(Class<?> type) {
+        try {
+            var source=type.getProtectionDomain().getCodeSource();
+            return source==null||source.getLocation()==null?"UNKNOWN":source.getLocation().toString();
+        } catch (RuntimeException ignored) {
+            return "UNAVAILABLE";
+        }
     }
 
     @Override public void onPluginMessageReceived(String channel, Player player, byte[] message) {
