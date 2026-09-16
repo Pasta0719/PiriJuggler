@@ -1,7 +1,6 @@
 package jp.pirijuggler.fabric;
 
 import jp.pirijuggler.common.protocol.EnvelopeCodec;
-import jp.pirijuggler.common.protocol.ProtocolException;
 import jp.pirijuggler.fabric.network.ClientHandshake;
 import jp.pirijuggler.fabric.network.ClientSession;
 import jp.pirijuggler.fabric.network.PiriPayload;
@@ -34,10 +33,14 @@ public final class PiriJugglerClient implements ClientModInitializer {
             try {
                 var envelope = EnvelopeCodec.decode(payload.bytes());
                 HANDSHAKE.receive(envelope); SESSION.receive(envelope, HANDSHAKE.canUseSlot());
-                if (HANDSHAKE.canUseSlot()) SlotUi.receive(envelope,SESSION,outbound -> ClientPlayNetworking.send(new PiriPayload(EnvelopeCodec.encode(outbound))));
+                if (HANDSHAKE.canUseSlot()) {
+                    var outbound = (java.util.function.Consumer<jp.pirijuggler.common.protocol.Envelope>) packet -> ClientPlayNetworking.send(new PiriPayload(EnvelopeCodec.encode(packet)));
+                    AdminUi.receive(envelope, SESSION, outbound);
+                    SlotUi.receive(envelope, SESSION, outbound);
+                }
             } catch (RuntimeException exception) {
                 HANDSHAKE.reject(); SESSION.reset();
-                if (SlotUi.hidesHud()) context.client().setScreen(null);
+                if (SlotUi.hidesHud() || AdminUi.isOpen()) context.client().setScreen(null);
                 SlotUi.reset();
             }
         }));
