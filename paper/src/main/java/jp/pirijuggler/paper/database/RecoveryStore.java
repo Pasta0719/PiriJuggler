@@ -40,9 +40,22 @@ public final class RecoveryStore {
         this.seed=seed;
     }
 
-    /** Settle one unresolved session to SEATED_READY while preserving source_business_period_id. */
+    /**
+     * Settle one unresolved session to SEATED_READY while preserving source_business_period_id.
+     * The persisted last_client_sequence is the snapshot version for the §133 idempotency key.
+     */
     public Session settle(Session before,long now) throws Exception {
         if(before.ready())return before;
+        String settlementId=settlementTransactionId(before);
+        var prior=db.rows("SELECT transaction_id FROM economy_transactions WHERE transaction_id=?",settlementId);
+        if(!prior.isEmpty()){
+            var current=db.rows("SELECT * FROM player_sessions WHERE session_id=?",before.id().toString());
+            if(current.size()!=1)throw new IllegalStateException("Settled session missing: "+before.id());
+            Session settled=new Session(current.getFirst());
+            if(!settled.ready())throw new IllegalStateException("Settlement marker exists for unresolved session: "+before.id());
+            return settled;
+        }
+
         int machine=before.machine();
         String period=before.text("source_business_period_id");
         Map<String,Object> statRow=row("SELECT * FROM machine_period_stats WHERE machine_id=? AND business_period_id=?",machine,period);
@@ -88,7 +101,13 @@ public final class RecoveryStore {
                 stats.total,stats.big,stats.reg,stats.current,stats.difference,stats.max,stats.lastBonus,stats.lastBonusAt,machine,period);
         db.sql("UPDATE machines SET last_left_stop=?,last_center_stop=?,last_right_stop=?,updated_at=? WHERE machine_id=?",
                 values.get("display_left_stop"),values.get("display_center_stop"),values.get("display_right_stop"),now,machine);
+        db.sql("INSERT INTO economy_transactions(transaction_id,player_uuid,operation,vault_amount,item_snapshot_json,balance_before,status,created_at,updated_at) VALUES(?,?,'FORCE_SETTLEMENT',0,?,NULL,'APPLIED',?,?)",
+                settlementId,before.player().toString(),before.state().name(),now,now);
         return new Session(values);
+    }
+
+    static String settlementTransactionId(Session session){
+        return "SETTLE:"+session.id()+":"+session.sequence();
     }
 
     private void settleFreshNormal(Map<String,Object> values,Stats stats,int setting,long now) throws Exception {
