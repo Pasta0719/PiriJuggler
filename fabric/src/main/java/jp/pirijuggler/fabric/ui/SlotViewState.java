@@ -8,19 +8,20 @@ import jp.pirijuggler.common.reel.ReelMotion;
 
 /** Public packets only; visual interpolation never computes a winning result. */
 public final class SlotViewState {
+    private static final long NEXT_GAME_DELAY_NANOS=1_700_000_000L;
     private final LongSupplier time;
     private final double[] starts=new double[3],rest=new double[3];
     private final Stop[] stops=new Stop[3];
     private final Press[] presses=new Press[3];
     private record Stop(double from,double target,long at,long duration) {}
     private record Press(int pressedIndex,int stopIndex,long at) {}
-    private UUID session,spin;private int machine;private long spinAt,noticeAt;private String animation="NORMAL";private int stopEnableAfterMs;
+    private UUID session,spin;private int machine;private long spinAt,noticeAt,nextGameAt;private String animation="NORMAL";private int stopEnableAfterMs;
     private boolean spinning,notice,blink;private JsonObject state,dataLamp,stopHints=new JsonObject();private String error="";
     public SlotViewState(LongSupplier nanos){time=nanos;}
     public void receive(Envelope envelope) {
         JsonObject b=envelope.payload();long now=time.getAsLong();
         switch(envelope.packetType()) {
-            case OPEN_MACHINE -> {session=UUID.fromString(b.get("sessionId").getAsString());machine=b.get("machineId").getAsInt();spin=null;state=null;dataLamp=null;stopHints=new JsonObject();error="";spinning=false;notice=false;blink=false;Arrays.fill(stops,null);Arrays.fill(presses,null);Arrays.fill(rest,0);}
+            case OPEN_MACHINE -> {session=UUID.fromString(b.get("sessionId").getAsString());machine=b.get("machineId").getAsInt();spin=null;state=null;dataLamp=null;stopHints=new JsonObject();error="";spinning=false;notice=false;blink=false;nextGameAt=0;Arrays.fill(stops,null);Arrays.fill(presses,null);Arrays.fill(rest,0);}
             case PUBLIC_STATE -> {if(matches(b)) {
                 state=b.deepCopy();notice=b.get("lampOn").getAsBoolean();error="";
                 var display=b.getAsJsonObject("displayStops");
@@ -45,6 +46,11 @@ public final class SlotViewState {
                     stops[reel]=new Stop(from,endpoint,now,visualMs*1_000_000L);rest[reel]=target;
                 }
                 if(b.has("nextStopHints"))stopHints=b.getAsJsonObject("nextStopHints").deepCopy();
+                if(allStopped()){
+                    long finalStopComplete=now;
+                    for(var stop:stops)finalStopComplete=Math.max(finalStopComplete,stop.at()+stop.duration());
+                    nextGameAt=finalStopComplete+NEXT_GAME_DELAY_NANOS;
+                }
             }}
             case NOTICE -> {if(matchesSpin(b)){notice="ON".equals(b.get("lamp").getAsString());blink="FAST_BLINK_1S".equals(b.get("pattern").getAsString());noticeAt=now;}}
             case DATA_LAMP -> {if(b.has("machineId")&&b.get("machineId").getAsInt()==machine)dataLamp=b.deepCopy();}
@@ -69,7 +75,18 @@ public final class SlotViewState {
         String name=new String[]{"left","center","right"}[reel];if(!stopHints.has(name))return null;JsonArray a=stopHints.getAsJsonArray(name);return pressed>=0&&pressed<a.size()?a.get(pressed).getAsJsonObject():null;
     }
     private boolean hasPendingPress(){for(var p:presses)if(p!=null)return true;return false;}
+    private boolean allStopped(){for(var s:stops)if(s==null)return false;return true;}
     private int nextPendingReel(){for(int i=0;i<3;i++)if(stops[i]==null)return i;return -1;}
+    private boolean leverReadyState(){
+        if(state==null||!state.has("gameState"))return false;
+        return switch(state.get("gameState").getAsString()){
+            case "NORMAL_BETTED","REPLAY_READY","BONUS_ENTRY_BETTED_BIG","BONUS_ENTRY_BETTED_REG","BIG_BETTED","REG_BETTED"->true;
+            default->false;
+        };
+    }
+    public boolean shouldQueueLever(){return !spinning&&leverReadyState()&&time.getAsLong()<nextGameAt;}
+    public boolean queuedLeverReady(){return !spinning&&leverReadyState()&&time.getAsLong()>=nextGameAt;}
+    public long nextGameRemainingNanos(){return Math.max(0,nextGameAt-time.getAsLong());}
     public boolean matches(JsonObject b){return session!=null&&b.has("sessionId")&&b.has("machineId")&&session.toString().equals(b.get("sessionId").getAsString())&&machine==b.get("machineId").getAsInt();}
     public boolean matchesSpin(JsonObject b){return spin!=null&&b.has("spinId")&&spin.toString().equals(b.get("spinId").getAsString());}
     public static double wrap(double value){return ReelMotion.wrap(value);}
