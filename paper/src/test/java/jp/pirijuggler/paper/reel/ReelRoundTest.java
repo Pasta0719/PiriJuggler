@@ -15,11 +15,11 @@ class ReelRoundTest {
     private Envelope request(PacketType type,long seq,int pressed){var b=request(type,seq).payload();b.addProperty("pressedIndex",pressed);return Envelope.current(type,b);}
     private static String error(ReelRound.Result r){assertFalse(r.accepted());return r.packets().getFirst().payload().get("errorCode").getAsString();}
     @Test void earlyStopConsumesSequenceAndUsesServerTimeWithPing(){
-        var r=round(ReelMotion.Profile.NORMAL,DisplayRole.BELL);var start=r.begin(0);assertEquals(400,start.payload().get("stopEnableAfterMs").getAsInt());assertTrue(start.payload().has("stopHints"));
-        assertEquals("STOP_TOO_EARLY",error(r.receive(OWNER,request(PacketType.STOP_LEFT,1),449_999_999,100)));assertEquals(1,r.lastSequence());
-        assertEquals("SEQUENCE_OLD",error(r.receive(OWNER,request(PacketType.STOP_LEFT,1),600_000_000,100)));
-        var valid=r.receive(OWNER,request(PacketType.STOP_LEFT,2),600_000_000,100);assertTrue(valid.accepted());assertEquals(4,valid.choice().pressedIndex());assertEquals(1,r.stoppedMask());
-        assertEquals(Set.of("spinId","reel","pressedIndex","stopIndex","slip","durationMs","nextStopHints"),valid.packets().get(1).payload().keySet());assertEquals("ALREADY_STOPPED",error(r.receive(OWNER,request(PacketType.STOP_LEFT,3),900_000_000,100)));
+        var r=round(ReelMotion.Profile.NORMAL,DisplayRole.BELL);var start=r.begin(0);assertEquals(700,start.payload().get("stopEnableAfterMs").getAsInt());assertTrue(start.payload().has("stopHints"));
+        assertEquals("STOP_TOO_EARLY",error(r.receive(OWNER,request(PacketType.STOP_LEFT,1),749_999_999,100)));assertEquals(1,r.lastSequence());
+        assertEquals("SEQUENCE_OLD",error(r.receive(OWNER,request(PacketType.STOP_LEFT,1),750_000_000,100)));
+        var valid=r.receive(OWNER,request(PacketType.STOP_LEFT,2),750_000_000,100);assertTrue(valid.accepted());assertEquals(1,valid.choice().pressedIndex());assertEquals(1,r.stoppedMask());
+        assertEquals(Set.of("spinId","reel","pressedIndex","stopIndex","slip","durationMs","nextStopHints"),valid.packets().get(1).payload().keySet());assertEquals("ALREADY_STOPPED",error(r.receive(OWNER,request(PacketType.STOP_LEFT,3),1_000_000_000,100)));
     }
     @Test void profileThresholdsAndClientDelaysAreFixed(){for(var profile:ReelMotion.Profile.values()){
         var r=round(profile,DisplayRole.GRAPE);assertEquals(profile.clientDelayMs(),r.begin(0).payload().get("stopEnableAfterMs").getAsInt());long boundary=profile.serverThresholdMs()*1_000_000L;
