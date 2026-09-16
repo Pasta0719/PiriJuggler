@@ -1,7 +1,8 @@
 # PHASE 09 Runtime Evidence
 
-Status: RUNTIME_ACCEPTANCE_PASS / FINAL_BUILD_PENDING
+Status: COMPLETE
 Date: 2026-09-16 (JST)
+Build HEAD: `1be4668f981ed051478941cd39e6e77447113353`
 
 ## Runtime acceptance confirmed
 
@@ -17,11 +18,18 @@ The following Phase09 behavior was confirmed in the live Minecraft environment d
 - Public remote data does not expose the machine setting.
 - Admin real-data simulation updates the same current-period data consumed by the data lamp/public data path.
 
-## Final completion gate
+## Final build/test gate
 
-Phase09 must not be marked COMPLETE until the latest repository HEAD passes both required Gradle gates:
+After pulling the latest repository HEAD, the user ran `build-jars.bat` on Windows and reported:
 
-- `./gradlew test` exit 0
-- `./gradlew build` exit 0
+- main build: `BUILD SUCCESSFUL in 28s` (`27 actionable tasks: 5 executed, 22 up-to-date`)
+- runtime helper build: `BUILD SUCCESSFUL in 3s` (`8 actionable tasks: 8 up-to-date`)
+- Paper and Fabric JAR packaging completed successfully into `dist/`
+- runtime test helper packaging completed successfully into `dist/test-only/`
+- the Fabric test suite, including the previously failing `UiResourcesTest`, passed as part of the successful build
 
-At the time this report was created, the latest GitHub HEAD was `90d743d8b771625b9cc19210ea0af62ebb942aca` and no CI status was published for that commit. Therefore runtime acceptance is recorded as PASS, while final Phase09 COMPLETE remains pending build/test evidence for the latest HEAD.
+The prior failing palette/spec-lock test was corrected without deleting the test; intentional cabinet theme palette overrides are now explicitly permitted while the remaining UI resource contract stays checked.
+
+## Result
+
+Phase09 runtime acceptance and the latest-HEAD build/test gate are PASS. Phase09 is COMPLETE.
