@@ -11,7 +11,7 @@ public final class SlotUi {
     private static SlotViewState view;private static SlotInput input;
     private static final Map<Long,String> ACCEPT_SOUNDS=new LinkedHashMap<>();
     private static long pendingBigBgmAt=-1L;
-    public static boolean hidesHud(){var screen=MinecraftClient.getInstance().currentScreen;return screen instanceof SlotScreen||screen instanceof SlotChatScreen;}
+    public static boolean hidesHud(){var screen=MinecraftClient.getInstance().currentScreen;return screen instanceof SlotScreen||screen instanceof SlotChatScreen||screen instanceof AdminScreen;}
     public static void receive(Envelope packet,ClientSession session,Consumer<Envelope> sender){
         var client=MinecraftClient.getInstance();var b=packet.payload();
         if(packet.packetType()==PacketType.OPEN_MACHINE){
