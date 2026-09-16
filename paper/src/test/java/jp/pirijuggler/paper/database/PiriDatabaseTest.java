@@ -80,7 +80,7 @@ class PiriDatabaseTest {
     }
     @Test void disconnectAndExactResumePreserveEntireSnapshot() throws Exception {
         int id = create(0); db.seat(player, id, NOW);
-        db.sql("UPDATE player_sessions SET game_state='NORMAL_SPINNING',credit=32,held_medals=442,spin_id=?,internal_role='BIG',premium_type='REVERSE',notice_state='PENDING',lamp_on=1,bonus_type='BIG',bonus_payout_count=4,current_bet=3,pay_display=15,display_left_stop=8,display_center_stop=9,display_right_stop=10,stopped_mask=1,phase_left=2.5,phase_center=3.5,phase_right=4.5,motion_profile='REVERSE',last_client_sequence=123", UUID.randomUUID().toString());
+        db.sql("UPDATE player_sessions SET game_state='NORMAL_SPINNING',credit=32,held_medals=442,spin_id=?,internal_role='BIG',premium_type=NULL,notice_state='PENDING',lamp_on=1,bonus_type='BIG',bonus_payout_count=4,current_bet=3,pay_display=15,display_left_stop=8,display_center_stop=9,display_right_stop=10,stopped_mask=1,phase_left=2.5,phase_center=3.5,phase_right=4.5,motion_profile='NORMAL',last_client_sequence=123", UUID.randomUUID().toString());
         Map<String, Object> before = db.state().session(player).snapshot();
         db.disconnect(player, NOW + 1, 60_000); assertTrue(db.state().busy(id));
         assertEquals(Session.Lifecycle.SUSPENDED_GRACE, db.state().session(player).lifecycle());
@@ -95,13 +95,23 @@ class PiriDatabaseTest {
         assertEquals(90, db.state().session(player).number("held_medals")); assertEquals(0, count("player_wallet"));
         db.seat(other, id, NOW + 60_001); code("MACHINE_OCCUPIED", () -> db.seat(player, id, NOW + 60_002));
     }
-    @Test void unsupportedNewerGameSnapshotNeverLosesRightsOnExpiryOrStartup() throws Exception {
-        int id = create(0); db.seat(player, id, NOW); db.sql("UPDATE player_sessions SET game_state='REPLAY_READY',credit=10");
-        db.disconnect(player, NOW, 0); assertThrows(DomainException.class, () -> db.expire(NOW));
-        assertTrue(db.state().busy(id)); db.close(); db = new PiriDatabase(directory.resolve("piri.db"));
-        assertThrows(DomainException.class, () -> db.open(2, NOW + 100, config, new SplittableRandom(2), ignored -> {}));
-        db = new PiriDatabase(directory.resolve("piri.db")); db.open(1, NOW + 200, config, new SplittableRandom(2), ignored -> {});
-        assertEquals(1, count("business_periods")); assertEquals(10, db.state().session(player).number("credit"));
+    @Test void unresolvedSnapshotForceSettlesOnGraceExpiryAndTrueRestart() throws Exception {
+        int id=create(0);db.seat(player,id,NOW);
+        db.sql("UPDATE player_sessions SET game_state='BONUS_PENDING_BIG',credit=10,held_medals=0,bonus_type='BIG'");
+        db.disconnect(player,NOW,0);db.expire(NOW);
+        Session safe=db.state().session(player);assertEquals(Session.Lifecycle.SUSPENDED_SAFE,safe.lifecycle());assertEquals(Session.GameState.SEATED_READY,safe.state());assertFalse(db.state().busy(id));
+        assertEquals(50,safe.number("credit"));assertEquals(199,safe.number("held_medals"));assertEquals(1,((Number)db.rows("SELECT big_count FROM machine_period_stats").getFirst().get("big_count")).longValue());
+        String old=db.state().period();
+        db.sql("UPDATE player_sessions SET lifecycle='ACTIVE',game_state='BONUS_PENDING_REG',credit=10,held_medals=0,bonus_type='REG'");
+        db.close();db=new PiriDatabase(directory.resolve("piri.db"));db.open(2,NOW+100,config,new SplittableRandom(2),ignored->{});
+        Session restarted=db.state().session(player);assertEquals(Session.Lifecycle.SUSPENDED_SAFE,restarted.lifecycle());assertEquals(Session.GameState.SEATED_READY,restarted.state());assertNotEquals(old,db.state().period());
+        assertEquals(1,((Number)db.rows("SELECT reg_count FROM machine_period_stats WHERE business_period_id=?",old).getFirst().get("reg_count")).longValue());
+    }
+    @Test void idleMaintenanceForceSettlesAndUnlocksActiveSession() throws Exception {
+        int id=create(0);db.seat(player,id,NOW);db.sql("UPDATE player_sessions SET game_state='BONUS_PENDING_REG',credit=10,bonus_type='REG',last_activity=?",NOW);
+        assertTrue(db.maintain(NOW+179_999,180_000).isEmpty());assertTrue(db.state().busy(id));
+        assertEquals(List.of(player),db.maintain(NOW+180_000,180_000));Session safe=db.state().session(player);
+        assertEquals(Session.Lifecycle.SUSPENDED_SAFE,safe.lifecycle());assertEquals(Session.GameState.SEATED_READY,safe.state());assertFalse(db.state().busy(id));
     }
     @Test void closeEmptyDeletesAndSequenceMismatchCannotChangeState() throws Exception {
         int id = create(0); Session seat = db.seat(player, id, NOW);
@@ -159,8 +169,8 @@ class PiriDatabaseTest {
         try (var executor = Executors.newSingleThreadExecutor()) { assertInstanceOf(IllegalStateException.class, executor.submit(() -> { try { db.state(); return null; } catch (Exception e) { return e; } }).get()); }
     }
     @Test void publicWireStateDoesNotLeakPrivateSnapshot() throws Exception {
-        int id = create(0); db.seat(player, id, NOW); db.sql("UPDATE player_sessions SET internal_role='BIG',premium_type='REVERSE'");
+        int id = create(0); db.seat(player, id, NOW); db.sql("UPDATE player_sessions SET internal_role='BIG',premium_type=NULL");
         var session = db.state().session(player); assertEquals(3, session.openPacket().size());
-        var json = session.publicState(); assertEquals(13, json.size()); assertFalse(json.toString().contains("REVERSE")); assertFalse(json.toString().contains("internal")); assertFalse(json.has("setting"));
+        var json = session.publicState(); assertEquals(13, json.size()); assertFalse(json.toString().contains("internal")); assertFalse(json.has("setting"));
     }
 }
