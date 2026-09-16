@@ -5,10 +5,11 @@
 ## 現在の再開情報 — 2026-09-16確認
 
 - Phase09はCOMPLETE。runtime evidenceは `runtime-evidence/PHASE_09/REPORT.md`。
-- 最新HEAD `1be4668f981ed051478941cd39e6e77447113353` をpull後、ユーザー実行の `build-jars.bat` が main build / runtime helper build とも `BUILD SUCCESSFUL`。Fabric testを含むbuild gateがPASS。
-- Phase09の実Minecraft受入は、data lamp、graph、history、Piri Chain、100/101境界、`/piri data`、`/piri data <machineId>`、設定値非公開を確認済み。
-- Phase09完了後は指示どおり次Phaseへ自動進行せず停止する。
-- 旧履歴中のPhase06–08状態欄は過去の未更新記録を含むため、このPhase09 closeoutでは遡及変更しない。
+- Phase10はIN_PROGRESS。仕様横断精査とproduction実装は完了し、`runtime-evidence/PHASE_10/REPORT.md` にbuild/runtime待ちとして記録した。
+- Phase10でSPEC 68章の「Admin Screen closeでAdminSession失効」に対してC2S packetが欠落している矛盾を確認。ユーザー承認により `ADMIN_CLOSE=16` を追加し、`docs/spec-amendments.json` に記録した。
+- Phase10実装HEADはまだユーザー環境でbuild未確認。Phase09で最後に確認済みのbuild HEADは `1be4668f981ed051478941cd39e6e77447113353`。
+- Phase10は実Minecraft Runtime Acceptance未実施のためCOMPLETE禁止。
+- 旧履歴中のPhase06–08状態欄は過去の未更新記録を含むため、Phase10作業では遡及変更しない。
 
 ## Phase 状態
 
@@ -23,7 +24,7 @@
 | 07 | NOT_STARTED | Vault / CREDIT / Held Medals / Medal Bundle |
 | 08 | NOT_STARTED | Prize Exchange / Vault Exchange / Transactions |
 | 09 | COMPLETE | Data Lamp / Graph / Piri Chain |
-| 10 | NOT_STARTED | Admin / Settings / Startup Allocation / Events |
+| 10 | IN_PROGRESS | Admin / Settings / Startup Allocation / Events |
 | 11 | NOT_STARTED | Suspend / Restart Recovery / Hardening / Final Tests |
 
 Allowed states:
@@ -32,20 +33,21 @@ Allowed states:
 ## Current work
 
 ```text
-Current phase: 09
+Current phase: 10
 Last completed phase: 09
-Active implementation: none
-Open blockers: none
-Next implementation phase: 10 (only when implementation continuation is requested)
+Active implementation: production code complete; build/runtime verification pending
+Open blockers: none in implementation; local build and Runtime Acceptance remain
+Next implementation phase: 11 only after Phase10 COMPLETE
 ```
 
 ## Build status
 
 ```text
-Latest verified HEAD: 1be4668f981ed051478941cd39e6e77447113353
-Latest build-jars.bat main build: PASS (BUILD SUCCESSFUL in 28s; 27 actionable tasks)
-Latest runtime helper build: PASS (BUILD SUCCESSFUL in 3s; 8 actionable tasks)
-Phase09 evidence: runtime-evidence/PHASE_09/REPORT.md
+Latest verified HEAD: 1be4668f981ed051478941cd39e6e77447113353 (Phase09)
+Latest build-jars.bat main build: PASS (Phase09; BUILD SUCCESSFUL in 28s; 27 actionable tasks)
+Latest runtime helper build: PASS (Phase09; BUILD SUCCESSFUL in 3s; 8 actionable tasks)
+Phase10 current HEAD: NOT YET VERIFIED by local build
+Phase10 evidence draft: runtime-evidence/PHASE_10/REPORT.md
 ```
 
 ## Implementation notes
@@ -248,3 +250,15 @@ Phase 02以降は未着手。次回はCODEX_START.mdに従いPhase 02を選択�
 - 最新HEAD `1be4668f981ed051478941cd39e6e77447113353` で `build-jars.bat` PASS。main build と runtime helper build はともに `BUILD SUCCESSFUL`。
 - Evidence: `runtime-evidence/PHASE_09/REPORT.md`。
 - **Phase09で終了。Phase10には進まない。**
+
+## Phase10 — IN_PROGRESS (implementation complete, verification pending)
+
+- SPEC指定章・Phase10 Runtime Acceptanceを横断確認。Admin Screen close通知だけ通信ID欠落の矛盾があり、ユーザー承認で `ADMIN_CLOSE=16` を追加。通常playの `CLOSE_REQUEST=10` は変更しない。
+- Fabric Admin Screenを実装。id / setting / current-period stats / active profile / autoSetting / enabled / latest30 setting history / busyを表示し、setting / auto / enabled / daily resetを操作可能。
+- serverは全admin packetでAdminSession ID / OP / owner / machine / sequenceを再検証。5分無操作・disconnect・restart・ADMIN_CLOSEで失効。busy中は閲覧のみ許可しmutationを拒否。
+- canonical `/piri setting <id> <1-6>` を実装し、same settingは履歴なしno-op、history reasonはSPECどおり `MANUAL`。旧 `/piri machine setting` は互換aliasとして同じ処理へ統合。
+- `/piri reset daily <id|all>` を実装。個別は現在period stats/history/graphだけresetしsetting/history/player assetsは維持。allは対象中1台でもbusyなら全体拒否し、対象全台を予約して1 transactionでreset。
+- `/piri event status|next <profile>|next clear` を実装。既存startup allocationのmanual-next / special / weekday / default優先、pattern→guarantee順、eligible条件、transaction rollbackとnext override消費を再確認。
+- 追加tests: `AdminStoreTest`, `StartupAllocationIntegrationTest`, `AdminSessionsTest`, Fabric `ClientSessionTest`, approved spec amendment merge。
+- Evidence draft: `runtime-evidence/PHASE_10/REPORT.md`。
+- **まだbuild/runtime未検証のためPhase10 COMPLETEではない。**
