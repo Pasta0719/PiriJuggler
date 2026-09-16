@@ -52,7 +52,7 @@ public final class SlotScreen extends Screen {
                 String symbol=UiConstants.symbol(reel,middle+row);
                 boolean wide=symbol.equals("seven")||symbol.equals("bar");
                 int textureWidth=wide?320:256,textureHeight=256,symbolHeight=130;
-                int symbolWidth=Math.round(symbolHeight*(textureWidth/(float)textureHeight));
+                int symbolWidth=wide?230:130;
                 texture(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,430+(row-fraction)*130,symbolWidth,symbolHeight,textureWidth,textureHeight,1);
             }
             c.disableScissor();
