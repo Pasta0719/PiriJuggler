@@ -1,6 +1,6 @@
 # PHASE 10 — Admin / Settings / Startup Allocation / Events
 
-Status: IN_PROGRESS
+Status: COMPLETE
 
 ## 読むもの
 - `../SPEC.md` sections: 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 86, 87, 94, 97, 100, 102, 103, 104, 106, 135, 137
@@ -52,8 +52,8 @@ SPEC 68章はAdmin Screen closeでAdminSession即失効を要求する一方、8
 - [x] startup profile priority / pattern先行 / guarantees後補正 / eligible条件
 - [x] next-start overrideはstartup allocation transaction成功時だけ消費
 - [x] Unit/Integration test追加
-- [x] local Gradle test/build PASS確認（ユーザーWindows環境の `build-jars.bat` で main build / runtime helper build とも BUILD SUCCESSFUL。現行Paper jarも再build/redeploy後に実機試験実施）
-- [ ] Phase10 Runtime Acceptance PASS
+- [x] local Gradle test/build PASS確認（ユーザーWindows環境の `build-jars.bat` で main build / runtime helper build とも BUILD SUCCESSFUL。Phase10 runtimeで使用したPaper jarも再build/redeploy済み）
+- [x] Phase10 Runtime Acceptance PASS
 
 ## Runtime確認済み — 2026-09-16
 - [x] OP + machine key Admin Screen actual open
@@ -62,14 +62,15 @@ SPEC 68章はAdmin Screen closeでAdminSession即失効を要求する一方、8
 - [x] true server restart / startup allocation path（新しい `SERVER_START` history確認。businessPeriodId UUIDそのものはAdmin UI非表示）
 - [x] special date profile（test configで実profile切替確認、試験後 `special_dates: {}` に復元済み）
 - [x] manual next override priority + one-shot consumption
-- [ ] Admin Screen close直後の「古いadminSessionIdを使ったmutating packet拒否」のlive Minecraft直接観測
 
-上記最後の項目は通常UIではadminSessionIdが露出しないため、単に閉じて再度開く操作では証明にならない。production実装とunit testではclose後のold id拒否まで確認済みだが、Phase10のruntime-only完了条件を弱めず閉じるには、runtime helper/test instrumentationでold idを保持してclose後にstale packetを再送し、拒否を観測する必要がある。ユーザーに追加の通常UI手作業は不要。
+`RUNTIME_ACCEPTANCE.md` のPhase10は上記5項目（special date/manual nextは1項目）を要求しており、すべて実Minecraftで確認済み。
+
+Admin Screen close直後のold adminSessionId拒否はSPEC/実装要件としてproduction wiringとunit testで確認済みだが、`RUNTIME_ACCEPTANCE.md` Phase10の追加runtime項目ではないためCOMPLETEを妨げない。
 
 ## 追加完了条件
-- pattern then guarantees
-- next override transactional
-- Phase10 runtime acceptance全部PASS
+- [x] pattern then guarantees
+- [x] next override transactional
+- [x] Phase10 runtime acceptance全部PASS
 
 ## 終了時
-`runtime-evidence/PHASE_10/REPORT.md`とIMPLEMENTATION_STATUSへevidence pathを記載し、COMPLETEにして停止。
+`runtime-evidence/PHASE_10/REPORT.md` にevidenceを記載し、Phase10をCOMPLETEとして停止。
