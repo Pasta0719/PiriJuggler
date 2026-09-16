@@ -4,6 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import jp.pirijuggler.paper.machine.DomainException;
 import jp.pirijuggler.paper.machine.Machine;
+import jp.pirijuggler.paper.reel.StopCatalogue;
+import jp.pirijuggler.paper.reel.StopSolver;
 import jp.pirijuggler.paper.session.Session;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -28,10 +30,13 @@ public final class PiriDatabase implements AutoCloseable {
     private Connection connection;
     private String period;
     private String profile;
+    private Map<String,Object> recoveryConfig;
+    private StopSolver recoverySolver;
     public PiriDatabase(Path file) { this.file = file; owner = Thread.currentThread(); }
     private void checkThread() { if (Thread.currentThread() != owner) throw new IllegalStateException("DB thread required"); }
     public State open(long jvmStart, long now, Map<String, Object> config, RandomGenerator eventRng, Consumer<String> warning) throws Exception {
         checkThread(); Files.createDirectories(file.toAbsolutePath().getParent());
+        recoveryConfig=config; recoverySolver=new StopSolver(new StopCatalogue());
         Class.forName("org.sqlite.JDBC");
         connection = DriverManager.getConnection("jdbc:sqlite:" + file.toAbsolutePath());
         try {
@@ -53,9 +58,10 @@ public final class PiriDatabase implements AutoCloseable {
                     period = Objects.requireNonNull(metadata("current_business_period_id"));
                     profile = (String) one("SELECT profile_name FROM business_periods WHERE business_period_id=?", period).get("profile_name");
                 } else {
-                    // Phase02 produces SEATED_READY sessions. Never discard game rights if a
-                    // newer game-engine snapshot is opened with this earlier foundation build.
-                    for (Session session : sessions()) if (session.ownsLock()) requireSettled(session);
+                    RecoveryStore recovery=recovery();
+                    for (Session session : sessions()) if (session.ownsLock()) {
+                        if(!session.ready()) recovery.settle(session,now);
+                    }
                     sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE lifecycle IN ('ACTIVE','SUSPENDED_GRACE')");
                     var day = Instant.ofEpochMilli(now).atZone(ZoneId.of("Asia/Tokyo")).toLocalDate();
                     var resolved = StartupProfile.resolve(config, day, metadata("next_start_profile"));
@@ -119,7 +125,7 @@ public final class PiriDatabase implements AutoCloseable {
                         UUID.randomUUID().toString(), player.toString(), id, period, machine.left(), machine.center(), machine.right(), now);
             } else {
                 if (existing.lifecycle() == Session.Lifecycle.SUSPENDED_GRACE && existing.number("lock_expires_at") <= now) {
-                    requireSettled(existing);
+                    if(!existing.ready()) recovery().settle(existing,now);
                     sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE player_uuid=?", player.toString());
                     existing = session(player);
                 }
@@ -159,15 +165,29 @@ public final class PiriDatabase implements AutoCloseable {
     }
     public void expire(long now) throws Exception {
         transaction(() -> {
+            RecoveryStore recovery=recovery();
             for (Session session : sessions()) if (session.lifecycle() == Session.Lifecycle.SUSPENDED_GRACE && session.number("lock_expires_at") <= now) {
-                requireSettled(session);
+                if(!session.ready()) recovery.settle(session,now);
                 sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE session_id=?", session.id().toString());
             }
             return null;
         });
     }
-    private static void requireSettled(Session session) {
-        if (!session.ready()) throw new DomainException("Unsettled game snapshot requires the matching game-engine build; lock and assets retained");
+    /** Force-settle both expired grace sessions and ACTIVE sessions that reached idle timeout. Returns players idled now. */
+    public List<UUID> maintain(long now,long idleMs) throws Exception {
+        if(idleMs<0)throw new IllegalArgumentException("idleMs");
+        return transaction(() -> {
+            RecoveryStore recovery=recovery();List<UUID> idled=new ArrayList<>();
+            for(Session session:sessions()){
+                boolean grace=session.lifecycle()==Session.Lifecycle.SUSPENDED_GRACE&&session.number("lock_expires_at")<=now;
+                boolean idle=session.lifecycle()==Session.Lifecycle.ACTIVE&&now-session.number("last_activity")>=idleMs;
+                if(!grace&&!idle)continue;
+                if(!session.ready())recovery.settle(session,now);
+                sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL,last_activity=? WHERE session_id=?",now,session.id().toString());
+                if(idle)idled.add(session.player());
+            }
+            return List.copyOf(idled);
+        });
     }
     public JsonObject adminState(int id) throws SQLException {
         Machine machine = requireMachine(id); JsonObject json = new JsonObject();
@@ -219,6 +239,7 @@ public final class PiriDatabase implements AutoCloseable {
     private boolean tableExists(String name) throws SQLException { return !rows("SELECT name FROM sqlite_master WHERE type='table' AND name=?", name).isEmpty(); }
     private String metadata(String key) throws SQLException { var rows = rows("SELECT value FROM metadata WHERE key=?", key); return rows.isEmpty() ? null : (String) rows.getFirst().get("value"); }
     private void metadata(String key, String value) throws SQLException { sql("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", key, value); }
+    private RecoveryStore recovery(){if(recoveryConfig==null||recoverySolver==null)throw new IllegalStateException("Recovery not configured");return new RecoveryStore(this,recoveryConfig,recoverySolver);}
     public int sql(String sql, Object... values) throws SQLException {
         checkThread(); try (PreparedStatement statement = connection.prepareStatement(sql)) {
             for (int i = 0; i < values.length; i++) statement.setObject(i + 1, values[i]);
