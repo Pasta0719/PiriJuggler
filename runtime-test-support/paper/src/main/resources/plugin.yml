@@ -20,6 +20,10 @@ commands:
     description: Phase08 test-only Vault failure and unknown-outcome injection using the real economy provider
     usage: /pirivaultfault <on|off|status> | /pirivaultfault uncertain <on|off|status>
     permission: piri.runtime
+  pirisecurity:
+    description: Phase11 duplicate/stale sequence and fake-session negative runtime test
+    usage: /pirisecurity
+    permission: piri.runtime
 permissions:
   piri.runtime:
     default: op
