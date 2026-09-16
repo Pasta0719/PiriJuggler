@@ -1,5 +1,8 @@
 # PHASE 09 — Data Lamp / Graph / Piri Chain
 
+Status: COMPLETE
+Evidence: `runtime-evidence/PHASE_09/REPORT.md`
+
 ## 読むもの
 - `../SPEC.md` sections: 58, 59, 60, 61, 62, 70, 71, 93, 99, 100, 106, 111, 122, 123, 133, 137
 - `../RUNTIME_ACCEPTANCE.md` Phase09
@@ -30,7 +33,6 @@
 - `/piri data` は台へ着席・物理アクセスせず一般プレイヤーが使用可能
 - `/piri data <machineId>` は total/current G、BIG/REG/合算実績確率、差枚、最大差枚、直近bonus historyを表示
 - Phase09 runtime acceptance全部PASS
-
 
 ## 終了時
 `runtime-evidence/PHASE_09/REPORT.md`とIMPLEMENTATION_STATUSへevidence pathを記載し、COMPLETEにして停止。
