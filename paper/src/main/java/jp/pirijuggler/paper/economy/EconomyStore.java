@@ -3,18 +3,23 @@ package jp.pirijuggler.paper.economy;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import jp.pirijuggler.paper.database.PiriDatabase;
+import jp.pirijuggler.paper.database.RecoveryStore;
 import jp.pirijuggler.paper.machine.DomainException;
 import jp.pirijuggler.paper.session.Session;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-/** SQLite-side Phase07 journal/ledger operations. Must run on the dedicated DB executor. */
+/** SQLite-side Phase07/11 journal and medal-ledger operations. Must run on the dedicated DB executor. */
 public final class EconomyStore {
     public enum JournalState { PREPARED, CALL_STARTED, APPLIED, ROLLED_BACK, REVIEW_REQUIRED }
     public record LoanPlan(String transactionId, int borrow, double vaultAmount, double balanceBefore, JournalState state) { }
     public record Bundle(UUID id, int amount) { }
     public record CashoutPlan(String transactionId, long amount, List<Bundle> bundles, boolean alreadyCompleted, Session session) {
         public CashoutPlan { bundles = List.copyOf(bundles); }
+    }
+    public record RecoveryStatus(String lifecycle,String gameState,long credit,long held,long pending) { }
+    public record RecoveryCashoutPlan(String transactionId,long amount,List<Bundle> bundles,boolean alreadyCompleted) {
+        public RecoveryCashoutPlan { bundles=List.copyOf(bundles); }
     }
     public record InsertCandidate(int slot, UUID bundleId, int amount) { }
     public record InsertReplacement(int slot, UUID oldBundleId, int oldAmount, UUID newBundleId, int newAmount, int consumed) { }
@@ -115,10 +120,8 @@ public final class EconomyStore {
                     transactionId, player.toString(), amount, now, now);
             List<Bundle> bundles = new ArrayList<>();
             if (amount > 0) {
-                int whole = Math.toIntExact(amount);
-                UUID id = UUID.randomUUID();
-                insertUnlimitedBundle(id, whole, "PENDING_DELIVERY", transactionId, now);
-                bundles.add(new Bundle(id, whole));
+                int whole = Math.toIntExact(amount); UUID id = UUID.randomUUID();
+                insertUnlimitedBundle(id, whole, "PENDING_DELIVERY", transactionId, now); bundles.add(new Bundle(id, whole));
             }
             int changed = db.sql("UPDATE player_sessions SET credit=0,held_medals=0,last_client_sequence=?,last_activity=? WHERE session_id=? AND last_client_sequence=? AND lifecycle='ACTIVE'",
                     sequence, now, sessionId.toString(), session.sequence());
@@ -134,19 +137,68 @@ public final class EconomyStore {
             if ("COMPLETED".equals(cashout.get("status"))) return requireSession(player);
             long deliveredAmount = 0, pendingAmount = 0;
             for (Bundle bundle : bundlesFor(transactionId)) {
-                if (delivered.contains(bundle.id())) {
-                    setBundleState(bundle.id(), "PENDING_DELIVERY", "ACTIVE", now);
-                    deliveredAmount = Math.addExact(deliveredAmount, bundle.amount());
-                } else {
-                    setBundleState(bundle.id(), "PENDING_DELIVERY", "RETIRED", now);
-                    pendingAmount = Math.addExact(pendingAmount, bundle.amount());
-                }
+                if (delivered.contains(bundle.id())) { setBundleState(bundle.id(), "PENDING_DELIVERY", "ACTIVE", now); deliveredAmount = Math.addExact(deliveredAmount, bundle.amount()); }
+                else { setBundleState(bundle.id(), "PENDING_DELIVERY", "RETIRED", now); pendingAmount = Math.addExact(pendingAmount, bundle.amount()); }
             }
-            if (pendingAmount > 0) db.sql("INSERT INTO player_wallet(player_uuid,pending_medals,updated_at) VALUES(?,?,?) ON CONFLICT(player_uuid) DO UPDATE SET pending_medals=player_wallet.pending_medals+excluded.pending_medals,updated_at=excluded.updated_at",
-                    player.toString(), pendingAmount, now);
+            if (pendingAmount > 0) addPending(player,pendingAmount,now);
             db.sql("UPDATE cashout_transactions SET delivered_amount=?,pending_amount=?,status='COMPLETED',updated_at=? WHERE transaction_id=?",
                     deliveredAmount, pendingAmount, now, transactionId);
             return requireSession(player);
+        });
+    }
+
+    /** Player-facing status for /piri recover status. */
+    public RecoveryStatus recoveryStatus(UUID player) throws Exception {
+        Session session=optionalSession(player);long pending=pending(player);
+        return session==null?new RecoveryStatus("NONE","NONE",0,0,pending):
+                new RecoveryStatus(session.lifecycle().name(),session.state().name(),session.number("credit"),session.number("held_medals"),pending);
+    }
+
+    /**
+     * Moves a suspended session plus wallet pending medals into one crash-safe pending delivery transaction.
+     * A GRACE session is force-settled before assets are moved. ACTIVE sessions must use the in-machine cashout path.
+     */
+    public RecoveryCashoutPlan prepareRecoveryCashout(UUID player, RecoveryStore recovery,long now) throws Exception {
+        Objects.requireNonNull(recovery);return db.transaction(() -> {
+            ensureUnlimitedTable();
+            var pendingTx=db.rows("SELECT * FROM cashout_transactions WHERE player_uuid=? AND status='PENDING' ORDER BY created_at LIMIT 1",player.toString());
+            if(!pendingTx.isEmpty()){
+                var row=pendingTx.getFirst();String tx=(String)row.get("transaction_id");
+                return new RecoveryCashoutPlan(tx,((Number)row.get("amount")).longValue(),bundlesFor(tx),false);
+            }
+            Session session=optionalSession(player);
+            if(session!=null&&session.lifecycle()==Session.Lifecycle.ACTIVE)throw new DomainException("INVALID_STATE");
+            if(session!=null&&session.lifecycle()==Session.Lifecycle.SUSPENDED_GRACE){
+                if(!session.ready())recovery.settle(session,now);
+                db.sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL,last_activity=? WHERE player_uuid=?",now,player.toString());
+                session=optionalSession(player);
+            }
+            long wallet=pending(player),assets=session==null?0:Math.addExact(session.number("credit"),session.number("held_medals"));
+            long amount=Math.addExact(wallet,assets);
+            if(amount<=0)throw new DomainException("NOT_ENOUGH_MEDALS");
+            if(amount>MedalToken.MAX_AMOUNT)throw new DomainException("MEDAL_AMOUNT_TOO_LARGE");
+            String tx=UUID.randomUUID().toString();
+            db.sql("INSERT INTO cashout_transactions(transaction_id,player_uuid,amount,status,created_at,updated_at) VALUES(?,?,?,'PENDING',?,?)",tx,player.toString(),amount,now,now);
+            UUID bundle=UUID.randomUUID();insertUnlimitedBundle(bundle,Math.toIntExact(amount),"PENDING_DELIVERY",tx,now);
+            if(session!=null)db.sql("DELETE FROM player_sessions WHERE player_uuid=?",player.toString());
+            db.sql("DELETE FROM player_wallet WHERE player_uuid=?",player.toString());
+            return new RecoveryCashoutPlan(tx,amount,List.of(new Bundle(bundle,Math.toIntExact(amount))),false);
+        });
+    }
+
+    /** Finalizes a recovery delivery; undelivered value returns to player_wallet for retry. */
+    public void finishRecoveryCashout(UUID player,String transactionId,Set<UUID> delivered,long now) throws Exception {
+        db.transaction(() -> {
+            ensureUnlimitedTable();var cashout=requireRow("SELECT * FROM cashout_transactions WHERE transaction_id=? AND player_uuid=?",transactionId,player.toString());
+            if("COMPLETED".equals(cashout.get("status")))return null;
+            long deliveredAmount=0,pendingAmount=0;
+            for(Bundle bundle:bundlesFor(transactionId)){
+                if(delivered.contains(bundle.id())){setBundleState(bundle.id(),"PENDING_DELIVERY","ACTIVE",now);deliveredAmount=Math.addExact(deliveredAmount,bundle.amount());}
+                else{setBundleState(bundle.id(),"PENDING_DELIVERY","RETIRED",now);pendingAmount=Math.addExact(pendingAmount,bundle.amount());}
+            }
+            if(pendingAmount>0)addPending(player,pendingAmount,now);
+            db.sql("UPDATE cashout_transactions SET delivered_amount=?,pending_amount=?,status='COMPLETED',updated_at=? WHERE transaction_id=?",deliveredAmount,pendingAmount,now,transactionId);
+            return null;
         });
     }
 
@@ -155,35 +207,22 @@ public final class EconomyStore {
         Objects.requireNonNull(candidates);
         String transactionId = deterministic("INSERT", sessionId, sequence);
         return db.transaction(() -> {
-            ensureUnlimitedTable();
-            Session session = requireActive(player, sessionId, machine);
+            ensureUnlimitedTable(); Session session = requireActive(player, sessionId, machine);
             if (!allowed(session.state())) throw new DomainException("INVALID_STATE");
             if (sequence <= session.sequence()) throw new DomainException("SEQUENCE_OLD");
-            int need = 50 - Math.toIntExact(session.number("credit"));
-            if (need <= 0) throw new DomainException("INVALID_STATE");
-            Set<UUID> seen = new HashSet<>();
-            List<InsertReplacement> replacements = new ArrayList<>();
-            int inserted = 0;
+            int need = 50 - Math.toIntExact(session.number("credit")); if (need <= 0) throw new DomainException("INVALID_STATE");
+            Set<UUID> seen = new HashSet<>(); List<InsertReplacement> replacements = new ArrayList<>(); int inserted = 0;
             for (InsertCandidate candidate : candidates) {
                 if (inserted >= need) break;
-                if (candidate.slot() < 0 || candidate.slot() > 35 || candidate.amount() < 1 || candidate.amount() > MedalToken.MAX_AMOUNT || !seen.add(candidate.bundleId()))
-                    throw new DomainException("INVALID_ITEM");
-                requireUsableBundle(candidate.bundleId(), candidate.amount());
-                int consumed = Math.min(candidate.amount(), need - inserted);
-                int remainder = candidate.amount() - consumed;
-                UUID remainderId = remainder == 0 ? null : UUID.randomUUID();
-                replacements.add(new InsertReplacement(candidate.slot(), candidate.bundleId(), candidate.amount(), remainderId, remainder, consumed));
-                inserted += consumed;
+                if (candidate.slot() < 0 || candidate.slot() > 35 || candidate.amount() < 1 || candidate.amount() > MedalToken.MAX_AMOUNT || !seen.add(candidate.bundleId())) throw new DomainException("INVALID_ITEM");
+                requireUsableBundle(candidate.bundleId(), candidate.amount()); int consumed = Math.min(candidate.amount(), need - inserted); int remainder = candidate.amount() - consumed;
+                UUID remainderId = remainder == 0 ? null : UUID.randomUUID(); replacements.add(new InsertReplacement(candidate.slot(), candidate.bundleId(), candidate.amount(), remainderId, remainder, consumed)); inserted += consumed;
             }
             if (inserted <= 0) throw new DomainException("NOT_ENOUGH_MEDALS");
             JsonArray beforeJson = new JsonArray(), afterJson = new JsonArray();
             for (InsertReplacement replacement : replacements) {
-                beforeJson.add(bundleJson(replacement.oldBundleId(), replacement.oldAmount(), replacement.slot()));
-                setBundleState(replacement.oldBundleId(), "ACTIVE", "RETIRED", now);
-                if (replacement.newBundleId() != null) {
-                    insertUnlimitedBundle(replacement.newBundleId(), replacement.newAmount(), "ACTIVE", null, now);
-                    afterJson.add(bundleJson(replacement.newBundleId(), replacement.newAmount(), replacement.slot()));
-                }
+                beforeJson.add(bundleJson(replacement.oldBundleId(), replacement.oldAmount(), replacement.slot())); setBundleState(replacement.oldBundleId(), "ACTIVE", "RETIRED", now);
+                if (replacement.newBundleId() != null) { insertUnlimitedBundle(replacement.newBundleId(), replacement.newAmount(), "ACTIVE", null, now); afterJson.add(bundleJson(replacement.newBundleId(), replacement.newAmount(), replacement.slot())); }
             }
             db.sql("INSERT INTO medal_inventory_transactions(transaction_id,player_uuid,operation,before_bundle_json,after_bundle_json,container_snapshot_json,status,created_at,updated_at) VALUES(?,?,'INSERT_MEDALS',?,?,?,'LEDGER_COMMITTED',?,?)",
                     transactionId, player.toString(), beforeJson.toString(), afterJson.toString(), "{\"container\":\"PLAYER_INVENTORY\"}", now, now);
@@ -195,107 +234,57 @@ public final class EconomyStore {
         });
     }
 
-    public void markInsertApplied(String transactionId, long now) throws Exception {
-        db.sql("UPDATE medal_inventory_transactions SET status='APPLIED',updated_at=? WHERE transaction_id=? AND status='LEDGER_COMMITTED'", now, transactionId);
-    }
+    public void markInsertApplied(String transactionId, long now) throws Exception { db.sql("UPDATE medal_inventory_transactions SET status='APPLIED',updated_at=? WHERE transaction_id=? AND status='LEDGER_COMMITTED'", now, transactionId); }
 
     public Session rollbackInsert(UUID player, UUID sessionId, InsertPlan plan, long now) throws Exception {
         return db.transaction(() -> {
             ensureUnlimitedTable();
-            for (InsertReplacement replacement : plan.replacements()) {
-                setBundleStateAny(replacement.oldBundleId(), "ACTIVE", now);
-                if (replacement.newBundleId() != null) setBundleStateAny(replacement.newBundleId(), "RETIRED", now);
-            }
-            db.sql("UPDATE player_sessions SET credit=?,last_client_sequence=?,last_activity=? WHERE session_id=?",
-                    plan.creditBefore(), plan.sequenceBefore(), now, sessionId.toString());
-            db.sql("UPDATE medal_inventory_transactions SET status='ROLLED_BACK',updated_at=? WHERE transaction_id=?", now, plan.transactionId());
-            return requireSession(player);
+            for (InsertReplacement replacement : plan.replacements()) { setBundleStateAny(replacement.oldBundleId(), "ACTIVE", now); if (replacement.newBundleId() != null) setBundleStateAny(replacement.newBundleId(), "RETIRED", now); }
+            db.sql("UPDATE player_sessions SET credit=?,last_client_sequence=?,last_activity=? WHERE session_id=?", plan.creditBefore(), plan.sequenceBefore(), now, sessionId.toString());
+            db.sql("UPDATE medal_inventory_transactions SET status='ROLLED_BACK',updated_at=? WHERE transaction_id=?", now, plan.transactionId()); return requireSession(player);
         });
     }
 
-    public boolean validActiveBundle(UUID id, int amount) throws Exception {
-        ensureUnlimitedTable();
-        try { requireUsableBundle(id, amount); return true; }
-        catch (DomainException invalid) { return false; }
-    }
-
-    private void requireNoEconomyReview(UUID player) throws Exception {
-        if (playerEconomyBlocked(player)) throw new DomainException("VAULT_ERROR");
-    }
-
+    public boolean validActiveBundle(UUID id, int amount) throws Exception { ensureUnlimitedTable(); try { requireUsableBundle(id, amount); return true; } catch (DomainException invalid) { return false; } }
+    private void requireNoEconomyReview(UUID player) throws Exception { if (playerEconomyBlocked(player)) throw new DomainException("VAULT_ERROR"); }
     private void requireUsableBundle(UUID id, int amount) throws Exception {
         String needle = "%" + id + "%";
-        if (!db.rows("SELECT transaction_id FROM medal_inventory_transactions WHERE status='REVIEW_REQUIRED' AND (before_bundle_json LIKE ? OR after_bundle_json LIKE ?) LIMIT 1", needle, needle).isEmpty())
-            throw new DomainException("TOKEN_REVIEW_REQUIRED");
-        var current = bundleRow(id);
-        if (current == null || !"ACTIVE".equals(current.get("state")) || ((Number) current.get("amount")).intValue() != amount)
-            throw new DomainException("INVALID_ITEM");
+        if (!db.rows("SELECT transaction_id FROM medal_inventory_transactions WHERE status='REVIEW_REQUIRED' AND (before_bundle_json LIKE ? OR after_bundle_json LIKE ?) LIMIT 1", needle, needle).isEmpty()) throw new DomainException("TOKEN_REVIEW_REQUIRED");
+        var current = bundleRow(id); if (current == null || !"ACTIVE".equals(current.get("state")) || ((Number) current.get("amount")).intValue() != amount) throw new DomainException("INVALID_ITEM");
     }
-
     private Session requireActive(UUID player, UUID sessionId, int machine) throws Exception {
-        Session session = requireSession(player);
-        if (!session.id().equals(sessionId) || session.machine() != machine || session.lifecycle() != Session.Lifecycle.ACTIVE)
-            throw new DomainException("SESSION_MISMATCH");
-        return session;
+        Session session = requireSession(player); if (!session.id().equals(sessionId) || session.machine() != machine || session.lifecycle() != Session.Lifecycle.ACTIVE) throw new DomainException("SESSION_MISMATCH"); return session;
     }
-
-    private Session requireSession(UUID player) throws Exception {
-        var rows = db.rows("SELECT * FROM player_sessions WHERE player_uuid=?", player.toString());
-        if (rows.size() != 1) throw new DomainException("SESSION_MISMATCH");
-        return new Session(rows.getFirst());
-    }
+    private Session requireSession(UUID player) throws Exception { Session s=optionalSession(player);if(s==null)throw new DomainException("SESSION_MISMATCH");return s; }
+    private Session optionalSession(UUID player) throws Exception { var rows=db.rows("SELECT * FROM player_sessions WHERE player_uuid=?",player.toString());if(rows.size()>1)throw new DomainException("DB_ERROR");return rows.isEmpty()?null:new Session(rows.getFirst()); }
+    private long pending(UUID player) throws Exception {var rows=db.rows("SELECT pending_medals FROM player_wallet WHERE player_uuid=?",player.toString());return rows.isEmpty()?0:((Number)rows.getFirst().get("pending_medals")).longValue();}
+    private void addPending(UUID player,long amount,long now) throws Exception {db.sql("INSERT INTO player_wallet(player_uuid,pending_medals,updated_at) VALUES(?,?,?) ON CONFLICT(player_uuid) DO UPDATE SET pending_medals=player_wallet.pending_medals+excluded.pending_medals,updated_at=excluded.updated_at",player.toString(),amount,now);}
 
     private List<Bundle> bundlesFor(String sourceTransactionId) throws Exception {
-        ensureUnlimitedTable();
-        List<Bundle> result = new ArrayList<>();
-        for (var row : db.rows("SELECT bundle_id,amount FROM medal_tokens WHERE source_transaction_id=? ORDER BY created_at,bundle_id", sourceTransactionId))
-            result.add(new Bundle(UUID.fromString((String) row.get("bundle_id")), ((Number) row.get("amount")).intValue()));
-        for (var row : db.rows("SELECT bundle_id,amount FROM " + UNLIMITED_TABLE + " WHERE source_transaction_id=? ORDER BY created_at,bundle_id", sourceTransactionId))
-            result.add(new Bundle(UUID.fromString((String) row.get("bundle_id")), ((Number) row.get("amount")).intValue()));
+        ensureUnlimitedTable(); List<Bundle> result = new ArrayList<>();
+        for (var row : db.rows("SELECT bundle_id,amount FROM medal_tokens WHERE source_transaction_id=? ORDER BY created_at,bundle_id", sourceTransactionId)) result.add(new Bundle(UUID.fromString((String) row.get("bundle_id")), ((Number) row.get("amount")).intValue()));
+        for (var row : db.rows("SELECT bundle_id,amount FROM " + UNLIMITED_TABLE + " WHERE source_transaction_id=? ORDER BY created_at,bundle_id", sourceTransactionId)) result.add(new Bundle(UUID.fromString((String) row.get("bundle_id")), ((Number) row.get("amount")).intValue()));
         return result;
     }
-
-    private void ensureUnlimitedTable() throws Exception {
-        db.sql("CREATE TABLE IF NOT EXISTS " + UNLIMITED_TABLE + " (bundle_id TEXT PRIMARY KEY,amount INTEGER NOT NULL CHECK(amount>=1),state TEXT NOT NULL CHECK(state IN ('PENDING_DELIVERY','ACTIVE','RETIRED')),source_transaction_id TEXT,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL)");
-    }
-
+    private void ensureUnlimitedTable() throws Exception { db.sql("CREATE TABLE IF NOT EXISTS " + UNLIMITED_TABLE + " (bundle_id TEXT PRIMARY KEY,amount INTEGER NOT NULL CHECK(amount>=1),state TEXT NOT NULL CHECK(state IN ('PENDING_DELIVERY','ACTIVE','RETIRED')),source_transaction_id TEXT,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL)"); }
     private void insertUnlimitedBundle(UUID id, int amount, String state, String sourceTransactionId, long now) throws Exception {
         if (amount < 1 || amount > MedalToken.MAX_AMOUNT) throw new DomainException("INVALID_ITEM");
-        db.sql("INSERT INTO " + UNLIMITED_TABLE + "(bundle_id,amount,state,source_transaction_id,created_at,updated_at) VALUES(?,?,?,?,?,?)",
-                id.toString(), amount, state, sourceTransactionId, now, now);
+        db.sql("INSERT INTO " + UNLIMITED_TABLE + "(bundle_id,amount,state,source_transaction_id,created_at,updated_at) VALUES(?,?,?,?,?,?)", id.toString(), amount, state, sourceTransactionId, now, now);
     }
-
     private Map<String,Object> bundleRow(UUID id) throws Exception {
-        var modern = db.rows("SELECT amount,state FROM " + UNLIMITED_TABLE + " WHERE bundle_id=?", id.toString());
-        if (modern.size() == 1) return modern.getFirst();
-        var legacy = db.rows("SELECT amount,state FROM medal_tokens WHERE bundle_id=?", id.toString());
-        return legacy.size() == 1 ? legacy.getFirst() : null;
+        var modern = db.rows("SELECT amount,state FROM " + UNLIMITED_TABLE + " WHERE bundle_id=?", id.toString()); if (modern.size() == 1) return modern.getFirst();
+        var legacy = db.rows("SELECT amount,state FROM medal_tokens WHERE bundle_id=?", id.toString()); return legacy.size() == 1 ? legacy.getFirst() : null;
     }
-
     private void setBundleState(UUID id, String from, String to, long now) throws Exception {
         int changed = db.sql("UPDATE " + UNLIMITED_TABLE + " SET state=?,updated_at=? WHERE bundle_id=? AND state=?", to, now, id.toString(), from);
         if (changed == 0) changed = db.sql("UPDATE medal_tokens SET state=?,updated_at=? WHERE bundle_id=? AND state=?", to, now, id.toString(), from);
         if (changed != 1) throw new DomainException("INVALID_ITEM");
     }
-
     private void setBundleStateAny(UUID id, String to, long now) throws Exception {
         int changed = db.sql("UPDATE " + UNLIMITED_TABLE + " SET state=?,updated_at=? WHERE bundle_id=?", to, now, id.toString());
-        if (changed == 0) changed = db.sql("UPDATE medal_tokens SET state=?,updated_at=? WHERE bundle_id=?", to, now, id.toString());
-        if (changed != 1) throw new DomainException("INVALID_ITEM");
+        if (changed == 0) changed = db.sql("UPDATE medal_tokens SET state=?,updated_at=? WHERE bundle_id=?", to, now, id.toString()); if (changed != 1) throw new DomainException("INVALID_ITEM");
     }
-
-    private Map<String,Object> requireRow(String sql, Object... args) throws Exception {
-        var rows = db.rows(sql, args);
-        if (rows.size() != 1) throw new DomainException("DB_ERROR");
-        return rows.getFirst();
-    }
-
-    private static JsonObject bundleJson(UUID id, int amount, int slot) {
-        JsonObject json = new JsonObject(); json.addProperty("bundleId", id.toString());
-        json.addProperty("amount", amount); json.addProperty("slot", slot); return json;
-    }
-
-    private static String deterministic(String operation, UUID sessionId, long sequence) {
-        return UUID.nameUUIDFromBytes((operation + ":" + sessionId + ":" + sequence).getBytes(StandardCharsets.UTF_8)).toString();
-    }
+    private Map<String,Object> requireRow(String sql, Object... args) throws Exception { var rows = db.rows(sql, args); if (rows.size() != 1) throw new DomainException("DB_ERROR"); return rows.getFirst(); }
+    private static JsonObject bundleJson(UUID id, int amount, int slot) { JsonObject json = new JsonObject(); json.addProperty("bundleId", id.toString()); json.addProperty("amount", amount); json.addProperty("slot", slot); return json; }
+    private static String deterministic(String operation, UUID sessionId, long sequence) { return UUID.nameUUIDFromBytes((operation + ":" + sessionId + ":" + sequence).getBytes(StandardCharsets.UTF_8)).toString(); }
 }
