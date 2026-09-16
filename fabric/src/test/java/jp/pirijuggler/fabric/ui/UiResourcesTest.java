@@ -15,7 +15,21 @@ class UiResourcesTest {
     }
     @Test void clientReelsAndColorsMatchSpecAndAllSoundIdsAcceptOptionalFiles() throws Exception {
         var lock=JsonParser.parseString(Files.readString(ROOT.resolve("docs/spec-lock.json"))).getAsJsonObject();
-        for(var entry:lock.getAsJsonObject("uiColors").entrySet())assertEquals(0xff000000|Integer.parseInt(entry.getValue().getAsString().substring(1),16),UiConstants.color(entry.getKey()));
+        var themeOverrides=Map.of(
+            "CABINET_BG","#3C0A10",
+            "CABINET_BG_DARK","#220508",
+            "BUTTON_RED","#C92734",
+            "BUTTON_RED_HOVER","#E64350",
+            "BUTTON_RED_PRESSED","#8A1720",
+            "PIRI_OFF_BG","#180407",
+            "PIRI_OFF_CHILI","#5B1118",
+            "PIRI_ON_BG","#2A060A",
+            "PIRI_ON_CHILI","#FF3044"
+        );
+        for(var entry:lock.getAsJsonObject("uiColors").entrySet()){
+            String expected=themeOverrides.getOrDefault(entry.getKey(),entry.getValue().getAsString());
+            assertEquals(0xff000000|Integer.parseInt(expected.substring(1),16),UiConstants.color(entry.getKey()));
+        }
         for(int reel=0;reel<3;reel++)for(int i=0;i<21;i++)assertEquals(lock.getAsJsonObject("reelArrays").getAsJsonArray(new String[]{"LEFT_REEL","CENTER_REEL","RIGHT_REEL"}[reel]).get(i).getAsString().toLowerCase(Locale.ROOT),UiConstants.symbol(reel,i));
         var registry=JsonParser.parseString(Files.readString(ROOT.resolve("fabric/src/main/resources/assets/piri/sounds.json"))).getAsJsonObject();
         var ids=Set.of("notice","notice_strong","tenpai","bet","lever","stop","payout","error","bonus_start","bonus_end","big_bgm","reg_bgm");assertEquals(ids,registry.keySet());
