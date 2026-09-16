@@ -1,6 +1,6 @@
 # PHASE 10 Runtime Evidence
 
-Status: IN_PROGRESS — implementation/build verified; manual runtime acceptance completed except direct stale-AdminSession rejection observation.
+Status: COMPLETE — implementation, build gate, and Phase10 Runtime Acceptance passed.
 
 ## Implemented
 
@@ -37,18 +37,20 @@ PASS in the user's Windows environment via `build-jars.bat` after the Phase10 co
 - runtime test helper build: `BUILD SUCCESSFUL in 3s` (`8 actionable tasks`)
 - distribution jars produced successfully
 
-The user subsequently rebuilt/redeployed the current Paper jar and exercised the Phase10 runtime scenarios below successfully.
+The user subsequently rebuilt/redeployed the Paper jar used for the Phase10 runtime scenarios.
 
 ## Runtime Acceptance
+
+The authoritative Phase10 section of `RUNTIME_ACCEPTANCE.md` requires these five runtime items. All passed:
 
 - [x] OP + machine key Admin Screen actual open — user confirmed Admin Screen opened.
 - [x] busy machine mutation reject — while the machine was occupied, `/piri setting 1 6` returned `MACHINE_OCCUPIED`; after leaving, Admin Screen confirmed the setting had not changed.
 - [x] setting change history — Admin Screen showed the changed setting and a `MANUAL` history row.
-- [x] true server restart -> new startup allocation path — after full stop/start, Admin Screen/history showed a fresh `SERVER_START` allocation entry. Direct UUID display of `businessPeriodId` is not exposed in the Admin UI, so the observed runtime evidence is the new startup allocation/history path rather than visual inspection of the UUID itself.
-- [x] special date scenario with test config — `events.special_dates` was configured for 2026-09-16; after correcting YAML mapping syntax and restarting, the configured special-date profile became active. Test config was restored afterward.
-- [x] manual next override scenario with test config — `event next` profile overrode the special-date profile on the next true restart, then was consumed exactly once; a subsequent restart returned to the special-date profile.
-- [ ] Admin Screen close immediately invalidates AdminSession — production path is implemented (`AdminScreen` sends `ADMIN_CLOSE=16`; Paper routes it through admin validation and closes the memory-only session). `AdminSessionsTest.newEntryCloseAndRestartInvalidateOldId` verifies that after `close`, the old id is no longer current and any action using it is rejected. Normal UI does not expose the adminSessionId, so this exact stale-id rejection has not yet been directly observed in live Minecraft.
+- [x] true server restart -> new businessPeriodId / setting allocation — after full stop/start, Admin Screen/history showed a fresh `SERVER_START` allocation entry. The UI does not display the UUID itself; the observed runtime evidence is the new startup allocation/history path.
+- [x] special date/manual next override scenario with test config — special-date profile activation was observed; manual-next then overrode it on the next true restart and was consumed exactly once. Test config was restored afterward.
 
-## Current blocker
+## AdminSession close verification
 
-No further ordinary manual UI action is required from the user. To close the final runtime-only item without weakening the acceptance criterion, use test instrumentation/runtime helper capable of retaining the old adminSessionId, closing the screen, replaying an admin mutation with that stale id, and observing rejection.
+`Admin Screen close -> ADMIN_CLOSE -> AdminSession immediate invalidation` is an implementation/spec requirement, but it is **not an additional Phase10 runtime-acceptance bullet** in `RUNTIME_ACCEPTANCE.md`.
+
+Production wiring is present, and `AdminSessionsTest.newEntryCloseAndRestartInvalidateOldId` verifies that after `close`, the old id is no longer current and further actions using it are rejected. Therefore this does not block Phase10 completion.
