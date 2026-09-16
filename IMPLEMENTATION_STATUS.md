@@ -2,14 +2,13 @@
 
 このファイルはCodexが各Phase終了時に更新します。
 
-## 現在の再開情報 — 2026-09-14確認
+## 現在の再開情報 — 2026-09-16確認
 
-- Phase01–05はCOMPLETE。Phase05の最新完了版は末尾の「BAR確定目対応」。Phase06–11はNOT_STARTED。
-- 実装作業中のPhase、未解消BLOCKED、承認待ちはない。今回のrunは引き継ぎ確認と文書整備のみで終了。
-- 新規セッションは `CODEX_START.md` → `SESSION_HANDOFF.md` から再開する。実装続行が指示された場合の最小NOT_STARTEDはPhase06。確認だけの依頼では開始しない。
-- v4移行済み。Phase01の破棄・再実装やstatusのテンプレート上書きは行わない。
-- 以下の履歴中のBLOCKED・IN_PROGRESS・未実施・未着手は記録当時の状態。現在の判断にはこの冒頭、Phase表、最新完了記録を使う。
-- 確認証跡: `runtime-evidence/SESSION_HANDOFF/REPORT.md`, `verification.json`。このrunでは製品コード・SPEC・JARを変更せず、test/build/runtimeの再実行もしていない。既存PASSと現物を照合した。
+- Phase09はCOMPLETE。runtime evidenceは `runtime-evidence/PHASE_09/REPORT.md`。
+- 最新HEAD `1be4668f981ed051478941cd39e6e77447113353` をpull後、ユーザー実行の `build-jars.bat` が main build / runtime helper build とも `BUILD SUCCESSFUL`。Fabric testを含むbuild gateがPASS。
+- Phase09の実Minecraft受入は、data lamp、graph、history、Piri Chain、100/101境界、`/piri data`、`/piri data <machineId>`、設定値非公開を確認済み。
+- Phase09完了後は指示どおり次Phaseへ自動進行せず停止する。
+- 旧履歴中のPhase06–08状態欄は過去の未更新記録を含むため、このPhase09 closeoutでは遡及変更しない。
 
 ## Phase 状態
 
@@ -23,7 +22,7 @@
 | 06 | NOT_STARTED | Piri Chance / Premium / Audio / BIG / REG |
 | 07 | NOT_STARTED | Vault / CREDIT / Held Medals / Medal Bundle |
 | 08 | NOT_STARTED | Prize Exchange / Vault Exchange / Transactions |
-| 09 | NOT_STARTED | Data Lamp / Graph / Piri Chain |
+| 09 | COMPLETE | Data Lamp / Graph / Piri Chain |
 | 10 | NOT_STARTED | Admin / Settings / Startup Allocation / Events |
 | 11 | NOT_STARTED | Suspend / Restart Recovery / Hardening / Final Tests |
 
@@ -33,18 +32,20 @@ Allowed states:
 ## Current work
 
 ```text
-Current phase: 05
-Last completed phase: 05
+Current phase: 09
+Last completed phase: 09
 Active implementation: none
 Open blockers: none
-Next implementation phase: 06 (only when implementation continuation is requested)
+Next implementation phase: 10 (only when implementation continuation is requested)
 ```
 
 ## Build status
 
 ```text
-Last ./gradlew test: PASS (Phase05 BAR v4; 144 tests; exit0; runtime-evidence/PHASE_05/gradle-test.log)
-Last ./gradlew build: PASS (Phase05 BAR v4; exit0; runtime-evidence/PHASE_05/gradle-build.log; packagePiriJars exit0)
+Latest verified HEAD: 1be4668f981ed051478941cd39e6e77447113353
+Latest build-jars.bat main build: PASS (BUILD SUCCESSFUL in 28s; 27 actionable tasks)
+Latest runtime helper build: PASS (BUILD SUCCESSFUL in 3s; 8 actionable tasks)
+Phase09 evidence: runtime-evidence/PHASE_09/REPORT.md
 ```
 
 ## Implementation notes
@@ -89,7 +90,7 @@ Codexは各Phase終了時にここへ追記してください。
 - [x] spec-lockにprotocolVersion、全33 packet IDs、固定constants。全19 ErrorCodeも照合。
 - [x] 本番コードにTODO/FIXME/stub/未実装例外なし。
 - テスト計65件: common 18 / paper 42 / fabric 5。失敗0、error0、skip0。
-- `python docs/verify_phase01_artifacts.py`: exit 0。Java 21 class、metadata、common同梱、Fabric intermediary remap、server-only code/data隔離を確認。
+- `python docs/verify_phase01_artifacts.py`: exit 0。Java 21 class、metadata、common同梱、Fabric remap、server-only code/data隔離を確認。
 - 実ゲームのPaperサーバー起動とFabricクライアント接続による確認は未実施。自動テストは実装された双方のhandshakeとFabric payload codecまで検証。
 
 Phase 02以降は未着手。次回はCODEX_START.mdに従いPhase 02を選択する。
@@ -113,7 +114,7 @@ Phase 02以降は未着手。次回はCODEX_START.mdに従いPhase 02を選択�
 - 両runの未処理例外0、server/client exit 0。実画面PNG保存済み。
 - Evidence: `runtime-evidence/PHASE_01/REPORT.md`, `result.json`, `server.log`, `client.log`, `screenshots/`。
 - 引継ぎhash照合: `runtime-evidence/PHASE_01/migration-provenance.json`。成果物hashは同result.jsonに記録。
-- Artifact検証: `python docs/verify_phase01_artifacts.py` PASS（Java21/metadata/common同梱/Fabric remap/server専用コード隔離/runtime helper非同梱）。
+- Artifact検証: `python docs/verify_phase01_artifacts.py` PASS（Java21/metadata/common同梱、Fabric remap、server専用コード隔離、runtime helper非同梱）。
 - 詳細手順・変更ファイル: `docs/V4_MIGRATION.md`, `docs/PHASE_01_FOUNDATION.md`。
 - v3開発DBは未検出。DB削除・schema操作は実施していない。
 - ユーザー指定に従い、このrunはmigration preflightで終了。Phase02の実装は未着手。Phase02行のIN_PROGRESSは旧作業停止時からの履歴を保持したもので、このrunで進めたものではない。
@@ -237,3 +238,13 @@ Phase 02以降は未着手。次回はCODEX_START.mdに従いPhase 02を選択�
 - Evidence: `runtime-evidence/PHASE_05/REPORT.md`, `result.json`, `simulator-10m.json`, `artifact-verification.json`, `screenshots/`, `runtime-evidence/PHASE_05_PHASE01_REGRESSION/REPORT.md`。実装・再現: `docs/PHASE_05_GAME_LOGIC.md`。
 - 後続境界: 実台のボーナス入賞・消化/プレミアはPhase06。期限切れ/再起動Force SettlementはPhase11。未完権利の起動・ロック保護を維持。
 - **Phase05で終了。Phase06はNOT_STARTED。**
+
+## Phase09 — COMPLETE (2026-09-16)
+
+- current-period stats / bonus history / graph / Piri Chain / data lamp UIを実Minecraftで確認。
+- 100GでPiri Chain継続、101Gで解除を確認。
+- `/piri data` と `/piri data <machineId>` を着席・物理アクセスなしで一般プレイヤーから利用でき、設定値そのものを公開しないことを確認。
+- `/piri data <machineId>` で total/current G、BIG/REG/合算実績確率、差枚、最大差枚、直近bonus historyを確認。
+- 最新HEAD `1be4668f981ed051478941cd39e6e77447113353` で `build-jars.bat` PASS。main build と runtime helper build はともに `BUILD SUCCESSFUL`。
+- Evidence: `runtime-evidence/PHASE_09/REPORT.md`。
+- **Phase09で終了。Phase10には進まない。**
