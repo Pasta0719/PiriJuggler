@@ -8,6 +8,9 @@ commands:
   piri:
     description: Piri Juggler commands
     usage: /piri data [machineId] | /piri prizes | /piri exchange <small|medium|large> [count] | /piri exchange all | /piri recover <status|cashout> | /piri sim <machineId> <games> | /piri machine create|redefine|remove|list|info|setting | /piri key give
+  piribuildinfo:
+    description: Show the exact loaded PiriJuggler build identity
+    usage: /piribuildinfo
   pirimerge:
     description: Merge all valid Piri Medal items in the player inventory into one token
     usage: /pirimerge
