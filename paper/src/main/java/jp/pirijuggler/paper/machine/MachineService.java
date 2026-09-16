@@ -1,14 +1,20 @@
 package jp.pirijuggler.paper.machine;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import jp.pirijuggler.common.protocol.*;
 import jp.pirijuggler.paper.PiriJugglerPlugin;
+import jp.pirijuggler.paper.admin.AdminStore;
+import jp.pirijuggler.paper.database.GameStore;
 import jp.pirijuggler.paper.database.PiriDatabase;
-import jp.pirijuggler.paper.session.AdminSessions;
-import jp.pirijuggler.paper.session.Session;
 import jp.pirijuggler.paper.economy.EconomyStore;
 import jp.pirijuggler.paper.economy.MedalToken;
 import jp.pirijuggler.paper.economy.VaultBridge;
+import jp.pirijuggler.paper.game.*;
+import jp.pirijuggler.paper.session.AdminSessions;
+import jp.pirijuggler.paper.session.Session;
+import jp.pirijuggler.paper.threading.PaperMainThread;
+import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Directional;
@@ -20,12 +26,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
-import net.kyori.adventure.text.Component;
+
 import java.lang.management.ManagementFactory;
-import jp.pirijuggler.paper.game.*;
-import jp.pirijuggler.paper.database.GameStore;
-import jp.pirijuggler.paper.threading.PaperMainThread;
-import com.google.gson.Gson;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +38,7 @@ import java.util.logging.Level;
 public final class MachineService implements Listener, CommandExecutor {
     private static final NamespacedKey ITEM_TYPE = new NamespacedKey("piri", "item_type");
     private static final NamespacedKey ITEM_VERSION = new NamespacedKey("piri", "item_version");
+    private static final Set<PacketType> ADMIN_MUTATIONS = Set.of(PacketType.ADMIN_SET_SETTING, PacketType.ADMIN_SET_AUTO, PacketType.ADMIN_SET_ENABLED, PacketType.ADMIN_RESET_DAILY);
     private final PiriJugglerPlugin plugin;
     private final AdminSessions admins = new AdminSessions();
     private final Set<UUID> pendingPlayers = new HashSet<>();
@@ -45,6 +48,7 @@ public final class MachineService implements Listener, CommandExecutor {
     private final long graceMs;
     private final int vaultPerMedal;
     private final VaultBridge vault;
+    private final Map<String,Object> config;
     private PiriDatabase database;
     private PiriDatabase.State state;
     private boolean stopped;
@@ -56,6 +60,7 @@ public final class MachineService implements Listener, CommandExecutor {
 
     public MachineService(PiriJugglerPlugin plugin, Map<String, Object> config) {
         this.plugin = plugin;
+        this.config = config;
         random=RandomStreams.production();weights=new RoleWeights(config);
         games=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin),config);
         graceMs = ((Number) jp.pirijuggler.paper.database.StartupProfile.map(config.get("game")).get("disconnect_grace_seconds")).longValue() * 1000;
@@ -103,7 +108,16 @@ public final class MachineService implements Listener, CommandExecutor {
                 if (target.getInventory().firstEmpty() < 0) throw new DomainException("INVENTORY_FULL");
                 target.getInventory().addItem(machineKey()); tell(sender, "KEY_GIVEN " + target.getName()); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri sim <setting> <games>, /piri machine create|redefine <id>|remove <id>|list|info <id>|setting <id> <1-6>, /piri key give [player]");
+            if (args.length == 3 && args[0].equalsIgnoreCase("setting")) {
+                commandSetting(sender,Integer.parseInt(args[1]),Integer.parseInt(args[2])); return true;
+            }
+            if (args.length == 3 && args[0].equalsIgnoreCase("reset") && args[1].equalsIgnoreCase("daily")) {
+                commandResetDaily(sender,args[2]); return true;
+            }
+            if (args.length >= 2 && args[0].equalsIgnoreCase("event")) {
+                commandEvent(sender,args); return true;
+            }
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create|redefine <id>|remove <id>|list|info <id>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri simulator <setting> <games>");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
@@ -112,24 +126,9 @@ public final class MachineService implements Listener, CommandExecutor {
                 Machine.Location target = target(sender);
                 submit(sender, null, 0, () -> database.create(target, System.currentTimeMillis()), id -> tell(sender, "MACHINE_CREATED " + id)); return true;
             }
+            // Backward-compatible alias retained for pre-Phase10 operators; canonical command is /piri setting.
             if (action.equals("setting") && args.length == 4) {
-                int id=Integer.parseInt(args[2]);int newSetting=Integer.parseInt(args[3]);
-                if(newSetting<1||newSetting>6)throw new DomainException("INVALID_STATE");
-                Machine machine=state.machine(id);if(machine==null)throw new DomainException("INVALID_STATE");
-                if(busy(id))throw new DomainException("MACHINE_OCCUPIED");
-                int oldSetting=machine.setting();String period=state.period(),profile=state.profile();
-                String actor=sender instanceof Player player?player.getUniqueId().toString():null;
-                long now=System.currentTimeMillis();
-                submit(sender,null,id,()->{
-                    database.transaction(()->{
-                        database.sql("UPDATE machines SET setting=?,updated_at=? WHERE machine_id=? AND deleted=0",newSetting,now,id);
-                        database.sql("INSERT INTO setting_history(machine_id,business_period_id,changed_at,old_setting,new_setting,reason,actor_uuid,profile_name) VALUES(?,?,?,?,?,?,?,?)",
-                                id,period,now,oldSetting,newSetting,"MANUAL_COMMAND",actor,profile);
-                        return null;
-                    });
-                    return newSetting;
-                },done->tell(sender,"MACHINE_SETTING id="+id+" old="+oldSetting+" new="+done));
-                return true;
+                commandSetting(sender,Integer.parseInt(args[2]),Integer.parseInt(args[3])); return true;
             }
             if (args.length != 3) throw new DomainException("INVALID_STATE");
             int id = Integer.parseInt(args[2]); Machine machine = state.machine(id);
@@ -152,6 +151,43 @@ public final class MachineService implements Listener, CommandExecutor {
         catch (IllegalArgumentException error) { tell(sender, "INVALID_STATE"); }
         return true;
     }
+
+    private void commandSetting(CommandSender sender,int id,int setting) {
+        if(setting<1||setting>6||state.machine(id)==null)throw new DomainException("INVALID_STATE");
+        if(busy(id))throw new DomainException("MACHINE_OCCUPIED");
+        int old=state.machine(id).setting(); UUID actor=sender instanceof Player p?p.getUniqueId():null;
+        submit(sender,null,id,()->new AdminStore(database,config).setSetting(state,id,setting,actor,System.currentTimeMillis()),
+                done->tell(sender,"MACHINE_SETTING id="+id+" old="+old+" new="+done));
+    }
+
+    private void commandResetDaily(CommandSender sender,String target) {
+        long now=System.currentTimeMillis();
+        if(target.equalsIgnoreCase("all")) {
+            List<Integer> ids=state.machines().stream().filter(m->!m.deleted()).map(Machine::id).toList();
+            if(ids.stream().anyMatch(this::busy))throw new DomainException("MACHINE_OCCUPIED");
+            submitMany(sender,ids,()->{new AdminStore(database,config).resetDailyAll(state,ids,now);return ids.size();},
+                    count->tell(sender,"DAILY_RESET_ALL machines="+count));
+            return;
+        }
+        int id=Integer.parseInt(target); if(state.machine(id)==null)throw new DomainException("INVALID_STATE");
+        if(busy(id))throw new DomainException("MACHINE_OCCUPIED");
+        submit(sender,null,id,()->{new AdminStore(database,config).resetDaily(state,id,now);return id;},done->tell(sender,"DAILY_RESET "+done));
+    }
+
+    private void commandEvent(CommandSender sender,String[] args) {
+        AdminStore store=new AdminStore(database,config);
+        if(args.length==2&&args[1].equalsIgnoreCase("status")) {
+            submit(sender,null,0,()->store.eventStatus(state),status->tell(sender,"EVENT_STATUS active="+status.get("activeProfile").getAsString()+" next="+(status.get("nextProfile").isJsonNull()?"none":status.get("nextProfile").getAsString()))); return;
+        }
+        if(args.length==3&&args[1].equalsIgnoreCase("next")&&args[2].equalsIgnoreCase("clear")) {
+            submit(sender,null,0,()->{store.clearNextProfile();return "cleared";},done->tell(sender,"EVENT_NEXT cleared")); return;
+        }
+        if(args.length==3&&args[1].equalsIgnoreCase("next")) {
+            String profile=args[2]; submit(sender,null,0,()->{store.setNextProfile(profile);return profile;},done->tell(sender,"EVENT_NEXT "+done)); return;
+        }
+        throw new DomainException("INVALID_STATE");
+    }
+
     private Machine.Location target(CommandSender sender) {
         if (!(sender instanceof Player player)) throw new DomainException("PLAYER_REQUIRED");
         var hit = player.rayTraceBlocks(5.0, FluidCollisionMode.NEVER);
@@ -186,14 +222,8 @@ public final class MachineService implements Listener, CommandExecutor {
         Player player = event.getPlayer(); UUID owner = player.getUniqueId();
         if (!plugin.canUseSlot(owner)) { tell(player, "Piri Juggler Client Mod 1.0.0 が必要です"); return; }
         if (player.isOp() && validKey(event.getItem())) {
-            plugin.executors().database(() -> database.adminState(machine.id()), (json, error) -> {
-                if (stopped || !player.isOnline()) return;
-                if (!player.isOp()) { error(player, "NOT_OP"); return; }
-                if (error != null) { failure(player, error); return; }
-                var session = admins.open(owner, machine.id(), System.currentTimeMillis());
-                json.addProperty("adminSessionId", session.id().toString());
-                json.addProperty("busy", busy(machine.id())); send(player, PacketType.ADMIN_STATE, json);
-            }); return;
+            var session = admins.open(owner, machine.id(), System.currentTimeMillis());
+            sendAdminState(player,session.id(),machine.id()); return;
         }
         if (!machine.enabled()) { error(player, "MACHINE_DISABLED"); return; }
         Session session = state.session(owner);
@@ -206,8 +236,22 @@ public final class MachineService implements Listener, CommandExecutor {
             games.resume(seated,System.nanoTime()).ifPresent(packet->send(player,packet));
         });
     }
+
+    private void sendAdminState(Player player,UUID adminId,int machine) {
+        plugin.executors().database(() -> database.adminState(machine), (json, error) -> {
+            if (stopped || !player.isOnline()) return;
+            var current=admins.current(player.getUniqueId(),System.currentTimeMillis());
+            if (!player.isOp()) { admins.close(player.getUniqueId()); error(player, "NOT_OP"); return; }
+            if(current==null||!current.id().equals(adminId)||current.machine()!=machine)return;
+            if (error != null) { failure(player, error); return; }
+            json.addProperty("adminSessionId", adminId.toString());
+            json.addProperty("busy", busy(machine)); send(player, PacketType.ADMIN_STATE, json);
+        });
+    }
+
     public void receive(Player player, Envelope envelope) {
         main(); if (!ready() || envelope.packetType() == PacketType.HELLO) return;
+        if(ADMIN_MUTATIONS.contains(envelope.packetType())||envelope.packetType()==PacketType.ADMIN_CLOSE){adminAction(player,envelope);return;}
         try {
             JsonObject body = envelope.payload();
             var keys=new HashSet<>(body.keySet());boolean hasPressed=keys.remove("pressedIndex");
@@ -228,6 +272,32 @@ public final class MachineService implements Listener, CommandExecutor {
                 default -> gameAction(player,id,machine,sequence,envelope.packetType(),pressed);
             }
         } catch (RuntimeException invalid) { error(player, "SESSION_MISMATCH"); }
+    }
+
+    private void adminAction(Player player,Envelope envelope) {
+        try {
+            JsonObject body=envelope.payload(); var keys=new HashSet<>(body.keySet());
+            boolean close=envelope.packetType()==PacketType.ADMIN_CLOSE;
+            if(close){if(!keys.equals(Set.of("adminSessionId","machineId","adminSequence")))throw new IllegalArgumentException();}
+            else if(!keys.equals(Set.of("adminSessionId","machineId","adminSequence","value")))throw new IllegalArgumentException();
+            UUID id=UUID.fromString(body.get("adminSessionId").getAsString());
+            int machine=body.get("machineId").getAsBigDecimal().intValueExact();
+            long sequence=body.get("adminSequence").getAsBigDecimal().longValueExact();
+            admins.accept(player.getUniqueId(),player.isOp(),id,machine,sequence,System.currentTimeMillis());
+            if(close){admins.close(player.getUniqueId());return;}
+            if(state.machine(machine)==null)throw new DomainException("INVALID_STATE");
+            if(busy(machine))throw new DomainException("MACHINE_OCCUPIED");
+            AdminStore store=new AdminStore(database,config); long now=System.currentTimeMillis();
+            Callable<Object> operation=switch(envelope.packetType()){
+                case ADMIN_SET_SETTING -> ()->store.setSetting(state,machine,body.get("value").getAsBigDecimal().intValueExact(),player.getUniqueId(),now);
+                case ADMIN_SET_AUTO -> ()->store.setAuto(state,machine,body.get("value").getAsBoolean(),now);
+                case ADMIN_SET_ENABLED -> ()->store.setEnabled(state,machine,body.get("value").getAsBoolean(),now);
+                case ADMIN_RESET_DAILY -> ()->{store.resetDaily(state,machine,now);return Boolean.TRUE;};
+                default -> throw new IllegalArgumentException();
+            };
+            submit(player,null,machine,operation,unused->sendAdminState(player,id,machine));
+        } catch(DomainException error){error(player,error.getMessage());}
+        catch(RuntimeException error){error(player,"SESSION_MISMATCH");}
     }
 
     private boolean reserveEconomy(Player player,UUID id,int machine,long sequence) {
@@ -411,6 +481,16 @@ public final class MachineService implements Listener, CommandExecutor {
                     if (deferredDisconnect.remove(player)) disconnect(player);
                 }
             }
+        });
+    }
+    private <T> void submitMany(CommandSender sender,List<Integer> machines,Callable<T> operation,Consumer<T> success) {
+        main();
+        if(machines.stream().anyMatch(pendingMachines::contains)){if(sender!=null)error(sender,"BUSY");return;}
+        pendingMachines.addAll(machines);
+        plugin.executors().database(() -> new Saved<>(operation.call(),database.state()),(saved,error)->{
+            if(saved!=null)state=saved.state;
+            try{if(!stopped){if(error!=null)failure(sender,error);else success.accept(saved.value);}}
+            finally{pendingMachines.removeAll(machines);}
         });
     }
     private void tick() {
