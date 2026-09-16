@@ -24,6 +24,11 @@ public final class AdminSessions {
         Entry updated = new Entry(id, player, machine, sequence, now + 300_000);
         entries.put(player, updated); return updated;
     }
+    public Entry current(UUID player, long now) {
+        Entry entry = entries.get(player);
+        if (entry != null && entry.expiresAt <= now) { entries.remove(player); return null; }
+        return entry;
+    }
     public void close(UUID player) { entries.remove(player); }
     public void expire(long now) { entries.values().removeIf(entry -> entry.expiresAt <= now); }
     public void clear() { entries.clear(); }
