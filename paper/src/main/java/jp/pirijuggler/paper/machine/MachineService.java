@@ -7,6 +7,7 @@ import jp.pirijuggler.paper.PiriJugglerPlugin;
 import jp.pirijuggler.paper.admin.AdminStore;
 import jp.pirijuggler.paper.database.GameStore;
 import jp.pirijuggler.paper.database.PiriDatabase;
+import jp.pirijuggler.paper.database.RecoveryStore;
 import jp.pirijuggler.paper.economy.EconomyStore;
 import jp.pirijuggler.paper.economy.MedalToken;
 import jp.pirijuggler.paper.economy.VaultBridge;
@@ -46,6 +47,7 @@ public final class MachineService implements Listener, CommandExecutor {
     private final Map<UUID, Runnable> deferredClose = new HashMap<>();
     private final Set<UUID> deferredDisconnect = new HashSet<>();
     private final long graceMs;
+    private final long idleMs;
     private final int vaultPerMedal;
     private final VaultBridge vault;
     private final Map<String,Object> config;
@@ -63,7 +65,9 @@ public final class MachineService implements Listener, CommandExecutor {
         this.config = config;
         random=RandomStreams.production();weights=new RoleWeights(config);
         games=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin),config);
-        graceMs = ((Number) jp.pirijuggler.paper.database.StartupProfile.map(config.get("game")).get("disconnect_grace_seconds")).longValue() * 1000;
+        var gameConfig=jp.pirijuggler.paper.database.StartupProfile.map(config.get("game"));
+        graceMs = ((Number) gameConfig.get("disconnect_grace_seconds")).longValue() * 1000;
+        idleMs = ((Number) gameConfig.get("idle_timeout_seconds")).longValue() * 1000;
         vaultPerMedal=((Number)jp.pirijuggler.paper.database.StartupProfile.map(config.get("economy")).get("vault_per_medal")).intValue();
         vault=VaultBridge.discover();
         long jvm = ManagementFactory.getRuntimeMXBean().getStartTime();
@@ -89,8 +93,13 @@ public final class MachineService implements Listener, CommandExecutor {
 
     @Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         main();
-        if (!sender.isOp()) { tell(sender, "NOT_OP"); return true; }
         if (!ready()) { tell(sender, "DB_ERROR"); return true; }
+        if(args.length==2&&args[0].equalsIgnoreCase("recover")){
+            if(!(sender instanceof Player player)){tell(sender,"PLAYER_REQUIRED");return true;}
+            if(args[1].equalsIgnoreCase("status")){recoverStatus(player);return true;}
+            if(args[1].equalsIgnoreCase("cashout")){recoverCashout(player);return true;}
+        }
+        if (!sender.isOp()) { tell(sender, "NOT_OP"); return true; }
         try {
             if (args.length==3 && (args[0].equalsIgnoreCase("simulator") || args[0].equalsIgnoreCase("sim"))) {
                 int setting=Integer.parseInt(args[1]);long count=Long.parseLong(args[2]);
@@ -117,7 +126,7 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length >= 2 && args[0].equalsIgnoreCase("event")) {
                 commandEvent(sender,args); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create|redefine <id>|remove <id>|list|info <id>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri simulator <setting> <games>");
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create|redefine <id>|remove <id>|list|info <id>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
@@ -126,7 +135,6 @@ public final class MachineService implements Listener, CommandExecutor {
                 Machine.Location target = target(sender);
                 submit(sender, null, 0, () -> database.create(target, System.currentTimeMillis()), id -> tell(sender, "MACHINE_CREATED " + id)); return true;
             }
-            // Backward-compatible alias retained for pre-Phase10 operators; canonical command is /piri setting.
             if (action.equals("setting") && args.length == 4) {
                 commandSetting(sender,Integer.parseInt(args[2]),Integer.parseInt(args[3])); return true;
             }
@@ -150,6 +158,38 @@ public final class MachineService implements Listener, CommandExecutor {
         } catch (DomainException error) { tell(sender, error.getMessage()); }
         catch (IllegalArgumentException error) { tell(sender, "INVALID_STATE"); }
         return true;
+    }
+
+    private void recoverStatus(Player player){
+        UUID owner=player.getUniqueId();
+        plugin.executors().database(()->new EconomyStore(database).recoveryStatus(owner),(status,error)->{
+            if(stopped||!player.isOnline())return;
+            if(error!=null){failure(player,error);return;}
+            tell(player,"RECOVER_STATUS lifecycle="+status.lifecycle()+" gameState="+status.gameState()+" credit="+status.credit()+" held="+status.held()+" pending="+status.pending());
+        });
+    }
+
+    private void recoverCashout(Player player){
+        UUID owner=player.getUniqueId();Session session=state.session(owner);int machine=session==null?0:session.machine();
+        if(pendingPlayers.contains(owner)||(machine!=0&&pendingMachines.contains(machine))){tell(player,"BUSY");return;}
+        pendingPlayers.add(owner);if(machine!=0)pendingMachines.add(machine);
+        long now=System.currentTimeMillis();
+        plugin.executors().database(()->new Saved<>(new EconomyStore(database).prepareRecoveryCashout(owner,new RecoveryStore(database,config,plugin.reels().solver()),now),database.state()),(prepared,error)->{
+            if(prepared!=null)state=prepared.state;
+            if(stopped){releaseEconomy(owner,machine);return;}
+            if(error!=null){releaseEconomy(owner,machine);failure(player,error);return;}
+            EconomyStore.RecoveryCashoutPlan plan=prepared.value;Set<UUID> delivered=new HashSet<>();long deliveredAmount=0;
+            for(var bundle:plan.bundles()){
+                int slot=player.getInventory().firstEmpty();if(slot<0)break;
+                player.getInventory().setItem(slot,MedalToken.create(bundle.id(),bundle.amount()));delivered.add(bundle.id());deliveredAmount=Math.addExact(deliveredAmount,bundle.amount());
+            }
+            long finalDelivered=deliveredAmount;
+            plugin.executors().database(()->{new EconomyStore(database).finishRecoveryCashout(owner,plan.transactionId(),delivered,System.currentTimeMillis());return new Saved<>(Boolean.TRUE,database.state());},(finished,finishError)->{
+                if(finished!=null)state=finished.state;releaseEconomy(owner,machine);
+                if(finishError!=null){removeBundleItems(player,delivered);failure(player,finishError);return;}
+                tell(player,"RECOVER_CASHOUT amount="+plan.amount()+" delivered="+finalDelivered+" pending="+(plan.amount()-finalDelivered));
+            });
+        });
     }
 
     private void commandSetting(CommandSender sender,int id,int setting) {
@@ -308,7 +348,7 @@ public final class MachineService implements Listener, CommandExecutor {
         pendingPlayers.add(player.getUniqueId());pendingMachines.add(machine);return true;
     }
     private void releaseEconomy(UUID player,int machine) {
-        pendingPlayers.remove(player);pendingMachines.remove(machine);
+        pendingPlayers.remove(player);if(machine!=0)pendingMachines.remove(machine);
         Runnable close=deferredClose.remove(player);if(close!=null&&!stopped)close.run();
         if(deferredDisconnect.remove(player)&&!stopped)disconnect(player);
     }
@@ -497,10 +537,20 @@ public final class MachineService implements Listener, CommandExecutor {
         main(); admins.expire(System.currentTimeMillis());
         if (!ready() || expiring || !pendingPlayers.isEmpty()) return;
         long now = System.currentTimeMillis();
-        if (state.sessions().stream().noneMatch(s -> s.lifecycle() == Session.Lifecycle.SUSPENDED_GRACE && s.number("lock_expires_at") <= now)) return;
+        boolean due=state.sessions().stream().anyMatch(s->
+                s.lifecycle()==Session.Lifecycle.SUSPENDED_GRACE&&s.number("lock_expires_at")<=now ||
+                s.lifecycle()==Session.Lifecycle.ACTIVE&&now-s.number("last_activity")>=idleMs);
+        if(!due)return;
         expiring = true;
-        plugin.executors().database(() -> { database.expire(now); return database.state(); }, (saved, error) -> {
-            expiring = false; if (saved != null) state = saved;
+        plugin.executors().database(() -> new Saved<>(database.maintain(now,idleMs),database.state()), (saved, error) -> {
+            expiring = false;
+            if(saved!=null){
+                state=saved.state;
+                for(UUID id:saved.value){
+                    Session session=state.session(id);if(session!=null)games.forget(session.id());
+                    Player player=Bukkit.getPlayer(id);if(player!=null&&player.isOnline()&&session!=null){JsonObject body=session.identity();body.addProperty("reason","IDLE_TIMEOUT");send(player,PacketType.SESSION_SUSPENDED,body);}
+                }
+            }
             if (error != null) failure(null, error);
         });
     }
