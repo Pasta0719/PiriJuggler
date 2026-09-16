@@ -3,7 +3,10 @@ package jp.pirijuggler.common.reel;
 public final class ReelMotion {
     public static final double NORMAL_SPEED = 21.0;
     public enum Profile {
-        NORMAL(400,350), REVERSE_500MS(800,750), RESUME_NORMAL(200,150);
+        // Client gate opens exactly 200 ms after full speed: NORMAL full speed at .500 s,
+        // reverse-premium full forward speed at .800 s, and RESUME_NORMAL starts at full speed.
+        // Paper keeps the existing 50 ms reception margin while remaining authoritative.
+        NORMAL(700,650), REVERSE_500MS(1000,950), RESUME_NORMAL(200,150);
         private final int clientDelayMs,serverThresholdMs;
         Profile(int clientDelayMs,int serverThresholdMs){this.clientDelayMs=clientDelayMs;this.serverThresholdMs=serverThresholdMs;}
         public int clientDelayMs(){return clientDelayMs;}public int serverThresholdMs(){return serverThresholdMs;}
