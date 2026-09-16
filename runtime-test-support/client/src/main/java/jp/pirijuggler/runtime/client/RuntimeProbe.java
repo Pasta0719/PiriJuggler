@@ -27,6 +27,7 @@ public final class RuntimeProbe implements ClientModInitializer {
     public static boolean mismatch() { return "mismatch".equals(System.getProperty("piri.runtime.scenario")); }
 
     @Override public void onInitializeClient() {
+        Phase11SecurityCommand.register();
         if (Phase02Probe.enabled()) Phase02Probe.initialize();
         initializedAt = System.currentTimeMillis();
         ClientTickEvents.END_CLIENT_TICK.register(RuntimeProbe::tick);
