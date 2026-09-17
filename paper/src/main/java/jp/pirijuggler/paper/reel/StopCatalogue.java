@@ -40,7 +40,7 @@ public final class StopCatalogue {
         var all=new ArrayList<Evaluation>(9261);var byRole=new EnumMap<DisplayRole,List<Evaluation>>(DisplayRole.class);
         for(var role:DisplayRole.values())byRole.put(role,new ArrayList<>());
         for(int l=0;l<21;l++)for(int c=0;c<21;c++)for(int r=0;r<21;r++){var e=evaluate(new StopTriplet(l,c,r));all.add(e);for(var role:DisplayRole.values())if(e.valid(role))byRole.get(role).add(e);}
-        evaluations=List.copyOf(all);var groups=new EnumMap<DisplayRole,Map<Integer,List<Evaluation>>>();
+        evaluations=List.copyOf(all);var groups=new EnumMap<DisplayRole,Map<Integer,List<Evaluation>>>(DisplayRole.class);
         byRole.replaceAll((role,list)->List.copyOf(list));candidates=Map.copyOf(byRole);
         for(var role:DisplayRole.values()){
             var mutable=new HashMap<Integer,List<Evaluation>>();for(var e:candidates(role))for(int mask=0;mask<8;mask++)mutable.computeIfAbsent(e.stops.fixedKey(mask),k->new ArrayList<>()).add(e);
