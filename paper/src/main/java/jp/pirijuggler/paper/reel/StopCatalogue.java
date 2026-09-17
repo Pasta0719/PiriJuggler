@@ -8,7 +8,13 @@ import static jp.pirijuggler.common.reel.Symbol.*;
 public final class StopCatalogue {
     private static final Symbol[][] REACH_PATTERNS={
         {SEVEN,BAR,SEVEN},{SEVEN,BAR,BAR},{BAR,SEVEN,SEVEN},{BAR,SEVEN,BAR},{BAR,BAR,SEVEN},{BAR,BAR,BAR},
-        {PIERO,SEVEN,PIERO},{PIERO,BAR,PIERO}
+        {PIERO,SEVEN,PIERO},{PIERO,BAR,PIERO},
+        // A lit bonus game must not drag the third reel an abnormal distance just to force 777/77BAR.
+        // These are legal "seven-tenpai miss" shapes: if the player presses where the bonus symbol is not
+        // naturally reachable, the non-bonus symbol may stop on the tenpai line and the bonus remains pending.
+        {GRAPE,SEVEN,SEVEN},{BELL,SEVEN,SEVEN},{PIERO,SEVEN,SEVEN},{REPLAY,SEVEN,SEVEN},{CHERRY,SEVEN,SEVEN},
+        {SEVEN,GRAPE,SEVEN},{SEVEN,BELL,SEVEN},{SEVEN,PIERO,SEVEN},{SEVEN,REPLAY,SEVEN},{SEVEN,CHERRY,SEVEN},
+        {SEVEN,SEVEN,GRAPE},{SEVEN,SEVEN,BELL},{SEVEN,SEVEN,PIERO},{SEVEN,SEVEN,REPLAY},{SEVEN,SEVEN,CHERRY}
     };
     public record Evaluation(StopTriplet stops,int winningGrapeLines,int winningBellLines,int winningPieroLines,int winningReplayLines,
                              boolean leftTopCherry,boolean leftMiddleCherry,boolean leftBottomCherry,int winningBigLines,int winningRegLines,
@@ -34,7 +40,7 @@ public final class StopCatalogue {
         var all=new ArrayList<Evaluation>(9261);var byRole=new EnumMap<DisplayRole,List<Evaluation>>(DisplayRole.class);
         for(var role:DisplayRole.values())byRole.put(role,new ArrayList<>());
         for(int l=0;l<21;l++)for(int c=0;c<21;c++)for(int r=0;r<21;r++){var e=evaluate(new StopTriplet(l,c,r));all.add(e);for(var role:DisplayRole.values())if(e.valid(role))byRole.get(role).add(e);}
-        evaluations=List.copyOf(all);var groups=new EnumMap<DisplayRole,Map<Integer,List<Evaluation>>>(DisplayRole.class);
+        evaluations=List.copyOf(all);var groups=new EnumMap<DisplayRole,Map<Integer,List<Evaluation>>>();
         byRole.replaceAll((role,list)->List.copyOf(list));candidates=Map.copyOf(byRole);
         for(var role:DisplayRole.values()){
             var mutable=new HashMap<Integer,List<Evaluation>>();for(var e:candidates(role))for(int mask=0;mask<8;mask++)mutable.computeIfAbsent(e.stops.fixedKey(mask),k->new ArrayList<>()).add(e);
