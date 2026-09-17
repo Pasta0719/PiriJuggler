@@ -24,7 +24,7 @@ public final class AdminScreen extends Screen {
     private boolean closeSent;
 
     public AdminScreen(ClientSession session, Consumer<Envelope> sender) {
-        super(Text.literal("Piri Juggler Admin"));
+        super(Text.literal("Piri Admin"));
         this.session = session;
         this.sender = sender;
     }
@@ -52,7 +52,7 @@ public final class AdminScreen extends Screen {
         }
         int left = width / 2 - 250;
         c.fill(left, 18, left + 500, height - 18, 0xFF111318);
-        center(c, "PIRI JUGGLER ADMIN", 30, 0xFFFFD37A);
+        center(c, "PIRI ADMIN", 30, 0xFFFFD37A);
         center(c, "MACHINE " + s.get("machineId").getAsInt() + (bool(s,"busy") ? "  [BUSY]" : ""), 54, bool(s,"busy") ? 0xFFFF6666 : 0xFFFFFFFF);
 
         line(c, left + 22, 82, "SETTING", Integer.toString(s.get("setting").getAsInt()));
