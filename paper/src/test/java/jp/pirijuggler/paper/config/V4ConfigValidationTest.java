@@ -31,6 +31,6 @@ class V4ConfigValidationTest {
         assertTrue(load(defaults().replace("idle_timeout_seconds: 180", "idle_timeout_seconds: 30")
                 .replace("disconnect_grace_seconds: 60", "disconnect_grace_seconds: 0")
                 .replace("notice_volume: 1.0", "notice_volume: 2.0")).valid());
-        assertFalse(load(defaults().replace("  disconnect_grace_seconds: 60\n", "")).valid());
+        assertFalse(load(defaults().replace("  disconnect_grace_seconds: 60", "")).valid());
     }
 }
