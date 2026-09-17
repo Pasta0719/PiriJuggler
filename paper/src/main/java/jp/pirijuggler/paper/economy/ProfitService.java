@@ -16,23 +16,29 @@ import org.bukkit.inventory.EquipmentSlot;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 
 /** Admin-only realized profit reporting, Vault crediting and physical button bindings. */
 public final class ProfitService implements Listener {
     private enum Kind { SESSION, TOTAL, DEPOSIT }
     private record Binding(Kind kind, double amount) { }
+    private record WithdrawalPlan(String transactionId, double amount, double availableBefore) { }
 
     private final PiriJugglerPlugin plugin;
     private final long startedAt;
     private final VaultBridge vault;
     private final File bindingsFile;
     private final Map<String, Binding> bindings = new HashMap<>();
+    private final Set<UUID> pendingDeposits = new HashSet<>();
 
     public ProfitService(PiriJugglerPlugin plugin) {
         this.plugin = plugin;
@@ -98,7 +104,7 @@ public final class ProfitService implements Listener {
         String name = switch (binding.kind()) {
             case SESSION -> "再起動後利益";
             case TOTAL -> "累計利益";
-            case DEPOSIT -> "Vault入金 " + money(binding.amount());
+            case DEPOSIT -> "利益引出 " + money(binding.amount());
         };
         sender.sendMessage("ボタンに「" + name + "」を割り当てました。");
         return true;
@@ -123,37 +129,176 @@ public final class ProfitService implements Listener {
 
     private void showProfit(CommandSender sender, boolean sessionOnly) {
         long cutoff = sessionOnly ? startedAt : 0L;
-        plugin.executors().database(() -> queryProfit(cutoff), (profit, error) -> {
+        plugin.executors().database(() -> queryProfit(cutoff, false), (profit, error) -> {
             if (error != null) {
                 plugin.getLogger().log(Level.SEVERE, "Profit query failed", error);
                 sender.sendMessage(Component.text("利益を取得できませんでした。"));
                 return;
             }
-            sender.sendMessage(Component.text((sessionOnly ? "再起動後の利益: " : "累計利益: ") + money(profit)));
+            sender.sendMessage(Component.text((sessionOnly ? "再起動後の利益残高: " : "累計利益残高: ") + money(profit)));
         });
     }
 
-    private double queryProfit(long cutoff) throws Exception {
+    /**
+     * Profit balance = successful loans - successful prize payouts - already/reserved profit withdrawals.
+     * PREPARED/CALL_STARTED withdrawals are included when reservePending is true so two clicks cannot spend the same profit.
+     */
+    private double queryProfit(long cutoff, boolean reservePending) throws Exception {
         Class.forName("org.sqlite.JDBC");
         var dbFile = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
         try (var db = DriverManager.getConnection("jdbc:sqlite:" + dbFile)) {
-            String sql = "SELECT COALESCE(SUM(CASE WHEN operation='LOAN' THEN vault_amount WHEN operation='PRIZE_TO_VAULT' THEN -vault_amount ELSE 0 END),0) " +
-                    "FROM economy_transactions WHERE status='APPLIED'" + (cutoff > 0 ? " AND updated_at>=?" : "");
-            try (var ps = db.prepareStatement(sql)) {
-                if (cutoff > 0) ps.setLong(1, cutoff);
-                try (var rs = ps.executeQuery()) { return rs.next() ? rs.getDouble(1) : 0.0; }
-            }
+            return queryProfit(db, cutoff, reservePending);
+        }
+    }
+
+    private double queryProfit(Connection db, long cutoff, boolean reservePending) throws Exception {
+        String withdrawalStatuses = reservePending ? "('PREPARED','CALL_STARTED','APPLIED')" : "('APPLIED')";
+        String sql = "SELECT COALESCE(SUM(CASE " +
+                "WHEN operation='LOAN' AND status='APPLIED' THEN vault_amount " +
+                "WHEN operation='PRIZE_TO_VAULT' AND status='APPLIED' THEN -vault_amount " +
+                "WHEN operation='PROFIT_WITHDRAW' AND status IN " + withdrawalStatuses + " THEN -vault_amount " +
+                "ELSE 0 END),0) FROM economy_transactions" + (cutoff > 0 ? " WHERE updated_at>=?" : "");
+        try (var ps = db.prepareStatement(sql)) {
+            if (cutoff > 0) ps.setLong(1, cutoff);
+            try (var rs = ps.executeQuery()) { return rs.next() ? rs.getDouble(1) : 0.0; }
         }
     }
 
     private void deposit(Player player, double amount) {
         if (vault == null) { player.sendMessage("Vault経済が利用できません。"); return; }
-        try {
-            if (!vault.deposit(player, amount)) { player.sendMessage("Vaultへの入金に失敗しました。"); return; }
-            player.sendMessage("Vaultに " + money(amount) + " 入金しました。現在残高: " + money(vault.balance(player)));
-        } catch (RuntimeException error) {
-            plugin.getLogger().log(Level.SEVERE, "Manual profit Vault deposit failed", error);
-            player.sendMessage("Vaultへの入金に失敗しました。");
+        UUID owner = player.getUniqueId();
+        if (!pendingDeposits.add(owner)) { player.sendMessage("利益の処理中です。少し待ってからもう一度お試しください。"); return; }
+
+        final double vaultBalance;
+        try { vaultBalance = vault.balance(player); }
+        catch (RuntimeException error) {
+            pendingDeposits.remove(owner);
+            plugin.getLogger().log(Level.SEVERE, "Could not read Vault balance before profit withdrawal", error);
+            player.sendMessage("Vault経済を確認できませんでした。");
+            return;
+        }
+
+        plugin.executors().database(() -> prepareWithdrawal(owner, amount, vaultBalance), (plan, error) -> {
+            if (error != null) {
+                pendingDeposits.remove(owner);
+                plugin.getLogger().log(Level.SEVERE, "Profit withdrawal prepare failed", error);
+                player.sendMessage("利益の処理に失敗しました。");
+                return;
+            }
+            if (plan == null) {
+                pendingDeposits.remove(owner);
+                plugin.executors().database(() -> queryProfit(0L, true), (available, queryError) -> {
+                    if (queryError != null) player.sendMessage("利益が不足しています。");
+                    else player.sendMessage("利益が不足しています。現在の利益残高: " + money(available));
+                });
+                return;
+            }
+            markCallStartedAndDeposit(player, plan);
+        });
+    }
+
+    private WithdrawalPlan prepareWithdrawal(UUID owner, double amount, double vaultBalance) throws Exception {
+        Class.forName("org.sqlite.JDBC");
+        var dbFile = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        try (var db = DriverManager.getConnection("jdbc:sqlite:" + dbFile)) {
+            db.setAutoCommit(false);
+            try {
+                try (var review = db.prepareStatement("SELECT 1 FROM economy_transactions WHERE operation='PROFIT_WITHDRAW' AND status='REVIEW_REQUIRED' LIMIT 1");
+                     var rs = review.executeQuery()) {
+                    if (rs.next()) throw new IllegalStateException("Profit withdrawal requires manual review");
+                }
+                double available = queryProfit(db, 0L, true);
+                if (available + 0.000001 < amount) { db.rollback(); return null; }
+                String tx = "PROFIT_WITHDRAW:" + UUID.randomUUID();
+                long now = System.currentTimeMillis();
+                try (var insert = db.prepareStatement("INSERT INTO economy_transactions(transaction_id,player_uuid,operation,vault_amount,item_snapshot_json,balance_before,status,created_at,updated_at) VALUES(?,?, 'PROFIT_WITHDRAW', ?,NULL,?,'PREPARED',?,?)")) {
+                    insert.setString(1, tx);
+                    insert.setString(2, owner.toString());
+                    insert.setDouble(3, amount);
+                    insert.setDouble(4, vaultBalance);
+                    insert.setLong(5, now);
+                    insert.setLong(6, now);
+                    insert.executeUpdate();
+                }
+                db.commit();
+                return new WithdrawalPlan(tx, amount, available);
+            } catch (Exception error) {
+                db.rollback();
+                throw error;
+            } finally {
+                db.setAutoCommit(true);
+            }
+        }
+    }
+
+    private void markCallStartedAndDeposit(Player player, WithdrawalPlan plan) {
+        plugin.executors().database(() -> {
+            updateWithdrawalStatus(plan.transactionId(), "PREPARED", "CALL_STARTED");
+            return Boolean.TRUE;
+        }, (ignored, startError) -> {
+            if (startError != null) {
+                pendingDeposits.remove(player.getUniqueId());
+                plugin.getLogger().log(Level.SEVERE, "Profit withdrawal could not enter CALL_STARTED", startError);
+                player.sendMessage("利益の処理に失敗しました。");
+                return;
+            }
+
+            final boolean deposited;
+            try { deposited = vault.deposit(player, plan.amount()); }
+            catch (RuntimeException uncertain) {
+                plugin.getLogger().log(Level.SEVERE, "Profit Vault deposit outcome uncertain", uncertain);
+                plugin.executors().database(() -> {
+                    forceWithdrawalStatus(plan.transactionId(), "REVIEW_REQUIRED");
+                    return Boolean.TRUE;
+                }, (done, finishError) -> {
+                    pendingDeposits.remove(player.getUniqueId());
+                    player.sendMessage("Vault入金結果を確定できませんでした。管理者確認が必要です。");
+                });
+                return;
+            }
+
+            String finalStatus = deposited ? "APPLIED" : "ROLLED_BACK";
+            plugin.executors().database(() -> {
+                updateWithdrawalStatus(plan.transactionId(), "CALL_STARTED", finalStatus);
+                return Boolean.TRUE;
+            }, (done, finishError) -> {
+                pendingDeposits.remove(player.getUniqueId());
+                if (finishError != null) {
+                    plugin.getLogger().log(Level.SEVERE, "Profit withdrawal finalization failed", finishError);
+                    player.sendMessage("利益の記録に失敗しました。管理者確認が必要です。");
+                    return;
+                }
+                if (!deposited) {
+                    player.sendMessage("Vaultへの入金に失敗しました。利益は消費されていません。");
+                    return;
+                }
+                player.sendMessage("利益から " + money(plan.amount()) + " をVaultへ移しました。現在残高: " + money(vault.balance(player)));
+            });
+        });
+    }
+
+    private void updateWithdrawalStatus(String transactionId, String expected, String next) throws Exception {
+        Class.forName("org.sqlite.JDBC");
+        var dbFile = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        try (var db = DriverManager.getConnection("jdbc:sqlite:" + dbFile);
+             var ps = db.prepareStatement("UPDATE economy_transactions SET status=?,updated_at=? WHERE transaction_id=? AND status=?")) {
+            ps.setString(1, next);
+            ps.setLong(2, System.currentTimeMillis());
+            ps.setString(3, transactionId);
+            ps.setString(4, expected);
+            if (ps.executeUpdate() != 1) throw new IllegalStateException("Profit withdrawal state changed unexpectedly");
+        }
+    }
+
+    private void forceWithdrawalStatus(String transactionId, String next) throws Exception {
+        Class.forName("org.sqlite.JDBC");
+        var dbFile = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        try (var db = DriverManager.getConnection("jdbc:sqlite:" + dbFile);
+             var ps = db.prepareStatement("UPDATE economy_transactions SET status=?,updated_at=? WHERE transaction_id=?")) {
+            ps.setString(1, next);
+            ps.setLong(2, System.currentTimeMillis());
+            ps.setString(3, transactionId);
+            if (ps.executeUpdate() != 1) throw new IllegalStateException("Profit withdrawal transaction missing");
         }
     }
 
