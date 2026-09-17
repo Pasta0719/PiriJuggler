@@ -11,8 +11,6 @@ public final class StopSolver {
     private static final EnumSet<DisplayRole> DIVERSIFIED_LINE_ROLES = EnumSet.of(
             DisplayRole.GRAPE, DisplayRole.BELL, DisplayRole.PIERO, DisplayRole.PIERO_BONUS, DisplayRole.REPLAY,
             DisplayRole.BIG_ENTRY, DisplayRole.REG_ENTRY);
-    private static final EnumSet<DisplayRole> BONUS_AWARD_ROLES = EnumSet.of(
-            DisplayRole.BONUS, DisplayRole.BONUS_CHERRY, DisplayRole.PIERO_BONUS);
 
     public record Choice(StopTriplet candidate,int targetRank,int pressedIndex,int stopIndex,int slip,int durationMs){}
     private record Key(DisplayRole role,DisplayRole alternateRole,int fixedKey,Reel reel,boolean premiumF,boolean allowBarConfirmation,boolean forbidRightFirstGrapeSevenBar){}
@@ -52,6 +50,7 @@ public final class StopSolver {
         }
         if(candidates.isEmpty())throw new IllegalStateException("No candidate: role="+role+" alternateRole="+alternateRole+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" premiumF="+premiumF+" allowBarConfirmation="+allowBarConfirmation+" forbidRightFirstGrapeSevenBar="+forbidRightFirstGrapeSevenBar);
 
+        boolean awardGame=alternateRole!=null||premiumF;
         Choice[] best=new Choice[21];
         for(int p=0;p<21;p++){
             int minSlip=21;
@@ -59,11 +58,11 @@ public final class StopSolver {
             for(var candidate:candidates){
                 int stop=candidate.stops().stop(reel);
                 int slip=ReelMotion.slip(stop,p);
-                if(forbiddenAbnormalBonusPull(role,reel,stop,slip))continue;
+                if(awardGame&&forbiddenAbnormalBonusPull(role,alternateRole,candidate,reel,slip))continue;
                 minSlip=Math.min(minSlip,slip);
                 if(slip<=NATURAL_MAX_SLIP)hasNatural=true;
             }
-            if(minSlip==21)throw new IllegalStateException("No natural/non-bonus fallback: role="+role+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" pressedIndex="+p);
+            if(minSlip==21)throw new IllegalStateException("No natural award-game stop: role="+role+" alternateRole="+alternateRole+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" pressedIndex="+p);
 
             int minAllowedSlip;
             int maxAllowedSlip;
@@ -91,7 +90,7 @@ public final class StopSolver {
             for(var candidate:candidates){
                 int stop=candidate.stops().stop(reel);
                 int slip=ReelMotion.slip(stop,p);
-                if(forbiddenAbnormalBonusPull(role,reel,stop,slip))continue;
+                if(awardGame&&forbiddenAbnormalBonusPull(role,alternateRole,candidate,reel,slip))continue;
                 if(slip<minAllowedSlip||slip>maxAllowedSlip)continue;
                 int rank=targetRank(candidate,role,alternateRole);
                 int lineDistance=DIVERSIFIED_LINE_ROLES.contains(role)?lineDistance(rank,preferredLine):0;
@@ -127,10 +126,15 @@ public final class StopSolver {
         return best;
     }
 
-    private static boolean forbiddenAbnormalBonusPull(DisplayRole role,Reel reel,int stopIndex,int slip){
-        if(!BONUS_AWARD_ROLES.contains(role)||slip<=NATURAL_MAX_SLIP)return false;
-        for(int row=-1;row<=1;row++){
-            Symbol symbol=FixedReels.row(reel,stopIndex,row);
+    private static boolean forbiddenAbnormalBonusPull(DisplayRole role,DisplayRole alternateRole,StopCatalogue.Evaluation candidate,Reel reel,int slip){
+        if(slip<=NATURAL_MAX_SLIP)return false;
+        DisplayRole controllingRole=candidate.valid(role)?role:(alternateRole!=null&&candidate.valid(alternateRole)?alternateRole:null);
+        if(controllingRole==null)return false;
+        int mask=candidate.lineMask(controllingRole);
+        if(mask==0)return false;
+        for(var line:Payline.values()){
+            if((mask&(1<<line.ordinal()))==0)continue;
+            Symbol symbol=FixedReels.row(reel,candidate.stops().stop(reel),line.row(reel));
             if(symbol==Symbol.SEVEN||symbol==Symbol.BAR)return true;
         }
         return false;
