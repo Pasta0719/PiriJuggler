@@ -7,7 +7,7 @@ softdepend: [Vault]
 commands:
   piri:
     description: Slot commands
-    usage: /piri recover <status|cashout> | /piri npc <prizes|exchange> <create|remove> | /piri sim <machineId> <games> | /piri machine create|redefine|remove|list|info|setting | /piri key give
+    usage: /piri recover <status|cashout> | /piri npc <prizes|exchange> <create|remove> | /piri sim <machineId|all> <games> | /piri profit <session|total|deposit> | /piri machine create|redefine|remove|list|info|setting | /piri key give
   piribuildinfo:
     description: Show the exact loaded build identity
     usage: /piribuildinfo
