@@ -361,10 +361,9 @@ public final class MachineService implements Listener, CommandExecutor {
         UUID owner=player.getUniqueId();
         final double balance;
         try {balance=vault.balance(player);}catch(RuntimeException failure){releaseEconomy(owner,machine);reject(player,sequence,"VAULT_ERROR");return;}
-        int need=50-Math.toIntExact(session.number("credit"));
-        int affordable=(int)Math.min(Integer.MAX_VALUE,Math.floor(balance/vaultPerMedal));
-        int borrow=Math.min(need,affordable);
-        if(borrow<1){releaseEconomy(owner,machine);reject(player,sequence,"NOT_ENOUGH_VAULT");return;}
+        int borrow=EconomyStore.LOAN_MEDALS;
+        long vaultAmount=Math.multiplyExact((long)borrow,(long)vaultPerMedal);
+        if(balance<vaultAmount){releaseEconomy(owner,machine);reject(player,sequence,"NOT_ENOUGH_VAULT");return;}
         long now=System.currentTimeMillis();
         plugin.executors().database(()->new Saved<>(new EconomyStore(database).prepareLoan(owner,id,machine,sequence,borrow,vaultPerMedal,balance,now),database.state()),(prepared,error)->{
             if(prepared!=null)state=prepared.state;
