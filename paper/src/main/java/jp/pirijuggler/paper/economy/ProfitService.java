@@ -338,7 +338,7 @@ public final class ProfitService implements Listener {
     private static boolean isButton(Material material) { return material.name().endsWith("_BUTTON"); }
 
     private static String money(double value) {
-        if (Math.abs(value - Math.rint(value)) < 0.000001) return String.format(Locale.JAPAN, "%,.0f円", value);
-        return String.format(Locale.JAPAN, "%,.2f円", value);
+        if (Math.abs(value - Math.rint(value)) < 0.000001) return String.format(Locale.JAPAN, "%,.0fピリ", value);
+        return String.format(Locale.JAPAN, "%,.2fピリ", value);
     }
 }
