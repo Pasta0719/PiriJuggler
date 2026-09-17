@@ -13,56 +13,63 @@ public final class StopSolver {
             DisplayRole.BIG_ENTRY, DisplayRole.REG_ENTRY);
 
     public record Choice(StopTriplet candidate,int targetRank,int pressedIndex,int stopIndex,int slip,int durationMs){}
-    private record Key(DisplayRole role,DisplayRole alternateRole,int fixedKey,Reel reel,boolean premiumF,boolean allowBarConfirmation,boolean forbidRightFirstGrapeSevenBar){}
+    private record Key(DisplayRole role,DisplayRole alternateRole,int fixedKey,Reel reel,boolean premiumF,boolean allowBarConfirmation,boolean forbidRightFirstGrapeSevenBar,boolean bonusAwardGame){}
     private final StopCatalogue catalogue;
     private final ConcurrentHashMap<Key,Choice[]> cache=new ConcurrentHashMap<>();
     public StopSolver(StopCatalogue catalogue){this.catalogue=catalogue;}
     public StopCatalogue catalogue(){return catalogue;}
     public Choice choose(DisplayRole role,int stoppedMask,StopTriplet stopped,Reel reel,int pressedIndex,boolean premiumF){
-        return choose(role,null,stoppedMask,stopped,reel,pressedIndex,premiumF,premiumF||role==DisplayRole.PREMIUM_B,false);
+        return choose(role,null,stoppedMask,stopped,reel,pressedIndex,premiumF,premiumF||role==DisplayRole.PREMIUM_B,false,false);
     }
     public Choice choose(DisplayRole role,int stoppedMask,StopTriplet stopped,Reel reel,int pressedIndex,boolean premiumF,boolean forbidRightFirstGrapeSevenBar){
-        return choose(role,null,stoppedMask,stopped,reel,pressedIndex,premiumF,premiumF||role==DisplayRole.PREMIUM_B,forbidRightFirstGrapeSevenBar);
+        return choose(role,null,stoppedMask,stopped,reel,pressedIndex,premiumF,premiumF||role==DisplayRole.PREMIUM_B,forbidRightFirstGrapeSevenBar,false);
     }
     public Choice choose(DisplayRole role,DisplayRole alternateRole,int stoppedMask,StopTriplet stopped,Reel reel,int pressedIndex,boolean premiumF,boolean forbidRightFirstGrapeSevenBar){
-        return choose(role,alternateRole,stoppedMask,stopped,reel,pressedIndex,premiumF,premiumF||role==DisplayRole.PREMIUM_B,forbidRightFirstGrapeSevenBar);
+        return choose(role,alternateRole,stoppedMask,stopped,reel,pressedIndex,premiumF,premiumF||role==DisplayRole.PREMIUM_B,forbidRightFirstGrapeSevenBar,false);
     }
     public Choice choose(DisplayRole role,DisplayRole alternateRole,int stoppedMask,StopTriplet stopped,Reel reel,int pressedIndex,boolean premiumF,boolean allowBarConfirmation,boolean forbidRightFirstGrapeSevenBar){
+        return choose(role,alternateRole,stoppedMask,stopped,reel,pressedIndex,premiumF,allowBarConfirmation,forbidRightFirstGrapeSevenBar,false);
+    }
+    public Choice choose(DisplayRole role,DisplayRole alternateRole,int stoppedMask,StopTriplet stopped,Reel reel,int pressedIndex,boolean premiumF,boolean allowBarConfirmation,boolean forbidRightFirstGrapeSevenBar,boolean bonusAwardGame){
         if(pressedIndex<0||pressedIndex>=21||stoppedMask<0||stoppedMask>7||(stoppedMask&reel.bit())!=0)throw new IllegalArgumentException("Invalid STOP conditions");
         if(premiumF&&role!=DisplayRole.BONUS&&role!=DisplayRole.BONUS_CHERRY&&role!=DisplayRole.PIERO_BONUS)throw new IllegalArgumentException("Invalid premium F base");
         if(premiumF&&alternateRole!=null)throw new IllegalArgumentException("Premium F cannot use direct-entry alternatives");
-        var key=new Key(role,alternateRole,stopped.fixedKey(stoppedMask),reel,premiumF,allowBarConfirmation,forbidRightFirstGrapeSevenBar);
-        return cache.computeIfAbsent(key,ignored->choices(role,alternateRole,stoppedMask,stopped,reel,premiumF,allowBarConfirmation,forbidRightFirstGrapeSevenBar))[pressedIndex];
+        if(bonusAwardGame&&awardFallbackRole(role)==null)throw new IllegalArgumentException("Invalid award-game role "+role);
+        var key=new Key(role,alternateRole,stopped.fixedKey(stoppedMask),reel,premiumF,allowBarConfirmation,forbidRightFirstGrapeSevenBar,bonusAwardGame);
+        return cache.computeIfAbsent(key,ignored->choices(role,alternateRole,stoppedMask,stopped,reel,premiumF,allowBarConfirmation,forbidRightFirstGrapeSevenBar,bonusAwardGame))[pressedIndex];
     }
 
-    private Choice[] choices(DisplayRole role,DisplayRole alternateRole,int mask,StopTriplet stopped,Reel reel,boolean premiumF,boolean allowBarConfirmation,boolean forbidRightFirstGrapeSevenBar){
+    private Choice[] choices(DisplayRole role,DisplayRole alternateRole,int mask,StopTriplet stopped,Reel reel,boolean premiumF,boolean allowBarConfirmation,boolean forbidRightFirstGrapeSevenBar,boolean bonusAwardGame){
+        DisplayRole fallbackRole=bonusAwardGame?awardFallbackRole(role):null;
         var unique=new LinkedHashMap<Integer,StopCatalogue.Evaluation>();
         for(var candidate:catalogue.candidates(role,mask,stopped))unique.put(candidate.stops().id(),candidate);
         if(alternateRole!=null)for(var candidate:catalogue.candidates(alternateRole,mask,stopped))unique.putIfAbsent(candidate.stops().id(),candidate);
+        if(fallbackRole!=null)for(var candidate:catalogue.candidates(fallbackRole,mask,stopped))unique.putIfAbsent(candidate.stops().id(),candidate);
         var candidates=new ArrayList<StopCatalogue.Evaluation>();
         boolean secondPremiumStop=premiumF&&Integer.bitCount(mask)==1;
         for(var candidate:unique.values()){
             if(!allowBarConfirmation&&candidate.winningBarConfirmationLines()!=0)continue;
             if(secondPremiumStop&&StopCatalogue.sevenTenpaiLines(candidate.stops(),mask|reel.bit())!=0)continue;
-            if(premiumF&&mask==0&&!premiumFirstStopFeasible(role,reel,candidate.stops().stop(reel)))continue;
+            if(premiumF&&mask==0&&candidate.valid(role)&&!premiumFirstStopFeasible(role,reel,candidate.stops().stop(reel)))continue;
             if(forbidRightFirstGrapeSevenBar&&mask==0&&reel==Reel.RIGHT&&StopCatalogue.isRightGrapeSevenBarStop(candidate.stops().right()))continue;
             candidates.add(candidate);
         }
-        if(candidates.isEmpty())throw new IllegalStateException("No candidate: role="+role+" alternateRole="+alternateRole+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" premiumF="+premiumF+" allowBarConfirmation="+allowBarConfirmation+" forbidRightFirstGrapeSevenBar="+forbidRightFirstGrapeSevenBar);
+        if(candidates.isEmpty())throw new IllegalStateException("No candidate: role="+role+" alternateRole="+alternateRole+" fallbackRole="+fallbackRole+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" premiumF="+premiumF+" awardGame="+bonusAwardGame);
 
-        boolean awardGame=alternateRole!=null||premiumF;
         Choice[] best=new Choice[21];
         for(int p=0;p<21;p++){
+            if(bonusAwardGame){
+                best[p]=awardChoice(role,alternateRole,fallbackRole,mask,stopped,reel,p,candidates);
+                continue;
+            }
+
             int minSlip=21;
             boolean hasNatural=false;
             for(var candidate:candidates){
-                int stop=candidate.stops().stop(reel);
-                int slip=ReelMotion.slip(stop,p);
-                if(awardGame&&forbiddenAbnormalBonusPull(role,alternateRole,candidate,reel,slip))continue;
+                int slip=ReelMotion.slip(candidate.stops().stop(reel),p);
                 minSlip=Math.min(minSlip,slip);
                 if(slip<=NATURAL_MAX_SLIP)hasNatural=true;
             }
-            if(minSlip==21)throw new IllegalStateException("No natural award-game stop: role="+role+" alternateRole="+alternateRole+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" pressedIndex="+p);
 
             int minAllowedSlip;
             int maxAllowedSlip;
@@ -90,9 +97,8 @@ public final class StopSolver {
             for(var candidate:candidates){
                 int stop=candidate.stops().stop(reel);
                 int slip=ReelMotion.slip(stop,p);
-                if(awardGame&&forbiddenAbnormalBonusPull(role,alternateRole,candidate,reel,slip))continue;
                 if(slip<minAllowedSlip||slip>maxAllowedSlip)continue;
-                int rank=targetRank(candidate,role,alternateRole);
+                int rank=targetRank(candidate,role,alternateRole,null);
                 int lineDistance=DIVERSIFIED_LINE_ROLES.contains(role)?lineDistance(rank,preferredLine):0;
                 int lineDirection=DIVERSIFIED_LINE_ROLES.contains(role)&&rank<5?Math.floorMod(rank-preferredLine,5):rank;
                 boolean better;
@@ -126,24 +132,73 @@ public final class StopSolver {
         return best;
     }
 
-    private static boolean forbiddenAbnormalBonusPull(DisplayRole role,DisplayRole alternateRole,StopCatalogue.Evaluation candidate,Reel reel,int slip){
-        if(slip<=NATURAL_MAX_SLIP)return false;
-        DisplayRole controllingRole=candidate.valid(role)?role:(alternateRole!=null&&candidate.valid(alternateRole)?alternateRole:null);
+    private Choice awardChoice(DisplayRole role,DisplayRole alternateRole,DisplayRole fallbackRole,int mask,StopTriplet stopped,Reel reel,int pressedIndex,List<StopCatalogue.Evaluation> candidates){
+        StopCatalogue.Evaluation selected=null;
+        int selectedSlip=Integer.MAX_VALUE;
+        int selectedPriority=Integer.MAX_VALUE;
+        int selectedRank=Integer.MAX_VALUE;
+
+        for(var candidate:candidates){
+            int slip=ReelMotion.slip(candidate.stops().stop(reel),pressedIndex);
+            boolean primary=candidate.valid(role)||(alternateRole!=null&&candidate.valid(alternateRole));
+            if(primary&&slip>NATURAL_MAX_SLIP&&pullsBonusSymbol(candidate,role,alternateRole,reel))continue;
+            if(!primary&&candidate.valid(fallbackRole)&&slip>NATURAL_MAX_SLIP&&showsBonusSymbol(candidate,reel))continue;
+            int priority;
+            if(primary&&slip<=NATURAL_MAX_SLIP){
+                priority=(alternateRole!=null&&candidate.valid(alternateRole))?0:1;
+            }else if(candidate.valid(fallbackRole)){
+                priority=2;
+            }else{
+                continue;
+            }
+            int rank=targetRank(candidate,role,alternateRole,fallbackRole);
+            boolean better=selected==null
+                    ||priority<selectedPriority
+                    ||priority==selectedPriority&&slip<selectedSlip
+                    ||priority==selectedPriority&&slip==selectedSlip&&rank<selectedRank
+                    ||priority==selectedPriority&&slip==selectedSlip&&rank==selectedRank&&candidate.stops().id()<selected.stops().id();
+            if(better){selected=candidate;selectedSlip=slip;selectedPriority=priority;selectedRank=rank;}
+        }
+        if(selected==null)throw new IllegalStateException("No natural/fallback award-game candidate: role="+role+" alternateRole="+alternateRole+" fallbackRole="+fallbackRole+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" pressedIndex="+pressedIndex);
+        int stop=selected.stops().stop(reel);
+        return new Choice(selected.stops(),selectedRank,pressedIndex,stop,selectedSlip,ReelMotion.durationMs(selectedSlip));
+    }
+
+    private static boolean pullsBonusSymbol(StopCatalogue.Evaluation candidate,DisplayRole role,DisplayRole alternateRole,Reel reel){
+        DisplayRole controllingRole=alternateRole!=null&&candidate.valid(alternateRole)?alternateRole:(candidate.valid(role)?role:null);
         if(controllingRole==null)return false;
         int mask=candidate.lineMask(controllingRole);
         if(mask==0)return false;
-        for(var line:Payline.values()){
-            if((mask&(1<<line.ordinal()))==0)continue;
+        for(var line:Payline.values())if((mask&(1<<line.ordinal()))!=0){
             Symbol symbol=FixedReels.row(reel,candidate.stops().stop(reel),line.row(reel));
             if(symbol==Symbol.SEVEN||symbol==Symbol.BAR)return true;
         }
         return false;
     }
 
-    private static int targetRank(StopCatalogue.Evaluation candidate,DisplayRole role,DisplayRole alternateRole){
-        if(candidate.valid(role))return candidate.targetRank(role);
+    private static boolean showsBonusSymbol(StopCatalogue.Evaluation candidate,Reel reel){
+        int stop=candidate.stops().stop(reel);
+        for(int row=-1;row<=1;row++){
+            Symbol symbol=FixedReels.row(reel,stop,row);
+            if(symbol==Symbol.SEVEN||symbol==Symbol.BAR)return true;
+        }
+        return false;
+    }
+
+    private static DisplayRole awardFallbackRole(DisplayRole role){
+        return switch(role){
+            case BONUS->DisplayRole.MISS;
+            case BONUS_CHERRY,PREMIUM_B->DisplayRole.CHERRY;
+            case PIERO_BONUS->DisplayRole.PIERO;
+            default->null;
+        };
+    }
+
+    private static int targetRank(StopCatalogue.Evaluation candidate,DisplayRole role,DisplayRole alternateRole,DisplayRole fallbackRole){
         if(alternateRole!=null&&candidate.valid(alternateRole))return candidate.targetRank(alternateRole);
-        throw new IllegalStateException("Candidate does not match either display role");
+        if(candidate.valid(role))return candidate.targetRank(role);
+        if(fallbackRole!=null&&candidate.valid(fallbackRole))return candidate.targetRank(fallbackRole);
+        throw new IllegalStateException("Candidate does not match display roles");
     }
 
     private boolean premiumFirstStopFeasible(DisplayRole role,Reel first,int firstStop){
