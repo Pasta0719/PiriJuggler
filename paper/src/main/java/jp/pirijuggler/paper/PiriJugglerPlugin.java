@@ -19,6 +19,7 @@ import jp.pirijuggler.paper.data.DataLampPublisher;
 import jp.pirijuggler.paper.data.MachineDataInteractionService;
 import jp.pirijuggler.paper.data.PublicDataCommand;
 import jp.pirijuggler.paper.data.MachineDataSimulationService;
+import jp.pirijuggler.paper.security.SecurityDoorService;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -43,6 +44,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
     private PrizeService prizes;
     private PrizeNpcService prizeNpcs;
     private ProfitService profit;
+    private SecurityDoorService securityDoors;
     private ReelEngine reels;
     private DataLampPublisher dataLamp;
     private PublicDataCommand publicData;
@@ -81,10 +83,11 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
                     prizes = new PrizeService(this, result.values());
                     prizeNpcs = new PrizeNpcService(this, prizes);
                     profit = new ProfitService(this);
+                    securityDoors = new SecurityDoorService(this);
                     new MachineDataInteractionService(this);
                     EconomyStartupRecovery.reconcile(this);
                     Objects.requireNonNull(getCommand("piri")).setExecutor((sender, command, label, args) ->
-                            handleBuildIdentity(sender,args) || machineSimulation.handle(sender,args) || publicData.handle(sender, args) || prizes.handle(sender, args) || prizeNpcs.handle(sender, args) || profit.handle(sender, args) || machines.onCommand(sender, command, label, args));
+                            handleBuildIdentity(sender,args) || machineSimulation.handle(sender,args) || publicData.handle(sender, args) || prizes.handle(sender, args) || prizeNpcs.handle(sender, args) || profit.handle(sender, args) || securityDoors.handle(sender,args) || machines.onCommand(sender, command, label, args));
                 }
             }
         } catch (IOException | RuntimeException exception) {
