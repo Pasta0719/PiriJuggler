@@ -26,21 +26,26 @@ class EconomyStoreTest {
     @AfterEach void close() throws Exception {db.close();}
     void code(String expected,org.junit.jupiter.api.function.Executable action){assertEquals(expected,assertThrows(DomainException.class,action).getMessage());}
 
-    @Test void loanJournalIsDeterministicAndAppliesCreditOnce() throws Exception {
-        var session=db.state().session(player);db.sql("UPDATE player_sessions SET credit=10");session=db.state().session(player);
-        var plan=store.prepareLoan(player,session.id(),machine,1,40,20,10_000,NOW+1);
-        assertEquals(EconomyStore.JournalState.PREPARED,plan.state());assertEquals(800,plan.vaultAmount());
+    @Test void loanJournalIsDeterministicAndAlwaysPaysFixedBundleWithOverflow() throws Exception {
+        var session=db.state().session(player);db.sql("UPDATE player_sessions SET credit=40,held_medals=3");session=db.state().session(player);
+        var plan=store.prepareLoan(player,session.id(),machine,1,10,20,10_000,NOW+1);
+        assertEquals(EconomyStore.JournalState.PREPARED,plan.state());assertEquals(50,plan.borrow());assertEquals(1000,plan.vaultAmount());
         store.markLoanCallStarted(plan.transactionId(),NOW+2);var after=store.applyLoan(player,session.id(),machine,1,plan,NOW+3);
-        assertEquals(50,after.number("credit"));assertEquals(1,after.sequence());
-        var duplicate=store.prepareLoan(player,session.id(),machine,1,40,20,10_000,NOW+4);
-        assertEquals(EconomyStore.JournalState.APPLIED,duplicate.state());
+        assertEquals(50,after.number("credit"));assertEquals(43,after.number("held_medals"));assertEquals(1,after.sequence());
+        var duplicate=store.prepareLoan(player,session.id(),machine,1,10,20,10_000,NOW+4);
+        assertEquals(EconomyStore.JournalState.APPLIED,duplicate.state());assertEquals(50,duplicate.borrow());assertEquals(1000,duplicate.vaultAmount());
         assertEquals(1,((Number)db.rows("SELECT count(*) FROM economy_transactions").getFirst().values().iterator().next()).intValue());
     }
 
+    @Test void fixedLoanRequiresFundsForWholeConfiguredBundle() throws Exception {
+        var session=db.state().session(player);db.sql("UPDATE player_sessions SET credit=40");session=db.state().session(player);UUID sid=session.id();
+        code("NOT_ENOUGH_VAULT",()->store.prepareLoan(player,sid,machine,1,10,20,999,NOW+1));
+    }
+
     @Test void callStartedAtBootBecomesReviewRequiredAndBlocksNewLoan() throws Exception {
-        var session=db.state().session(player);var plan=store.prepareLoan(player,session.id(),machine,1,1,20,100,NOW+1);store.markLoanCallStarted(plan.transactionId(),NOW+2);
+        var session=db.state().session(player);var plan=store.prepareLoan(player,session.id(),machine,1,1,20,1000,NOW+1);store.markLoanCallStarted(plan.transactionId(),NOW+2);
         assertEquals(1,store.quarantineStartedVaultTransactions(NOW+3).size());assertTrue(store.playerEconomyBlocked(player));
-        code("VAULT_ERROR",()->store.prepareLoan(player,session.id(),machine,2,1,20,100,NOW+4));
+        code("VAULT_ERROR",()->store.prepareLoan(player,session.id(),machine,2,1,20,1000,NOW+4));
     }
 
     @Test void cashout662CreatesOne662Token() throws Exception {
