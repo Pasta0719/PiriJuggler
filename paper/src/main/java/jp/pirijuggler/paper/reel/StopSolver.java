@@ -54,12 +54,12 @@ public final class StopSolver {
             if(forbidRightFirstGrapeSevenBar&&mask==0&&reel==Reel.RIGHT&&StopCatalogue.isRightGrapeSevenBarStop(candidate.stops().right()))continue;
             candidates.add(candidate);
         }
-        if(candidates.isEmpty())throw new IllegalStateException("No candidate: role="+role+" alternateRole="+alternateRole+" fallbackRole="+fallbackRole+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" premiumF="+premiumF+" awardGame="+bonusAwardGame);
+        if(candidates.isEmpty()&&!bonusAwardGame)throw new IllegalStateException("No candidate: role="+role+" alternateRole="+alternateRole+" fallbackRole="+fallbackRole+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" premiumF="+premiumF+" awardGame="+bonusAwardGame);
 
         Choice[] best=new Choice[21];
         for(int p=0;p<21;p++){
             if(bonusAwardGame){
-                best[p]=awardChoice(role,alternateRole,fallbackRole,mask,stopped,reel,p,candidates);
+                best[p]=awardChoice(role,alternateRole,fallbackRole,mask,stopped,reel,p,candidates,allowBarConfirmation);
                 continue;
             }
 
@@ -132,7 +132,7 @@ public final class StopSolver {
         return best;
     }
 
-    private Choice awardChoice(DisplayRole role,DisplayRole alternateRole,DisplayRole fallbackRole,int mask,StopTriplet stopped,Reel reel,int pressedIndex,List<StopCatalogue.Evaluation> candidates){
+    private Choice awardChoice(DisplayRole role,DisplayRole alternateRole,DisplayRole fallbackRole,int mask,StopTriplet stopped,Reel reel,int pressedIndex,List<StopCatalogue.Evaluation> candidates,boolean allowBarConfirmation){
         StopCatalogue.Evaluation selected=null;
         int selectedSlip=Integer.MAX_VALUE;
         int selectedPriority=Integer.MAX_VALUE;
@@ -141,26 +141,38 @@ public final class StopSolver {
         for(var candidate:candidates){
             int slip=ReelMotion.slip(candidate.stops().stop(reel),pressedIndex);
             if(slip>NATURAL_MAX_SLIP&&showsBonusSymbol(candidate,reel))continue;
-            boolean primary=candidate.valid(role)||(alternateRole!=null&&candidate.valid(alternateRole));
-            int priority;
-            if(primary&&slip<=NATURAL_MAX_SLIP){
-                priority=(alternateRole!=null&&candidate.valid(alternateRole))?0:1;
-            }else if(candidate.valid(fallbackRole)){
-                priority=2;
-            }else{
-                continue;
-            }
+            boolean direct=alternateRole!=null&&candidate.valid(alternateRole);
+            boolean base=candidate.valid(role);
+            boolean fallback=candidate.valid(fallbackRole);
+            if(!direct&&!base&&!fallback)continue;
+            int priority=direct?0:base?1:2;
             int rank=targetRank(candidate,role,alternateRole,fallbackRole);
             boolean better=selected==null
-                    ||priority<selectedPriority
-                    ||priority==selectedPriority&&slip<selectedSlip
-                    ||priority==selectedPriority&&slip==selectedSlip&&rank<selectedRank
-                    ||priority==selectedPriority&&slip==selectedSlip&&rank==selectedRank&&candidate.stops().id()<selected.stops().id();
+                    ||slip<selectedSlip
+                    ||slip==selectedSlip&&priority<selectedPriority
+                    ||slip==selectedSlip&&priority==selectedPriority&&rank<selectedRank
+                    ||slip==selectedSlip&&priority==selectedPriority&&rank==selectedRank&&candidate.stops().id()<selected.stops().id();
             if(better){selected=candidate;selectedSlip=slip;selectedPriority=priority;selectedRank=rank;}
         }
-        if(selected==null)throw new IllegalStateException("No natural/fallback award-game candidate: role="+role+" alternateRole="+alternateRole+" fallbackRole="+fallbackRole+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" pressedIndex="+pressedIndex);
-        int stop=selected.stops().stop(reel);
-        return new Choice(selected.stops(),selectedRank,pressedIndex,stop,selectedSlip,ReelMotion.durationMs(selectedSlip));
+        if(selected!=null){
+            int stop=selected.stops().stop(reel);
+            return new Choice(selected.stops(),selectedRank,pressedIndex,stop,selectedSlip,ReelMotion.durationMs(selectedSlip));
+        }
+
+        // If the strict role catalog has no legal continuation, do not drag a bonus symbol around the reel.
+        // Stop naturally (0..4 frames) and let the server keep the already-won bonus right pending.
+        for(int slip=0;slip<=NATURAL_MAX_SLIP;slip++){
+            int stop=Math.floorMod(pressedIndex-slip,21);
+            StopTriplet synthetic=stopped.with(reel,stop);
+            var evaluation=catalogue.evaluation(synthetic);
+            if(!allowBarConfirmation&&Integer.bitCount(mask|reel.bit())==3&&evaluation.winningBarConfirmationLines()!=0)continue;
+            int rank=6;
+            if(alternateRole!=null&&evaluation.valid(alternateRole))rank=evaluation.targetRank(alternateRole);
+            else if(evaluation.valid(role))rank=evaluation.targetRank(role);
+            else if(evaluation.valid(fallbackRole))rank=evaluation.targetRank(fallbackRole);
+            return new Choice(synthetic,rank,pressedIndex,stop,slip,ReelMotion.durationMs(slip));
+        }
+        throw new IllegalStateException("No safe award-game stop: role="+role+" alternateRole="+alternateRole+" fallbackRole="+fallbackRole+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" pressedIndex="+pressedIndex);
     }
 
     private static boolean showsBonusSymbol(StopCatalogue.Evaluation candidate,Reel reel){
@@ -175,7 +187,7 @@ public final class StopSolver {
     private static DisplayRole awardFallbackRole(DisplayRole role){
         return switch(role){
             case BONUS->DisplayRole.MISS;
-            case BONUS_CHERRY,PREMIUM_B->DisplayRole.CHERRY;
+            case BONUS_CHERRY->DisplayRole.CHERRY;
             case PIERO_BONUS->DisplayRole.PIERO;
             default->null;
         };
