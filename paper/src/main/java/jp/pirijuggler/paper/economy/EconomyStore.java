@@ -29,6 +29,7 @@ public final class EconomyStore {
     }
 
     private static final String UNLIMITED_TABLE = "medal_tokens_unlimited";
+    public static final int LOAN_MEDALS = 50;
     private static final EnumSet<Session.GameState> ECONOMY_STATES = EnumSet.of(
             Session.GameState.SEATED_READY, Session.GameState.REPLAY_READY,
             Session.GameState.BONUS_PENDING_BIG, Session.GameState.BONUS_PENDING_REG,
@@ -56,22 +57,24 @@ public final class EconomyStore {
     public LoanPlan prepareLoan(UUID player, UUID sessionId, int machine, long sequence,
                                 int borrow, int vaultPerMedal, double balanceBefore, long now) throws Exception {
         if (borrow < 1 || vaultPerMedal < 1) throw new DomainException("NOT_ENOUGH_VAULT");
-        double vaultAmount = Math.multiplyExact((long) borrow, (long) vaultPerMedal);
+        int fixedBorrow = LOAN_MEDALS;
+        double vaultAmount = Math.multiplyExact((long) fixedBorrow, (long) vaultPerMedal);
+        if (balanceBefore < vaultAmount) throw new DomainException("NOT_ENOUGH_VAULT");
         String transactionId = deterministic("LOAN", sessionId, sequence);
         return db.transaction(() -> {
             var existing = db.rows("SELECT * FROM economy_transactions WHERE transaction_id=?", transactionId);
             if (!existing.isEmpty()) {
                 String status = (String) existing.getFirst().get("status");
-                return new LoanPlan(transactionId, borrow, vaultAmount, balanceBefore, JournalState.valueOf(status));
+                return new LoanPlan(transactionId, fixedBorrow, vaultAmount, balanceBefore, JournalState.valueOf(status));
             }
             requireNoEconomyReview(player);
             Session session = requireActive(player, sessionId, machine);
             if (!allowed(session.state())) throw new DomainException("INVALID_STATE");
             if (sequence <= session.sequence()) throw new DomainException("SEQUENCE_OLD");
-            if (session.number("credit") + borrow > 50) throw new DomainException("INVALID_STATE");
+            Math.addExact(session.number("held_medals"), Math.max(0L, Math.addExact(session.number("credit"), fixedBorrow) - 50L));
             db.sql("INSERT INTO economy_transactions(transaction_id,player_uuid,operation,vault_amount,item_snapshot_json,balance_before,status,created_at,updated_at) VALUES(?,?,'LOAN',?,NULL,?,'PREPARED',?,?)",
                     transactionId, player.toString(), vaultAmount, balanceBefore, now, now);
-            return new LoanPlan(transactionId, borrow, vaultAmount, balanceBefore, JournalState.PREPARED);
+            return new LoanPlan(transactionId, fixedBorrow, vaultAmount, balanceBefore, JournalState.PREPARED);
         });
     }
 
@@ -87,10 +90,11 @@ public final class EconomyStore {
             if (!"CALL_STARTED".equals(tx.get("status"))) throw new DomainException("VAULT_ERROR");
             Session session = requireActive(player, sessionId, machine);
             if (sequence <= session.sequence()) throw new DomainException("SEQUENCE_OLD");
-            long credit = Math.addExact(session.number("credit"), plan.borrow());
-            if (credit > 50) throw new DomainException("INVALID_STATE");
-            int changed = db.sql("UPDATE player_sessions SET credit=?,last_client_sequence=?,last_activity=? WHERE session_id=? AND last_client_sequence=? AND lifecycle='ACTIVE'",
-                    credit, sequence, now, sessionId.toString(), session.sequence());
+            long total = Math.addExact(session.number("credit"), plan.borrow());
+            long credit = Math.min(50L, total);
+            long held = Math.addExact(session.number("held_medals"), Math.max(0L, total - 50L));
+            int changed = db.sql("UPDATE player_sessions SET credit=?,held_medals=?,last_client_sequence=?,last_activity=? WHERE session_id=? AND last_client_sequence=? AND lifecycle='ACTIVE'",
+                    credit, held, sequence, now, sessionId.toString(), session.sequence());
             if (changed != 1) throw new DomainException("SEQUENCE_OLD");
             db.sql("UPDATE economy_transactions SET status='APPLIED',updated_at=? WHERE transaction_id=?", now, plan.transactionId());
             return requireSession(player);
