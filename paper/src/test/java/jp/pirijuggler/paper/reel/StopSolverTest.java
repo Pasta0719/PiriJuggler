@@ -12,7 +12,7 @@ class StopSolverTest {
         assertEquals(9261,CATALOGUE.evaluations().size());assertEquals(9261,CATALOGUE.evaluations().stream().map(e->e.stops().id()).distinct().count());
         var expected=Map.ofEntries(
                 Map.entry(DisplayRole.GRAPE,750),Map.entry(DisplayRole.BELL,50),Map.entry(DisplayRole.PIERO,20),Map.entry(DisplayRole.PIERO_BONUS,20),Map.entry(DisplayRole.REPLAY,525),
-                Map.entry(DisplayRole.CHERRY,1287),Map.entry(DisplayRole.MISS,5126),Map.entry(DisplayRole.BONUS,124),Map.entry(DisplayRole.BONUS_CHERRY,12),
+                Map.entry(DisplayRole.CHERRY,1287),Map.entry(DisplayRole.MISS,4803),Map.entry(DisplayRole.BONUS,447),Map.entry(DisplayRole.BONUS_CHERRY,24),
                 Map.entry(DisplayRole.BIG_ENTRY,10),Map.entry(DisplayRole.REG_ENTRY,10),Map.entry(DisplayRole.PREMIUM_B,782));
         assertEquals(expected,CATALOGUE.counts());
         var lock=JsonParser.parseString(Files.readString(Path.of(System.getProperty("piri.specRoot"),"docs/spec-lock.json"))).getAsJsonObject();
@@ -110,6 +110,28 @@ class StopSolverTest {
             var choice=SOLVER.choose(DisplayRole.BIG_ENTRY,0,blank,Reel.RIGHT,press,false);
             assertEquals(4,choice.stopIndex(),"after SEVEN passes, the natural pull-in should place it on the top row at press="+press);
             assertEquals(press-4,choice.slip());
+        }
+    }
+    @Test void sevenTenpaiCanMissOnEveryThirdReelWithoutAbnormalBonusPull(){
+        for(var entry:List.of(DisplayRole.BIG_ENTRY,DisplayRole.REG_ENTRY)){
+            var thirdReels=EnumSet.noneOf(Reel.class);
+            for(var order:ReelVerification.orders()){
+                Reel first=order.get(0),second=order.get(1),third=order.get(2);
+                boolean witnessed=false;
+                for(int p1=0;p1<21&&!witnessed;p1++)for(int p2=0;p2<21&&!witnessed;p2++){
+                    StopTriplet stopped=new StopTriplet(0,0,0);int mask=0;
+                    var one=SOLVER.choose(DisplayRole.BONUS,entry,mask,stopped,first,p1,false,false);stopped=stopped.with(first,one.stopIndex());mask|=first.bit();
+                    var two=SOLVER.choose(DisplayRole.BONUS,entry,mask,stopped,second,p2,false,false);stopped=stopped.with(second,two.stopIndex());mask|=second.bit();
+                    if(StopCatalogue.sevenTenpaiLines(stopped,mask)==0)continue;
+                    for(int p3=0;p3<21;p3++){
+                        var three=SOLVER.choose(DisplayRole.BONUS,entry,mask,stopped,third,p3,false,false);
+                        var finalStops=stopped.with(third,three.stopIndex());var evaluation=CATALOGUE.evaluation(finalStops);
+                        if(evaluation.valid(entry))assertTrue(three.slip()<=4,"direct bonus entry may only use natural 0..4 slip: "+entry+" "+order+" press="+p3+" slip="+three.slip());
+                        else if(evaluation.valid(DisplayRole.BONUS)){assertTrue(three.slip()<=4,"tenpai miss should stay natural: "+entry+" "+order+" press="+p3+" slip="+three.slip());witnessed=true;thirdReels.add(third);break;}
+                    }
+                }
+            }
+            assertEquals(EnumSet.allOf(Reel.class),thirdReels,"every reel must be able to miss a seven tenpai as third stop for "+entry);
         }
     }
     @Test void ordinaryPressesCanFinishEveryPaylineForLineRoles(){
