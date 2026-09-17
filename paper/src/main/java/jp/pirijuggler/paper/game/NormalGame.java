@@ -93,7 +93,8 @@ public final class NormalGame {
                             DisplayRole fallbackRole=bonus==null?null:awardFallbackRole(role,premiumB);
                             boolean directEntry=directRole!=null&&evaluation.valid(directRole);
                             boolean naturalFallback=fallbackRole!=null&&evaluation.valid(fallbackRole);
-                            if(!evaluation.valid(baseRole)&&!directEntry&&!naturalFallback)throw new IllegalStateException("Unexpected final reel shape");
+                            boolean naturalAwardShape=directRole!=null;
+                            if(!evaluation.valid(baseRole)&&!directEntry&&!naturalFallback&&!naturalAwardShape)throw new IllegalStateException("Unexpected final reel shape");
                             if(directEntry){
                                 if(bonus==null)throw new IllegalStateException("Direct entry requires a bonus role");
                                 payout=0;values.put("pay_display",0);bonusStarted=bonus;
