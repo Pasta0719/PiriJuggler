@@ -31,7 +31,7 @@ public final class PublicDataCommand {
             ids.add(id);
         }else{
             for(Machine machine:plugin.machines().snapshot().machines())if(!machine.deleted()&&machine.enabled())ids.add(machine.id());
-            if(ids.isEmpty()){tell(sender,"No playable Piri Juggler machines.");return true;}
+            if(ids.isEmpty()){tell(sender,"No playable slot machines.");return true;}
         }
 
         var databasePath=plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
@@ -47,7 +47,7 @@ public final class PublicDataCommand {
             if(sender instanceof Player player&&!player.isOnline())return;
             if(args.length==2){for(String line:PublicDataText.detail(snapshots.getFirst()))tell(sender,line);}
             else{
-                tell(sender,"[Piri Juggler Data]");
+                tell(sender,"[Slot Data]");
                 for(JsonObject snapshot:snapshots)tell(sender,PublicDataText.summary(snapshot));
                 tell(sender,"Details: /piri data <machineId>");
             }
