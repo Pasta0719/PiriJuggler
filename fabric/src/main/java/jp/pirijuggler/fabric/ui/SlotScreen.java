@@ -17,7 +17,7 @@ import static jp.pirijuggler.fabric.ui.UiConstants.color;
 public final class SlotScreen extends Screen {
     private static final DateTimeFormatter HISTORY_TIME=DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("Asia/Tokyo"));
     private final SlotViewState view;private final SlotInput input;private String pressed="";private long leverAt=Long.MIN_VALUE;
-    public SlotScreen(SlotViewState view,SlotInput input){super(Text.literal("Piri Juggler"));this.view=view;this.input=input;}
+    public SlotScreen(SlotViewState view,SlotInput input){super(Text.literal("Piri Slot"));this.view=view;this.input=input;}
     @Override public boolean shouldPause(){return false;}
     @Override public boolean shouldCloseOnEsc(){return false;}
     @Override protected void init(){client.mouse.unlockCursor();}
