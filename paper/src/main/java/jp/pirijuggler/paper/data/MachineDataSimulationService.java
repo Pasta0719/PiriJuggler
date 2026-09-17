@@ -78,17 +78,17 @@ public final class MachineDataSimulationService {
 
         String period=state.period();
         var dbFile=plugin.getDataFolder().toPath().resolve("piri.db");
-        long seed=new SecureRandom().nextLong();
+        final long seed=new SecureRandom().nextLong();
         running=true;
         sender.sendMessage(Component.text("SIMULATION_ALL_STARTED machines="+machines.size()+" gamesEach="+games+" totalGames="+Math.multiplyExact((long)machines.size(),games)));
 
         plugin.executors().database(()->{
             List<MachineDataSimulator.Result> results=new ArrayList<>(machines.size());
             long now=System.currentTimeMillis();
+            var masterRandom=new SplittableRandom(seed);
             for(int i=0;i<machines.size();i++){
                 Machine machine=machines.get(i);
-                var random=new SplittableRandom(seed).split();
-                seed=Long.rotateLeft(seed^0x9E3779B97F4A7C15L,17)+i;
+                var random=masterRandom.split();
                 results.add(MachineDataSimulator.run(dbFile,weights,machine.id(),machine.setting(),games,period,random,now+(long)i*games));
             }
             return results;
