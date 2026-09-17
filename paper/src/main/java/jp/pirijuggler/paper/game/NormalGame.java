@@ -89,10 +89,11 @@ public final class NormalGame {
                         case NORMAL_SPINNING -> {
                             InternalRole role=InternalRole.valueOf(before.text("internal_role"));PremiumPolicy.Type p=premiumType(before);boolean premiumB=p==PremiumPolicy.Type.B;
                             var evaluation=solver.catalogue().evaluation(round.display());
-                            DisplayRole baseRole=role.display(premiumB);DisplayRole directRole=directEntryRole(role,p);
+                            DisplayRole baseRole=role.display(premiumB);DisplayRole directRole=directEntryRole(role,p);String bonus=GameRules.bonus(role);
+                            DisplayRole fallbackRole=bonus==null?null:awardFallbackRole(role,premiumB);
                             boolean directEntry=directRole!=null&&evaluation.valid(directRole);
-                            if(!evaluation.valid(baseRole)&&!directEntry)throw new IllegalStateException("Unexpected final reel shape");
-                            String bonus=GameRules.bonus(role);
+                            boolean naturalFallback=fallbackRole!=null&&evaluation.valid(fallbackRole);
+                            if(!evaluation.valid(baseRole)&&!directEntry&&!naturalFallback)throw new IllegalStateException("Unexpected final reel shape");
                             if(directEntry){
                                 if(bonus==null)throw new IllegalStateException("Direct entry requires a bonus role");
                                 payout=0;values.put("pay_display",0);bonusStarted=bonus;
@@ -199,6 +200,15 @@ public final class NormalGame {
     private static String stateForNormalSpin(){return "NORMAL_SPINNING";}
     private static PremiumPolicy.Type premiumType(Session s){String text=s.text("premium_type");return text==null?null:PremiumPolicy.Type.valueOf(text);}
     private static DisplayRole directEntryRole(InternalRole role,PremiumPolicy.Type premium){return premium==PremiumPolicy.Type.B||premium==PremiumPolicy.Type.F?null:role.directEntryDisplay();}
+    private static DisplayRole awardFallbackRole(InternalRole role,boolean premiumB){
+        if(premiumB)return DisplayRole.CHERRY;
+        return switch(role){
+            case BIG,REG->DisplayRole.MISS;
+            case CHERRY_BIG,CHERRY_REG->DisplayRole.CHERRY;
+            case PIERO_BIG,PIERO_REG->DisplayRole.PIERO;
+            default->null;
+        };
+    }
     private static Reel stoppedReel(PacketType action,ReelRound round){return switch(action){case STOP_LEFT->Reel.LEFT;case STOP_CENTER->Reel.CENTER;case STOP_RIGHT->Reel.RIGHT;case SPACE_ACTION->{int mask=round.stoppedMask();if((mask&Reel.RIGHT.bit())!=0&&(mask&Reel.CENTER.bit())==0)yield Reel.CENTER;if((mask&Reel.CENTER.bit())!=0&&(mask&Reel.LEFT.bit())==0)yield Reel.LEFT;if((mask&Reel.RIGHT.bit())!=0)yield Reel.RIGHT;if((mask&Reel.CENTER.bit())!=0)yield Reel.CENTER;yield Reel.LEFT;}default->null;};}
     private DisplayRole drawBonusDisplay(int machine){long roll=random.gameplay(machine).nextLong(1_000_000);if(roll<916)return DisplayRole.BELL;if(roll<1832)return DisplayRole.PIERO;if(roll<850275)return DisplayRole.GRAPE;return DisplayRole.CHERRY;}
     private static ReelMotion.Profile profile(Session s){String value=s.text("motion_profile");return value==null?ReelMotion.Profile.NORMAL:ReelMotion.Profile.valueOf(value);}
