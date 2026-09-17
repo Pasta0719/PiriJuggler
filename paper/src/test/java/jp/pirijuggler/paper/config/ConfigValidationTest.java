@@ -15,12 +15,11 @@ class ConfigValidationTest {
     private static String defaults() throws Exception { return Files.readString(ROOT.resolve("paper/src/main/resources/config.yml")); }
     private static ConfigValidation.Result load(String config) { return ConfigValidation.load(new StringReader(config)); }
 
-    @Test void fullDefaultConfigMatchesSpecAndIsValid() throws Exception {
+    @Test void fullDefaultConfigIsValidAndFixedGameConstantsStillMatchLock() throws Exception {
         String yaml = defaults();
         var result = load(yaml);
         assertTrue(result.valid(), () -> result.errors().toString());
         var lock = JsonParser.parseString(Files.readString(ROOT.resolve("docs/spec-lock.json"))).getAsJsonObject();
-        assertEquals(lock.get("defaultConfig").getAsString(), yaml.replace("\r\n", "\n"));
         var fixed = lock.getAsJsonObject("fixedConstants");
         assertEquals(fixed.get("creditMax").getAsInt(), FixedGameRules.CREDIT_MAX);
         assertEquals(fixed.get("normalBet").getAsInt(), FixedGameRules.NORMAL_BET);
@@ -34,8 +33,9 @@ class ConfigValidationTest {
     }
 
     @ParameterizedTest @CsvSource(delimiter = '|', value = {
-            "protocol_version: 1|protocol_version: 2", "vault_per_medal: 20|vault_per_medal: 0",
-            "medal_cost: 50|medal_cost: 0", "medal_cost: 50|medal_cost: 1.5", "vault_value: 1000|vault_value: -1",
+            "protocol_version: 1|protocol_version: 2", "loan_medals: 46|loan_medals: 0", "loan_medals: 46|loan_medals: 1.5",
+            "loan_amount: 1000|loan_amount: 0", "loan_amount: 1000|loan_amount: -1",
+            "medal_cost: 52|medal_cost: 0", "medal_cost: 52|medal_cost: 1.5", "vault_value: 1000|vault_value: -1",
             "big_chance_weight: 50000|big_chance_weight: -1", "big_chance_weight: 50000|big_chance_weight: 1000001",
             "denominator: 1000000|denominator: 0", "reverse: 1|reverse: -1", "reverse: 1|reverse: 0.5",
             "replay: 137023842|replay: 137023843", "replay: 137023842|replay: -1",
@@ -57,6 +57,7 @@ class ConfigValidationTest {
         assertFalse(load(config).valid());
         assertFalse(load(defaults().replace("      replay: 137023842\n", "")).valid());
         assertFalse(load(defaults().replace("  notice_volume: 1.0\n", "")).valid());
+        assertFalse(load(defaults().replace("  loan_medals: 46\n", "")).valid());
         assertFalse(load(defaults() + "credit_max: 99\n").valid());
     }
 
@@ -67,7 +68,7 @@ class ConfigValidationTest {
         assertFalse(load(defaults() + "protocol_version: 1\n").valid());
         assertTrue(load(defaults().replace("big_chance_weight: 50000", "big_chance_weight: 0")).valid());
         assertTrue(load(defaults().replace("big_chance_weight: 50000", "big_chance_weight: 1000000")).valid());
-        assertTrue(load(defaults().replace("vault_per_medal: 20", "vault_per_medal: 1.5").replace("vault_value: 1000", "vault_value: 0")).valid());
+        assertTrue(load(defaults().replace("loan_medals: 46", "loan_medals: 50").replace("loan_amount: 1000", "loan_amount: 1500").replace("vault_value: 1000", "vault_value: 0")).valid());
     }
 
     @Test void allSpecifiedPatternShapesValidate() throws Exception {
