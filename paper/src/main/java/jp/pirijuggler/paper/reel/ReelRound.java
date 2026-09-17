@@ -43,6 +43,10 @@ public final class ReelRound {
         if(!"NORMAL".equals(mode))return false;
         return switch(role){case GRAPE,BONUS,BONUS_CHERRY,PIERO_BONUS,PREMIUM_B->false;default->true;};
     }
+    private boolean bonusAwardGame(){
+        if(!"NORMAL".equals(mode))return false;
+        return role==DisplayRole.BONUS||role==DisplayRole.BONUS_CHERRY||role==DisplayRole.PIERO_BONUS||role==DisplayRole.PREMIUM_B;
+    }
     /** Call immediately before sending this envelope, using System.nanoTime on Paper's thread. */
     public Envelope begin(long now){
         main.requireMainThread();if(motionStartNanos!=null)throw new IllegalStateException("Round already began");motionStartNanos=now;
@@ -67,7 +71,7 @@ public final class ReelRound {
         if(elapsed<profile.serverThresholdMs())return rejected(sequence,ErrorCode.STOP_TOO_EARLY);
         try(var lease=gate.beginBusy()){
             int pressed=b.has("pressedIndex")?b.get("pressedIndex").getAsInt():ReelMotion.pressedIndex(profile,starts[reel.ordinal()],motionStartNanos,receivedNanos,playerPing);
-            var choice=solver.choose(role,alternateRole,stoppedMask,display,reel,pressed,premiumF,allowBarConfirmation,forbidRightFirstGrapeSevenBar);display=display.with(reel,choice.stopIndex());stoppedMask|=reel.bit();
+            var choice=solver.choose(role,alternateRole,stoppedMask,display,reel,pressed,premiumF,allowBarConfirmation,forbidRightFirstGrapeSevenBar,bonusAwardGame());display=display.with(reel,choice.stopIndex());stoppedMask|=reel.bit();
             int tenpai=Integer.bitCount(stoppedMask)==2?StopCatalogue.sevenTenpaiLines(display,stoppedMask):0;
             boolean sound=Integer.bitCount(stoppedMask)==2&&(premiumF||tenpai>0);
             if(premiumF&&Integer.bitCount(stoppedMask)==2&&tenpai!=0)throw new IllegalStateException("Premium F unexpectedly has SEVEN tenpai");
@@ -83,7 +87,7 @@ public final class ReelRound {
             if((stoppedMask&reel.bit())!=0)continue;
             JsonArray choices=new JsonArray();
             for(int pressed=0;pressed<21;pressed++){
-                var choice=solver.choose(role,alternateRole,stoppedMask,display,reel,pressed,premiumF,allowBarConfirmation,forbidRightFirstGrapeSevenBar);JsonObject item=new JsonObject();
+                var choice=solver.choose(role,alternateRole,stoppedMask,display,reel,pressed,premiumF,allowBarConfirmation,forbidRightFirstGrapeSevenBar,bonusAwardGame());JsonObject item=new JsonObject();
                 item.addProperty("stopIndex",choice.stopIndex());item.addProperty("slip",choice.slip());item.addProperty("durationMs",choice.durationMs());choices.add(item);
             }
             all.add(reel.name().toLowerCase(Locale.ROOT),choices);
