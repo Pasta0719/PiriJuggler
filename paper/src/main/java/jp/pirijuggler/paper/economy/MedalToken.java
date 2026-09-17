@@ -33,7 +33,7 @@ public final class MedalToken {
                 .decorate(TextDecoration.BOLD)
                 .decoration(TextDecoration.ITALIC, false));
         meta.lore(List.of(
-                Component.text("PIRI JUGGLER", NamedTextColor.DARK_GRAY)
+                Component.text("SLOT MEDAL", NamedTextColor.DARK_GRAY)
                         .decoration(TextDecoration.ITALIC, false),
                 Component.empty(),
                 Component.text("残高  ", NamedTextColor.GRAY)
