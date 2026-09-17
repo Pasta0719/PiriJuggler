@@ -55,7 +55,9 @@ public final class ConfigValidation {
         Check c = new Check(values);
         c.keys("", Set.of("protocol_version", "economy", "game", "sound", "premium", "prizes", "events", "probabilities"));
         c.equalInteger("protocol_version", Protocol.VERSION);
-        c.number("economy.vault_per_medal", BigDecimal.ONE);
+        c.keys("economy", Set.of("loan_medals", "loan_amount"));
+        c.integer("economy.loan_medals", 1, Integer.MAX_VALUE);
+        c.number("economy.loan_amount", BigDecimal.ONE);
         c.integer("game.idle_timeout_seconds", 30, Long.MAX_VALUE);
         c.integer("game.disconnect_grace_seconds", 0, Long.MAX_VALUE);
         c.keys("sound", SOUNDS);
