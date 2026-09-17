@@ -60,8 +60,7 @@ public final class PrizeNpcService implements Listener {
         if (action.equals("create")) {
             Villager npc = player.getWorld().spawn(player.getLocation(), Villager.class, villager -> {
                 villager.getPersistentDataContainer().set(marker, PersistentDataType.STRING, type);
-                villager.customName(Component.text(type.equals("prizes") ? "景品交換所" : "換金所"));
-                villager.setCustomNameVisible(true);
+                applyDisplayName(villager, type);
                 villager.setAI(false);
                 villager.setInvulnerable(true);
                 villager.setSilent(true);
@@ -98,6 +97,7 @@ public final class PrizeNpcService implements Listener {
         String type = counterType(npc);
         if (type == null) return;
         event.setCancelled(true);
+        applyDisplayName(npc, type);
         if (type.equals("prizes")) prizes.handle(event.getPlayer(), new String[]{"prizes"});
         else if (type.equals("exchange")) openExchange(event.getPlayer());
     }
@@ -140,6 +140,11 @@ public final class PrizeNpcService implements Listener {
         if (!lore.isEmpty()) meta.lore(List.of(Component.text(lore, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)));
         item.setItemMeta(meta);
         return item;
+    }
+
+    private void applyDisplayName(Villager villager, String type) {
+        villager.customName(Component.text(type.equals("prizes") ? "景品交換所" : "換金所"));
+        villager.setCustomNameVisible(true);
     }
 
     private String counterType(Villager villager) {
