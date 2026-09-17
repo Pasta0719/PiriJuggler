@@ -1,7 +1,8 @@
 protocol_version: 1
 
 economy:
-  vault_per_medal: 20
+  loan_medals: 46
+  loan_amount: 1000
 
 game:
   idle_timeout_seconds: 180
@@ -31,9 +32,9 @@ premium:
     fake_tenpai: 1
 
 prizes:
-  small: {medal_cost: 50, vault_value: 1000}
-  medium: {medal_cost: 200, vault_value: 4000}
-  large: {medal_cost: 450, vault_value: 9000}
+  small: {medal_cost: 52, vault_value: 1000}
+  medium: {medal_cost: 208, vault_value: 4000}
+  large: {medal_cost: 468, vault_value: 9000}
 
 events:
   timezone: "Asia/Tokyo"
