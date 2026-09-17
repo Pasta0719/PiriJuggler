@@ -11,15 +11,15 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.List;
 import java.util.Locale;
 
-/** Canonical Piri prize item representation. */
+/** Canonical prize item representation. */
 public final class PrizeItem {
     public static final NamespacedKey ITEM_TYPE = new NamespacedKey("piri", "item_type");
     public static final NamespacedKey ITEM_VERSION = new NamespacedKey("piri", "item_version");
 
     public enum Type {
-        SMALL("small", Material.GOLD_NUGGET, "Piri Prize - Small", "prize_small"),
-        MEDIUM("medium", Material.GOLD_INGOT, "Piri Prize - Medium", "prize_medium"),
-        LARGE("large", Material.GOLD_BLOCK, "Piri Prize - Large", "prize_large");
+        SMALL("small", Material.GOLD_NUGGET, "小景品", "prize_small"),
+        MEDIUM("medium", Material.GOLD_INGOT, "中景品", "prize_medium"),
+        LARGE("large", Material.GOLD_BLOCK, "大景品", "prize_large");
 
         private final String id;
         private final Material material;
@@ -57,8 +57,8 @@ public final class PrizeItem {
                 .decorate(TextDecoration.BOLD)
                 .decoration(TextDecoration.ITALIC, false));
         meta.lore(List.of(
-                Component.text("PIRI JUGGLER 景品", NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false),
-                Component.text("/piri exchange " + type.id() + " でVaultへ交換", NamedTextColor.GRAY)
+                Component.text("店内景品", NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false),
+                Component.text("景品交換所で取り扱っています", NamedTextColor.GRAY)
                         .decoration(TextDecoration.ITALIC, false)
         ));
         var pdc = meta.getPersistentDataContainer();
