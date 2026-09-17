@@ -29,7 +29,6 @@ public final class EconomyStore {
     }
 
     private static final String UNLIMITED_TABLE = "medal_tokens_unlimited";
-    public static final int LOAN_MEDALS = 50;
     private static final EnumSet<Session.GameState> ECONOMY_STATES = EnumSet.of(
             Session.GameState.SEATED_READY, Session.GameState.REPLAY_READY,
             Session.GameState.BONUS_PENDING_BIG, Session.GameState.BONUS_PENDING_REG,
@@ -55,26 +54,23 @@ public final class EconomyStore {
     }
 
     public LoanPlan prepareLoan(UUID player, UUID sessionId, int machine, long sequence,
-                                int borrow, int vaultPerMedal, double balanceBefore, long now) throws Exception {
-        if (borrow < 1 || vaultPerMedal < 1) throw new DomainException("NOT_ENOUGH_VAULT");
-        int fixedBorrow = LOAN_MEDALS;
-        double vaultAmount = Math.multiplyExact((long) fixedBorrow, (long) vaultPerMedal);
-        if (balanceBefore < vaultAmount) throw new DomainException("NOT_ENOUGH_VAULT");
+                                int borrow, double vaultAmount, double balanceBefore, long now) throws Exception {
+        if (borrow < 1 || !Double.isFinite(vaultAmount) || vaultAmount <= 0 || balanceBefore < vaultAmount) throw new DomainException("NOT_ENOUGH_VAULT");
         String transactionId = deterministic("LOAN", sessionId, sequence);
         return db.transaction(() -> {
             var existing = db.rows("SELECT * FROM economy_transactions WHERE transaction_id=?", transactionId);
             if (!existing.isEmpty()) {
                 String status = (String) existing.getFirst().get("status");
-                return new LoanPlan(transactionId, fixedBorrow, vaultAmount, balanceBefore, JournalState.valueOf(status));
+                return new LoanPlan(transactionId, borrow, vaultAmount, balanceBefore, JournalState.valueOf(status));
             }
             requireNoEconomyReview(player);
             Session session = requireActive(player, sessionId, machine);
             if (!allowed(session.state())) throw new DomainException("INVALID_STATE");
             if (sequence <= session.sequence()) throw new DomainException("SEQUENCE_OLD");
-            Math.addExact(session.number("held_medals"), Math.max(0L, Math.addExact(session.number("credit"), fixedBorrow) - 50L));
+            Math.addExact(session.number("held_medals"), Math.max(0L, Math.addExact(session.number("credit"), borrow) - 50L));
             db.sql("INSERT INTO economy_transactions(transaction_id,player_uuid,operation,vault_amount,item_snapshot_json,balance_before,status,created_at,updated_at) VALUES(?,?,'LOAN',?,NULL,?,'PREPARED',?,?)",
                     transactionId, player.toString(), vaultAmount, balanceBefore, now, now);
-            return new LoanPlan(transactionId, fixedBorrow, vaultAmount, balanceBefore, JournalState.PREPARED);
+            return new LoanPlan(transactionId, borrow, vaultAmount, balanceBefore, JournalState.PREPARED);
         });
     }
 
