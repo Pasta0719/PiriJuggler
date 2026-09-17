@@ -2,20 +2,21 @@ name: PiriJuggler
 version: '${version}'
 main: jp.pirijuggler.paper.PiriJugglerPlugin
 api-version: '1.21'
-description: Piri Juggler server-authoritative slot foundation
+description: Server-authoritative slot foundation
 softdepend: [Vault]
 commands:
   piri:
-    description: Piri Juggler commands
-    usage: /piri data [machineId] | /piri prizes | /piri exchange <small|medium|large> [count] | /piri exchange all | /piri recover <status|cashout> | /piri sim <machineId> <games> | /piri machine create|redefine|remove|list|info|setting | /piri key give
+    description: Slot commands
+    usage: /piri recover <status|cashout> | /piri npc <prizes|exchange> <create|remove> | /piri sim <machineId> <games> | /piri machine create|redefine|remove|list|info|setting | /piri key give
   piribuildinfo:
-    description: Show the exact loaded PiriJuggler build identity
+    description: Show the exact loaded build identity
     usage: /piribuildinfo
   pirimerge:
-    description: Merge all valid Piri Medal items in the player inventory into one token
+    description: Administrative manual medal merge fallback
     usage: /pirimerge
+    permission: piri.dev
   pirireset:
-    description: Development reset for an unsettled Piri game snapshot while preserving CREDIT and held medals
+    description: Development reset for an unsettled game snapshot while preserving CREDIT and held medals
     usage: /pirireset [player]
     permission: piri.dev
 permissions:
