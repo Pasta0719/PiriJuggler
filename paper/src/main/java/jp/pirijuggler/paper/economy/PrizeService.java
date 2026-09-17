@@ -72,7 +72,6 @@ public final class PrizeService implements Listener {
     }
     private record MedalMutation(String transactionId, List<Held> before, UUID remainderId, int remainderAmount,
                                  int destinationSlot, PrizePlan prizes, int cost) { }
-    private record PrizeRemoval(PrizeItem.Type type, int count, double vaultAmount) { }
 
     private static final class PrizeHolder implements InventoryHolder {
         @Override public Inventory getInventory() { return null; }
@@ -100,15 +99,14 @@ public final class PrizeService implements Listener {
         defs.put(type, new PrizeDef(cost, value));
     }
 
-    /** Returns true when this is a Phase08 root /piri subcommand. */
     public boolean handle(CommandSender sender, String[] args) {
         if (args.length == 1 && args[0].equalsIgnoreCase("prizes")) {
-            if (!(sender instanceof Player player)) { sender.sendMessage("PLAYER_REQUIRED"); return true; }
+            if (!(sender instanceof Player player)) { sender.sendMessage("この操作はゲーム内から実行してください。"); return true; }
             open(player);
             return true;
         }
         if (args.length >= 2 && args[0].equalsIgnoreCase("exchange")) {
-            if (!(sender instanceof Player player)) { sender.sendMessage("PLAYER_REQUIRED"); return true; }
+            if (!(sender instanceof Player player)) { sender.sendMessage("この操作はゲーム内から実行してください。"); return true; }
             exchangeCommand(player, args);
             return true;
         }
@@ -116,7 +114,7 @@ public final class PrizeService implements Listener {
     }
 
     private void open(Player player) {
-        Inventory gui = Bukkit.createInventory(new PrizeHolder(), GUI_SIZE, "Piri Prize Exchange");
+        Inventory gui = Bukkit.createInventory(new PrizeHolder(), GUI_SIZE, "景品カウンター");
         gui.setItem(SMALL_SLOT, guiPrize(PrizeItem.Type.SMALL));
         gui.setItem(MEDIUM_SLOT, guiPrize(PrizeItem.Type.MEDIUM));
         gui.setItem(LARGE_SLOT, guiPrize(PrizeItem.Type.LARGE));
@@ -156,14 +154,14 @@ public final class PrizeService implements Listener {
         if (event.getClickedInventory() != event.getView().getTopInventory()) return;
         int slot = event.getRawSlot();
         if (slot == CLOSE_SLOT) { player.closeInventory(); return; }
-        if (slot == MAX_SLOT) { requestPrizeExchange(player, null, true, false); return; }
+        if (slot == MAX_SLOT) { requestPrizeExchange(player, null, true); return; }
         PrizeItem.Type type = switch (slot) {
             case SMALL_SLOT -> PrizeItem.Type.SMALL;
             case MEDIUM_SLOT -> PrizeItem.Type.MEDIUM;
             case LARGE_SLOT -> PrizeItem.Type.LARGE;
             default -> null;
         };
-        if (type != null) requestPrizeExchange(player, type, event.isShiftClick(), false);
+        if (type != null) requestPrizeExchange(player, type, event.isShiftClick());
     }
 
     @EventHandler
@@ -171,15 +169,15 @@ public final class PrizeService implements Listener {
         if (event.getView().getTopInventory().getHolder() instanceof PrizeHolder) event.setCancelled(true);
     }
 
-    private void requestPrizeExchange(Player player, PrizeItem.Type requested, boolean max, boolean commandPath) {
+    private void requestPrizeExchange(Player player, PrizeItem.Type requested, boolean max) {
         UUID owner = player.getUniqueId();
-        if (!pending.add(owner)) { player.sendMessage("BUSY"); return; }
+        if (!pending.add(owner)) { player.sendMessage("ただいま処理中です。少し待ってからもう一度お試しください。"); return; }
         List<Held> held = heldMedals(player);
-        if (held.isEmpty()) { pending.remove(owner); player.sendMessage("NOT_ENOUGH_MEDALS"); return; }
+        if (held.isEmpty()) { pending.remove(owner); player.sendMessage("メダルが足りません。"); return; }
         long totalLong = 0;
         try { for (Held item : held) totalLong = Math.addExact(totalLong, item.amount()); }
-        catch (ArithmeticException overflow) { pending.remove(owner); player.sendMessage("INVALID_ITEM"); return; }
-        if (totalLong > Integer.MAX_VALUE) { pending.remove(owner); player.sendMessage("INVALID_ITEM"); return; }
+        catch (ArithmeticException overflow) { pending.remove(owner); player.sendMessage("メダル情報を確認できませんでした。管理者にお問い合わせください。"); return; }
+        if (totalLong > Integer.MAX_VALUE) { pending.remove(owner); player.sendMessage("メダル情報を確認できませんでした。管理者にお問い合わせください。"); return; }
         int total = (int) totalLong;
         PrizePlan plan;
         if (requested == null) {
@@ -203,13 +201,13 @@ public final class PrizeService implements Listener {
             int minimumCost = requested == null
                     ? Math.min(defs.get(PrizeItem.Type.SMALL).medalCost(), Math.min(defs.get(PrizeItem.Type.MEDIUM).medalCost(), defs.get(PrizeItem.Type.LARGE).medalCost()))
                     : defs.get(requested).medalCost();
-            player.sendMessage(total >= minimumCost ? "INVENTORY_FULL" : "NOT_ENOUGH_MEDALS");
+            player.sendMessage(total >= minimumCost ? "インベントリに景品を受け取る空きがありません。" : "メダルが足りません。");
             return;
         }
         int cost = plan.totalCost(defs);
-        if (cost > total) { pending.remove(owner); player.sendMessage("NOT_ENOUGH_MEDALS"); return; }
-        if (!fitsAfterMedals(player, held, plan, total - cost)) { pending.remove(owner); player.sendMessage("INVENTORY_FULL"); return; }
-        prepareMedalMutation(player, held, plan, cost, commandPath);
+        if (cost > total) { pending.remove(owner); player.sendMessage("メダルが足りません。"); return; }
+        if (!fitsAfterMedals(player, held, plan, total - cost)) { pending.remove(owner); player.sendMessage("インベントリに景品を受け取る空きがありません。"); return; }
+        prepareMedalMutation(player, held, plan, cost);
     }
 
     private PrizePlan singlePlan(PrizeItem.Type type, int count) {
@@ -220,22 +218,13 @@ public final class PrizeService implements Listener {
         };
     }
 
-    /** Exact bounded search over shared inventory slots. Tie order: large, then medium, then small. */
     private PrizePlan maximumPlan(Player player, List<Held> held, int medals) {
         PrizePlan best = maximumPlanForCapacity(prizeCapacity(player, held, true), medals);
-
-        // Spending every medal removes the medal token completely, so its slot is also available for prizes.
         PrizePlan exact = maximumPlanForCapacity(prizeCapacity(player, held, false), medals);
         if (exact.totalCost(defs) == medals && betterPlan(exact, best)) best = exact;
         return best;
     }
 
-    /**
-     * Search by assigning the small number of empty inventory slots to prize types first.
-     * Existing partial stacks are free capacity and do not consume an empty slot.
-     * Phase08 costs are 50/200/450, so for a fixed large count taking the maximum medium
-     * count cannot reduce spend; remaining medals are then filled with small prizes.
-     */
     private PrizePlan maximumPlanForCapacity(PrizeCapacity capacity, int medals) {
         PrizePlan best = new PrizePlan(0, 0, 0);
         int smallCost = defs.get(PrizeItem.Type.SMALL).medalCost();
@@ -342,7 +331,7 @@ public final class PrizeService implements Listener {
         return remaining == 0;
     }
 
-    private void prepareMedalMutation(Player player, List<Held> held, PrizePlan prizes, int cost, boolean commandPath) {
+    private void prepareMedalMutation(Player player, List<Held> held, PrizePlan prizes, int cost) {
         var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
         UUID owner = player.getUniqueId();
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -357,8 +346,7 @@ public final class PrizeService implements Listener {
                     for (Held item : held) {
                         validateActive(connection, item);
                         total = Math.addExact(total, item.amount());
-                        JsonObject json = bundleJson(item.bundleId(), item.amount(), item.slot());
-                        beforeJson.add(json);
+                        beforeJson.add(bundleJson(item.bundleId(), item.amount(), item.slot()));
                     }
                     if (cost < 1 || cost > total) throw new IllegalStateException("NOT_ENOUGH_MEDALS");
                     int remainder = Math.toIntExact(total - cost);
@@ -393,7 +381,7 @@ public final class PrizeService implements Listener {
             } catch (Exception failure) {
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     pending.remove(owner);
-                    player.sendMessage(normalizeFailure(failure));
+                    player.sendMessage(friendlyFailure(failure));
                 });
                 return;
             }
@@ -448,7 +436,7 @@ public final class PrizeService implements Listener {
                 if (update.executeUpdate() != 1) throw new IllegalStateException("JOURNAL_CHANGED");
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     pending.remove(owner);
-                    player.sendMessage("PIRI_PRIZE_EXCHANGED medals=" + plan.cost() + " small=" + plan.prizes().small() + " medium=" + plan.prizes().medium() + " large=" + plan.prizes().large());
+                    player.sendMessage("景品と交換しました。使用メダル: " + plan.cost() + "枚（小景品×" + plan.prizes().small() + " / 中景品×" + plan.prizes().medium() + " / 大景品×" + plan.prizes().large() + "）");
                 });
             } catch (Exception failure) {
                 plugin.getLogger().severe("PIRI_PRIZE_APPLY_MARK_FAILED tx=" + plan.transactionId() + " " + failure);
@@ -474,7 +462,7 @@ public final class PrizeService implements Listener {
                 } catch (Exception failure) { connection.rollback(); throw failure; }
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     pending.remove(owner);
-                    if (player != null) player.sendMessage("PIRI_PRIZE_EXCHANGE_RETRY");
+                    if (player != null) player.sendMessage("景品交換を完了できませんでした。もう一度お試しください。");
                 });
             } catch (Exception failure) {
                 plugin.getLogger().severe("PIRI_PRIZE_ROLLBACK_FAILED tx=" + plan.transactionId() + " " + failure);
@@ -484,17 +472,17 @@ public final class PrizeService implements Listener {
     }
 
     private void exchangeCommand(Player player, String[] args) {
-        if (args.length < 2 || args.length > 3) { player.sendMessage("Usage: /piri exchange <small|medium|large> [count] | /piri exchange all"); return; }
+        if (args.length < 2 || args.length > 3) { player.sendMessage("交換内容を確認できませんでした。交換窓口からもう一度お試しください。"); return; }
         UUID owner = player.getUniqueId();
-        if (!pending.add(owner)) { player.sendMessage("BUSY"); return; }
-        if (vault == null) { pending.remove(owner); player.sendMessage("ECONOMY_UNAVAILABLE"); return; }
+        if (!pending.add(owner)) { player.sendMessage("ただいま処理中です。少し待ってからもう一度お試しください。"); return; }
+        if (vault == null) { pending.remove(owner); player.sendMessage("現在、交換窓口を利用できません。"); return; }
         String kind = args[1].toLowerCase(Locale.ROOT);
         if (kind.equals("all")) {
-            if (args.length != 2) { pending.remove(owner); player.sendMessage("INVALID_STATE"); return; }
+            if (args.length != 2) { pending.remove(owner); player.sendMessage("交換内容を確認できませんでした。もう一度お試しください。"); return; }
             int small = countPrizes(player, PrizeItem.Type.SMALL);
             int medium = countPrizes(player, PrizeItem.Type.MEDIUM);
             int large = countPrizes(player, PrizeItem.Type.LARGE);
-            if (small + medium + large == 0) { pending.remove(owner); player.sendMessage("NO_PRIZES"); return; }
+            if (small + medium + large == 0) { pending.remove(owner); player.sendMessage("交換できる景品を持っていません。"); return; }
             double amount = small * defs.get(PrizeItem.Type.SMALL).vaultValue()
                     + medium * defs.get(PrizeItem.Type.MEDIUM).vaultValue()
                     + large * defs.get(PrizeItem.Type.LARGE).vaultValue();
@@ -502,14 +490,14 @@ public final class PrizeService implements Listener {
             return;
         }
         PrizeItem.Type type = PrizeItem.Type.parse(kind);
-        if (type == null) { pending.remove(owner); player.sendMessage("INVALID_STATE"); return; }
+        if (type == null) { pending.remove(owner); player.sendMessage("交換内容を確認できませんでした。もう一度お試しください。"); return; }
         int count = 1;
         if (args.length == 3) {
             try { count = Integer.parseInt(args[2]); }
-            catch (NumberFormatException invalid) { pending.remove(owner); player.sendMessage("INVALID_STATE"); return; }
+            catch (NumberFormatException invalid) { pending.remove(owner); player.sendMessage("交換内容を確認できませんでした。もう一度お試しください。"); return; }
         }
-        if (count < 1) { pending.remove(owner); player.sendMessage("INVALID_STATE"); return; }
-        if (countPrizes(player, type) < count) { pending.remove(owner); player.sendMessage("NOT_ENOUGH_PRIZES"); return; }
+        if (count < 1) { pending.remove(owner); player.sendMessage("交換内容を確認できませんでした。もう一度お試しください。"); return; }
+        if (countPrizes(player, type) < count) { pending.remove(owner); player.sendMessage("景品が足りません。"); return; }
         prepareVaultExchange(player, type, count, count * defs.get(type).vaultValue());
     }
 
@@ -519,7 +507,7 @@ public final class PrizeService implements Listener {
         JsonObject snapshot = prizeSnapshot(backup, type, count);
         double balanceBefore;
         try { balanceBefore = vault.balance(player); }
-        catch (RuntimeException failure) { pending.remove(owner); player.sendMessage("VAULT_ERROR"); return; }
+        catch (RuntimeException failure) { pending.remove(owner); player.sendMessage("交換処理に失敗しました。少し待ってからもう一度お試しください。"); return; }
         String tx = UUID.randomUUID().toString();
         var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -540,7 +528,7 @@ public final class PrizeService implements Listener {
                     connection.commit();
                 } catch (Exception failure) { connection.rollback(); throw failure; }
             } catch (Exception failure) {
-                Bukkit.getScheduler().runTask(plugin, () -> { pending.remove(owner); player.sendMessage(normalizeFailure(failure)); });
+                Bukkit.getScheduler().runTask(plugin, () -> { pending.remove(owner); player.sendMessage(friendlyFailure(failure)); });
                 return;
             }
             Bukkit.getScheduler().runTask(plugin, () -> performVaultDeposit(player, type, count, vaultAmount, backup, tx));
@@ -563,7 +551,7 @@ public final class PrizeService implements Listener {
         catch (RuntimeException uncertain) {
             plugin.getLogger().severe("PIRI_VAULT_REVIEW_REQUIRED transactionId=" + tx + " operation=PRIZE_TO_VAULT expected=" + vaultAmount + " reason=CALL_EXCEPTION " + uncertain);
             pending.remove(owner);
-            player.sendMessage("VAULT_REVIEW_REQUIRED");
+            player.sendMessage("交換処理の確認が必要な状態です。管理者にお問い合わせください。");
             return;
         }
         if (!deposited) {
@@ -571,10 +559,9 @@ public final class PrizeService implements Listener {
             rollbackEconomy(tx, owner, player, "VAULT_ERROR");
             return;
         }
-        markEconomyApplied(tx, owner, player, vaultAmount);
+        markEconomyApplied(tx, owner, player);
     }
 
-    /** all uses the required small -> medium -> large removal order. */
     private static boolean removePrizes(Player player, PrizeItem.Type type, int count) {
         if (type != null) return removeType(player, type, count);
         int[] amounts = { countPrizes(player, PrizeItem.Type.SMALL), countPrizes(player, PrizeItem.Type.MEDIUM), countPrizes(player, PrizeItem.Type.LARGE) };
@@ -597,14 +584,14 @@ public final class PrizeService implements Listener {
         return remaining == 0;
     }
 
-    private void markEconomyApplied(String tx, UUID owner, Player player, double amount) {
+    private void markEconomyApplied(String tx, UUID owner, Player player) {
         var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try (Connection connection = open(dbPath.toString());
                  var update = connection.prepareStatement("UPDATE economy_transactions SET status='APPLIED',updated_at=? WHERE transaction_id=? AND status='CALL_STARTED'")) {
                 update.setLong(1, System.currentTimeMillis()); update.setString(2, tx);
                 if (update.executeUpdate() != 1) throw new IllegalStateException("JOURNAL_CHANGED");
-                Bukkit.getScheduler().runTask(plugin, () -> { pending.remove(owner); player.sendMessage("PIRI_VAULT_EXCHANGED amount=" + amount); });
+                Bukkit.getScheduler().runTask(plugin, () -> { pending.remove(owner); player.sendMessage("景品の交換が完了しました。"); });
             } catch (Exception failure) {
                 plugin.getLogger().severe("PIRI_VAULT_APPLY_MARK_FAILED tx=" + tx + " " + failure);
                 Bukkit.getScheduler().runTask(plugin, () -> pending.remove(owner));
@@ -619,7 +606,7 @@ public final class PrizeService implements Listener {
                  var update = connection.prepareStatement("UPDATE economy_transactions SET status='ROLLED_BACK',updated_at=? WHERE transaction_id=? AND status IN ('PREPARED','CALL_STARTED')")) {
                 update.setLong(1, System.currentTimeMillis()); update.setString(2, tx); update.executeUpdate();
             } catch (Exception failure) { plugin.getLogger().severe("PIRI_VAULT_ROLLBACK_MARK_FAILED tx=" + tx + " " + failure); }
-            Bukkit.getScheduler().runTask(plugin, () -> { pending.remove(owner); player.sendMessage(message); });
+            Bukkit.getScheduler().runTask(plugin, () -> { pending.remove(owner); player.sendMessage(friendlyCode(message)); });
         });
     }
 
@@ -768,10 +755,20 @@ public final class PrizeService implements Listener {
         json.addProperty("bundleId", id.toString()); json.addProperty("amount", amount); json.addProperty("slot", slot); return json;
     }
 
-    private static String normalizeFailure(Throwable failure) {
+    private static String friendlyFailure(Throwable failure) {
         String message = failure.getMessage();
-        if (message == null) return "DB_ERROR";
-        if (Set.of("TOKEN_REVIEW_REQUIRED", "VAULT_REVIEW_REQUIRED", "INVALID_ITEM", "NOT_ENOUGH_MEDALS").contains(message)) return message;
-        return "DB_ERROR";
+        return friendlyCode(message == null ? "DB_ERROR" : message);
+    }
+
+    private static String friendlyCode(String code) {
+        return switch (code) {
+            case "TOKEN_REVIEW_REQUIRED", "VAULT_REVIEW_REQUIRED" -> "交換処理の確認が必要な状態です。管理者にお問い合わせください。";
+            case "INVALID_ITEM" -> "メダル情報を確認できませんでした。管理者にお問い合わせください。";
+            case "NOT_ENOUGH_MEDALS" -> "メダルが足りません。";
+            case "NOT_ENOUGH_PRIZES" -> "景品が足りません。";
+            case "INVENTORY_FULL" -> "インベントリに空きがありません。";
+            case "VAULT_ERROR", "ECONOMY_UNAVAILABLE", "DB_ERROR" -> "交換処理に失敗しました。少し待ってからもう一度お試しください。";
+            default -> "処理を完了できませんでした。少し待ってからもう一度お試しください。";
+        };
     }
 }
