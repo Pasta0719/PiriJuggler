@@ -48,7 +48,8 @@ public final class MachineService implements Listener, CommandExecutor {
     private final Set<UUID> deferredDisconnect = new HashSet<>();
     private final long graceMs;
     private final long idleMs;
-    private final int vaultPerMedal;
+    private final int loanMedals;
+    private final double loanAmount;
     private final VaultBridge vault;
     private final Map<String,Object> config;
     private PiriDatabase database;
@@ -68,7 +69,9 @@ public final class MachineService implements Listener, CommandExecutor {
         var gameConfig=jp.pirijuggler.paper.database.StartupProfile.map(config.get("game"));
         graceMs = ((Number) gameConfig.get("disconnect_grace_seconds")).longValue() * 1000;
         idleMs = ((Number) gameConfig.get("idle_timeout_seconds")).longValue() * 1000;
-        vaultPerMedal=((Number)jp.pirijuggler.paper.database.StartupProfile.map(config.get("economy")).get("vault_per_medal")).intValue();
+        var economyConfig=jp.pirijuggler.paper.database.StartupProfile.map(config.get("economy"));
+        loanMedals=((Number)economyConfig.get("loan_medals")).intValue();
+        loanAmount=((Number)economyConfig.get("loan_amount")).doubleValue();
         vault=VaultBridge.discover();
         long jvm = ManagementFactory.getRuntimeMXBean().getStartTime();
         long now = System.currentTimeMillis();
@@ -361,11 +364,9 @@ public final class MachineService implements Listener, CommandExecutor {
         UUID owner=player.getUniqueId();
         final double balance;
         try {balance=vault.balance(player);}catch(RuntimeException failure){releaseEconomy(owner,machine);reject(player,sequence,"VAULT_ERROR");return;}
-        int borrow=EconomyStore.LOAN_MEDALS;
-        long vaultAmount=Math.multiplyExact((long)borrow,(long)vaultPerMedal);
-        if(balance<vaultAmount){releaseEconomy(owner,machine);reject(player,sequence,"NOT_ENOUGH_VAULT");return;}
+        if(balance<loanAmount){releaseEconomy(owner,machine);reject(player,sequence,"NOT_ENOUGH_VAULT");return;}
         long now=System.currentTimeMillis();
-        plugin.executors().database(()->new Saved<>(new EconomyStore(database).prepareLoan(owner,id,machine,sequence,borrow,vaultPerMedal,balance,now),database.state()),(prepared,error)->{
+        plugin.executors().database(()->new Saved<>(new EconomyStore(database).prepareLoan(owner,id,machine,sequence,loanMedals,loanAmount,balance,now),database.state()),(prepared,error)->{
             if(prepared!=null)state=prepared.state;
             if(stopped){releaseEconomy(owner,machine);return;}
             if(error!=null){releaseEconomy(owner,machine);failure(player,error);return;}
