@@ -33,7 +33,7 @@ public final class MedalMergeCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("PLAYER_REQUIRED");
+            sender.sendMessage("この操作はゲーム内から実行してください。");
             return true;
         }
         if (args.length != 0) return false;
@@ -44,11 +44,11 @@ public final class MedalMergeCommand implements CommandExecutor {
             if (value != null) held.add(new Held(slot, value.bundleId(), value.amount()));
         }
         if (held.size() < 2) {
-            player.sendMessage("PIRI_MEDALS_ALREADY_SINGLE");
+            player.sendMessage("メダルはすでに1つにまとまっています。");
             return true;
         }
 
-        player.sendMessage("PIRI_MEDALS_MERGING");
+        player.sendMessage("メダルを1つにまとめています…");
         var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             Plan plan;
@@ -100,7 +100,13 @@ public final class MedalMergeCommand implements CommandExecutor {
                     }
                 }
             } catch (Exception failure) {
-                String message = "PIRI_MEDALS_MERGE_FAILED " + failure.getMessage();
+                String message = switch (String.valueOf(failure.getMessage())) {
+                    case "CLOSE_SLOT_SCREEN_FIRST" -> "遊技中はメダルをまとめられません。台を離れてからもう一度お試しください。";
+                    case "MEDAL_AMOUNT_TOO_LARGE" -> "メダル枚数が上限を超えているため、まとめられませんでした。";
+                    case "TOKEN_REVIEW_REQUIRED" -> "メダル情報の確認が必要な状態です。管理者にお問い合わせください。";
+                    case "INVALID_ITEM" -> "メダル情報を確認できなかったため、まとめられませんでした。";
+                    default -> "メダルをまとめられませんでした。少し待ってからもう一度お試しください。";
+                };
                 Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage(message));
                 return;
             }
@@ -131,7 +137,7 @@ public final class MedalMergeCommand implements CommandExecutor {
             try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
                  var statement = connection.prepareStatement("UPDATE medal_inventory_transactions SET status='APPLIED',updated_at=? WHERE transaction_id=? AND status='LEDGER_COMMITTED'")) {
                 statement.setLong(1, System.currentTimeMillis()); statement.setString(2, plan.transactionId()); statement.executeUpdate();
-                Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage("PIRI_MEDALS_MERGED amount=" + plan.amount()));
+                Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage("メダルを1つにまとめました。合計 " + plan.amount() + "枚です。"));
             } catch (Exception failure) {
                 plugin.getLogger().severe("PIRI_MEDAL_MERGE_APPLY_MARK_FAILED tx=" + plan.transactionId() + " " + failure);
             }
@@ -152,7 +158,7 @@ public final class MedalMergeCommand implements CommandExecutor {
                     }
                     connection.commit();
                 } catch (Exception failure) { connection.rollback(); throw failure; }
-                if (player != null) Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage("PIRI_MEDALS_MERGE_RETRY"));
+                if (player != null) Bukkit.getScheduler().runTask(plugin, () -> player.sendMessage("メダルをまとめる処理を完了できませんでした。もう一度お試しください。"));
             } catch (Exception failure) {
                 plugin.getLogger().severe("PIRI_MEDAL_MERGE_ROLLBACK_FAILED tx=" + plan.transactionId() + " " + failure);
             }
