@@ -46,7 +46,7 @@ class DirectBonusEntryTest extends GameFixture {
         for(int p0=0;p0<21;p0++)for(int p1=0;p1<21;p1++)for(int p2=0;p2<21;p2++){
             int[] presses={p0,p1,p2};StopTriplet stopped=new StopTriplet(0,0,0);int mask=0;
             for(var reel:Reel.values()){
-                var choice=SOLVER.choose(base,entry,mask,stopped,reel,presses[reel.ordinal()],false,false);
+                var choice=SOLVER.choose(base,entry,mask,stopped,reel,presses[reel.ordinal()],false,false,false,true);
                 stopped=stopped.with(reel,choice.stopIndex());mask|=reel.bit();
             }
             if(SOLVER.catalogue().evaluation(stopped).valid(entry))return presses;
