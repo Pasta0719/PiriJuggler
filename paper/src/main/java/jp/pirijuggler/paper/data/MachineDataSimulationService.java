@@ -2,13 +2,19 @@ package jp.pirijuggler.paper.data;
 
 import jp.pirijuggler.paper.PiriJugglerPlugin;
 import jp.pirijuggler.paper.game.RoleWeights;
+import jp.pirijuggler.paper.machine.Machine;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.SplittableRandom;
 
-/** /piri sim <machineId> <games>: advances the selected machine's real current-period data. */
+/**
+ * /piri sim <machineId> <games>: advances one machine's real current-period data.
+ * /piri sim all <games>: advances every non-deleted machine by the same number of games.
+ */
 public final class MachineDataSimulationService {
     private final PiriJugglerPlugin plugin;
     private final RoleWeights weights;
@@ -22,16 +28,23 @@ public final class MachineDataSimulationService {
     public boolean handle(CommandSender sender,String[] args) {
         if(args.length==0||!args[0].equalsIgnoreCase("sim"))return false;
         if(!sender.isOp()){sender.sendMessage(Component.text("NOT_OP"));return true;}
-        if(args.length!=3){sender.sendMessage(Component.text("Usage: /piri sim <machineId> <games>"));return true;}
-        final int machineId;final long games;
-        try{machineId=Integer.parseInt(args[1]);games=Long.parseLong(args[2]);}
+        if(args.length!=3){sender.sendMessage(Component.text("Usage: /piri sim <machineId|all> <games>"));return true;}
+
+        final long games;
+        try{games=Long.parseLong(args[2]);}
         catch(NumberFormatException error){sender.sendMessage(Component.text("INVALID_STATE"));return true;}
         if(games<1||games>100_000L){sender.sendMessage(Component.text("INVALID_STATE (games: 1..100000)"));return true;}
+        if(running){sender.sendMessage(Component.text("BUSY"));return true;}
+
         var state=plugin.machines().snapshot();
+        if(args[1].equalsIgnoreCase("all"))return simulateAll(sender,state,games);
+
+        final int machineId;
+        try{machineId=Integer.parseInt(args[1]);}
+        catch(NumberFormatException error){sender.sendMessage(Component.text("INVALID_STATE"));return true;}
         var machine=state.machine(machineId);
         if(machine==null){sender.sendMessage(Component.text("INVALID_STATE"));return true;}
         if(state.busy(machineId)){sender.sendMessage(Component.text("MACHINE_OCCUPIED"));return true;}
-        if(running){sender.sendMessage(Component.text("BUSY"));return true;}
 
         int setting=machine.setting();
         String period=state.period();
@@ -50,6 +63,51 @@ public final class MachineDataSimulationService {
                     }
                     sender.sendMessage(Component.text("SIMULATION_DONE machine="+result.machineId()+" setting="+result.setting()+" games="+result.games()+" BIG="+result.big()+" REG="+result.reg()+" DIFF="+signed(result.difference())+" MAX="+signed(result.maxDifference())+" CURRENT="+result.currentGames()));
                 });
+        return true;
+    }
+
+    private boolean simulateAll(CommandSender sender, jp.pirijuggler.paper.database.PiriDatabase.State state, long games) {
+        List<Machine> machines=state.machines().stream().filter(machine->!machine.deleted()).toList();
+        if(machines.isEmpty()){sender.sendMessage(Component.text("INVALID_STATE (no machines)"));return true;}
+        for(Machine machine:machines){
+            if(state.busy(machine.id())){
+                sender.sendMessage(Component.text("MACHINE_OCCUPIED id="+machine.id()));
+                return true;
+            }
+        }
+
+        String period=state.period();
+        var dbFile=plugin.getDataFolder().toPath().resolve("piri.db");
+        long seed=new SecureRandom().nextLong();
+        running=true;
+        sender.sendMessage(Component.text("SIMULATION_ALL_STARTED machines="+machines.size()+" gamesEach="+games+" totalGames="+Math.multiplyExact((long)machines.size(),games)));
+
+        plugin.executors().database(()->{
+            List<MachineDataSimulator.Result> results=new ArrayList<>(machines.size());
+            long now=System.currentTimeMillis();
+            for(int i=0;i<machines.size();i++){
+                Machine machine=machines.get(i);
+                var random=new SplittableRandom(seed).split();
+                seed=Long.rotateLeft(seed^0x9E3779B97F4A7C15L,17)+i;
+                results.add(MachineDataSimulator.run(dbFile,weights,machine.id(),machine.setting(),games,period,random,now+(long)i*games));
+            }
+            return results;
+        },(results,error)->{
+            running=false;
+            if(error!=null){
+                plugin.getLogger().log(java.util.logging.Level.SEVERE,"All-machine data simulation failed",error);
+                sender.sendMessage(Component.text(error.getMessage()==null?"DB_ERROR":error.getMessage()));
+                return;
+            }
+            long totalBig=0,totalReg=0,totalDifference=0;
+            for(var result:results){
+                totalBig=Math.addExact(totalBig,result.big());
+                totalReg=Math.addExact(totalReg,result.reg());
+                totalDifference=Math.addExact(totalDifference,result.difference());
+                sender.sendMessage(Component.text("SIM machine="+result.machineId()+" setting="+result.setting()+" BIG="+result.big()+" REG="+result.reg()+" DIFF="+signed(result.difference())+" CURRENT="+result.currentGames()));
+            }
+            sender.sendMessage(Component.text("SIMULATION_ALL_DONE machines="+results.size()+" gamesEach="+games+" totalGames="+Math.multiplyExact((long)results.size(),games)+" BIG="+totalBig+" REG="+totalReg+" DIFF_SUM="+signed(totalDifference)));
+        });
         return true;
     }
 
