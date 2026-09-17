@@ -36,7 +36,7 @@ public final class ReelRound {
         this.starts=starts.clone();for(double phase:starts)if(!Double.isFinite(phase)||phase<0||phase>=21)throw new IllegalArgumentException("Start phase");
         if(premiumF&&role!=DisplayRole.BONUS&&role!=DisplayRole.BONUS_CHERRY&&role!=DisplayRole.PIERO_BONUS)throw new IllegalArgumentException("Invalid premium F base");
         if(premiumF&&alternateRole!=null)throw new IllegalArgumentException("Premium F cannot use direct-entry alternatives");
-        if(solver.catalogue().candidates(role,stoppedMask,display).isEmpty()&&(alternateRole==null||solver.catalogue().candidates(alternateRole,stoppedMask,display).isEmpty()))throw new IllegalArgumentException("Unreachable resumed stops");
+        if(!bonusAwardGame()&&solver.catalogue().candidates(role,stoppedMask,display).isEmpty()&&(alternateRole==null||solver.catalogue().candidates(alternateRole,stoppedMask,display).isEmpty()))throw new IllegalArgumentException("Unreachable resumed stops");
         this.display=display;this.stoppedMask=stoppedMask;gate=new ActionGate(main,lastSequence);
     }
     private static boolean defaultRightFirstTellRestriction(DisplayRole role,String mode){
