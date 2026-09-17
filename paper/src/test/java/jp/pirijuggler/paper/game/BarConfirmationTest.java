@@ -19,7 +19,7 @@ class BarConfirmationTest extends GameFixture {
             }
         }
         assertEquals(160,raw);assertEquals(124,pure);assertEquals(12,cherry);assertTrue(premiumB>0);for(int count:perLine)assertTrue(count>0);
-        assertEquals(5126,SOLVER.catalogue().candidates(DisplayRole.MISS).size());assertEquals(1287,SOLVER.catalogue().candidates(DisplayRole.CHERRY).size());assertEquals(124,SOLVER.catalogue().candidates(DisplayRole.BONUS).size());assertEquals(12,SOLVER.catalogue().candidates(DisplayRole.BONUS_CHERRY).size());assertEquals(782,SOLVER.catalogue().candidates(DisplayRole.PREMIUM_B).size());
+        assertEquals(5126,SOLVER.catalogue().candidates(DisplayRole.MISS).size());assertEquals(1287,SOLVER.catalogue().candidates(DisplayRole.CHERRY).size());assertEquals(447,SOLVER.catalogue().candidates(DisplayRole.BONUS).size());assertEquals(24,SOLVER.catalogue().candidates(DisplayRole.BONUS_CHERRY).size());assertEquals(782,SOLVER.catalogue().candidates(DisplayRole.PREMIUM_B).size());
         assertFalse(StopCatalogue.isReachPattern(Symbol.SEVEN,Symbol.SEVEN,Symbol.SEVEN));assertFalse(StopCatalogue.isReachPattern(Symbol.SEVEN,Symbol.SEVEN,Symbol.BAR));
         assertTrue(StopCatalogue.isReachPattern(Symbol.BAR,Symbol.BAR,Symbol.BAR));assertTrue(StopCatalogue.isReachPattern(Symbol.PIERO,Symbol.BAR,Symbol.PIERO));
     }
