@@ -31,7 +31,7 @@ class BonusAwardSlipTest {
             StopTriplet stopped=new StopTriplet(0,0,0);int mask=0;
             for(int i=0;i<3;i++){
                 Reel reel=order.get(i);
-                var choice=SOLVER.choose(pair.base(),pair.entry(),mask,stopped,reel,presses[i],false,false,false);
+                var choice=SOLVER.choose(pair.base(),pair.entry(),mask,stopped,reel,presses[i],false,false,false,true);
                 if(choice.slip()>4){
                     assertFalse(showsBonusSymbol(reel,choice.stopIndex()),
                             pair+" order="+order+" press="+presses[i]+" slip="+choice.slip()+" stop="+choice.stopIndex());
