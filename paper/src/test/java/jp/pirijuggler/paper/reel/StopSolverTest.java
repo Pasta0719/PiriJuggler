@@ -12,14 +12,14 @@ class StopSolverTest {
         assertEquals(9261,CATALOGUE.evaluations().size());assertEquals(9261,CATALOGUE.evaluations().stream().map(e->e.stops().id()).distinct().count());
         var expected=Map.ofEntries(
                 Map.entry(DisplayRole.GRAPE,750),Map.entry(DisplayRole.BELL,50),Map.entry(DisplayRole.PIERO,20),Map.entry(DisplayRole.PIERO_BONUS,20),Map.entry(DisplayRole.REPLAY,525),
-                Map.entry(DisplayRole.CHERRY,1287),Map.entry(DisplayRole.MISS,4803),Map.entry(DisplayRole.BONUS,447),Map.entry(DisplayRole.BONUS_CHERRY,24),
+                Map.entry(DisplayRole.CHERRY,1287),Map.entry(DisplayRole.MISS,5126),Map.entry(DisplayRole.BONUS,447),Map.entry(DisplayRole.BONUS_CHERRY,24),
                 Map.entry(DisplayRole.BIG_ENTRY,10),Map.entry(DisplayRole.REG_ENTRY,10),Map.entry(DisplayRole.PREMIUM_B,782));
         assertEquals(expected,CATALOGUE.counts());
         var lock=JsonParser.parseString(Files.readString(Path.of(System.getProperty("piri.specRoot"),"docs/spec-lock.json"))).getAsJsonObject();
         for(var role:DisplayRole.values()){assertTrue(CATALOGUE.candidates(role).size()>=role.minimum());for(var candidate:CATALOGUE.candidates(role))assertTrue(oracle(candidate.stops()).contains(role),candidate.stops()+" "+role);}
         for(var e:CATALOGUE.evaluations()){var roles=oracle(e.stops());for(var role:DisplayRole.values())assertEquals(roles.contains(role),e.valid(role),e.stops()+" "+role);}
     }
-    // Independent oracle uses literal row triples and named reach patterns, not catalogue masks.
+    // Independent oracle uses literal row triples and named reach patterns, not catalogue candidate maps.
     private static Set<DisplayRole> oracle(StopTriplet s){
         int[][] rows={{0,0,0},{-1,-1,-1},{1,1,1},{-1,0,1},{1,0,-1}};var wins=new EnumMap<DisplayRole,Integer>(DisplayRole.class);int reach=0;boolean bonusPair=false;
         for(int[] row:rows){
@@ -28,11 +28,12 @@ class StopSolverTest {
             if(StopCatalogue.isReachPattern(left,center,right))reach++;
             int bonusSymbols=(left==Symbol.SEVEN||left==Symbol.BAR?1:0)+(center==Symbol.SEVEN||center==Symbol.BAR?1:0)+(right==Symbol.SEVEN||right==Symbol.BAR?1:0);if(bonusSymbols>=2)bonusPair=true;
         }
+        int bonusControl=Integer.bitCount(StopCatalogue.bonusControlLines(s));
         boolean top=FixedReels.row(Reel.LEFT,s.left(),-1)==Symbol.CHERRY,middle=FixedReels.row(Reel.LEFT,s.left(),0)==Symbol.CHERRY,bottom=FixedReels.row(Reel.LEFT,s.left(),1)==Symbol.CHERRY;var result=EnumSet.noneOf(DisplayRole.class);
         boolean noCherry=!top&&!middle&&!bottom;
         if(noCherry&&wins.isEmpty()&&reach==0)result.add(DisplayRole.MISS);
-        if(noCherry&&wins.isEmpty()&&reach==1)result.add(DisplayRole.BONUS);
-        if(wins.isEmpty()&&reach==1&&!middle&&(top^bottom))result.add(DisplayRole.BONUS_CHERRY);
+        if(noCherry&&wins.isEmpty()&&bonusControl==1)result.add(DisplayRole.BONUS);
+        if(wins.isEmpty()&&bonusControl==1&&!middle&&(top^bottom))result.add(DisplayRole.BONUS_CHERRY);
         if(noCherry&&reach==0&&wins.size()==1&&wins.values().iterator().next()==1){DisplayRole win=wins.keySet().iterator().next();result.add(win);if(win==DisplayRole.PIERO)result.add(DisplayRole.PIERO_BONUS);}
         if(wins.isEmpty()&&reach==0&&!bonusPair&&!middle&&(top^bottom))result.add(DisplayRole.CHERRY);
         if(wins.isEmpty()&&reach<=1&&middle&&!top&&!bottom)result.add(DisplayRole.PREMIUM_B);
@@ -41,12 +42,12 @@ class StopSolverTest {
     @Test void allOrdersAndAllPressedSequencesCompleteIncludingPremiumF(){
         var report=ReelVerification.verify(SOLVER);assertEquals(666792,report.allSequences());assertEquals(166698,report.premiumFSequences());assertEquals(7938,report.premiumFSecondChecks());
     }
-    @Test void pureBonusAlwaysHasOneReachLineAndNoCherryWhileCherryBonusHasBoth(){
+    @Test void pureBonusAlwaysHasOneControlLineAndNoCherryWhileCherryBonusHasBoth(){
         for(var e:CATALOGUE.candidates(DisplayRole.BONUS)){
-            assertEquals(1,Integer.bitCount(e.winningReachLines()));assertFalse(e.anyCherry());
+            assertEquals(1,Integer.bitCount(e.lineMask(DisplayRole.BONUS)));assertFalse(e.anyCherry());
         }
         for(var e:CATALOGUE.candidates(DisplayRole.BONUS_CHERRY)){
-            assertEquals(1,Integer.bitCount(e.winningReachLines()));assertFalse(e.leftMiddleCherry());assertTrue(e.leftTopCherry()^e.leftBottomCherry());
+            assertEquals(1,Integer.bitCount(e.lineMask(DisplayRole.BONUS_CHERRY)));assertFalse(e.leftMiddleCherry());assertTrue(e.leftTopCherry()^e.leftBottomCherry());
         }
     }
     @Test void premiumBMayAlsoCarryOneBonusReachLine(){
