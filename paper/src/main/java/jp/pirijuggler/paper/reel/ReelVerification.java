@@ -8,8 +8,8 @@ public final class ReelVerification {
     public static Report verify(StopSolver solver){
         var catalogue=solver.catalogue();if(catalogue.evaluations().size()!=9261)throw new IllegalStateException("Expected all 9261 triplets");
         for(var role:DisplayRole.values())if(catalogue.candidates(role).size()<role.minimum())throw new IllegalStateException("Strict candidate minimum failed: "+role+"="+catalogue.candidates(role).size());
-        if(catalogue.candidates(DisplayRole.BONUS).size()!=124)throw new IllegalStateException("Expected 124 pure-bonus reach triplets");
-        if(catalogue.candidates(DisplayRole.BONUS_CHERRY).size()!=12)throw new IllegalStateException("Expected 12 cherry-bonus reach triplets");
+        if(catalogue.candidates(DisplayRole.BONUS).size()!=447)throw new IllegalStateException("Expected 447 pure-bonus reach/miss triplets");
+        if(catalogue.candidates(DisplayRole.BONUS_CHERRY).size()!=24)throw new IllegalStateException("Expected 24 cherry-bonus reach/miss triplets");
         int normal=0,premium=0,seconds=0;
         for(var role:DisplayRole.values())normal+=verifySequences(solver,role,false);
         for(var role:List.of(DisplayRole.BONUS,DisplayRole.BONUS_CHERRY,DisplayRole.PIERO_BONUS)){premium+=verifySequences(solver,role,true);seconds+=6*21*21;}
