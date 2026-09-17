@@ -23,7 +23,7 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.Comparator;
 import java.util.List;
 
-/** Persistent interaction points for medal-to-prize and prize exchange GUIs. */
+/** Persistent interaction points for medal-to-prize and prize cash-out GUIs. */
 public final class PrizeNpcService implements Listener {
     private static final int SMALL_SLOT = 20;
     private static final int MEDIUM_SLOT = 22;
@@ -49,8 +49,8 @@ public final class PrizeNpcService implements Listener {
     /** OP-only placement/removal: /piri npc <prizes|exchange> <create|remove>. */
     public boolean handle(CommandSender sender, String[] args) {
         if (args.length < 1 || !args[0].equalsIgnoreCase("npc")) return false;
-        if (!sender.isOp()) { sender.sendMessage(Component.text("NOT_OP")); return true; }
-        if (!(sender instanceof Player player)) { sender.sendMessage(Component.text("PLAYER_REQUIRED")); return true; }
+        if (!sender.isOp()) { sender.sendMessage(Component.text("この操作を行う権限がありません。")); return true; }
+        if (!(sender instanceof Player player)) { sender.sendMessage(Component.text("この操作はゲーム内から実行してください。")); return true; }
         if (args.length != 3) { usage(sender); return true; }
 
         String type = args[1].toLowerCase();
@@ -60,7 +60,7 @@ public final class PrizeNpcService implements Listener {
         if (action.equals("create")) {
             Villager npc = player.getWorld().spawn(player.getLocation(), Villager.class, villager -> {
                 villager.getPersistentDataContainer().set(marker, PersistentDataType.STRING, type);
-                villager.customName(Component.text(type.equals("prizes") ? "景品カウンター" : "交換窓口"));
+                villager.customName(Component.text(type.equals("prizes") ? "景品交換所" : "換金所"));
                 villager.setCustomNameVisible(true);
                 villager.setAI(false);
                 villager.setInvulnerable(true);
@@ -69,7 +69,7 @@ public final class PrizeNpcService implements Listener {
                 villager.setRemoveWhenFarAway(false);
                 villager.setProfession(Villager.Profession.NONE);
             });
-            sender.sendMessage(Component.text("COUNTER_NPC_CREATED " + type + " " + npc.getUniqueId()));
+            sender.sendMessage(Component.text(type.equals("prizes") ? "景品交換所のNPCを設置しました。" : "換金所のNPCを設置しました。"));
             return true;
         }
 
@@ -79,9 +79,12 @@ public final class PrizeNpcService implements Listener {
                     .filter(villager -> type.equals(counterType(villager)))
                     .min(Comparator.comparingDouble(entity -> entity.getLocation().distanceSquared(player.getLocation())))
                     .orElse(null);
-            if (npc == null) { sender.sendMessage(Component.text("COUNTER_NPC_NOT_FOUND " + type)); return true; }
+            if (npc == null) {
+                sender.sendMessage(Component.text(type.equals("prizes") ? "近くに景品交換所のNPCが見つかりません。" : "近くに換金所のNPCが見つかりません。"));
+                return true;
+            }
             npc.remove();
-            sender.sendMessage(Component.text("COUNTER_NPC_REMOVED " + type));
+            sender.sendMessage(Component.text(type.equals("prizes") ? "景品交換所のNPCを削除しました。" : "換金所のNPCを削除しました。"));
             return true;
         }
 
@@ -100,11 +103,11 @@ public final class PrizeNpcService implements Listener {
     }
 
     private void openExchange(Player player) {
-        Inventory gui = plugin.getServer().createInventory(new ExchangeHolder(), 54, "景品交換窓口");
-        gui.setItem(SMALL_SLOT, exchangeButton(Material.GOLD_NUGGET, "小景品を交換", "1個ずつ交換します"));
-        gui.setItem(MEDIUM_SLOT, exchangeButton(Material.GOLD_INGOT, "中景品を交換", "1個ずつ交換します"));
-        gui.setItem(LARGE_SLOT, exchangeButton(Material.GOLD_BLOCK, "大景品を交換", "1個ずつ交換します"));
-        gui.setItem(ALL_SLOT, exchangeButton(Material.EMERALD, "すべて交換", "所持している景品をまとめて交換します"));
+        Inventory gui = plugin.getServer().createInventory(new ExchangeHolder(), 54, "換金所");
+        gui.setItem(SMALL_SLOT, exchangeButton(Material.GOLD_NUGGET, "小景品を換金", "小景品を1個換金します"));
+        gui.setItem(MEDIUM_SLOT, exchangeButton(Material.GOLD_INGOT, "中景品を換金", "中景品を1個換金します"));
+        gui.setItem(LARGE_SLOT, exchangeButton(Material.GOLD_BLOCK, "大景品を換金", "大景品を1個換金します"));
+        gui.setItem(ALL_SLOT, exchangeButton(Material.EMERALD, "すべて換金", "所持している景品をまとめて換金します"));
         gui.setItem(CLOSE_SLOT, exchangeButton(Material.BARRIER, "閉じる", ""));
         player.openInventory(gui);
     }
@@ -145,6 +148,6 @@ public final class PrizeNpcService implements Listener {
     }
 
     private static void usage(CommandSender sender) {
-        sender.sendMessage(Component.text("Usage: /piri npc <prizes|exchange> <create|remove>"));
+        sender.sendMessage(Component.text("使い方: /piri npc <prizes|exchange> <create|remove>"));
     }
 }
