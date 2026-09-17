@@ -47,8 +47,10 @@ public final class StopSolver {
         if(fallbackRole!=null)for(var candidate:catalogue.candidates(fallbackRole,mask,stopped))unique.putIfAbsent(candidate.stops().id(),candidate);
         var candidates=new ArrayList<StopCatalogue.Evaluation>();
         boolean secondPremiumStop=premiumF&&Integer.bitCount(mask)==1;
+        boolean finalStop=Integer.bitCount(mask|reel.bit())==3;
         for(var candidate:unique.values()){
             if(!allowBarConfirmation&&candidate.winningBarConfirmationLines()!=0)continue;
+            if(bonusAwardGame&&finalStop&&incompatibleAwardCompletion(candidate,alternateRole))continue;
             if(secondPremiumStop&&StopCatalogue.sevenTenpaiLines(candidate.stops(),mask|reel.bit())!=0)continue;
             if(premiumF&&mask==0&&candidate.valid(role)&&!premiumFirstStopFeasible(role,reel,candidate.stops().stop(reel)))continue;
             if(forbidRightFirstGrapeSevenBar&&mask==0&&reel==Reel.RIGHT&&StopCatalogue.isRightGrapeSevenBarStop(candidate.stops().right()))continue;
@@ -160,11 +162,12 @@ public final class StopSolver {
         }
 
         // If the strict role catalog has no legal continuation, do not drag a bonus symbol around the reel.
-        // Stop naturally (0..4 frames) and let the server keep the already-won bonus right pending.
+        // Stop naturally (0..4 frames), but never complete a bonus pattern that contradicts the awarded bonus.
         for(int slip=0;slip<=NATURAL_MAX_SLIP;slip++){
             int stop=Math.floorMod(pressedIndex-slip,21);
             StopTriplet synthetic=stopped.with(reel,stop);
             var evaluation=catalogue.evaluation(synthetic);
+            if(Integer.bitCount(mask|reel.bit())==3&&incompatibleAwardCompletion(evaluation,alternateRole))continue;
             if(!allowBarConfirmation&&Integer.bitCount(mask|reel.bit())==3&&evaluation.winningBarConfirmationLines()!=0)continue;
             int rank=6;
             if(alternateRole!=null&&evaluation.valid(alternateRole))rank=evaluation.targetRank(alternateRole);
@@ -173,6 +176,16 @@ public final class StopSolver {
             return new Choice(synthetic,rank,pressedIndex,stop,slip,ReelMotion.durationMs(slip));
         }
         throw new IllegalStateException("No safe award-game stop: role="+role+" alternateRole="+alternateRole+" fallbackRole="+fallbackRole+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" pressedIndex="+pressedIndex);
+    }
+
+    private static boolean incompatibleAwardCompletion(StopCatalogue.Evaluation evaluation,DisplayRole awardedEntryRole){
+        if(awardedEntryRole==DisplayRole.BIG_ENTRY){
+            return evaluation.winningRegLines()!=0||evaluation.winningBarConfirmationLines()!=0;
+        }
+        if(awardedEntryRole==DisplayRole.REG_ENTRY){
+            return evaluation.winningBigLines()!=0||evaluation.winningBarConfirmationLines()!=0;
+        }
+        return false;
     }
 
     private static boolean showsBonusSymbol(StopCatalogue.Evaluation candidate,Reel reel){
