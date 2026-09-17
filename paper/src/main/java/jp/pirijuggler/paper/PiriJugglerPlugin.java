@@ -9,10 +9,13 @@ import jp.pirijuggler.paper.network.ServerHandshake;
 import jp.pirijuggler.paper.threading.PaperMainThread;
 import jp.pirijuggler.paper.threading.TaskExecutors;
 import jp.pirijuggler.paper.economy.EconomyStartupRecovery;
+import jp.pirijuggler.paper.economy.MedalAutoMergeService;
 import jp.pirijuggler.paper.economy.MedalMergeCommand;
 import jp.pirijuggler.paper.economy.MedalRecoveryListener;
+import jp.pirijuggler.paper.economy.PrizeNpcService;
 import jp.pirijuggler.paper.economy.PrizeService;
 import jp.pirijuggler.paper.data.DataLampPublisher;
+import jp.pirijuggler.paper.data.MachineDataInteractionService;
 import jp.pirijuggler.paper.data.PublicDataCommand;
 import jp.pirijuggler.paper.data.MachineDataSimulationService;
 import org.bukkit.command.CommandSender;
@@ -37,6 +40,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
     private boolean configurationValid;
     private MachineService machines;
     private PrizeService prizes;
+    private PrizeNpcService prizeNpcs;
     private ReelEngine reels;
     private DataLampPublisher dataLamp;
     private PublicDataCommand publicData;
@@ -73,9 +77,11 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
                     publicData = new PublicDataCommand(this);
                     machineSimulation = new MachineDataSimulationService(this,result.values());
                     prizes = new PrizeService(this, result.values());
+                    prizeNpcs = new PrizeNpcService(this, prizes);
+                    new MachineDataInteractionService(this);
                     EconomyStartupRecovery.reconcile(this);
                     Objects.requireNonNull(getCommand("piri")).setExecutor((sender, command, label, args) ->
-                            handleBuildIdentity(sender,args) || machineSimulation.handle(sender,args) || publicData.handle(sender, args) || prizes.handle(sender, args) || machines.onCommand(sender, command, label, args));
+                            handleBuildIdentity(sender,args) || machineSimulation.handle(sender,args) || publicData.handle(sender, args) || prizes.handle(sender, args) || prizeNpcs.handle(sender, args) || machines.onCommand(sender, command, label, args));
                 }
             }
         } catch (IOException | RuntimeException exception) {
@@ -84,7 +90,9 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
         }
         var mergeCommand = getCommand("pirimerge");
         if (mergeCommand == null) throw new IllegalStateException("pirimerge command missing");
-        mergeCommand.setExecutor(new MedalMergeCommand(this));
+        var medalMerger = new MedalMergeCommand(this);
+        mergeCommand.setExecutor(medalMerger);
+        new MedalAutoMergeService(this, medalMerger);
         var resetCommand = getCommand("pirireset");
         if (resetCommand == null) throw new IllegalStateException("pirireset command missing");
         resetCommand.setExecutor(new DevResetCommand(this));
