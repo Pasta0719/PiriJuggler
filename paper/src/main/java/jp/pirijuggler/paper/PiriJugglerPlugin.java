@@ -14,6 +14,7 @@ import jp.pirijuggler.paper.economy.MedalMergeCommand;
 import jp.pirijuggler.paper.economy.MedalRecoveryListener;
 import jp.pirijuggler.paper.economy.PrizeNpcService;
 import jp.pirijuggler.paper.economy.PrizeService;
+import jp.pirijuggler.paper.economy.ProfitService;
 import jp.pirijuggler.paper.data.DataLampPublisher;
 import jp.pirijuggler.paper.data.MachineDataInteractionService;
 import jp.pirijuggler.paper.data.PublicDataCommand;
@@ -41,6 +42,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
     private MachineService machines;
     private PrizeService prizes;
     private PrizeNpcService prizeNpcs;
+    private ProfitService profit;
     private ReelEngine reels;
     private DataLampPublisher dataLamp;
     private PublicDataCommand publicData;
@@ -78,10 +80,11 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
                     machineSimulation = new MachineDataSimulationService(this,result.values());
                     prizes = new PrizeService(this, result.values());
                     prizeNpcs = new PrizeNpcService(this, prizes);
+                    profit = new ProfitService(this);
                     new MachineDataInteractionService(this);
                     EconomyStartupRecovery.reconcile(this);
                     Objects.requireNonNull(getCommand("piri")).setExecutor((sender, command, label, args) ->
-                            handleBuildIdentity(sender,args) || machineSimulation.handle(sender,args) || publicData.handle(sender, args) || prizes.handle(sender, args) || prizeNpcs.handle(sender, args) || machines.onCommand(sender, command, label, args));
+                            handleBuildIdentity(sender,args) || machineSimulation.handle(sender,args) || publicData.handle(sender, args) || prizes.handle(sender, args) || prizeNpcs.handle(sender, args) || profit.handle(sender, args) || machines.onCommand(sender, command, label, args));
                 }
             }
         } catch (IOException | RuntimeException exception) {
