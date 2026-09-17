@@ -140,9 +140,8 @@ public final class StopSolver {
 
         for(var candidate:candidates){
             int slip=ReelMotion.slip(candidate.stops().stop(reel),pressedIndex);
+            if(slip>NATURAL_MAX_SLIP&&showsBonusSymbol(candidate,reel))continue;
             boolean primary=candidate.valid(role)||(alternateRole!=null&&candidate.valid(alternateRole));
-            if(primary&&slip>NATURAL_MAX_SLIP&&pullsBonusSymbol(candidate,role,alternateRole,reel))continue;
-            if(!primary&&candidate.valid(fallbackRole)&&slip>NATURAL_MAX_SLIP&&showsBonusSymbol(candidate,reel))continue;
             int priority;
             if(primary&&slip<=NATURAL_MAX_SLIP){
                 priority=(alternateRole!=null&&candidate.valid(alternateRole))?0:1;
@@ -162,18 +161,6 @@ public final class StopSolver {
         if(selected==null)throw new IllegalStateException("No natural/fallback award-game candidate: role="+role+" alternateRole="+alternateRole+" fallbackRole="+fallbackRole+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" pressedIndex="+pressedIndex);
         int stop=selected.stops().stop(reel);
         return new Choice(selected.stops(),selectedRank,pressedIndex,stop,selectedSlip,ReelMotion.durationMs(selectedSlip));
-    }
-
-    private static boolean pullsBonusSymbol(StopCatalogue.Evaluation candidate,DisplayRole role,DisplayRole alternateRole,Reel reel){
-        DisplayRole controllingRole=alternateRole!=null&&candidate.valid(alternateRole)?alternateRole:(candidate.valid(role)?role:null);
-        if(controllingRole==null)return false;
-        int mask=candidate.lineMask(controllingRole);
-        if(mask==0)return false;
-        for(var line:Payline.values())if((mask&(1<<line.ordinal()))!=0){
-            Symbol symbol=FixedReels.row(reel,candidate.stops().stop(reel),line.row(reel));
-            if(symbol==Symbol.SEVEN||symbol==Symbol.BAR)return true;
-        }
-        return false;
     }
 
     private static boolean showsBonusSymbol(StopCatalogue.Evaluation candidate,Reel reel){
