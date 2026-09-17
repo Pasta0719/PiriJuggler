@@ -55,9 +55,9 @@ class ConfigValidationTest {
         for (String name : new String[]{"reverse", "middle_cherry", "sound_first_peka", "strong_after_peka", "five_notice_blink", "fake_tenpai"})
             config = config.replace(name + ": 1", name + ": 0");
         assertFalse(load(config).valid());
-        assertFalse(load(defaults().replace("      replay: 137023842\n", "")).valid());
-        assertFalse(load(defaults().replace("  notice_volume: 1.0\n", "")).valid());
-        assertFalse(load(defaults().replace("  loan_medals: 46\n", "")).valid());
+        assertFalse(load(defaults().replace("      replay: 137023842", "")).valid());
+        assertFalse(load(defaults().replace("  notice_volume: 1.0", "")).valid());
+        assertFalse(load(defaults().replace("  loan_medals: 46", "")).valid());
         assertFalse(load(defaults() + "credit_max: 99\n").valid());
     }
 
