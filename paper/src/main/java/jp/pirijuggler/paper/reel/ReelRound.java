@@ -44,8 +44,7 @@ public final class ReelRound {
         return switch(role){case GRAPE,BONUS,BONUS_CHERRY,PIERO_BONUS,PREMIUM_B->false;default->true;};
     }
     private boolean bonusAwardGame(){
-        if(!"NORMAL".equals(mode))return false;
-        return role==DisplayRole.BONUS||role==DisplayRole.BONUS_CHERRY||role==DisplayRole.PIERO_BONUS||role==DisplayRole.PREMIUM_B;
+        return "NORMAL".equals(mode)&&alternateRole!=null;
     }
     /** Call immediately before sending this envelope, using System.nanoTime on Paper's thread. */
     public Envelope begin(long now){
