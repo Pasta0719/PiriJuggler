@@ -11,6 +11,8 @@ public final class StopSolver {
     private static final EnumSet<DisplayRole> DIVERSIFIED_LINE_ROLES = EnumSet.of(
             DisplayRole.GRAPE, DisplayRole.BELL, DisplayRole.PIERO, DisplayRole.PIERO_BONUS, DisplayRole.REPLAY,
             DisplayRole.BIG_ENTRY, DisplayRole.REG_ENTRY);
+    private static final EnumSet<DisplayRole> BONUS_AWARD_ROLES = EnumSet.of(
+            DisplayRole.BONUS, DisplayRole.BONUS_CHERRY, DisplayRole.PIERO_BONUS);
 
     public record Choice(StopTriplet candidate,int targetRank,int pressedIndex,int stopIndex,int slip,int durationMs){}
     private record Key(DisplayRole role,DisplayRole alternateRole,int fixedKey,Reel reel,boolean premiumF,boolean allowBarConfirmation,boolean forbidRightFirstGrapeSevenBar){}
@@ -55,10 +57,13 @@ public final class StopSolver {
             int minSlip=21;
             boolean hasNatural=false;
             for(var candidate:candidates){
-                int slip=ReelMotion.slip(candidate.stops().stop(reel),p);
+                int stop=candidate.stops().stop(reel);
+                int slip=ReelMotion.slip(stop,p);
+                if(forbiddenAbnormalBonusPull(role,reel,stop,slip))continue;
                 minSlip=Math.min(minSlip,slip);
                 if(slip<=NATURAL_MAX_SLIP)hasNatural=true;
             }
+            if(minSlip==21)throw new IllegalStateException("No natural/non-bonus fallback: role="+role+" stoppedMask="+mask+" stops="+stopped+" reel="+reel+" pressedIndex="+p);
 
             int minAllowedSlip;
             int maxAllowedSlip;
@@ -86,6 +91,7 @@ public final class StopSolver {
             for(var candidate:candidates){
                 int stop=candidate.stops().stop(reel);
                 int slip=ReelMotion.slip(stop,p);
+                if(forbiddenAbnormalBonusPull(role,reel,stop,slip))continue;
                 if(slip<minAllowedSlip||slip>maxAllowedSlip)continue;
                 int rank=targetRank(candidate,role,alternateRole);
                 int lineDistance=DIVERSIFIED_LINE_ROLES.contains(role)?lineDistance(rank,preferredLine):0;
@@ -119,6 +125,15 @@ public final class StopSolver {
             best[p]=new Choice(selected.stops(),selectedRank,p,stop,selectedSlip,ReelMotion.durationMs(selectedSlip));
         }
         return best;
+    }
+
+    private static boolean forbiddenAbnormalBonusPull(DisplayRole role,Reel reel,int stopIndex,int slip){
+        if(!BONUS_AWARD_ROLES.contains(role)||slip<=NATURAL_MAX_SLIP)return false;
+        for(int row=-1;row<=1;row++){
+            Symbol symbol=FixedReels.row(reel,stopIndex,row);
+            if(symbol==Symbol.SEVEN||symbol==Symbol.BAR)return true;
+        }
+        return false;
     }
 
     private static int targetRank(StopCatalogue.Evaluation candidate,DisplayRole role,DisplayRole alternateRole){
