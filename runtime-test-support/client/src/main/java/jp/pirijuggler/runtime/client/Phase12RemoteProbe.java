@@ -90,7 +90,14 @@ public final class Phase12RemoteProbe {
     }
 
     private static String summary() {
-        int cached = PiriJugglerClient.remoteMachines().snapshot().size();
+        var snapshot = PiriJugglerClient.remoteMachines().snapshot();
+        int cached = snapshot.size();
+        long spinningCached = snapshot.values().stream()
+                .filter(state -> state.has("spinning")
+                        && state.get("spinning").isJsonPrimitive()
+                        && state.getAsJsonPrimitive("spinning").isBoolean()
+                        && state.get("spinning").getAsBoolean())
+                .count();
         return "PIRI12"
                 + " SNAPSHOT=" + count(PacketType.REMOTE_MACHINE_SNAPSHOT)
                 + " SPIN=" + count(PacketType.REMOTE_MACHINE_SPIN)
@@ -100,6 +107,7 @@ public final class Phase12RemoteProbe {
                 + " REMOVE=" + count(PacketType.REMOTE_MACHINE_REMOVE)
                 + " SOUND=" + count(PacketType.REMOTE_MACHINE_SOUND)
                 + " CACHE=" + cached
+                + " SPINNING_CACHE=" + spinningCached
                 + " LAST_MACHINE=" + lastMachineId;
     }
 }
