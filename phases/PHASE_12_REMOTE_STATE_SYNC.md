@@ -1,6 +1,6 @@
 # PHASE 12 — Remote Public State / Interest Sync
 
-Status: IN_PROGRESS — BUILD_PASS / RUNTIME_PENDING
+Status: COMPLETE — BUILD_PASS / RUNTIME_PASS
 
 ## 読むもの
 - `../docs/REMOTE_MACHINE_VISUAL_SPEC.md`
@@ -109,22 +109,22 @@ COMPLETE 時:
 IMPLEMENTATION_STATUS の Phase12 を COMPLETE にし、Phase13 は NOT_STARTED のまま停止。
 
 
-## Current blocker
-Production implementation and static contradiction review are present on main.
-`build-jars.bat` completed successfully on the user runtime machine after commit 237fbf1141a6edc2d6d97daa9f9266c67ab2361e. Gradle unit/integration tests and production JAR build therefore PASS.
-Phase12 cannot be marked COMPLETE yet because the real Paper 1.21 + Fabric 1.21 runtime acceptance remains pending.
-Required next verification is the Phase12 section of `RUNTIME_ACCEPTANCE.md`.
+## Completion record
+Phase12 acceptance completed on 2026-09-20.
 
+- production build/tests: PASS
+- owner regression: PASS
+- 42-machine spectator initial sync: PASS
+- range leave/re-entry + hysteresis runtime: PASS
+- 30-second idle remote traffic: PASS
+- SPIN / STOP / NOTICE / BONUS start/end: PASS
+- world change / return: PASS
+- spectator reconnect / fresh cache rebuild: PASS
+- stale spin reconnect check: PASS (`SPINNING_CACHE=0`)
+- create / redefine / remove immediate reflection: PASS
+- enable immediate reflection: code-verified via `ADMIN_SET_ENABLED -> remote.machineChanged(machine)`
+- hidden-state exclusion / BONUS_PENDING type secrecy: code-verified
+- malformed remote isolation: code-verified
+- evidence: `runtime-evidence/PHASE_12/REPORT.md`
 
-## Runtime progress
-- Owner regression runtime: PASS (2026-09-19, user-confirmed)
-  - compatible client connected successfully
-  - existing machine opened normally
-  - BET -> spin -> STOP -> payout completed normally
-- Remote spectator sync acceptance: CORE PASS (2026-09-19, user-confirmed)
-  - 42 machines cached in-range: CACHE=42
-  - one real play observed remotely: SPIN=1 / STOP=3
-  - leaving all machine interest radii: REMOVE=42 / CACHE=0
-  - re-entering range: SNAPSHOT increased 5 -> 47 / CACHE=42
-  - runtime-test spectator probe used only in test client helper, not production jars
-- Remaining formal Phase12 acceptance items are limited to criteria not evidenced by this manual run (e.g. notice/bonus/world-change/reconnect/idle-traffic capture).
+Phase13 remains NOT_STARTED and must not be started automatically.
