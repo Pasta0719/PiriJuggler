@@ -1,6 +1,6 @@
 # PHASE 12 — Remote Public State / Interest Sync
 
-Status: IN_PROGRESS
+Status: BLOCKED — RUNTIME_ENVIRONMENT_UNAVAILABLE
 
 ## 読むもの
 - `../docs/REMOTE_MACHINE_VISUAL_SPEC.md`
@@ -107,3 +107,9 @@ COMPLETE 時:
 
 ## 終了時
 IMPLEMENTATION_STATUS の Phase12 を COMPLETE にし、Phase13 は NOT_STARTED のまま停止。
+
+
+## Current blocker
+Production implementation and static contradiction review are present on main.
+This environment cannot execute the repository Gradle build or boot the real Paper 1.21 + Fabric 1.21 pair, so Phase12 cannot be marked COMPLETE yet.
+Required next verification is `./gradlew test`, `./gradlew build`, then the Phase12 section of `RUNTIME_ACCEPTANCE.md`.
