@@ -21,7 +21,7 @@ Remote Machine Visual / Hall Audio は仕様確定済み。Phase12 runtime accep
 | 10 | COMPLETE | Admin / Settings / Startup Allocation / Events |
 | 11 | COMPLETE | Suspend / Restart Recovery / Hardening / Final Tests |
 | 12 | COMPLETE | Remote Public State / Interest Sync — build/test + real spectator runtime acceptance PASS |
-| 13 | NOT_STARTED | Entity-Free World Cabinet Renderer |
+| 13 | IN_PROGRESS | Entity-Free World Cabinet Renderer |
 | 14 | NOT_STARTED | Positional Hall Audio / Performance / Hardening |
 
 ## Existing final verification
@@ -52,10 +52,10 @@ Important locked decisions:
 
 ## Completion / next work
 
-Current phase: none (stopped after Phase12 completion)
+Current phase: 13
 Last completed phase: 12
 Open blockers: none for Phase12
-Next planned phase: Phase13, only when explicitly started
-Phase13 start condition: satisfied, but do not start automatically
+Next planned phase: Phase13 implementation/runtime acceptance
+Phase13 start condition: satisfied and explicitly started
 
 Phase12 production implementation and real Paper+Fabric runtime acceptance are PASS. Phase13 world rendering and Phase14 hall audio remain NOT_STARTED.
