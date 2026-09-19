@@ -5,7 +5,7 @@
 ## Current status — 2026-09-19
 
 PiriJuggler Phase01–11 はすべて COMPLETE。
-Remote Machine Visual / Hall Audio は仕様確定済み、Phase12–14 は未実装。
+Remote Machine Visual / Hall Audio は仕様確定済み。Phase12 は実装中、Phase13–14 は未実装。
 
 | Phase | 状態 | 概要 |
 |---|---|---|
@@ -54,8 +54,8 @@ Important locked decisions:
 
 Current phase: 12
 Last completed phase: 11
-Open blockers: none
-Next planned phase: 12
-Phase12 may start only on explicit implementation instruction.
+Open blockers: Phase12 unit/build/runtime acceptance not yet executed in a runnable Minecraft/Gradle environment
+Next planned phase: Phase12 verification/completion
+Phase13 start condition: Phase12 COMPLETE only
 
-Phase12–14 are specification-only at this point. No production implementation for remote cabinet rendering or hall audio has been started.
+Phase12 production implementation has started. Phase13 world rendering and Phase14 hall audio are still NOT_STARTED.
