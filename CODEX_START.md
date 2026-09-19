@@ -1,6 +1,6 @@
 # CODEX_START.md — v4
 
-`SPEC.md`が製品仕様の正本。Phase05完了後のユーザー承認hotfixについては `docs/POST_PHASE05_HOTFIX.md` を必ず併読し、同文書が明示的に変更した範囲ではhotfix内容を最新仕様として扱う。次回SPEC整合更新時に正本へ統合する。
+`SPEC.md`が製品仕様の正本。Phase12–14のRemote Machine Visual / Hall Audioについては `docs/REMOTE_MACHINE_VISUAL_SPEC.md` を追加の仕様正本として必ず併読する。Phase05完了後のユーザー承認hotfixについては `docs/POST_PHASE05_HOTFIX.md` を必ず併読し、同文書が明示的に変更した範囲ではhotfix内容を最新仕様として扱う。次回SPEC整合更新時に正本へ統合する。
 `AUDIT_REPORT.md`はv3からの修正理由であり、仕様値の正はSPEC.mdと上記承認hotfix。
 
 ## 開始時の引き継ぎ確認
