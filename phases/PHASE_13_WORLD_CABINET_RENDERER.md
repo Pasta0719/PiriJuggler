@@ -78,6 +78,8 @@ snapshot/resume:
 - stopped reel は動かさない
 - spinning reel だけ再開
 - reconnect 後に古い spin id を持ち越さない
+- ESC/UI close で session が SUSPENDED_GRACE になっても、内部的に spinning なら world 側も spinning を継続する
+- lock を失った SUSPENDED_SAFE / unowned state は machine row の最終 stop を non-spinning で表示する
 
 ### Render culling
 1つの world render callback だけを使用。
