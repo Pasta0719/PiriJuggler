@@ -352,7 +352,10 @@ public final class MachineService implements Listener, CommandExecutor {
                 case ADMIN_RESET_DAILY -> ()->{store.resetDaily(state,machine,now);return Boolean.TRUE;};
                 default -> throw new IllegalArgumentException();
             };
-            submit(player,null,machine,operation,unused->{sendAdminState(player,id,machine);remote.machineChanged(machine);});
+            submit(player,null,machine,operation,unused->{
+                sendAdminState(player,id,machine);
+                if (envelope.packetType() == PacketType.ADMIN_SET_ENABLED) remote.machineChanged(machine);
+            });
         } catch(DomainException error){error(player,error.getMessage());}
         catch(RuntimeException error){error(player,"SESSION_MISMATCH");}
     }
