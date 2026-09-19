@@ -28,6 +28,8 @@ public final class RemoteMachineSync {
     private final Supplier<PiriDatabase.State> stateSupplier;
     private final Predicate<UUID> compatible;
     private final BiFunction<Session, Long, Session> capture;
+    private record DataLamp(long totalGames,long bigCount,long regCount) {}
+    private final Map<Integer, DataLamp> dataLamp = new HashMap<>();
     private final Map<UUID, Set<Integer>> interests = new HashMap<>();
 
     public RemoteMachineSync(PiriJugglerPlugin plugin,
@@ -72,6 +74,7 @@ public final class RemoteMachineSync {
         requireMain();
         PiriDatabase.State state = stateSupplier.get();
         Machine machine = state == null ? null : state.machine(machineId);
+        if (machine == null) dataLamp.remove(machineId);
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID viewer = player.getUniqueId();
             if (!compatible.test(viewer)) continue;
@@ -88,6 +91,18 @@ public final class RemoteMachineSync {
                 sendSnapshot(player, machine);
             }
         }
+    }
+
+    public void updateDataLamp(JsonObject snapshot) {
+        requireMain();
+        if (snapshot == null || !snapshot.has("machineId")) return;
+        int machineId = snapshot.get("machineId").getAsInt();
+        long totalGames = nonNegative(snapshot, "totalGames");
+        long bigCount = nonNegative(snapshot, "bigCount");
+        long regCount = nonNegative(snapshot, "regCount");
+        DataLamp next = new DataLamp(totalGames, bigCount, regCount);
+        DataLamp previous = dataLamp.put(machineId, next);
+        if (!next.equals(previous)) broadcastSnapshot(machineId);
     }
 
     /** Sends a fresh public state to current interested spectators only. */
@@ -212,6 +227,10 @@ public final class RemoteMachineSync {
                 .findFirst().orElse(null);
 
         JsonObject body = placement(machine);
+        DataLamp stats = dataLamp.getOrDefault(machine.id(), new DataLamp(0, 0, 0));
+        body.addProperty("totalGames", stats.totalGames());
+        body.addProperty("bigCount", stats.bigCount());
+        body.addProperty("regCount", stats.regCount());
         body.addProperty("enabled", machine.enabled());
         body.addProperty("occupied", state.busy(machine.id()));
 
@@ -257,6 +276,14 @@ public final class RemoteMachineSync {
             }
         }
         send(viewer, PacketType.REMOTE_MACHINE_SNAPSHOT, body);
+    }
+
+    private static long nonNegative(JsonObject body, String key) {
+        if (!body.has(key) || !body.get(key).isJsonPrimitive() || !body.getAsJsonPrimitive(key).isNumber())
+            throw new IllegalArgumentException(key);
+        long value = body.get(key).getAsLong();
+        if (value < 0) throw new IllegalArgumentException(key);
+        return value;
     }
 
     private static double number(Session session, String key, double fallback) {
