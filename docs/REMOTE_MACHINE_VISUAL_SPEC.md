@@ -120,7 +120,7 @@ The remote protocol contains no client-to-server control action. Remote viewers 
 Paper sends remote state only to compatible Piri Fabric clients in the same world.
 
 Visual interest radius: 32 blocks from the machine anchor.
-Audio interest radius is defined separately below.
+- server interest entry radius is 32 blocks; existing interest may be retained to 34 blocks as boundary hysteresis to prevent SNAPSHOT/REMOVE churn. Phase13 render culling remains 32 blocks.\nAudio interest radius is defined separately below.
 
 Interest set is refreshed:
 - on join / successful protocol handshake
