@@ -5,7 +5,7 @@ public final class CabinetPlacement {
     public static final double WIDTH = 1.00;
     public static final double HEIGHT = 835.0 / 1340.0;
     public static final double FACE_OFFSET = -0.500;
-    public static final double HORIZONTAL_UP_OFFSET = 1.00;
+    public static final double HORIZONTAL_UP_OFFSET = 0.86;
     public static final double DEPTH_BIAS = 0.002;
 
     public record Vec(double x, double y, double z) {
