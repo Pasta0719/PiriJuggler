@@ -61,6 +61,8 @@ compact cabinet face として:
 - PAY
 - BIG/REG が public の時のみ mode
 - bonus active 中 bonusCount
+- 台上部の compact data lamp に current-period BIG数 / REG数 / 合算確率を表示
+- 合算 = totalGames / (bigCount + regCount)、0回時は 1/---
 
 単なる floating text/icon ではなく、台前面に一体化した表示にする。
 
