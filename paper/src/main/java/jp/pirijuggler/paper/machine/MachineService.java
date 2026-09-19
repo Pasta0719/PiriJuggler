@@ -96,6 +96,7 @@ public final class MachineService implements Listener, CommandExecutor {
     private void main() { if (!Bukkit.isPrimaryThread()) throw new IllegalStateException("Machine state requires Paper main thread"); }
     public boolean ready() { main(); return !stopped && state != null; }
     public PiriDatabase.State snapshot() { main(); return state; }
+    public void updateRemoteDataLamp(JsonObject data) { main(); if (ready()) remote.updateDataLamp(data); }
     private boolean busy(int id) { return pendingMachines.contains(id) || state.busy(id); }
 
     @Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
