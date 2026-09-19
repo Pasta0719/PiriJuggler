@@ -152,7 +152,7 @@ def clickpos(name,x,y,z,kind=None):
     if kind:wait(lambda:pcount(name,kind)>before,name+" receive "+kind)
 
 def create_machine(name,x,z,index):
-    command(name,f"tp @s {x+0.5} 65 {z+1.5}")
+    command(name,f"tp @s {x+0.5} 65 2.5")
     time.sleep(.05);action(name,"aimpos",x=x,y=66,z=z);time.sleep(.05)
     before=machine_count();command(name,"piri machine create")
     wait(lambda:machine_count()==before+1,f"machine {index} committed")
@@ -167,7 +167,7 @@ def forbidden_remote_payload(value):
 try:
     start_server()
     start_client("phase12-owner"); owner="phase12-owner"
-    coords=[(x,z) for x in range(-3,4) for z in (-5,-3,-1,1,3,5)]
+    coords=[(x,0) for x in range(-20,22)]
     for i,(x,z) in enumerate(coords,1): create_machine(owner,x,z,i)
     check("42 physical registered machines exist",machine_count()==42,{"machines":machine_count()})
 
@@ -202,7 +202,7 @@ try:
     check("spectator reconnect starts from fresh 42-machine snapshot",pcount(spec,"REMOTE_MACHINE_REMOVE")==0,remote_counts(spec))
 
     # Real gameplay remote transitions including notice and bonus start/end.
-    x,z=coords[0];command(owner,f"tp @s {x+0.5} 65 {z+1.5}");clickpos(owner,x,66,z,"OPEN_MACHINE")
+    x,z=coords[0];command(owner,f"tp @s {x+0.5} 65 2.5");clickpos(owner,x,66,z,"OPEN_MACHINE")
     command(owner,"piritest fund", "TEST_FUNDED")
     action(owner,"close");wait(lambda:not session(),"funded close")
     clickpos(owner,x,66,z,"OPEN_MACHINE");wait(lambda:session().get("credit")==50,"funded session refresh")
@@ -240,10 +240,10 @@ try:
     before_remove=pcount(spec,"REMOTE_MACHINE_REMOVE")
     command(owner,"piri machine remove 42")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_REMOVE")>=before_remove+1 and client(spec).get("remoteCacheSize")==41,"immediate machine remove")
-    rx,rz=coords[-1];command(owner,f"tp @s {rx+0.5} 65 {rz+1.5}");action(owner,"aimpos",x=rx,y=66,z=rz)
+    rx,rz=coords[-1];command(owner,f"tp @s {rx+0.5} 65 2.5");action(owner,"aimpos",x=rx,y=66,z=rz)
     before_snap=pcount(spec,"REMOTE_MACHINE_SNAPSHOT");command(owner,"piri machine create")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_SNAPSHOT")>=before_snap+1 and client(spec).get("remoteCacheSize")==42,"immediate machine create")
-    command(owner,"tp @s 4.5 65 5.5");action(owner,"aimpos",x=4,y=66,z=2)
+    command(owner,"tp @s 22.5 65 2.5");action(owner,"aimpos",x=22,y=66,z=0)
     before_snap=pcount(spec,"REMOTE_MACHINE_SNAPSHOT");command(owner,"piri machine redefine 43")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_SNAPSHOT")>=before_snap+1 and client(spec).get("remoteCacheSize")==42,"immediate redefine snapshot")
     check("create/remove/redefine changes reflect immediately to spectator",True,remote_counts(spec))
