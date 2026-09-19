@@ -3,6 +3,7 @@ package jp.pirijuggler.fabric.network;
 import com.google.gson.JsonObject;
 import jp.pirijuggler.common.protocol.Envelope;
 import jp.pirijuggler.common.protocol.PacketType;
+import jp.pirijuggler.common.reel.ReelMotion;
 
 import java.util.*;
 
@@ -40,7 +41,9 @@ public final class RemoteMachineRegistry {
                 case REMOTE_MACHINE_SNAPSHOT -> applySnapshot(machineId, body);
                 case REMOTE_MACHINE_SPIN -> mutate(machineId, current -> {
                     requireString(body, "spinId");
+                    UUID.fromString(body.get("spinId").getAsString());
                     requireString(body, "animation");
+                    ReelMotion.Profile.valueOf(body.get("animation").getAsString());
                     JsonObject phase = requireObject(body, "startPhase");
                     requireNumber(phase, "left"); requireNumber(phase, "center"); requireNumber(phase, "right");
                     current.addProperty("spinning", true);
@@ -52,12 +55,16 @@ public final class RemoteMachineRegistry {
                             ? body.get("stoppedMask").getAsInt() : 0;
                     if (stoppedMask < 0 || stoppedMask > 7) throw new IllegalArgumentException("stoppedMask");
                     current.addProperty("stoppedMask", stoppedMask);
-                    if (body.has("displayStops") && body.get("displayStops").isJsonObject())
-                        current.add("displayStops", body.getAsJsonObject("displayStops").deepCopy());
+                    if (body.has("displayStops") && body.get("displayStops").isJsonObject()) {
+                        JsonObject displayStops = body.getAsJsonObject("displayStops");
+                        validateStop(displayStops, "left"); validateStop(displayStops, "center"); validateStop(displayStops, "right");
+                        current.add("displayStops", displayStops.deepCopy());
+                    }
                 });
                 case REMOTE_MACHINE_STOP -> mutate(machineId, current -> {
                     requireString(body, "spinId"); requireString(body, "reel");
                     requireNumber(body, "stopIndex"); requireNumber(body, "durationMs");
+                    if (body.get("durationMs").getAsInt() < 0) throw new IllegalArgumentException("durationMs");
                     if (!current.has("spinId") || !body.get("spinId").getAsString().equals(current.get("spinId").getAsString()))
                         return; // stale stop from an older spin
                     String reel = body.get("reel").getAsString();
@@ -76,6 +83,8 @@ public final class RemoteMachineRegistry {
                 });
                 case REMOTE_MACHINE_NOTICE -> mutate(machineId, current -> {
                     requireString(body, "lamp"); requireString(body, "pattern");
+                    if (!Set.of("ON","OFF").contains(body.get("lamp").getAsString())) throw new IllegalArgumentException("lamp");
+                    if (!Set.of("STEADY","FAST_BLINK_1S").contains(body.get("pattern").getAsString())) throw new IllegalArgumentException("pattern");
                     if (body.has("spinId") && current.has("spinId")
                             && !body.get("spinId").getAsString().equals(current.get("spinId").getAsString())) return;
                     current.addProperty("lampOn", "ON".equals(body.get("lamp").getAsString()));
@@ -89,7 +98,12 @@ public final class RemoteMachineRegistry {
                         String type = body.get("bonusType").getAsString();
                         if (!Set.of("BIG","REG").contains(type)) throw new IllegalArgumentException("bonusType");
                         current.addProperty("bonusMode", type);
-                        if (body.has("count")) current.addProperty("bonusCount", body.get("count").getAsLong());
+                        if (body.has("count")) {
+                            requireNumber(body, "count");
+                            long count = body.get("count").getAsLong();
+                            if (count < 0) throw new IllegalArgumentException("count");
+                            current.addProperty("bonusCount", count);
+                        }
                     } else {
                         current.addProperty("bonusMode", "NONE");
                         if (body.has("finalCount")) current.addProperty("bonusCount", body.get("finalCount").getAsLong());
@@ -127,11 +141,15 @@ public final class RemoteMachineRegistry {
         requireString(body, "worldName");
         requireNumber(body, "x"); requireNumber(body, "y"); requireNumber(body, "z");
         requireString(body, "facing");
+        if (!Set.of("NORTH","SOUTH","EAST","WEST","UP","DOWN").contains(body.get("facing").getAsString()))
+            throw new IllegalArgumentException("facing");
         requireBoolean(body, "enabled"); requireBoolean(body, "occupied");
         requireString(body, "gameState");
         JsonObject stops = requireObject(body, "displayStops");
         validateStop(stops, "left"); validateStop(stops, "center"); validateStop(stops, "right");
         requireNumber(body, "stoppedMask");
+        int stoppedMask = body.get("stoppedMask").getAsInt();
+        if (stoppedMask < 0 || stoppedMask > 7) throw new IllegalArgumentException("stoppedMask");
         requireBoolean(body, "lampOn");
         requireNumber(body, "credit"); requireNumber(body, "pay"); requireNumber(body, "bonusCount");
         requireString(body, "bonusMode");
@@ -141,6 +159,7 @@ public final class RemoteMachineRegistry {
         if (body.get("spinning").getAsBoolean()) {
             requireString(body, "spinId"); UUID.fromString(body.get("spinId").getAsString());
             requireString(body, "animation");
+            ReelMotion.Profile.valueOf(body.get("animation").getAsString());
             JsonObject phase = requireObject(body, "startPhase");
             requireNumber(phase, "left"); requireNumber(phase, "center"); requireNumber(phase, "right");
         }
