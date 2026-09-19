@@ -35,7 +35,12 @@ public final class Phase02Probe {
     private static long motionAt;
     private static JsonObject phaseTap;
     private static long phaseTapAt;
-    private static final Path OUTPUT = Path.of(System.getProperty("piri.runtime.clientResult"));
+    private static Path output() {
+        String configured = System.getProperty("piri.runtime.clientResult");
+        if (configured == null || configured.isBlank())
+            throw new IllegalStateException("piri.runtime.clientResult is required for automated Phase02-05 probes");
+        return Path.of(configured);
+    }
     public static boolean enabled() { return System.getProperty("piri.runtime.scenario", "").startsWith("phase02") || System.getProperty("piri.runtime.scenario", "").startsWith("phase03") || (System.getProperty("piri.runtime.scenario", "").startsWith("phase04") || System.getProperty("piri.runtime.scenario", "").startsWith("phase05")); }
     public static void initialize() { ClientReceiveMessageEvents.GAME.register((message, overlay) -> messages.add(message.getString())); }
     public static void received(Envelope packet, boolean compatible) {
