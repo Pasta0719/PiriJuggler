@@ -82,6 +82,7 @@ On spin start Paper broadcasts a remote visual state event containing:
 - the three start phases
 - current public game mode
 - current lamp state
+- stoppedMask and current public displayStops so RESUME_NORMAL never restarts an already-stopped reel
 
 Fabric records local receive time and advances each reel with the existing ReelMotion profile.
 
@@ -104,10 +105,10 @@ Required packets:
 - REMOTE_MACHINE_SNAPSHOT: full public visual state for one machine
 - REMOTE_MACHINE_SPIN: spin start/resume
 - REMOTE_MACHINE_STOP: one authoritative reel stop
-- REMOTE_MACHINE_NOTICE: public lamp change/blink
+- REMOTE_MACHINE_NOTICE: public lamp change/blink only; owner NOTICE sound/premium sound identifier is not mirrored in Phase12
 - REMOTE_MACHINE_BONUS: BIG/REG start/end after type is public
 - REMOTE_MACHINE_REMOVE: stop rendering a machine
-- REMOTE_MACHINE_SOUND: one positional public sound event
+- REMOTE_MACHINE_SOUND: one positional public sound event; reserved in Phase12 and first emitted/played in Phase14
 
 Every remote packet contains machineId.
 Placement-bearing snapshot packets also contain world UUID, x/y/z and facing.
