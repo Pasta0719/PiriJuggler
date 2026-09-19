@@ -202,9 +202,10 @@ Bonus end:
 - final visible state is synchronized
 
 Session close/suspend:
-- machine remains rendered at its authoritative stopped state
-- suspended sessions are explicitly rendered as non-spinning; machine-row last authoritative stops are used
-- no stale spinning state may remain
+- closing the owner's UI does not stop an internally spinning reel
+- SUSPENDED_GRACE keeps rendering the same public spinning/stopped-mask state from the retained session
+- once the session no longer owns the machine lock (for example SUSPENDED_SAFE), render the machine-row last authoritative stops as non-spinning
+- no stale spinning state may remain after the lock-owning session is gone
 
 Server restart/reconnect:
 - fresh snapshots reconstruct every in-range machine without relying on old client cache
