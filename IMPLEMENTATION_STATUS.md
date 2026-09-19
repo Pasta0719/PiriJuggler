@@ -5,7 +5,7 @@
 ## Current status — 2026-09-19
 
 PiriJuggler Phase01–11 はすべて COMPLETE。
-Remote Machine Visual / Hall Audio は仕様確定済み。Phase12 は実装中、Phase13–14 は未実装。
+Remote Machine Visual / Hall Audio は仕様確定済み。Phase12 は実装済みで主要runtime spectator同期までPASS、残る正式受入項目を確認中。Phase13–14 は未実装。
 
 | Phase | 状態 | 概要 |
 |---|---|---|
@@ -20,7 +20,7 @@ Remote Machine Visual / Hall Audio は仕様確定済み。Phase12 は実装中�
 | 09 | COMPLETE | Data Lamp / Graph / Piri Chain |
 | 10 | COMPLETE | Admin / Settings / Startup Allocation / Events |
 | 11 | COMPLETE | Suspend / Restart Recovery / Hardening / Final Tests |
-| 12 | IN_PROGRESS | Remote Public State / Interest Sync — build PASS, runtime acceptance pending |
+| 12 | IN_PROGRESS | Remote Public State / Interest Sync — build PASS, owner regression PASS, 42台spectator sync/range re-entry PASS |
 | 13 | NOT_STARTED | Entity-Free World Cabinet Renderer |
 | 14 | NOT_STARTED | Positional Hall Audio / Performance / Hardening |
 
@@ -54,7 +54,7 @@ Important locked decisions:
 
 Current phase: 12
 Last completed phase: 11
-Open blockers: Phase12 remote spectator sync runtime acceptance remains; owner gameplay regression PASS
+Open blockers: Phase12の主要spectator同期はPASS。正式受入で未記録のnotice/bonus/world-change/reconnect/idle-traffic等のみ残る
 Next planned phase: Phase12 verification/completion
 Phase13 start condition: Phase12 COMPLETE only
 
