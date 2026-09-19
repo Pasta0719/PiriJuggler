@@ -41,8 +41,9 @@ anchor center:
 `(x+0.5, y+0.5, z+0.5)`
 
 display plane:
-- front = stored facing
-- center = anchor center + front*0.505 + up*1.05
+- front = stored facing; NORTH/SOUTH/EAST/WEST/UP/DOWN を全て扱う
+- horizontal: localUp=world +Y, center=anchor center + front*0.505 + localUp*1.05
+- UP/DOWN: localUp=world -Z, localRight=world +X, center=anchor center + front*0.505
 - width = 1.60 blocks
 - height = 1.00 blocks
 - outward-facing
@@ -97,7 +98,7 @@ per-machine entity/tick callback は作らない。
 - lamp ON/OFF/blink が一致
 - BIG/REG active 表示と count が一致
 - internal bonus type は public 前に表示されない
-- 4方向 NORTH/SOUTH/EAST/WEST で向きが正しい
+- 6方向 NORTH/SOUTH/EAST/WEST/UP/DOWN で向きが正しく、UP/DOWNも回転が不定にならない
 - redefine で表示位置/向きが追従
 - 42台同時視界でも renderer crash / leak 無し
 - local SlotScreen の入力・描画・音に regression 無し
@@ -106,7 +107,7 @@ per-machine entity/tick callback は作らない。
 ## Evidence
 COMPLETE 時:
 - `runtime-evidence/PHASE_13/REPORT.md`
-- four-facing screenshots
+- six-facing screenshots
 - owner screen vs external display stop-index comparison
 - entity count before/after
 
