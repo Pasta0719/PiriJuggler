@@ -194,6 +194,7 @@ public final class MachineService implements Listener, CommandExecutor {
             plugin.executors().database(()->{new EconomyStore(database).finishRecoveryCashout(owner,plan.transactionId(),delivered,System.currentTimeMillis());return new Saved<>(Boolean.TRUE,database.state());},(finished,finishError)->{
                 if(finished!=null)state=finished.state;releaseEconomy(owner,machine);
                 if(finishError!=null){removeBundleItems(player,delivered);failure(player,finishError);return;}
+                if(machine!=0)remote.broadcastSnapshot(machine);
                 tell(player,"RECOVER_CASHOUT amount="+plan.amount()+" delivered="+finalDelivered+" pending="+(plan.amount()-finalDelivered));
             });
         });
@@ -279,7 +280,6 @@ public final class MachineService implements Listener, CommandExecutor {
             error(player, "MACHINE_OCCUPIED"); return;
         }
         submit(player, owner, machine.id(), () -> database.seat(owner, machine.id(), System.currentTimeMillis()), seated -> {
-            remote.broadcastSnapshot(machine.id());
             send(player, PacketType.OPEN_MACHINE, seated.openPacket()); send(player, PacketType.PUBLIC_STATE, seated.publicState());
             games.resume(seated,System.nanoTime()).ifPresent(packet->{send(player,packet);remote.publishOwnerPacket(machine.id(),packet);});
         });
@@ -482,7 +482,7 @@ public final class MachineService implements Listener, CommandExecutor {
         try {
             var transition=games.plan(session,action,sequence,state.machine(machine).setting(),System.currentTimeMillis(),System.nanoTime(),player.getPing(),pressedIndex);
             submit(player,player.getUniqueId(),machine,()->new GameStore(database).commit(transition),saved->{
-                for(var packet:games.committed(transition,System.nanoTime())){send(player,packet);remote.publishOwnerPacket(machine,packet);}
+                for(var packet:games.committed(transition,System.nanoTime())){send(player,packet);if(packet.packetType()!=PacketType.PUBLIC_STATE)remote.publishOwnerPacket(machine,packet);}
                 for(var event:games.scheduled(transition))schedule(player,id,machine,event);
             });
         } catch(DomainException error){reject(player,sequence,error.getMessage());}
@@ -492,7 +492,7 @@ public final class MachineService implements Listener, CommandExecutor {
         long ticks=Math.max(1,(event.delayMs()+49)/50);
         plugin.getServer().getScheduler().runTaskLater(plugin,()->{
             if(stopped||state==null||!player.isOnline())return;Session current=state.session(player.getUniqueId());
-            if(current!=null&&current.id().equals(sessionId)){send(player,event.packet());remote.publishOwnerPacket(machine,event.packet());}
+            if(current!=null&&current.id().equals(sessionId)){send(player,event.packet());if(event.packet().packetType()!=PacketType.PUBLIC_STATE)remote.publishOwnerPacket(machine,event.packet());}
         },ticks);
     }
     private void closeRequest(Player player, UUID id, int machine, long sequence) {
@@ -552,10 +552,13 @@ public final class MachineService implements Listener, CommandExecutor {
         main(); admins.expire(System.currentTimeMillis());
         if (!ready() || expiring || !pendingPlayers.isEmpty()) return;
         long now = System.currentTimeMillis();
-        boolean due=state.sessions().stream().anyMatch(s->
-                s.lifecycle()==Session.Lifecycle.SUSPENDED_GRACE&&s.number("lock_expires_at")<=now ||
-                s.lifecycle()==Session.Lifecycle.ACTIVE&&now-s.number("last_activity")>=idleMs);
-        if(!due)return;
+        Map<UUID,Integer> dueMachines=new HashMap<>();
+        for(Session s:state.sessions()) {
+            boolean dueSession=s.lifecycle()==Session.Lifecycle.SUSPENDED_GRACE&&s.number("lock_expires_at")<=now ||
+                    s.lifecycle()==Session.Lifecycle.ACTIVE&&now-s.number("last_activity")>=idleMs;
+            if(dueSession)dueMachines.put(s.player(),s.machine());
+        }
+        if(dueMachines.isEmpty())return;
         expiring = true;
         plugin.executors().database(() -> new Saved<>(database.maintain(now,idleMs),database.state()), (saved, error) -> {
             expiring = false;
@@ -564,7 +567,7 @@ public final class MachineService implements Listener, CommandExecutor {
                 for(UUID id:saved.value){
                     Session session=state.session(id);if(session!=null)games.forget(session.id());
                     Player player=Bukkit.getPlayer(id);if(player!=null&&player.isOnline()&&session!=null){JsonObject body=session.identity();body.addProperty("reason","IDLE_TIMEOUT");send(player,PacketType.SESSION_SUSPENDED,body);}
-                    if(session!=null)remote.broadcastSnapshot(session.machine());
+                    Integer changedMachine=dueMachines.get(id);if(changedMachine!=null)remote.broadcastSnapshot(changedMachine);
                 }
             }
             if (error != null) failure(null, error);
@@ -582,7 +585,15 @@ public final class MachineService implements Listener, CommandExecutor {
     }
     private void reject(Player player, long sequence, String code) { send(player, ErrorPackets.rejected(sequence, ErrorCode.valueOf(code))); }
     private void send(Player player, PacketType type, JsonObject body) { send(player, new Envelope(Protocol.VERSION, type, body)); }
-    private void send(Player player, Envelope packet) { if (player.isOnline() && !stopped) player.sendPluginMessage(plugin, Protocol.CHANNEL, EnvelopeCodec.encode(packet)); }
+    private void send(Player player, Envelope packet) {
+        if (player.isOnline() && !stopped) {
+            player.sendPluginMessage(plugin, Protocol.CHANNEL, EnvelopeCodec.encode(packet));
+            if (packet.packetType() == PacketType.PUBLIC_STATE && packet.payload().has("machineId")) {
+                try { remote.publishOwnerPacket(packet.payload().get("machineId").getAsInt(), packet); }
+                catch (RuntimeException invalidPublicState) { plugin.getLogger().warning("Skipped malformed PUBLIC_STATE remote mirror"); }
+            }
+        }
+    }
     public void shutdown() {
         main(); stopped = true; admins.clear(); remote.clear();
         try { plugin.executors().databaseBarrier(() -> { if (database != null) database.shutdown(System.currentTimeMillis(), graceMs); return null; }).get(30, TimeUnit.SECONDS); }
