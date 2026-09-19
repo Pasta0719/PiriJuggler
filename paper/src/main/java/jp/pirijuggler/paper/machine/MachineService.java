@@ -156,7 +156,7 @@ public final class MachineService implements Listener, CommandExecutor {
             int id = Integer.parseInt(args[2]); Machine machine = state.machine(id);
             if (machine == null) throw new DomainException("INVALID_STATE");
             switch (action) {
-                case "info" -> tell(sender, "MACHINE_INFO id=" + id + " world=" + machine.location().worldName() + " xyz=" + machine.location().x() + "," + machine.location().y() + "," + machine.location().z()
+                case "info" -> tell(sender, "MACHINE_INFO id=" + id + " type=" + machine.type() + " world=" + machine.location().worldName() + " xyz=" + machine.location().x() + "," + machine.location().y() + "," + machine.location().z()
                         + " setting=" + machine.setting() + " enabled=" + machine.enabled() + " autoSetting=" + machine.autoSetting() + " busy=" + busy(id));
                 case "redefine" -> {
                     if (busy(id)) throw new DomainException("MACHINE_OCCUPIED");
