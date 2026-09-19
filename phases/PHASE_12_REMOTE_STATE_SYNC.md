@@ -26,7 +26,8 @@ Status: IN_PROGRESS
 ## 実装範囲
 
 ### Protocol
-- protocol version を更新する。
+- protocol version を 2 へ更新する。
+- 既存 `config.yml` の固定 marker `protocol_version: 1` は他設定を変更せず起動時に2へ自動移行する。2以外の不正値は従来どおりvalidation error。
 - server->client packet を追加:
   - REMOTE_MACHINE_SNAPSHOT
   - REMOTE_MACHINE_SPIN
@@ -94,6 +95,7 @@ DB commit 前に remote viewer へ成功状態を送らない。
 - spin/stop/notice/bonus start/end が commit 後だけ remote event 化される
 - reconnect/server restart 後に stale state 無しで snapshot 再構築
 - hidden state が packet capture に存在しない
+- 既存v1 configを保持したserverを新Paperで起動すると protocol markerだけ2へmigrationされ、経済/イベント等の既存設定は保持される
 - unit/integration tests + real Minecraft runtime PASS
 
 ## Evidence
