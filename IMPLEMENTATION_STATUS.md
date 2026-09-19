@@ -2,9 +2,10 @@
 
 このファイルは各Phase終了時の現在状態を示す。
 
-## Current status — 2026-09-17
+## Current status — 2026-09-19
 
 PiriJuggler Phase01–11 はすべて COMPLETE。
+Remote Machine Visual / Hall Audio は仕様確定済み、Phase12–14 は未実装。
 
 | Phase | 状態 | 概要 |
 |---|---|---|
@@ -19,8 +20,11 @@ PiriJuggler Phase01–11 はすべて COMPLETE。
 | 09 | COMPLETE | Data Lamp / Graph / Piri Chain |
 | 10 | COMPLETE | Admin / Settings / Startup Allocation / Events |
 | 11 | COMPLETE | Suspend / Restart Recovery / Hardening / Final Tests |
+| 12 | NOT_STARTED | Remote Public State / Interest Sync |
+| 13 | NOT_STARTED | Entity-Free World Cabinet Renderer |
+| 14 | NOT_STARTED | Positional Hall Audio / Performance / Hardening |
 
-## Final verification
+## Existing final verification
 
 - Phase11 Runtime Acceptance: PASS
 - Security negative test: PASS
@@ -30,11 +34,28 @@ PiriJuggler Phase01–11 はすべて COMPLETE。
 - Final Phase11 evidence: `runtime-evidence/PHASE_11/REPORT.md`
 - Phase11 instruction status: `phases/PHASE_11_RECOVERY_FINAL.md` = COMPLETE
 
-## Completion
+## Locked future specification
+
+- Master spec: `docs/REMOTE_MACHINE_VISUAL_SPEC.md`
+- Phase12: `phases/PHASE_12_REMOTE_STATE_SYNC.md`
+- Phase13: `phases/PHASE_13_WORLD_CABINET_RENDERER.md`
+- Phase14: `phases/PHASE_14_HALL_AUDIO_PERFORMANCE.md`
+
+Important locked decisions:
+- display entities 0
+- custom BlockEntity 0
+- registered machine button position/facing remains physical anchor
+- Paper owns truth; Fabric only renders public state
+- remote client cannot control machines
+- no hidden setting/internal role/bonus type leaks
+- 42-machine performance acceptance required before Phase14 COMPLETE
+
+## Completion / next work
 
 Current phase: none
 Last completed phase: 11
 Open blockers: none
-Next phase: none
+Next planned phase: 12
+Phase12 may start only on explicit implementation instruction.
 
-Project implementation and acceptance sequence is complete.
+Phase12–14 are specification-only at this point. No production implementation for remote cabinet rendering or hall audio has been started.
