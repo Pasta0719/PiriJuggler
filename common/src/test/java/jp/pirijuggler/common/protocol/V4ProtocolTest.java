@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class V4ProtocolTest {
     @Test void handshakeHasNoDuplicatePacketType() {
-        assertEquals("{\"protocol\":1,\"modVersion\":\"1.0.0\"}", Handshake.hello().payload().toString());
-        assertEquals("{\"protocol\":1,\"serverVersion\":\"1.0.0\"}", Handshake.acknowledgement().payload().toString());
+        assertEquals("{\"protocol\":2,\"modVersion\":\"1.0.0\"}", Handshake.hello().payload().toString());
+        assertEquals("{\"protocol\":2,\"serverVersion\":\"1.0.0\"}", Handshake.acknowledgement().payload().toString());
         var payload = Handshake.hello().payload(); payload.addProperty("type", "HELLO");
         assertFalse(Handshake.validHello(Envelope.current(PacketType.HELLO, payload)));
         assertThrows(ProtocolException.class, () -> EnvelopeCodec.encode(Envelope.current(PacketType.HELLO, payload)));
