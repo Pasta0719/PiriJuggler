@@ -68,6 +68,37 @@ class RemoteMachineRegistryTest {
         assertNotNull(registry.machine(2));
     }
 
+
+    @Test void staleStopCannotOverwriteNewerSpin() {
+        RemoteMachineRegistry registry = new RemoteMachineRegistry();
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, snapshot(8)));
+
+        String oldSpin = UUID.randomUUID().toString();
+        JsonObject first = id(8);
+        first.addProperty("spinId", oldSpin);
+        first.addProperty("animation", "NORMAL");
+        JsonObject phase = new JsonObject();
+        phase.addProperty("left", 0.0); phase.addProperty("center", 0.0); phase.addProperty("right", 0.0);
+        first.add("startPhase", phase);
+        first.addProperty("stoppedMask", 0);
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SPIN, first));
+
+        String newSpin = UUID.randomUUID().toString();
+        JsonObject second = first.deepCopy();
+        second.addProperty("spinId", newSpin);
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SPIN, second));
+
+        JsonObject stale = id(8);
+        stale.addProperty("spinId", oldSpin);
+        stale.addProperty("reel", "LEFT");
+        stale.addProperty("stopIndex", 17);
+        stale.addProperty("durationMs", 380);
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_STOP, stale));
+
+        assertEquals(newSpin, registry.machine(8).get("spinId").getAsString());
+        assertEquals(0, registry.machine(8).getAsJsonObject("displayStops").get("left").getAsInt());
+    }
+
     @Test void removeAndResetDiscardState() {
         RemoteMachineRegistry registry = new RemoteMachineRegistry();
         registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, snapshot(3)));
