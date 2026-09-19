@@ -62,7 +62,7 @@ public final class Phase02Probe {
         }
         if (++ticks % 5 != 0) return;
         try {
-            Path instruction = OUTPUT.resolveSibling("command-" + (completed + 1) + ".json");
+            Path instruction = output().resolveSibling("command-" + (completed + 1) + ".json");
             if (Files.exists(instruction)) {
                 JsonObject command = JsonParser.parseString(Files.readString(instruction)).getAsJsonObject();
                 long id = command.get("id").getAsLong();
@@ -124,7 +124,7 @@ public final class Phase02Probe {
             JsonObject sounds=new JsonObject();for(String sound:PiriSounds.NAMES){JsonObject s=new JsonObject();s.addProperty("registered",Registries.SOUND_EVENT.containsId(Identifier.of("piri",sound)));s.addProperty("available",PiriSounds.available(sound));sounds.add(sound,s);}result.add("sounds",sounds);
         }
         if (client.player != null) { result.addProperty("position",client.player.getPos().toString()); result.addProperty("yaw",client.player.getYaw()); result.addProperty("pitch",client.player.getPitch()); }
-        try { Files.createDirectories(OUTPUT.getParent()); Files.writeString(OUTPUT,result.toString()); }
+        try { Path output = output(); Files.createDirectories(output.getParent()); Files.writeString(output,result.toString()); }
         catch (java.nio.file.FileSystemException sharingConflict) { LoggerFactory.getLogger("PiriRuntimeAcceptance").debug("Retrying observation write on next tick",sharingConflict); }
         catch (java.io.IOException error) { throw new java.io.UncheckedIOException(error); }
     }
