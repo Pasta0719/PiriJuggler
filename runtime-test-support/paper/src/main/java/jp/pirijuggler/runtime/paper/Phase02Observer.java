@@ -34,9 +34,9 @@ public final class Phase02Observer implements Listener {
         if ("phase12".equals(System.getProperty("piri.runtime.phase", ""))) {
             // Build supports first, then buttons. Interleaving these two operations
             // overwrites the previous z-row's button with the next row's support block.
-            for (int x=-3;x<=3;x++) for (int z=-3;z<=2;z++)
+            for (int x=-3;x<=3;x++) for (int z : new int[]{-5,-3,-1,1,3,5})
                 world.getBlockAt(x,66,z-1).setType(Material.STONE,false);
-            for (int x=-3;x<=3;x++) for (int z=-3;z<=2;z++) {
+            for (int x=-3;x<=3;x++) for (int z : new int[]{-5,-3,-1,1,3,5}) {
                 Switch button=(Switch)Bukkit.createBlockData(Material.STONE_BUTTON);
                 button.setAttachedFace(FaceAttachable.AttachedFace.WALL);
                 button.setFacing(org.bukkit.block.BlockFace.SOUTH);
