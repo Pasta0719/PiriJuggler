@@ -9,7 +9,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HandshakeIntegrationTest {
-    @Test void actualClientAndServerHandlersExchangeVersionOnePackets() {
+    @Test void actualClientAndServerHandlersExchangeCurrentProtocolPackets() {
         MainThread main = new MainThread() {
             private final Thread owner = Thread.currentThread();
             public boolean isMainThread() { return Thread.currentThread() == owner; }
@@ -33,9 +33,9 @@ class HandshakeIntegrationTest {
         client.receive(Handshake.acknowledgement());
         assertFalse(client.canUseSlot());
         client.begin();
-        client.receive(new Envelope(2, PacketType.HELLO_ACK, Handshake.acknowledgement().payload()));
+        client.receive(new Envelope(Protocol.VERSION + 1, PacketType.HELLO_ACK, Handshake.acknowledgement().payload()));
         assertFalse(client.canUseSlot());
-        var payload = Handshake.acknowledgement().payload(); payload.addProperty("protocol", 2);
+        var payload = Handshake.acknowledgement().payload(); payload.addProperty("protocol", Protocol.VERSION + 1);
         client.receive(Envelope.current(PacketType.HELLO_ACK, payload));
         assertFalse(client.canUseSlot());
         client.receive(Handshake.acknowledgement()); assertTrue(client.canUseSlot());
