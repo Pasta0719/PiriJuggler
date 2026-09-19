@@ -2,7 +2,7 @@ package jp.pirijuggler.fabric.render;
 
 /** Pure placement math for the entity-free Phase13 cabinet plane. */
 public final class CabinetPlacement {
-    public static final double WIDTH = 1.60;
+    public static final double WIDTH = 1.00;
     public static final double HEIGHT = 1.00;
     public static final double FACE_OFFSET = 0.505;
     public static final double HORIZONTAL_UP_OFFSET = 1.05;
