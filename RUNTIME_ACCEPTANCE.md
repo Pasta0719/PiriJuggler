@@ -135,3 +135,13 @@ REPORTは実行日時、build hash、Minecraft/Paper/Fabric version、手順、�
 - malformed remote payloadを投入してもlocal SlotScreen/session/handshakeが破壊されない
 - create/redefine/remove/enable変更がinterest clientへ即時反映される
 - evidence: `runtime-evidence/PHASE_12/REPORT.md` + packet capture + 42台idle traffic measurement
+
+
+### Phase12 result — 2026-09-20
+**PASS / COMPLETE**
+
+Real runtime covered 42-machine initial sync, range leave/re-entry, idle no-churn, SPIN/STOP/NOTICE/BONUS start/end, world change/return, reconnect, stale-spin recovery, and create/redefine/remove immediate reflection.
+
+Security/edge criteria that are not useful to reproduce manually were completed by code/static verification: hidden-state allow-listing, BONUS_PENDING BIG/REG secrecy, malformed remote isolation, and enabled-state immediate refresh path.
+
+Evidence: `runtime-evidence/PHASE_12/REPORT.md`.
