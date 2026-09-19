@@ -41,7 +41,7 @@ public final class Phase02Probe {
             throw new IllegalStateException("piri.runtime.clientResult is required for automated Phase02-05 probes");
         return Path.of(configured);
     }
-    public static boolean enabled() { return System.getProperty("piri.runtime.scenario", "").startsWith("phase02") || System.getProperty("piri.runtime.scenario", "").startsWith("phase03") || (System.getProperty("piri.runtime.scenario", "").startsWith("phase04") || System.getProperty("piri.runtime.scenario", "").startsWith("phase05")); }
+    public static boolean enabled() { String scenario=System.getProperty("piri.runtime.scenario", ""); return scenario.startsWith("phase02") || scenario.startsWith("phase03") || scenario.startsWith("phase04") || scenario.startsWith("phase05") || scenario.startsWith("phase12"); }
     public static void initialize() { ClientReceiveMessageEvents.GAME.register((message, overlay) -> messages.add(message.getString())); }
     public static void received(Envelope packet, boolean compatible) {
         allowed = compatible; JsonObject entry = new JsonObject(); entry.addProperty("type",packet.packetType().name()); entry.add("payload",packet.payload());
@@ -72,11 +72,20 @@ public final class Phase02Probe {
                         case "aim" -> {
                             targetX = command.get("x").getAsInt(); aim(client,targetX);
                         }
+                        case "aimpos" -> {
+                            aim(client,command.get("x").getAsInt(),command.get("y").getAsInt(),command.get("z").getAsInt());
+                        }
                         case "command" -> { if (targetX != null) aim(client,targetX); client.player.networkHandler.sendChatCommand(command.get("text").getAsString()); }
                         case "click" -> {
                             int x = command.get("x").getAsInt(); aim(client,x); BlockPos block = new BlockPos(x,66,0);
                             var result = client.interactionManager.interactBlock(client.player,Hand.MAIN_HAND,new BlockHitResult(new Vec3d(x + .5,66.5,.1),Direction.SOUTH,block,false));
                             LoggerFactory.getLogger("PiriRuntimeAcceptance").info("PIRI_PHASE02_REAL_CLICK block={} result={}",block,result);
+                        }
+                        case "clickpos" -> {
+                            int x=command.get("x").getAsInt(),y=command.get("y").getAsInt(),z=command.get("z").getAsInt();
+                            aim(client,x,y,z); BlockPos block=new BlockPos(x,y,z);
+                            var result=client.interactionManager.interactBlock(client.player,Hand.MAIN_HAND,new BlockHitResult(new Vec3d(x+.5,y+.5,z+.5),Direction.SOUTH,block,false));
+                            LoggerFactory.getLogger("PiriRuntimeAcceptance").info("PIRI_PHASE12_REAL_CLICK block={} result={}",block,result);
                         }
                         case "close" -> {
                             var session = PiriJugglerClient.session(); JsonObject body = new JsonObject();
@@ -128,8 +137,9 @@ public final class Phase02Probe {
         catch (java.nio.file.FileSystemException sharingConflict) { LoggerFactory.getLogger("PiriRuntimeAcceptance").debug("Retrying observation write on next tick",sharingConflict); }
         catch (java.io.IOException error) { throw new java.io.UncheckedIOException(error); }
     }
-    private static void aim(MinecraftClient client, int x) {
-        Vec3d delta = new Vec3d(x + .5,66.5,.1).subtract(client.player.getEyePos());
+    private static void aim(MinecraftClient client, int x) { aim(client,x,66,0); }
+    private static void aim(MinecraftClient client, int x, int y, int z) {
+        Vec3d delta = new Vec3d(x + .5,y + .5,z + .1).subtract(client.player.getEyePos());
         float yaw = (float) Math.toDegrees(Math.atan2(-delta.x,delta.z));
         float pitch = (float) -Math.toDegrees(Math.atan2(delta.y,Math.sqrt(delta.x * delta.x + delta.z * delta.z)));
         client.player.setYaw(yaw); client.player.setPitch(pitch);
