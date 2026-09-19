@@ -34,19 +34,19 @@ public final class Phase02Observer implements Listener {
         if ("phase12".equals(System.getProperty("piri.runtime.phase", ""))) {
             // Build supports first, then buttons. Interleaving these two operations
             // overwrites the previous z-row's button with the next row's support block.
-            for (int x=-3;x<=3;x++) for (int z : new int[]{-5,-3,-1,1,3,5})
-                world.getBlockAt(x,66,z-1).setType(Material.STONE,false);
-            for (int x=-3;x<=3;x++) for (int z : new int[]{-5,-3,-1,1,3,5}) {
+            for (int x=-20;x<=21;x++)
+                world.getBlockAt(x,66,-1).setType(Material.STONE,false);
+            for (int x=-20;x<=21;x++) {
                 Switch button=(Switch)Bukkit.createBlockData(Material.STONE_BUTTON);
                 button.setAttachedFace(FaceAttachable.AttachedFace.WALL);
                 button.setFacing(org.bukkit.block.BlockFace.SOUTH);
-                world.getBlockAt(x,66,z).setBlockData(button,false);
+                world.getBlockAt(x,66,0).setBlockData(button,false);
             }
-            world.getBlockAt(4,66,1).setType(Material.STONE,false);
+            world.getBlockAt(22,66,-1).setType(Material.STONE,false);
             Switch spare=(Switch)Bukkit.createBlockData(Material.STONE_BUTTON);
             spare.setAttachedFace(FaceAttachable.AttachedFace.WALL);
             spare.setFacing(org.bukkit.block.BlockFace.SOUTH);
-            world.getBlockAt(4,66,2).setBlockData(spare,false);
+            world.getBlockAt(22,66,0).setBlockData(spare,false);
         }
         Bukkit.getPluginManager().registerEvents(this,plugin);
         if (java.util.Set.of("phase03","phase05").contains(System.getProperty("piri.runtime.phase", ""))) {
