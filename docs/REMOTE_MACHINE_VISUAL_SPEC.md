@@ -1,6 +1,6 @@
 # Remote Machine Visual / Hall Audio Specification
 
-Status: SPEC_LOCKED / NOT_IMPLEMENTED
+Status: SPEC_LOCKED / PHASE12_IN_PROGRESS
 Target: Minecraft 1.21, Fabric API 0.102.0+, Paper plugin + existing Piri Fabric client
 
 ## 1. Goal
@@ -32,9 +32,12 @@ The external display is a client-side world render attached to the registered ma
 
 Coordinate system:
 - anchor center = (x + 0.5, y + 0.5, z + 0.5)
-- front direction = stored machine facing
+- front direction = stored machine facing; all six Bukkit Directional facings NORTH/SOUTH/EAST/WEST/UP/DOWN are valid
 - display plane faces outward in the stored facing direction
-- display plane center = anchor center + front * 0.505 + world-up * 1.05
+- for NORTH/SOUTH/EAST/WEST, local up = world +Y
+- for UP/DOWN, local up = world -Z (north) and local right = world +X (east), giving a deterministic orientation
+- display plane center = anchor center + front * 0.505 + local-up * 1.05 for horizontal facings
+- for UP/DOWN, display plane center = anchor center + front * 0.505; the screen is centered on that face (no additional world-Y offset)
 - logical width = 1.60 blocks
 - logical height = 1.00 blocks
 - rendering depth offset = 0.002 blocks to prevent z-fighting
@@ -199,6 +202,7 @@ Bonus end:
 
 Session close/suspend:
 - machine remains rendered at its authoritative stopped state
+- suspended sessions are explicitly rendered as non-spinning; machine-row last authoritative stops are used
 - no stale spinning state may remain
 
 Server restart/reconnect:
