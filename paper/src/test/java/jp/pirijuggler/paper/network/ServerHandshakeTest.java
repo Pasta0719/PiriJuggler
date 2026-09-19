@@ -31,8 +31,8 @@ class ServerHandshakeTest {
             UUID player = UUID.randomUUID();
             server.receive(player, EnvelopeCodec.encode(Handshake.hello()));
             var payload = Handshake.hello().payload();
-            if (!envelopeMismatch) payload.addProperty("protocol", 2);
-            Envelope wrong = new Envelope(envelopeMismatch ? 2 : 1, PacketType.HELLO, payload);
+            if (!envelopeMismatch) payload.addProperty("protocol", Protocol.VERSION + 1);
+            Envelope wrong = new Envelope(envelopeMismatch ? Protocol.VERSION + 1 : Protocol.VERSION, PacketType.HELLO, payload);
             assertEquals(ErrorPackets.error(ErrorCode.PROTOCOL_MISMATCH), EnvelopeCodec.decode(server.receive(player, EnvelopeCodec.encode(wrong)).orElseThrow()));
             assertFalse(server.canUseSlot(player));
         }
@@ -51,7 +51,7 @@ class ServerHandshakeTest {
         }
         assertTrue(server.receive(player, new byte[]{1, 2, 3}).isEmpty());
         assertFalse(server.canUseSlot(player));
-        var payload = Handshake.hello().payload(); payload.addProperty("protocol", "1");
+        var payload = Handshake.hello().payload(); payload.addProperty("protocol", Integer.toString(Protocol.VERSION));
         assertEquals(ErrorPackets.error(ErrorCode.PROTOCOL_MISMATCH), EnvelopeCodec.decode(server.receive(player, EnvelopeCodec.encode(Envelope.current(PacketType.HELLO, payload))).orElseThrow()));
     }
 
