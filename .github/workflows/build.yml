@@ -21,3 +21,11 @@ jobs:
       - name: Runtime test helper
         shell: cmd
         run: build-runtime-test-helper.bat --no-pause
+
+      - name: Upload production jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: piri-juggler-production
+          path: |
+            dist/piri-juggler-paper-1.0.0.jar
+            dist/piri-juggler-fabric-1.0.0.jar
