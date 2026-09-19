@@ -2,10 +2,10 @@
 
 このファイルは各Phase終了時の現在状態を示す。
 
-## Current status — 2026-09-19
+## Current status — 2026-09-20
 
-PiriJuggler Phase01–11 はすべて COMPLETE。
-Remote Machine Visual / Hall Audio は仕様確定済み。Phase12 は実装済みで主要runtime spectator同期までPASS、残る正式受入項目を確認中。Phase13–14 は未実装。
+PiriJuggler Phase01–12 はすべて COMPLETE。
+Remote Machine Visual / Hall Audio は仕様確定済み。Phase12 runtime acceptanceまでPASS。Phase13–14 は未実装。
 
 | Phase | 状態 | 概要 |
 |---|---|---|
@@ -20,7 +20,7 @@ Remote Machine Visual / Hall Audio は仕様確定済み。Phase12 は実装済�
 | 09 | COMPLETE | Data Lamp / Graph / Piri Chain |
 | 10 | COMPLETE | Admin / Settings / Startup Allocation / Events |
 | 11 | COMPLETE | Suspend / Restart Recovery / Hardening / Final Tests |
-| 12 | IN_PROGRESS | Remote Public State / Interest Sync — build PASS, owner regression PASS, 42台spectator sync/range re-entry PASS |
+| 12 | COMPLETE | Remote Public State / Interest Sync — build/test + real spectator runtime acceptance PASS |
 | 13 | NOT_STARTED | Entity-Free World Cabinet Renderer |
 | 14 | NOT_STARTED | Positional Hall Audio / Performance / Hardening |
 
@@ -52,10 +52,10 @@ Important locked decisions:
 
 ## Completion / next work
 
-Current phase: 12
-Last completed phase: 11
-Open blockers: Phase12の主要spectator同期はPASS。正式受入で未記録のnotice/bonus/world-change/reconnect/idle-traffic等のみ残る
-Next planned phase: Phase12 verification/completion
-Phase13 start condition: Phase12 COMPLETE only
+Current phase: none (stopped after Phase12 completion)
+Last completed phase: 12
+Open blockers: none for Phase12
+Next planned phase: Phase13, only when explicitly started
+Phase13 start condition: satisfied, but do not start automatically
 
-Phase12 production implementation is implemented and Gradle build/tests PASS, but not COMPLETE until real Paper+Fabric runtime acceptance PASS. Phase13 world rendering and Phase14 hall audio are still NOT_STARTED.
+Phase12 production implementation and real Paper+Fabric runtime acceptance are PASS. Phase13 world rendering and Phase14 hall audio remain NOT_STARTED.
