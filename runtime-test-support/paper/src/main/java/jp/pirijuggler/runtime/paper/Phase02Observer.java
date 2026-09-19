@@ -39,6 +39,11 @@ public final class Phase02Observer implements Listener {
                 button.setFacing(org.bukkit.block.BlockFace.SOUTH);
                 world.getBlockAt(x,66,z).setBlockData(button,false);
             }
+            world.getBlockAt(4,66,1).setType(Material.STONE,false);
+            Switch spare=(Switch)Bukkit.createBlockData(Material.STONE_BUTTON);
+            spare.setAttachedFace(FaceAttachable.AttachedFace.WALL);
+            spare.setFacing(org.bukkit.block.BlockFace.SOUTH);
+            world.getBlockAt(4,66,2).setBlockData(spare,false);
         }
         Bukkit.getPluginManager().registerEvents(this,plugin);
         if (java.util.Set.of("phase03","phase05").contains(System.getProperty("piri.runtime.phase", ""))) {
