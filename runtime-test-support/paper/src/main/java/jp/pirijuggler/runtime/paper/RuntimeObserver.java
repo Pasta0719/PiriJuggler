@@ -43,7 +43,7 @@ public final class RuntimeObserver extends JavaPlugin {
                 var production = (PiriJugglerPlugin) getServer().getPluginManager().getPlugin("PiriJuggler");
                 if (production == null) throw new IllegalStateException("Production plugin missing");
                 boolean allowed = production.canUseSlot(player.getUniqueId());
-                boolean expected = envelope.protocol() == 1 && envelope.payload().get("protocol").getAsInt() == 1;
+                boolean expected = envelope.protocol() == Protocol.VERSION && envelope.payload().get("protocol").getAsInt() == Protocol.VERSION;
                 JsonObject result = new JsonObject();
                 result.addProperty("timestamp", Instant.now().toString());
                 result.addProperty("serverVersion", getServer().getVersion());
