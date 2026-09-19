@@ -13,7 +13,7 @@ class EnvelopeCodecTest {
     @Test void wireBytesMatchTheSpecifiedHelloExactly() {
         String json = "{\"protocol\":1,\"modVersion\":\"1.0.0\"}";
         byte[] encoded = EnvelopeCodec.encode(Handshake.hello());
-        assertArrayEquals(new byte[]{0x50, 0x49, 0x52, 0x49, 0, 1, 1, (byte) json.length()}, Arrays.copyOf(encoded, 8));
+        assertArrayEquals(new byte[]{0x50, 0x49, 0x52, 0x49, 0, 2, 1, (byte) json.length()}, Arrays.copyOf(encoded, 8));
         assertEquals(json, new String(encoded, 8, encoded.length - 8, StandardCharsets.UTF_8));
         assertEquals(Handshake.hello(), EnvelopeCodec.decode(encoded));
     }
@@ -66,7 +66,7 @@ class EnvelopeCodecTest {
     @Test void rejectsInvalidUtf8OverlongVarIntAndDeepJson() {
         assertThrows(ProtocolException.class, () -> EnvelopeCodec.decode(raw(new byte[]{'{', '"', 'a', '"', ':', '"', (byte) 0xc3, '"', '}'})));
         for (byte[] length : new byte[][]{{(byte) 0x80}, {(byte) 0x82, 0}, {(byte) 0xff, (byte) 0xff, 0x02}, {(byte) 0x80, (byte) 0x80, (byte) 0x80}}) {
-            byte[] bytes = ByteBuffer.allocate(7 + length.length).putInt(Protocol.MAGIC).putShort((short) 1).put((byte) 1).put(length).array();
+            byte[] bytes = ByteBuffer.allocate(7 + length.length).putInt(Protocol.MAGIC).putShort((short) 2).put((byte) 1).put(length).array();
             assertThrows(ProtocolException.class, () -> EnvelopeCodec.decode(bytes));
         }
         String deep = "{\"a\":" + "[".repeat(1000) + "0" + "]".repeat(1000) + "}";
@@ -82,7 +82,7 @@ class EnvelopeCodecTest {
     }
 
     private static byte[] raw(byte[] payload) {
-        var buffer = ByteBuffer.allocate(10 + payload.length).putInt(Protocol.MAGIC).putShort((short) 1).put((byte) 1);
+        var buffer = ByteBuffer.allocate(10 + payload.length).putInt(Protocol.MAGIC).putShort((short) 2).put((byte) 1);
         int length = payload.length;
         do { int b = length & 127; length >>>= 7; buffer.put((byte) (b | (length == 0 ? 0 : 128))); } while (length != 0);
         buffer.put(payload);
