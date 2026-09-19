@@ -22,6 +22,9 @@ class RemoteMachineViewStateTest {
         assertEquals(5, view.machineId());
         assertEquals("NORTH", view.facing());
         assertEquals(12, view.credit());
+        assertEquals(3500, view.totalGames());
+        assertEquals(14, view.bigCount());
+        assertEquals(11, view.regCount());
 
         String spinId = UUID.randomUUID().toString();
         JsonObject spin = id(5);
@@ -72,6 +75,7 @@ class RemoteMachineViewStateTest {
         body.addProperty("lampOn", false);
         body.addProperty("credit", 12); body.addProperty("pay", 3);
         body.addProperty("bonusCount", 0); body.addProperty("bonusMode", "NONE");
+        body.addProperty("totalGames", 3500); body.addProperty("bigCount", 14); body.addProperty("regCount", 11);
         body.addProperty("spinning", false);
         return body;
     }
