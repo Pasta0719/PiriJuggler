@@ -20,7 +20,7 @@ Remote Machine Visual / Hall Audio は仕様確定済み、Phase12–14 は未�
 | 09 | COMPLETE | Data Lamp / Graph / Piri Chain |
 | 10 | COMPLETE | Admin / Settings / Startup Allocation / Events |
 | 11 | COMPLETE | Suspend / Restart Recovery / Hardening / Final Tests |
-| 12 | NOT_STARTED | Remote Public State / Interest Sync |
+| 12 | IN_PROGRESS | Remote Public State / Interest Sync |
 | 13 | NOT_STARTED | Entity-Free World Cabinet Renderer |
 | 14 | NOT_STARTED | Positional Hall Audio / Performance / Hardening |
 
@@ -52,7 +52,7 @@ Important locked decisions:
 
 ## Completion / next work
 
-Current phase: none
+Current phase: 12
 Last completed phase: 11
 Open blockers: none
 Next planned phase: 12
