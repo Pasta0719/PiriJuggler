@@ -25,7 +25,7 @@ class CabinetPlacementTest {
 
     @Test void horizontalCenterHasLockedVerticalOffsetButVerticalFacesDoNot() {
         var north = CabinetPlacement.basis(4, 70, 8, "NORTH");
-        assertEquals(71.55, north.center().y(), 1e-12);
+        assertEquals(70.5 + CabinetPlacement.HORIZONTAL_UP_OFFSET, north.center().y(), 1e-12);
         assertEquals(8.5 - CabinetPlacement.FACE_OFFSET - CabinetPlacement.DEPTH_BIAS, north.center().z(), 1e-12);
 
         var up = CabinetPlacement.basis(4, 70, 8, "UP");
