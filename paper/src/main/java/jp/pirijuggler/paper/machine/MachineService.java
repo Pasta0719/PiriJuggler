@@ -59,7 +59,7 @@ public final class MachineService implements Listener, CommandExecutor {
     private boolean expiring, simulating;
     private final RandomStreams random;
     private final RoleWeights weights;
-    private final NormalGame games;
+    private final GameEngine games;
     private final RemoteMachineSync remote;
     private record Saved<T>(T value, PiriDatabase.State state) {}
 
@@ -67,7 +67,8 @@ public final class MachineService implements Listener, CommandExecutor {
         this.plugin = plugin;
         this.config = config;
         random=RandomStreams.production();weights=new RoleWeights(config);
-        games=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin),config);
+        var jugglerGame=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin),config);
+        games=new JugglerGameEngine(jugglerGame);
         remote=new RemoteMachineSync(plugin,()->state,plugin::canUseSlot,games::capture);
         var gameConfig=jp.pirijuggler.paper.database.StartupProfile.map(config.get("game"));
         graceMs = ((Number) gameConfig.get("disconnect_grace_seconds")).longValue() * 1000;
