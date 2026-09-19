@@ -69,14 +69,14 @@ public final class WorldCabinetRenderer {
         VertexConsumerProvider consumers = context.consumers();
 
         // One integrated cabinet face.
-        quad(consumers, WHITE, basis, camera, 0, 0, 1.60, 1.00, 0xff17191d, 0, 0, 1, 1);
+        quad(consumers, WHITE, basis, camera, 0, 0, 1.60, 1.00, 0.0000, 0xff17191d, 0, 0, 1, 1);
 
         // Header / lamp region.
-        quad(consumers, WHITE, basis, camera, 0, 0.385, 1.48, 0.16,
+        quad(consumers, WHITE, basis, camera, 0, 0.385, 1.48, 0.16, 0.0008,
                 state.enabled() ? 0xff292d34 : 0xff171717, 0, 0, 1, 1);
         boolean lamp = state.lampVisible(now);
         quad(consumers, lamp ? LAMP_ON : LAMP_OFF, basis, camera, 0.52, 0.385,
-                0.34, 0.14, 0xffffffff, 0, 0, 1, 1);
+                0.34, 0.14, 0.0018, 0xffffffff, 0, 0, 1, 1);
 
         // Three reel windows and smooth client-side reel motion.
         final double[] reelX = {-0.49, 0.0, 0.49};
@@ -85,7 +85,7 @@ public final class WorldCabinetRenderer {
             double windowY = 0.045;
             double windowW = 0.43;
             double windowH = 0.56;
-            quad(consumers, WHITE, basis, camera, cx, windowY, windowW, windowH,
+            quad(consumers, WHITE, basis, camera, cx, windowY, windowW, windowH, 0.0008,
                     0xff050505, 0, 0, 1, 1);
 
             double phase = state.phase(reel, now);
@@ -102,7 +102,7 @@ public final class WorldCabinetRenderer {
         }
 
         // Lower status strip stays public-only.
-        quad(consumers, WHITE, basis, camera, 0, -0.355, 1.48, 0.18, 0xff22262c, 0, 0, 1, 1);
+        quad(consumers, WHITE, basis, camera, 0, -0.355, 1.48, 0.18, 0.0008, 0xff22262c, 0, 0, 1, 1);
         String status = "CREDIT " + state.credit() + "   PAY " + state.pay();
         String bonus = "NONE".equals(state.bonusMode()) ? "" : state.bonusMode() + " " + state.bonusCount();
         drawText(consumers, client.textRenderer, basis, camera, -0.69, -0.318, status, 0xfff2f2f2);
@@ -125,20 +125,22 @@ public final class WorldCabinetRenderer {
         float vBottom = (float)((top - clippedBottom) / height);
         Identifier texture = Identifier.of("piri", "textures/symbols/" + symbol + ".png");
         quad(consumers, texture, basis, camera, cx, visibleCenter, width, visibleHeight,
-                0xffffffff, 0, vTop, 1, vBottom);
+                0.0018, 0xffffffff, 0, vTop, 1, vBottom);
     }
 
     private static void quad(VertexConsumerProvider consumers, Identifier texture,
                              CabinetPlacement.Basis basis, Vec3d camera,
-                             double cx, double cy, double width, double height,
+                             double cx, double cy, double width, double height, double depth,
                              int color, float u0, float v0, float u1, float v1) {
+        CabinetPlacement.Basis layer = depth == 0 ? basis : new CabinetPlacement.Basis(
+                basis.center().add(basis.front().scale(depth)), basis.front(), basis.right(), basis.up());
         double left = cx - width / 2.0, right = cx + width / 2.0;
         double bottom = cy - height / 2.0, top = cy + height / 2.0;
 
-        CabinetPlacement.Vec p0 = cameraRelative(CabinetPlacement.point(basis, left, bottom), camera);
-        CabinetPlacement.Vec p1 = cameraRelative(CabinetPlacement.point(basis, right, bottom), camera);
-        CabinetPlacement.Vec p2 = cameraRelative(CabinetPlacement.point(basis, right, top), camera);
-        CabinetPlacement.Vec p3 = cameraRelative(CabinetPlacement.point(basis, left, top), camera);
+        CabinetPlacement.Vec p0 = cameraRelative(CabinetPlacement.point(layer, left, bottom), camera);
+        CabinetPlacement.Vec p1 = cameraRelative(CabinetPlacement.point(layer, right, bottom), camera);
+        CabinetPlacement.Vec p2 = cameraRelative(CabinetPlacement.point(layer, right, top), camera);
+        CabinetPlacement.Vec p3 = cameraRelative(CabinetPlacement.point(layer, left, top), camera);
         CabinetPlacement.Vec n = basis.front();
 
         VertexConsumer vc = consumers.getBuffer(RenderLayer.getEntityCutoutNoCull(texture));
