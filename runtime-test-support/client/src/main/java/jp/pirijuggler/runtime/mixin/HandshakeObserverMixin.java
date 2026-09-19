@@ -3,6 +3,7 @@ package jp.pirijuggler.runtime.mixin;
 import jp.pirijuggler.runtime.client.RuntimeProbe;
 
 import jp.pirijuggler.common.protocol.Envelope;
+import jp.pirijuggler.common.protocol.Protocol;
 import jp.pirijuggler.fabric.network.ClientHandshake;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,8 +19,8 @@ public abstract class HandshakeObserverMixin {
         if (RuntimeProbe.mismatch()) {
             Envelope original = callback.getReturnValue();
             var payload = original.payload();
-            payload.addProperty("protocol", 2);
-            callback.setReturnValue(new Envelope(2, original.packetType(), payload));
+            payload.addProperty("protocol", Protocol.VERSION + 1);
+            callback.setReturnValue(new Envelope(Protocol.VERSION + 1, original.packetType(), payload));
         }
         RuntimeProbe.sent(callback.getReturnValue());
     }
