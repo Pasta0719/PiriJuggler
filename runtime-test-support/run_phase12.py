@@ -41,7 +41,13 @@ def wait(pred,label,timeout=120):
     until=time.monotonic()+timeout
     while time.monotonic()<until:
         if pred(): return
-        if server is not None and server.poll() is not None: raise RuntimeError("Paper exited while "+label)
+        if server is not None and server.poll() is not None:
+            tail=""
+            try:
+                server_log=OUT/"server.log"
+                tail=log(server_log)[-12000:]
+            except Exception: pass
+            raise RuntimeError("Paper exited while "+label+" exit="+str(server.returncode)+"\n"+tail)
         for name,(proc,path,_) in list(clients.items()):
             if proc.poll() is not None: raise RuntimeError(f"{name} exited {proc.returncode} while {label}")
             failure=load(path).get("failure")
