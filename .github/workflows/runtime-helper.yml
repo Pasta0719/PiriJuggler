@@ -15,6 +15,9 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: gradle
+      - name: Build production Fabric jar prerequisite
+        shell: cmd
+        run: gradlew.bat :fabric:remapJar --console=plain
       - name: Build runtime helper
         shell: cmd
         run: build-runtime-test-helper.bat --no-pause
