@@ -62,15 +62,18 @@ public final class RemoteMachineRegistry {
                     }
                 });
                 case REMOTE_MACHINE_STOP -> mutate(machineId, current -> {
-                    requireString(body, "spinId"); requireString(body, "reel");
+                    requireString(body, "spinId");
+                    UUID.fromString(body.get("spinId").getAsString());
+                    requireString(body, "reel");
                     requireNumber(body, "stopIndex"); requireNumber(body, "durationMs");
-                    if (body.get("durationMs").getAsInt() < 0) throw new IllegalArgumentException("durationMs");
-                    if (!current.has("spinId") || !body.get("spinId").getAsString().equals(current.get("spinId").getAsString()))
-                        return; // stale stop from an older spin
                     String reel = body.get("reel").getAsString();
                     if (!Set.of("LEFT","CENTER","RIGHT").contains(reel)) throw new IllegalArgumentException("reel");
                     int stop = body.get("stopIndex").getAsInt();
                     if (stop < 0 || stop >= 21) throw new IllegalArgumentException("stopIndex");
+                    if (body.get("durationMs").getAsInt() < 0) throw new IllegalArgumentException("durationMs");
+                    // Validate the packet completely before treating it as a harmless stale event.
+                    if (!current.has("spinId") || !body.get("spinId").getAsString().equals(current.get("spinId").getAsString()))
+                        return; // valid but stale stop from an older spin
                     JsonObject stops = requireObject(current, "displayStops");
                     String key = reel.toLowerCase(Locale.ROOT);
                     stops.addProperty(key, stop);
