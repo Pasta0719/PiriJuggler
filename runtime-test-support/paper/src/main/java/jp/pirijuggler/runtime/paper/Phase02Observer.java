@@ -32,8 +32,11 @@ public final class Phase02Observer implements Listener {
             world.getBlockAt(x,66,0).setBlockData(button,false);
         }
         if ("phase12".equals(System.getProperty("piri.runtime.phase", ""))) {
-            // Build supports first, then buttons. Interleaving these two operations
-            // overwrites the previous z-row's button with the next row's support block.
+            // Deterministic test platform: keep the automated client at y=65 so its
+            // raytrace cannot fall into generated terrain and hit gravel/stone.
+            for (int x=-22;x<=23;x++) for (int z=-3;z<=3;z++)
+                world.getBlockAt(x,64,z).setType(Material.STONE,false);
+            // Build supports first, then buttons.
             for (int x=-20;x<=21;x++)
                 world.getBlockAt(x,66,-1).setType(Material.STONE,false);
             for (int x=-20;x<=21;x++) {
