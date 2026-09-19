@@ -57,8 +57,8 @@ public final class WorldCabinetRenderer {
         var consumers=context.consumers();
 
         // Exact SlotScreen cabinet palette: gold edge + burgundy face.
-        quad(consumers,WHITE,basis,camera,0,0,1.60,1.00,0,UiConstants.color("CABINET_EDGE"),0,0,1,1);
-        quad(consumers,WHITE,basis,camera,0,0,1.585,.985,.0006,UiConstants.color("CABINET_BG"),0,0,1,1);
+        quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH,CabinetPlacement.HEIGHT,0,UiConstants.color("CABINET_EDGE"),0,0,1,1);
+        quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.015,CabinetPlacement.HEIGHT-.015,.0006,UiConstants.color("CABINET_BG"),0,0,1,1);
 
         // SlotScreen reel separator: (670,300)-(1570,690), mapped inside CABINET.
         rect(consumers,WHITE,basis,camera,670,300,900,390,.0010,UiConstants.color("REEL_SEPARATOR"),0,0,1,1);
@@ -134,9 +134,9 @@ public final class WorldCabinetRenderer {
     private static void rect(VertexConsumerProvider c,Identifier tex,CabinetPlacement.Basis b,Vec3d cam,
                              double sx,double sy,double sw,double sh,double depth,int color,
                              float u0,float v0,float u1,float v1){
-        double cx=((sx-CAB_X)+sw/2.0)/CAB_W*1.60-.80;
-        double cy=.50-((sy-CAB_Y)+sh/2.0)/CAB_H*1.00;
-        quad(c,tex,b,cam,cx,cy,sw/CAB_W*1.60,sh/CAB_H,depth,color,u0,v0,u1,v1);
+        double cx=((sx-CAB_X)+sw/2.0)/CAB_W*CabinetPlacement.WIDTH-CabinetPlacement.WIDTH/2.0;
+        double cy=CabinetPlacement.HEIGHT/2.0-((sy-CAB_Y)+sh/2.0)/CAB_H*CabinetPlacement.HEIGHT;
+        quad(c,tex,b,cam,cx,cy,sw/CAB_W*CabinetPlacement.WIDTH,sh/CAB_H*CabinetPlacement.HEIGHT,depth,color,u0,v0,u1,v1);
     }
 
     private static void quad(VertexConsumerProvider consumers,Identifier texture,CabinetPlacement.Basis basis,Vec3d camera,
@@ -173,9 +173,9 @@ public final class WorldCabinetRenderer {
 
     private static void text0(VertexConsumerProvider consumers,TextRenderer tr,CabinetPlacement.Basis b,Vec3d cam,
                               double sx,double sy,String value,float screenScale,int color,boolean centered){
-        double lx=(sx-CAB_X)/CAB_W*1.60-.80;
-        double ly=.50-(sy-CAB_Y)/CAB_H;
-        float scale=(float)(screenScale*1.60/CAB_W);
+        double lx=(sx-CAB_X)/CAB_W*CabinetPlacement.WIDTH-CabinetPlacement.WIDTH/2.0;
+        double ly=CabinetPlacement.HEIGHT/2.0-(sy-CAB_Y)/CAB_H*CabinetPlacement.HEIGHT;
+        float scale=(float)(screenScale*CabinetPlacement.WIDTH/CAB_W);
         var origin=CabinetPlacement.point(b,lx,ly).add(b.front().scale(.0035));
         CabinetPlacement.Vec t=relative(origin,cam);
         CabinetPlacement.Vec r=b.right();
