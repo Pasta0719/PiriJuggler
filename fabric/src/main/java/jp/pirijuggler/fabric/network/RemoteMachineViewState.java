@@ -29,6 +29,7 @@ public final class RemoteMachineViewState {
     private boolean lampOn, lampBlink;
     private long lampChangedAt;
     private long credit, pay, bonusCount;
+    private long totalGames, bigCount, regCount;
     private String bonusMode;
     private boolean spinning;
     private UUID spinId;
@@ -61,6 +62,9 @@ public final class RemoteMachineViewState {
         state.lampChangedAt = now;
         state.credit = body.get("credit").getAsLong();
         state.pay = body.get("pay").getAsLong();
+        state.totalGames = body.get("totalGames").getAsLong();
+        state.bigCount = body.get("bigCount").getAsLong();
+        state.regCount = body.get("regCount").getAsLong();
         state.bonusCount = body.get("bonusCount").getAsLong();
         state.bonusMode = body.get("bonusMode").getAsString();
         state.spinning = body.get("spinning").getAsBoolean();
@@ -181,6 +185,9 @@ public final class RemoteMachineViewState {
     public long credit() { return credit; }
     public long pay() { return pay; }
     public long bonusCount() { return bonusCount; }
+    public long totalGames() { return totalGames; }
+    public long bigCount() { return bigCount; }
+    public long regCount() { return regCount; }
     public String bonusMode() { return bonusMode; }
     public boolean spinning() { return spinning; }
     public UUID spinId() { return spinId; }
