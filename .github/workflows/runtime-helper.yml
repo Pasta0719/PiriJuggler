@@ -1,0 +1,20 @@
+name: Runtime helper build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Build runtime helper
+        shell: cmd
+        run: build-runtime-test-helper.bat --no-pause
