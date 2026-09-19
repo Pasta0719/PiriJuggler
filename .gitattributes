@@ -1,0 +1,2 @@
+# Keep specification source hashes stable across Windows/Linux checkouts.
+docs/v3-section-121.txt text eol=lf
