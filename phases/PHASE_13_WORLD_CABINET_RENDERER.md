@@ -1,6 +1,6 @@
 # PHASE 13 — Entity-Free World Cabinet Renderer
 
-Status: NOT_STARTED
+Status: IN_PROGRESS — IMPLEMENTATION
 Depends on: Phase12 COMPLETE
 
 ## 読むもの
