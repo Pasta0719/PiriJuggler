@@ -6,6 +6,7 @@ import jp.pirijuggler.common.protocol.PacketType;
 import jp.pirijuggler.common.reel.ReelMotion;
 
 import java.util.*;
+import java.util.function.LongSupplier;
 
 /**
  * Client-side cache of public remote-machine state.
@@ -22,6 +23,16 @@ public final class RemoteMachineRegistry {
             PacketType.REMOTE_MACHINE_SOUND
     );
     private final Map<Integer, JsonObject> machines = new HashMap<>();
+    private final Map<Integer, RemoteMachineViewState> views = new HashMap<>();
+    private final LongSupplier time;
+
+    public RemoteMachineRegistry() {
+        this(System::nanoTime);
+    }
+
+    RemoteMachineRegistry(LongSupplier time) {
+        this.time = Objects.requireNonNull(time);
+    }
 
     public static boolean isRemote(PacketType type) {
         return TYPES.contains(type);
@@ -38,8 +49,12 @@ public final class RemoteMachineRegistry {
         try {
             if (machineId == null || machineId <= 0) throw new IllegalArgumentException("machineId");
             switch (envelope.packetType()) {
-                case REMOTE_MACHINE_SNAPSHOT -> applySnapshot(machineId, body);
-                case REMOTE_MACHINE_SPIN -> mutate(machineId, current -> {
+                case REMOTE_MACHINE_SNAPSHOT -> {
+                    applySnapshot(machineId, body);
+                    views.put(machineId, RemoteMachineViewState.fromSnapshot(machineId, body, time.getAsLong()));
+                }
+                case REMOTE_MACHINE_SPIN -> {
+                    mutate(machineId, current -> {
                     requireString(body, "spinId");
                     UUID.fromString(body.get("spinId").getAsString());
                     requireString(body, "animation");
@@ -60,8 +75,12 @@ public final class RemoteMachineRegistry {
                         validateStop(displayStops, "left"); validateStop(displayStops, "center"); validateStop(displayStops, "right");
                         current.add("displayStops", displayStops.deepCopy());
                     }
-                });
-                case REMOTE_MACHINE_STOP -> mutate(machineId, current -> {
+                    });
+                    RemoteMachineViewState view = views.get(machineId);
+                    if (view != null) view.applySpin(body, time.getAsLong());
+                }
+                case REMOTE_MACHINE_STOP -> {
+                    mutate(machineId, current -> {
                     requireString(body, "spinId");
                     UUID.fromString(body.get("spinId").getAsString());
                     requireString(body, "reel");
@@ -83,8 +102,12 @@ public final class RemoteMachineRegistry {
                     current.addProperty("lastStopReel", reel);
                     current.addProperty("lastStopDurationMs", body.get("durationMs").getAsInt());
                     if ((mask | bit) == 7) current.addProperty("spinning", false);
-                });
-                case REMOTE_MACHINE_NOTICE -> mutate(machineId, current -> {
+                    });
+                    RemoteMachineViewState view = views.get(machineId);
+                    if (view != null) view.applyStop(body, time.getAsLong());
+                }
+                case REMOTE_MACHINE_NOTICE -> {
+                    mutate(machineId, current -> {
                     requireString(body, "lamp"); requireString(body, "pattern");
                     if (!Set.of("ON","OFF").contains(body.get("lamp").getAsString())) throw new IllegalArgumentException("lamp");
                     if (!Set.of("STEADY","FAST_BLINK_1S").contains(body.get("pattern").getAsString())) throw new IllegalArgumentException("pattern");
@@ -92,8 +115,12 @@ public final class RemoteMachineRegistry {
                             && !body.get("spinId").getAsString().equals(current.get("spinId").getAsString())) return;
                     current.addProperty("lampOn", "ON".equals(body.get("lamp").getAsString()));
                     current.addProperty("lampPattern", body.get("pattern").getAsString());
-                });
-                case REMOTE_MACHINE_BONUS -> mutate(machineId, current -> {
+                    });
+                    RemoteMachineViewState view = views.get(machineId);
+                    if (view != null) view.applyNotice(body, time.getAsLong());
+                }
+                case REMOTE_MACHINE_BONUS -> {
+                    mutate(machineId, current -> {
                     requireBoolean(body, "active");
                     boolean active = body.get("active").getAsBoolean();
                     if (active) {
@@ -111,15 +138,24 @@ public final class RemoteMachineRegistry {
                         current.addProperty("bonusMode", "NONE");
                         if (body.has("finalCount")) current.addProperty("bonusCount", body.get("finalCount").getAsLong());
                     }
-                });
-                case REMOTE_MACHINE_REMOVE -> machines.remove(machineId);
+                    });
+                    RemoteMachineViewState view = views.get(machineId);
+                    if (view != null) view.applyBonus(body);
+                }
+                case REMOTE_MACHINE_REMOVE -> {
+                    machines.remove(machineId);
+                    views.remove(machineId);
+                }
                 case REMOTE_MACHINE_SOUND -> {
                     // Reserved for Phase14. Validate the identity only and do not play audio yet.
                 }
                 default -> { }
             }
         } catch (RuntimeException malformed) {
-            if (machineId != null) machines.remove(machineId);
+            if (machineId != null) {
+                machines.remove(machineId);
+                views.remove(machineId);
+            }
         }
     }
 
@@ -135,8 +171,17 @@ public final class RemoteMachineRegistry {
         return Collections.unmodifiableMap(copy);
     }
 
+    public List<RemoteMachineViewState> viewSnapshot() {
+        return List.copyOf(views.values());
+    }
+
+    public RemoteMachineViewState view(int machineId) {
+        return views.get(machineId);
+    }
+
     public void reset() {
         machines.clear();
+        views.clear();
     }
 
     private void applySnapshot(int machineId, JsonObject body) {
