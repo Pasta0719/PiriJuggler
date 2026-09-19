@@ -32,8 +32,11 @@ public final class Phase02Observer implements Listener {
             world.getBlockAt(x,66,0).setBlockData(button,false);
         }
         if ("phase12".equals(System.getProperty("piri.runtime.phase", ""))) {
-            for (int x=-3;x<=3;x++) for (int z=-3;z<=2;z++) {
+            // Build supports first, then buttons. Interleaving these two operations
+            // overwrites the previous z-row's button with the next row's support block.
+            for (int x=-3;x<=3;x++) for (int z=-3;z<=2;z++)
                 world.getBlockAt(x,66,z-1).setType(Material.STONE,false);
+            for (int x=-3;x<=3;x++) for (int z=-3;z<=2;z++) {
                 Switch button=(Switch)Bukkit.createBlockData(Material.STONE_BUTTON);
                 button.setAttachedFace(FaceAttachable.AttachedFace.WALL);
                 button.setFacing(org.bukkit.block.BlockFace.SOUTH);
@@ -86,7 +89,7 @@ public final class Phase02Observer implements Listener {
         if("phase04".equals(System.getProperty("piri.runtime.phase"))) result.add("phase04",Phase04Harness.snapshot());
         if("phase05".equals(System.getProperty("piri.runtime.phase")))result.add("phase05",Phase05Fixture.snapshot());
         result.add("inbound",inbound);result.add("fixtures",fixtures);result.addProperty("fixtureCompleted",fixtureCompleted);
-        JsonArray blocks = new JsonArray(); for (int x : new int[]{0,2,3}) { JsonObject block = new JsonObject(); block.addProperty("x",x); block.addProperty("type",world.getBlockAt(x,66,0).getType().name()); block.addProperty("powered",((Switch) world.getBlockAt(x,66,0).getBlockData()).isPowered()); blocks.add(block); } result.add("buttons",blocks);
+        JsonArray blocks = new JsonArray(); for (int x : new int[]{0,2,3}) { JsonObject block = new JsonObject(); var data=world.getBlockAt(x,66,0).getBlockData(); block.addProperty("x",x); block.addProperty("type",world.getBlockAt(x,66,0).getType().name()); block.addProperty("powered",data instanceof Switch sw && sw.isPowered()); blocks.add(block); } result.add("buttons",blocks);
         try { Path output = Path.of(System.getProperty("piri.runtime.serverResult")); Files.createDirectories(output.getParent()); Files.writeString(output,result.toString()); }
         catch (java.nio.file.FileSystemException sharingConflict) { plugin.getLogger().fine("Retrying observation write on next tick: " + sharingConflict); }
         catch (java.io.IOException error) { throw new java.io.UncheckedIOException(error); }
