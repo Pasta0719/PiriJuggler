@@ -19,7 +19,11 @@ require(phase in setOf("PHASE_01", "PHASE_02", "PHASE_02_PHASE01_REGRESSION", "P
 val runtimeRun = providers.gradleProperty("runtimeRun").orElse("current").get()
 require(runtimeRun.matches(Regex("[a-zA-Z0-9_-]+")))
 val evidenceDirectory = rootProject.file(if (phase == "PHASE_02" || phase == "PHASE_03" || phase == "PHASE_12" || (phase == "PHASE_04" || phase == "PHASE_05_REEL_REGRESSION") || (phase == "PHASE_05" || phase.startsWith("PHASE_05_BAR_"))) "runtime-evidence/$phase/attempts/$runtimeRun/$scenario" else "runtime-evidence/$phase/$scenario")
-val player = if (scenario == "phase02-other" || scenario == "phase12-spectator") "PiriRuntimeTest2" else "PiriRuntimeTest"
+val player = when {
+    scenario == "phase02-other" || scenario == "phase12-spectator" -> "PiriRuntimeTest2"
+    phase == "PHASE_12" && scenario == "mismatch" -> "PiriRuntimeMismatch"
+    else -> "PiriRuntimeTest"
+}
 val port = when (phase) {
     "PHASE_12" -> "25590"
     "PHASE_05", "PHASE_05_BAR_BIG", "PHASE_05_BAR_REG" -> "25589"
