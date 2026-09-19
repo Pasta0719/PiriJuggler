@@ -200,6 +200,9 @@ public final class RemoteMachineRegistry {
         if (stoppedMask < 0 || stoppedMask > 7) throw new IllegalArgumentException("stoppedMask");
         requireBoolean(body, "lampOn");
         requireNumber(body, "credit"); requireNumber(body, "pay"); requireNumber(body, "bonusCount");
+        requireNumber(body, "totalGames"); requireNumber(body, "bigCount"); requireNumber(body, "regCount");
+        if (body.get("totalGames").getAsLong() < 0 || body.get("bigCount").getAsLong() < 0 || body.get("regCount").getAsLong() < 0)
+            throw new IllegalArgumentException("dataLamp");
         requireString(body, "bonusMode");
         if (!Set.of("NONE","BIG","REG").contains(body.get("bonusMode").getAsString()))
             throw new IllegalArgumentException("bonusMode");
