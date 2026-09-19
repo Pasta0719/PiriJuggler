@@ -46,7 +46,7 @@ public final class PiriJugglerClient implements ClientModInitializer {
                     SlotUi.receive(envelope, SESSION, outbound);
                 }
             } catch (RuntimeException exception) {
-                HANDSHAKE.reject(); SESSION.reset();
+                HANDSHAKE.reject(); SESSION.reset(); REMOTE.reset();
                 if (SlotUi.hidesHud() || AdminUi.isOpen()) context.client().setScreen(null);
                 SlotUi.reset();
             }
