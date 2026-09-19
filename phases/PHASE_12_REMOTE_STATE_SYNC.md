@@ -114,3 +114,11 @@ Production implementation and static contradiction review are present on main.
 `build-jars.bat` completed successfully on the user runtime machine after commit 237fbf1141a6edc2d6d97daa9f9266c67ab2361e. Gradle unit/integration tests and production JAR build therefore PASS.
 Phase12 cannot be marked COMPLETE yet because the real Paper 1.21 + Fabric 1.21 runtime acceptance remains pending.
 Required next verification is the Phase12 section of `RUNTIME_ACCEPTANCE.md`.
+
+
+## Runtime progress
+- Owner regression runtime: PASS (2026-09-19, user-confirmed)
+  - compatible client connected successfully
+  - existing machine opened normally
+  - BET -> spin -> STOP -> payout completed normally
+- Remote spectator sync acceptance: PENDING
