@@ -20,7 +20,7 @@ Remote Machine Visual / Hall Audio は仕様確定済み。Phase12 は実装中�
 | 09 | COMPLETE | Data Lamp / Graph / Piri Chain |
 | 10 | COMPLETE | Admin / Settings / Startup Allocation / Events |
 | 11 | COMPLETE | Suspend / Restart Recovery / Hardening / Final Tests |
-| 12 | BLOCKED | Remote Public State / Interest Sync — build/runtime acceptance pending |
+| 12 | IN_PROGRESS | Remote Public State / Interest Sync — build PASS, runtime acceptance pending |
 | 13 | NOT_STARTED | Entity-Free World Cabinet Renderer |
 | 14 | NOT_STARTED | Positional Hall Audio / Performance / Hardening |
 
@@ -52,10 +52,10 @@ Important locked decisions:
 
 ## Completion / next work
 
-Current phase: 12 (BLOCKED)
+Current phase: 12
 Last completed phase: 11
-Open blockers: RUNTIME_ENVIRONMENT_UNAVAILABLE — Phase12 Gradle test/build and real Paper+Fabric acceptance remain
+Open blockers: Phase12 real Paper+Fabric runtime acceptance remains
 Next planned phase: Phase12 verification/completion
 Phase13 start condition: Phase12 COMPLETE only
 
-Phase12 production implementation is statically implemented and audited, but not COMPLETE until test/build/runtime PASS. Phase13 world rendering and Phase14 hall audio are still NOT_STARTED.
+Phase12 production implementation is implemented and Gradle build/tests PASS, but not COMPLETE until real Paper+Fabric runtime acceptance PASS. Phase13 world rendering and Phase14 hall audio are still NOT_STARTED.
