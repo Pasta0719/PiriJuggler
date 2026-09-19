@@ -47,11 +47,19 @@ public final class RemoteMachineRegistry {
                     current.addProperty("spinId", body.get("spinId").getAsString());
                     current.addProperty("animation", body.get("animation").getAsString());
                     current.add("startPhase", phase.deepCopy());
-                    current.addProperty("stoppedMask", 0);
+                    int stoppedMask = body.has("stoppedMask") && body.get("stoppedMask").isJsonPrimitive()
+                            && body.getAsJsonPrimitive("stoppedMask").isNumber()
+                            ? body.get("stoppedMask").getAsInt() : 0;
+                    if (stoppedMask < 0 || stoppedMask > 7) throw new IllegalArgumentException("stoppedMask");
+                    current.addProperty("stoppedMask", stoppedMask);
+                    if (body.has("displayStops") && body.get("displayStops").isJsonObject())
+                        current.add("displayStops", body.getAsJsonObject("displayStops").deepCopy());
                 });
                 case REMOTE_MACHINE_STOP -> mutate(machineId, current -> {
                     requireString(body, "spinId"); requireString(body, "reel");
                     requireNumber(body, "stopIndex"); requireNumber(body, "durationMs");
+                    if (!current.has("spinId") || !body.get("spinId").getAsString().equals(current.get("spinId").getAsString()))
+                        return; // stale stop from an older spin
                     String reel = body.get("reel").getAsString();
                     if (!Set.of("LEFT","CENTER","RIGHT").contains(reel)) throw new IllegalArgumentException("reel");
                     int stop = body.get("stopIndex").getAsInt();
@@ -68,6 +76,8 @@ public final class RemoteMachineRegistry {
                 });
                 case REMOTE_MACHINE_NOTICE -> mutate(machineId, current -> {
                     requireString(body, "lamp"); requireString(body, "pattern");
+                    if (body.has("spinId") && current.has("spinId")
+                            && !body.get("spinId").getAsString().equals(current.get("spinId").getAsString())) return;
                     current.addProperty("lampOn", "ON".equals(body.get("lamp").getAsString()));
                     current.addProperty("lampPattern", body.get("pattern").getAsString());
                 });
