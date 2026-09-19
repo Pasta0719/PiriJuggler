@@ -125,6 +125,8 @@ public final class Phase02Probe {
         result.addProperty("handshake",allowed); result.addProperty("failure",failure); result.add("packets",packets); result.add("messages",messages); result.add("actions",actions);
         result.addProperty("motionSpin",motionSpin);result.add("motionTrace",motionTrace);
         result.addProperty("productionSession",PiriJugglerClient.session().sessionId() == null ? null : PiriJugglerClient.session().sessionId().toString());
+        if(System.getProperty("piri.runtime.scenario", "").startsWith("phase12"))
+            result.addProperty("remoteCacheSize",PiriJugglerClient.remoteMachines().snapshot().size());
         if(System.getProperty("piri.runtime.scenario", "").startsWith("phase03") || (System.getProperty("piri.runtime.scenario", "").startsWith("phase04") || System.getProperty("piri.runtime.scenario", "").startsWith("phase05"))) {
             result.addProperty("screen",client.currentScreen==null?"none":client.currentScreen.getClass().getSimpleName());result.addProperty("hudHidden",SlotUi.hidesHud());
             result.addProperty("cursorLocked",client.mouse.isCursorLocked());result.addProperty("hudLeaks",HudAudit.leaks);result.addProperty("hudWorldCalls",HudAudit.worldCalls);
