@@ -121,4 +121,10 @@ Required next verification is the Phase12 section of `RUNTIME_ACCEPTANCE.md`.
   - compatible client connected successfully
   - existing machine opened normally
   - BET -> spin -> STOP -> payout completed normally
-- Remote spectator sync acceptance: PENDING
+- Remote spectator sync acceptance: CORE PASS (2026-09-19, user-confirmed)
+  - 42 machines cached in-range: CACHE=42
+  - one real play observed remotely: SPIN=1 / STOP=3
+  - leaving all machine interest radii: REMOVE=42 / CACHE=0
+  - re-entering range: SNAPSHOT increased 5 -> 47 / CACHE=42
+  - runtime-test spectator probe used only in test client helper, not production jars
+- Remaining formal Phase12 acceptance items are limited to criteria not evidenced by this manual run (e.g. notice/bonus/world-change/reconnect/idle-traffic capture).
