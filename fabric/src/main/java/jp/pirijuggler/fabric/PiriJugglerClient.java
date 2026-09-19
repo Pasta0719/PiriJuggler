@@ -4,6 +4,7 @@ import jp.pirijuggler.common.protocol.EnvelopeCodec;
 import jp.pirijuggler.fabric.network.ClientHandshake;
 import jp.pirijuggler.fabric.network.ClientSession;
 import jp.pirijuggler.fabric.network.PiriPayload;
+import jp.pirijuggler.fabric.network.RemoteMachineRegistry;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -15,6 +16,7 @@ import jp.pirijuggler.fabric.ui.*;
 public final class PiriJugglerClient implements ClientModInitializer {
     private static final ClientHandshake HANDSHAKE = new ClientHandshake();
     private static final ClientSession SESSION = new ClientSession();
+    private static final RemoteMachineRegistry REMOTE = new RemoteMachineRegistry();
 
     @Override public void onInitializeClient() {
         SlotKeys.register(); PiriSounds.register();
@@ -23,10 +25,11 @@ public final class PiriJugglerClient implements ClientModInitializer {
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> client.execute(() -> {
             HANDSHAKE.reset();
             SESSION.reset();
+            REMOTE.reset();
             SlotUi.reset();
             sendHelloWhenChannelAvailable(client);
         }));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> { HANDSHAKE.reset(); SESSION.reset(); SlotUi.reset(); }));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> { HANDSHAKE.reset(); SESSION.reset(); REMOTE.reset(); SlotUi.reset(); }));
         ClientTickEvents.END_CLIENT_TICK.register(PiriJugglerClient::sendHelloWhenChannelAvailable);
         ClientTickEvents.END_CLIENT_TICK.register(client -> SlotUi.tick());
         ClientPlayNetworking.registerGlobalReceiver(PiriPayload.ID, (payload, context) -> context.client().execute(() -> {
@@ -34,6 +37,10 @@ public final class PiriJugglerClient implements ClientModInitializer {
                 var envelope = EnvelopeCodec.decode(payload.bytes());
                 HANDSHAKE.receive(envelope); SESSION.receive(envelope, HANDSHAKE.canUseSlot());
                 if (HANDSHAKE.canUseSlot()) {
+                    if (RemoteMachineRegistry.isRemote(envelope.packetType())) {
+                        REMOTE.receive(envelope);
+                        return;
+                    }
                     var outbound = (java.util.function.Consumer<jp.pirijuggler.common.protocol.Envelope>) packet -> ClientPlayNetworking.send(new PiriPayload(EnvelopeCodec.encode(packet)));
                     AdminUi.receive(envelope, SESSION, outbound);
                     SlotUi.receive(envelope, SESSION, outbound);
@@ -59,5 +66,9 @@ public final class PiriJugglerClient implements ClientModInitializer {
     public static ClientSession session() {
         if (!MinecraftClient.getInstance().isOnThread()) throw new IllegalStateException("Client state requires main thread");
         return SESSION;
+    }
+    public static RemoteMachineRegistry remoteMachines() {
+        if (!MinecraftClient.getInstance().isOnThread()) throw new IllegalStateException("Client state requires main thread");
+        return REMOTE;
     }
 }
