@@ -215,19 +215,20 @@ public final class RemoteMachineSync {
         body.addProperty("enabled", machine.enabled());
         body.addProperty("occupied", state.busy(machine.id()));
 
-        if (session == null || session.lifecycle() != Session.Lifecycle.ACTIVE) {
-            // A suspended/unowned cabinet must never look as if it is spinning forever.
-            // The machine row is updated transactionally with the last authoritative display stops.
-            body.addProperty("gameState", session == null ? "IDLE" : session.publicGameState().name());
+        if (session == null) {
+            // No lock-owning session remains: render the machine row's final authoritative stops.
+            body.addProperty("gameState", "IDLE");
             body.add("displayStops", stops(machine.left(), machine.center(), machine.right()));
             body.addProperty("stoppedMask", 7);
-            body.addProperty("lampOn", session != null && session.number("lamp_on") != 0);
-            body.addProperty("credit", session == null ? 0 : session.number("credit"));
-            body.addProperty("pay", session == null ? 0 : session.number("pay_display"));
-            body.addProperty("bonusCount", session == null ? 0 : session.number("bonus_payout_count"));
-            body.addProperty("bonusMode", session == null ? "NONE" : publicBonusMode(session.publicGameState().name()));
+            body.addProperty("lampOn", false);
+            body.addProperty("credit", 0);
+            body.addProperty("pay", 0);
+            body.addProperty("bonusCount", 0);
+            body.addProperty("bonusMode", "NONE");
             body.addProperty("spinning", false);
         } else {
+            // ACTIVE and SUSPENDED_GRACE both retain the public reel state. ESC only closes
+            // the owner's UI; it must not visually stop a reel that is still spinning.
             JsonObject publicState = session.publicState();
             String gameState = publicState.get("gameState").getAsString();
             body.addProperty("gameState", gameState);
