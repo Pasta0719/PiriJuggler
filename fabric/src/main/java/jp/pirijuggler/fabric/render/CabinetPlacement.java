@@ -4,7 +4,7 @@ package jp.pirijuggler.fabric.render;
 public final class CabinetPlacement {
     public static final double WIDTH = 1.00;
     public static final double HEIGHT = 1.00;
-    public static final double FACE_OFFSET = 0.505;
+    public static final double FACE_OFFSET = -0.500;
     public static final double HORIZONTAL_UP_OFFSET = 1.05;
     public static final double DEPTH_BIAS = 0.002;
 
