@@ -180,6 +180,7 @@ public final class RemoteMachineSync {
     public void clear() {
         requireMain();
         interests.clear();
+        dataLamp.clear();
     }
 
     private void refreshViewer(Player player, boolean forceSnapshot) {
