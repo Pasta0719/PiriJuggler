@@ -58,6 +58,8 @@ It renders:
 - PAY
 - bonus count while BIG/REG is active
 - BIG/REG mode indication only after the bonus type is public
+- a compact data lamp above the cabinet with current-period BIG count, REG count and combined probability
+- combined probability = totalGames / (bigCount + regCount), shown as 1/x.x; no bonuses is shown as 1/---
 
 It does not render:
 - setting
