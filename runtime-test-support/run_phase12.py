@@ -12,6 +12,7 @@ SERVER=EVIDENCE/"work"/("server-"+RUN)
 JAVA=shutil.which("java")
 PAPER=ROOT/"runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar"
 FLAGS=subprocess.CREATE_NO_WINDOW if os.name=="nt" else 0
+GRADLE_CMD=["cmd.exe","/d","/c",str(ROOT/"gradlew.bat")] if os.name=="nt" else [str(ROOT/"gradlew")]
 artifacts={side:ROOT/side/f"build/libs/piri-juggler-{side}-1.0.0.jar" for side in ("paper","fabric")}
 helpers={side:ROOT/f"runtime-test-support/{module}/build/libs/piri-runtime-test-{side}-1.0.0.jar" for side,module in (("paper","paper"),("client","client"))}
 OUT.mkdir(parents=True,exist_ok=True)
@@ -120,7 +121,7 @@ def start_client(name):
     directory.mkdir(parents=True,exist_ok=True)
     (directory/"options.txt").write_text("version:3953\nlang:en_us\nrenderDistance:4\nsimulationDistance:5\nmaxFps:20\npauseOnLostFocus:false\nsoundCategory_master:0.0\nskipMultiplayerWarning:true\nonboardAccessibility:false\n",encoding="utf-8")
     h=(folder/"client.log").open("a",encoding="utf-8"); handles.append(h)
-    cmd=["cmd.exe","/d","/c",str(ROOT/"gradlew.bat"),"-PruntimeAcceptance=true",f"-PruntimeScenario={name}",
+    cmd=GRADLE_CMD+["-PruntimeAcceptance=true",f"-PruntimeScenario={name}",
          f"-PruntimeRun={RUN}","-PruntimeEvidencePhase=PHASE_12",":runtime-test-client:runClient","--console=plain"]
     manifest["commands"].append({"client":name,"command":cmd,"cwd":str(ROOT)})
     proc=subprocess.Popen(cmd,cwd=ROOT,stdout=h,stderr=subprocess.STDOUT,creationflags=FLAGS)
@@ -137,7 +138,7 @@ def start_mismatch():
     name="mismatch";folder=OUT/name;folder.mkdir(parents=True,exist_ok=True);result=folder/"client-result.json"
     if result.exists():result.unlink()
     h=(folder/"client.log").open("w",encoding="utf-8");handles.append(h)
-    cmd=["cmd.exe","/d","/c",str(ROOT/"gradlew.bat"),"-PruntimeAcceptance=true","-PruntimeScenario=mismatch",
+    cmd=GRADLE_CMD+["-PruntimeAcceptance=true","-PruntimeScenario=mismatch",
          f"-PruntimeRun={RUN}","-PruntimeEvidencePhase=PHASE_12",":runtime-test-client:runClient","--console=plain"]
     proc=subprocess.Popen(cmd,cwd=ROOT,stdout=h,stderr=subprocess.STDOUT,creationflags=FLAGS)
     wait(lambda:load(result).get("passed") is True,"protocol mismatch rejection",600)
