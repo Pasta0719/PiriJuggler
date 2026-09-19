@@ -143,7 +143,6 @@ public final class RemoteMachineSync {
                 copyString(source, body, "spinId");
                 copyString(source, body, "lamp");
                 copyString(source, body, "pattern");
-                copyString(source, body, "sound");
                 broadcast(machineId, PacketType.REMOTE_MACHINE_NOTICE, body);
             }
             case BONUS_START -> {
