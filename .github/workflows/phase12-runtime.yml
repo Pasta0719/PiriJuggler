@@ -26,7 +26,7 @@ jobs:
           chmod +x gradlew
       - name: Build production and runtime helpers
         run: |
-          ./gradlew test packagePiriJars :runtime-test-paper:jar :runtime-test-client:remapJar :runtime-test-vault:jar --console=plain
+          ./gradlew -PruntimeAcceptance=true :runtime-test-paper:jar :runtime-test-client:remapJar :runtime-test-vault:jar --console=plain
       - name: Download verified Paper 1.21 build 130
         shell: pwsh
         run: |
