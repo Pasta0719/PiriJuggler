@@ -37,7 +37,7 @@ REPORTは実行日時、build hash、Minecraft/Paper/Fabric version、手順、�
 - actual Paper boot with built plugin jar
 - actual Fabric client boot with built mod jar
 - localhost connection
-- HELLO/HELLO_ACK protocol1 established
+- HELLO/HELLO_ACK current `Protocol.VERSION` established
 - second run with runtime-test client protocol mismatch confirms gameplay denied
 - no uncaught exception
 
@@ -117,3 +117,21 @@ REPORTは実行日時、build hash、Minecraft/Paper/Fabric version、手順、�
 - recover cashout
 - duplicate packets/security negative tests
 - SPEC completion condition40項目を`FINAL_VERIFICATION.md`へ全部PASS
+
+
+## Phase12
+- production Paper/Fabric の両方を同一 build へ更新し、protocol2 HELLO/HELLO_ACK established
+- 旧protocol client が PROTOCOL_MISMATCH で gameplay denied
+- compatible spectator が同一world・32block以内へ入ると各machineにつき REMOTE_MACHINE_SNAPSHOT を1回受信
+- 32block外へ出ると REMOTE_MACHINE_REMOVE、再進入で fresh SNAPSHOT
+- world change で旧world machineがremoveされ、新world interestが再構築される
+- 42台idleをrange内へ置き、initial snapshot後30秒のREMOTE_MACHINE_* gameplay trafficが0
+- 1台を実playし、commit後の SPIN/STOP/NOTICE/BONUS start/end が spectatorへ対応するREMOTE packetとして届く
+- owner自身の既存 OPEN_MACHINE/PUBLIC_STATE/SPIN_START/REEL_STOP flowが従来どおり動作
+- packet captureに setting/internalRole/premiumType/stopHints/RNG/Vault/heldMedals が存在しない
+- BONUS_PENDING中はBIG/REG内部種別がremote payloadへ出ない
+- disconnect/suspend中の台がremote側で永久spinしない
+- reconnect/server restart後、range内台がfresh snapshotから復元され stale spin/bonus stateが残らない
+- malformed remote payloadを投入してもlocal SlotScreen/session/handshakeが破壊されない
+- create/redefine/remove/enable変更がinterest clientへ即時反映される
+- evidence: `runtime-evidence/PHASE_12/REPORT.md` + packet capture + 42台idle traffic measurement
