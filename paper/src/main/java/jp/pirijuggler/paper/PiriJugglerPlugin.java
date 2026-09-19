@@ -35,7 +35,7 @@ import java.util.UUID;
 import jp.pirijuggler.paper.reel.ReelEngine;
 
 public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessageListener, Listener {
-    private static final String BUILD_IDENTITY = "PHASE11_FORCE_SETTLEMENT_20260917_B";
+    private static final String BUILD_IDENTITY = "PHASE12_REMOTE_SYNC_20260919_A";
     private PaperMainThread mainThread;
     private TaskExecutors executors;
     private ServerHandshake handshake;
