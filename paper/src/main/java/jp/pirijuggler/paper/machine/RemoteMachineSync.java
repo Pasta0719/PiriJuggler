@@ -273,6 +273,8 @@ public final class RemoteMachineSync {
         JsonObject body = base(machine.id());
         body.addProperty("world", machine.location().world().toString());
         body.addProperty("worldName", machine.location().worldName());
+        org.bukkit.World machineWorld = Bukkit.getWorld(machine.location().world());
+        if (machineWorld != null) body.addProperty("dimension", machineWorld.getKey().toString());
         body.addProperty("x", machine.location().x());
         body.addProperty("y", machine.location().y());
         body.addProperty("z", machine.location().z());
