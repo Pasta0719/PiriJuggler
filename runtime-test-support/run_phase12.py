@@ -152,7 +152,7 @@ def clickpos(name,x,y,z,kind=None):
     if kind:wait(lambda:pcount(name,kind)>before,name+" receive "+kind)
 
 def create_machine(name,x,z,index):
-    command(name,f"tp @s {x+0.5} 65 {z+3.5}")
+    command(name,f"tp @s {x+0.5} 65 {z+1.5}")
     time.sleep(.05);action(name,"aimpos",x=x,y=66,z=z);time.sleep(.05)
     before=machine_count();command(name,"piri machine create")
     wait(lambda:machine_count()==before+1,f"machine {index} committed")
@@ -167,7 +167,7 @@ def forbidden_remote_payload(value):
 try:
     start_server()
     start_client("phase12-owner"); owner="phase12-owner"
-    coords=[(x,z) for x in range(-3,4) for z in range(-3,3)]
+    coords=[(x,z) for x in range(-3,4) for z in (-5,-3,-1,1,3,5)]
     for i,(x,z) in enumerate(coords,1): create_machine(owner,x,z,i)
     check("42 physical registered machines exist",machine_count()==42,{"machines":machine_count()})
 
@@ -183,7 +183,7 @@ try:
     command(spec,"tp @s 100 65 100")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_REMOVE")>=42 and client(spec).get("remoteCacheSize")==0,"range remove")
     remove_after=pcount(spec,"REMOTE_MACHINE_REMOVE")
-    command(spec,"tp @s 0.5 65 3.5")
+    command(spec,"tp @s 0.5 65 0.5")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_SNAPSHOT")>=84 and client(spec).get("remoteCacheSize")==42,"range re-entry")
     check("32-block leave removes and re-entry rebuilds fresh cache",remove_after==42 and client(spec).get("remoteCacheSize")==42,remote_counts(spec))
 
@@ -192,7 +192,7 @@ try:
     command(spec,"execute in minecraft:the_nether run tp @s 0 65 0")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_REMOVE")>=before_remove+42 and client(spec).get("remoteCacheSize")==0,"world change remove")
     before_snap=pcount(spec,"REMOTE_MACHINE_SNAPSHOT")
-    command(spec,"execute in minecraft:overworld run tp @s 0.5 65 3.5")
+    command(spec,"execute in minecraft:overworld run tp @s 0.5 65 0.5")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_SNAPSHOT")>=before_snap+42 and client(spec).get("remoteCacheSize")==42,"world change rebuild")
     check("world change drops old interest and rebuilds overworld interest",True,remote_counts(spec))
 
@@ -202,7 +202,7 @@ try:
     check("spectator reconnect starts from fresh 42-machine snapshot",pcount(spec,"REMOTE_MACHINE_REMOVE")==0,remote_counts(spec))
 
     # Real gameplay remote transitions including notice and bonus start/end.
-    x,z=coords[0];command(owner,f"tp @s {x+0.5} 65 {z+3.5}");clickpos(owner,x,66,z,"OPEN_MACHINE")
+    x,z=coords[0];command(owner,f"tp @s {x+0.5} 65 {z+1.5}");clickpos(owner,x,66,z,"OPEN_MACHINE")
     command(owner,"piritest fund", "TEST_FUNDED")
     action(owner,"close");wait(lambda:not session(),"funded close")
     clickpos(owner,x,66,z,"OPEN_MACHINE");wait(lambda:session().get("credit")==50,"funded session refresh")
@@ -240,7 +240,7 @@ try:
     before_remove=pcount(spec,"REMOTE_MACHINE_REMOVE")
     command(owner,"piri machine remove 42")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_REMOVE")>=before_remove+1 and client(spec).get("remoteCacheSize")==41,"immediate machine remove")
-    rx,rz=coords[-1];command(owner,f"tp @s {rx+0.5} 65 {rz+3.5}");action(owner,"aimpos",x=rx,y=66,z=rz)
+    rx,rz=coords[-1];command(owner,f"tp @s {rx+0.5} 65 {rz+1.5}");action(owner,"aimpos",x=rx,y=66,z=rz)
     before_snap=pcount(spec,"REMOTE_MACHINE_SNAPSHOT");command(owner,"piri machine create")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_SNAPSHOT")>=before_snap+1 and client(spec).get("remoteCacheSize")==42,"immediate machine create")
     command(owner,"tp @s 4.5 65 5.5");action(owner,"aimpos",x=4,y=66,z=2)
