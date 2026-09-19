@@ -13,14 +13,15 @@ dependencies {
 }
 
 val scenario = providers.gradleProperty("runtimeScenario").orElse("normal").get()
-require(scenario in setOf("normal", "mismatch", "phase02-create", "phase02-owner", "phase02-other", "phase03-ui", "phase04-reels", "phase05-game"))
+require(scenario in setOf("normal", "mismatch", "phase02-create", "phase02-owner", "phase02-other", "phase03-ui", "phase04-reels", "phase05-game", "phase12-owner", "phase12-spectator"))
 val phase = providers.gradleProperty("runtimeEvidencePhase").orElse(if (scenario.startsWith("phase02")) "PHASE_02" else "PHASE_01").get()
-require(phase in setOf("PHASE_01", "PHASE_02", "PHASE_02_PHASE01_REGRESSION", "PHASE_03", "PHASE_03_PHASE01_REGRESSION", "PHASE_04", "PHASE_04_PHASE01_REGRESSION", "PHASE_05", "PHASE_05_PHASE01_REGRESSION", "PHASE_05_REEL_REGRESSION", "PHASE_05_BAR_BIG", "PHASE_05_BAR_REG"))
+require(phase in setOf("PHASE_01", "PHASE_02", "PHASE_02_PHASE01_REGRESSION", "PHASE_03", "PHASE_03_PHASE01_REGRESSION", "PHASE_04", "PHASE_04_PHASE01_REGRESSION", "PHASE_05", "PHASE_05_PHASE01_REGRESSION", "PHASE_05_REEL_REGRESSION", "PHASE_05_BAR_BIG", "PHASE_05_BAR_REG", "PHASE_12"))
 val runtimeRun = providers.gradleProperty("runtimeRun").orElse("current").get()
 require(runtimeRun.matches(Regex("[a-zA-Z0-9_-]+")))
-val evidenceDirectory = rootProject.file(if (phase == "PHASE_02" || phase == "PHASE_03" || (phase == "PHASE_04" || phase == "PHASE_05_REEL_REGRESSION") || (phase == "PHASE_05" || phase.startsWith("PHASE_05_BAR_"))) "runtime-evidence/$phase/attempts/$runtimeRun/$scenario" else "runtime-evidence/$phase/$scenario")
-val player = if (scenario == "phase02-other") "PiriRuntimeTest2" else "PiriRuntimeTest"
+val evidenceDirectory = rootProject.file(if (phase == "PHASE_02" || phase == "PHASE_03" || phase == "PHASE_12" || (phase == "PHASE_04" || phase == "PHASE_05_REEL_REGRESSION") || (phase == "PHASE_05" || phase.startsWith("PHASE_05_BAR_"))) "runtime-evidence/$phase/attempts/$runtimeRun/$scenario" else "runtime-evidence/$phase/$scenario")
+val player = if (scenario == "phase02-other" || scenario == "phase12-spectator") "PiriRuntimeTest2" else "PiriRuntimeTest"
 val port = when (phase) {
+    "PHASE_12" -> "25590"
     "PHASE_05", "PHASE_05_BAR_BIG", "PHASE_05_BAR_REG" -> "25589"
     "PHASE_04", "PHASE_05_REEL_REGRESSION" -> "25588"
     "PHASE_03" -> "25587"
