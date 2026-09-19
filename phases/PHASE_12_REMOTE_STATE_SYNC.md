@@ -1,6 +1,6 @@
 # PHASE 12 — Remote Public State / Interest Sync
 
-Status: NOT_STARTED
+Status: IN_PROGRESS
 
 ## 読むもの
 - `../docs/REMOTE_MACHINE_VISUAL_SPEC.md`
