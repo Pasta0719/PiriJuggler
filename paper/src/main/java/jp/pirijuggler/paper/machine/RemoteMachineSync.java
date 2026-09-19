@@ -117,6 +117,17 @@ public final class RemoteMachineSync {
                 copyString(source, body, "spinId");
                 copyString(source, body, "animation");
                 copyObject(source, body, "startPhase");
+                PiriDatabase.State state = stateSupplier.get();
+                Session current = state == null ? null : state.sessions().stream()
+                        .filter(s -> s.machine() == machineId && s.lifecycle() == Session.Lifecycle.ACTIVE)
+                        .findFirst().orElse(null);
+                if (current != null) {
+                    JsonObject publicState = current.publicState();
+                    body.addProperty("stoppedMask", publicState.get("stoppedMask").getAsInt());
+                    body.add("displayStops", publicState.getAsJsonObject("displayStops").deepCopy());
+                } else {
+                    body.addProperty("stoppedMask", 0);
+                }
                 broadcast(machineId, PacketType.REMOTE_MACHINE_SPIN, body);
             }
             case REEL_STOP -> {
