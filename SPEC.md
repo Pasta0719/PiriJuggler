@@ -2786,7 +2786,7 @@ piri:main
 binary envelope:
 ```text
 magic: 4 bytes ASCII PIRI (50 49 52 49)
-protocol: unsigned uint16 big-endian, value1
+protocol: unsigned uint16 big-endian, value2
 packetType: uint8
 payloadLength: standard Minecraft non-negative VarInt
 payload: UTF-8 JSON object
@@ -2803,18 +2803,18 @@ packetTypeはbinary envelopeが唯一のpacket種別の正。JSON payloadへ`typ
 
 client join後HELLO packet type1 payload:
 ```json
-{"protocol":1,"modVersion":"1.0.0"}
+{"protocol":2,"modVersion":"1.0.0"}
 ```
 
 server HELLO_ACK type101:
 ```json
-{"protocol":1,"serverVersion":"1.0.0"}
+{"protocol":2,"serverVersion":"1.0.0"}
 ```
 
 判定:
-- envelope protocol !=1 -> PROTOCOL_MISMATCH
-- HELLO payload protocol !=1 -> PROTOCOL_MISMATCH
-- modVersion文字列はログ用。protocol=1ならversion文字列が1.0.0と異なっても接続を拒否しない
+- envelope protocol !=2 -> PROTOCOL_MISMATCH
+- HELLO payload protocol !=2 -> PROTOCOL_MISMATCH
+- modVersion文字列はログ用。protocol=2ならversion文字列が1.0.0と異なっても接続を拒否しない
 
 HELLO成功前はslot/admin gameplay packetを無視してERROR(PROTOCOL_MISMATCH)。
 
@@ -2898,6 +2898,13 @@ SESSION_SUSPENDED=115
 SESSION_END=116
 ADMIN_STATE=117
 ERROR=118
+REMOTE_MACHINE_SNAPSHOT=119
+REMOTE_MACHINE_SPIN=120
+REMOTE_MACHINE_STOP=121
+REMOTE_MACHINE_NOTICE=122
+REMOTE_MACHINE_BONUS=123
+REMOTE_MACHINE_REMOVE=124
+REMOTE_MACHINE_SOUND=125
 ```
 
 共通規則:
@@ -2905,7 +2912,7 @@ ERROR=118
 - normal playerへsettingを送らない
 - field欠落をclient推測で補わない
 
-詳細payloadは89-93章および131章。
+詳細payloadは89-93章、131章、および `docs/REMOTE_MACHINE_VISUAL_SPEC.md`。
 
 ACTION_ACCEPTED:
 ```json
