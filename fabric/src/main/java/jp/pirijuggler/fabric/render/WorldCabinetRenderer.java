@@ -13,6 +13,8 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 
+import java.util.Locale;
+
 /**
  * Phase13 external cabinet renderer.
  * Geometry/layout is mapped directly from SlotLayout.CABINET (290,205,1340,835).
@@ -55,6 +57,22 @@ public final class WorldCabinetRenderer {
     private static void draw(WorldRenderContext context,RemoteMachineViewState state,
                              CabinetPlacement.Basis basis,Vec3d camera,long now,MinecraftClient client){
         var consumers=context.consumers();
+
+        // Compact public data lamp above the cabinet.
+        double dataY=CabinetPlacement.HEIGHT/2.0+.125;
+        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH,.20,.0010,UiConstants.color("CABINET_EDGE"),0,0,1,1);
+        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH-.015,.185,.0016,UiConstants.color("DISPLAY_BG"),0,0,1,1);
+        quad(consumers,WHITE,basis,camera,.11,dataY,.006,.165,.0020,UiConstants.color("BUTTON_METAL_DARK"),0,0,1,1);
+
+        localText(consumers,client.textRenderer,basis,camera,-.45,dataY+.055,"BIG",.00245f,UiConstants.color("DISPLAY_BIG"),false);
+        localText(consumers,client.textRenderer,basis,camera,-.23,dataY+.055,Long.toString(state.bigCount()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
+        localText(consumers,client.textRenderer,basis,camera,-.45,dataY-.015,"REG",.00245f,UiConstants.color("DISPLAY_REG"),false);
+        localText(consumers,client.textRenderer,basis,camera,-.23,dataY-.015,Long.toString(state.regCount()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
+
+        long bonusTotal=state.bigCount()+state.regCount();
+        String combined=bonusTotal==0?"1/---":String.format(Locale.ROOT,"1/%.1f",state.totalGames()/(double)bonusTotal);
+        localText(consumers,client.textRenderer,basis,camera,.31,dataY+.050,"合算",.00205f,UiConstants.color("DISPLAY_GREEN"),true);
+        localText(consumers,client.textRenderer,basis,camera,.31,dataY-.018,combined,.00285f,UiConstants.color("DISPLAY_WHITE"),true);
 
         // Exact SlotScreen cabinet palette: gold edge + burgundy face.
         quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH,CabinetPlacement.HEIGHT,0,UiConstants.color("CABINET_EDGE"),0,0,1,1);
@@ -177,6 +195,22 @@ public final class WorldCabinetRenderer {
         double ly=CabinetPlacement.HEIGHT/2.0-(sy-CAB_Y)/CAB_H*CabinetPlacement.HEIGHT;
         float scale=(float)(screenScale*CabinetPlacement.WIDTH/CAB_W);
         var origin=CabinetPlacement.point(b,lx,ly).add(b.front().scale(.0035));
+        CabinetPlacement.Vec t=relative(origin,cam);
+        CabinetPlacement.Vec r=b.right();
+        CabinetPlacement.Vec u=b.up();
+        CabinetPlacement.Vec f=b.front();
+        Matrix4f m=new Matrix4f().identity();
+        m.m00((float)(r.x()*scale)).m01((float)(r.y()*scale)).m02((float)(r.z()*scale));
+        m.m10((float)(-u.x()*scale)).m11((float)(-u.y()*scale)).m12((float)(-u.z()*scale));
+        m.m20((float)f.x()).m21((float)f.y()).m22((float)f.z());
+        m.m30((float)t.x()).m31((float)t.y()).m32((float)t.z());
+        float x=centered?-tr.getWidth(value)/2f:0;
+        tr.draw(value,x,0,color,false,m,consumers,TextRenderer.TextLayerType.NORMAL,0,FULL_LIGHT);
+    }
+
+    private static void localText(VertexConsumerProvider consumers,TextRenderer tr,CabinetPlacement.Basis b,Vec3d cam,
+                                  double lx,double ly,String value,float scale,int color,boolean centered){
+        var origin=CabinetPlacement.point(b,lx,ly).add(b.front().scale(.0040));
         CabinetPlacement.Vec t=relative(origin,cam);
         CabinetPlacement.Vec r=b.right();
         CabinetPlacement.Vec u=b.up();
