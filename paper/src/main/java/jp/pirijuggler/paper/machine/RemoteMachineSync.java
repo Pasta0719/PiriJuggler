@@ -22,13 +22,7 @@ import java.util.function.Supplier;
  * premium choices, stop hints, RNG state, Vault data, or held medals.
  */
 public final class RemoteMachineSync {
-    public static final double VISUAL_RADIUS = 32.0;
-    /** Interest enters at the locked 32-block visual radius, but existing interest is
-     * retained to 34 blocks to prevent boundary churn from sub-block player motion.
-     * Fabric still performs its own 32-block render cull in Phase13. */
-    static final double INTEREST_EXIT_RADIUS = 34.0;
-    private static final double VISUAL_RADIUS_SQUARED = VISUAL_RADIUS * VISUAL_RADIUS;
-    private static final double INTEREST_EXIT_RADIUS_SQUARED = INTEREST_EXIT_RADIUS * INTEREST_EXIT_RADIUS;
+    public static final double VISUAL_RADIUS = RemoteInterestPolicy.ENTER_RADIUS;
 
     private final PiriJugglerPlugin plugin;
     private final Supplier<PiriDatabase.State> stateSupplier;
@@ -206,12 +200,7 @@ public final class RemoteMachineSync {
         double dx = player.getLocation().getX() - (machine.location().x() + 0.5);
         double dy = player.getLocation().getY() - (machine.location().y() + 0.5);
         double dz = player.getLocation().getZ() - (machine.location().z() + 0.5);
-        return interestContains(dx * dx + dy * dy + dz * dz, currentlyInterested);
-    }
-
-    static boolean interestContains(double distanceSquared, boolean currentlyInterested) {
-        double limit = currentlyInterested ? INTEREST_EXIT_RADIUS_SQUARED : VISUAL_RADIUS_SQUARED;
-        return distanceSquared <= limit;
+        return RemoteInterestPolicy.contains(dx * dx + dy * dy + dz * dz, currentlyInterested);
     }
 
     private void sendSnapshot(Player viewer, Machine machine) {
