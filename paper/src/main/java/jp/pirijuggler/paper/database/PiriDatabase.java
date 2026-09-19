@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import jp.pirijuggler.paper.machine.DomainException;
 import jp.pirijuggler.paper.machine.Machine;
+import jp.pirijuggler.paper.machine.MachineType;
 import jp.pirijuggler.paper.reel.StopCatalogue;
 import jp.pirijuggler.paper.reel.StopSolver;
 import jp.pirijuggler.paper.session.Session;
@@ -53,6 +54,7 @@ public final class PiriDatabase implements AutoCloseable {
                     }
                     metadata("schema_version", "4");
                 }
+                ensureMachineTypeColumn();
                 String oldJvm = metadata("current_jvm_start_ms");
                 if (Long.toString(jvmStart).equals(oldJvm)) {
                     period = Objects.requireNonNull(metadata("current_business_period_id"));
@@ -92,11 +94,15 @@ public final class PiriDatabase implements AutoCloseable {
     }
     public State state() throws SQLException { return new State(period, profile, List.copyOf(machines()), List.copyOf(sessions())); }
     public int create(Machine.Location location, long now) throws Exception {
+        return create(location, MachineType.JUGGLER, now);
+    }
+    public int create(Machine.Location location, MachineType type, long now) throws Exception {
+        Objects.requireNonNull(type);
         return transaction(() -> {
             rejectDuplicate(location, 0);
             int id = ((Number) one("SELECT COALESCE(MAX(machine_id),0)+1 AS next FROM machines").get("next")).intValue();
-            sql("INSERT INTO machines(machine_id,world_uuid,world_name,x,y,z,facing,setting,created_at,updated_at) VALUES(?,?,?,?,?,?,?,1,?,?)",
-                    id, location.world().toString(), location.worldName(), location.x(), location.y(), location.z(), location.facing(), now, now);
+            sql("INSERT INTO machines(machine_id,world_uuid,world_name,x,y,z,facing,machine_type,setting,created_at,updated_at) VALUES(?,?,?,?,?,?,?, ?,1,?,?)",
+                    id, location.world().toString(), location.worldName(), location.x(), location.y(), location.z(), location.facing(), type.name(), now, now);
             initializeStats(id, now); return id;
         });
     }
@@ -230,10 +236,15 @@ public final class PiriDatabase implements AutoCloseable {
         List<Machine> result = new ArrayList<>();
         for (var row : rows("SELECT * FROM machines ORDER BY machine_id")) {
             var location = new Machine.Location(UUID.fromString((String) row.get("world_uuid")), (String) row.get("world_name"), n(row,"x"), n(row,"y"), n(row,"z"), (String) row.get("facing"));
-            result.add(new Machine(n(row,"machine_id"), location, n(row,"setting"), n(row,"enabled") != 0, n(row,"auto_setting") != 0,
+            MachineType type=MachineType.valueOf(Objects.toString(row.get("machine_type"),"JUGGLER"));
+            result.add(new Machine(n(row,"machine_id"), location, type, n(row,"setting"), n(row,"enabled") != 0, n(row,"auto_setting") != 0,
                     n(row,"deleted") != 0, n(row,"last_left_stop"), n(row,"last_center_stop"), n(row,"last_right_stop"), ((Number)row.get("created_at")).longValue(), ((Number)row.get("updated_at")).longValue()));
         }
         return result;
+    }
+    private void ensureMachineTypeColumn() throws SQLException {
+        boolean present=rows("PRAGMA table_info(machines)").stream().anyMatch(row->"machine_type".equals(row.get("name")));
+        if(!present) sql("ALTER TABLE machines ADD COLUMN machine_type TEXT NOT NULL DEFAULT 'JUGGLER'");
     }
     private static int n(Map<String, Object> row, String key) { return ((Number) row.get(key)).intValue(); }
     private boolean tableExists(String name) throws SQLException { return !rows("SELECT name FROM sqlite_master WHERE type='table' AND name=?", name).isEmpty(); }
