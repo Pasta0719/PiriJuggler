@@ -33,7 +33,7 @@ class ConfigValidationTest {
     }
 
     @ParameterizedTest @CsvSource(delimiter = '|', value = {
-            "protocol_version: 1|protocol_version: 2", "loan_medals: 46|loan_medals: 0", "loan_medals: 46|loan_medals: 1.5",
+            "protocol_version: 2|protocol_version: 1", "loan_medals: 46|loan_medals: 0", "loan_medals: 46|loan_medals: 1.5",
             "loan_amount: 1000|loan_amount: 0", "loan_amount: 1000|loan_amount: -1",
             "medal_cost: 52|medal_cost: 0", "medal_cost: 52|medal_cost: 1.5", "vault_value: 1000|vault_value: -1",
             "big_chance_weight: 50000|big_chance_weight: -1", "big_chance_weight: 50000|big_chance_weight: 1000001",
