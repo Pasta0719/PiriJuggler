@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "entrypoint": "CODEX_START.md",
   "spec": "SPEC.md",
   "runtime": "RUNTIME_ACCEPTANCE.md",
@@ -325,6 +325,38 @@
         135,
         136,
         137
+      ]
+    },
+    {
+      "number": 12,
+      "file": "phases/PHASE_12_REMOTE_STATE_SYNC.md",
+      "title": "Remote Public State / Interest Sync",
+      "spec_sections": [
+        84,
+        85,
+        87
+      ]
+    },
+    {
+      "number": 13,
+      "file": "phases/PHASE_13_WORLD_CABINET_RENDERER.md",
+      "title": "Entity-Free World Cabinet Renderer",
+      "spec_sections": [
+        3,
+        4,
+        23,
+        84,
+        87
+      ]
+    },
+    {
+      "number": 14,
+      "file": "phases/PHASE_14_HALL_AUDIO_PERFORMANCE.md",
+      "title": "Positional Hall Audio / Performance / Hardening",
+      "spec_sections": [
+        23,
+        84,
+        87
       ]
     }
   ]
