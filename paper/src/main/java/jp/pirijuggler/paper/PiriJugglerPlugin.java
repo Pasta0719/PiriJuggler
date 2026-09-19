@@ -136,7 +136,10 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
         byte[] ownedMessage = message.clone();
         mainThread.execute(() -> {
             if (isEnabled() && player.isOnline()) {
+                boolean compatibleBefore = handshake.canUseSlot(player.getUniqueId());
                 handshake.receive(player.getUniqueId(), ownedMessage).ifPresent(reply -> player.sendPluginMessage(this, Protocol.CHANNEL, reply));
+                boolean compatibleAfter = handshake.canUseSlot(player.getUniqueId());
+                if (!compatibleBefore && compatibleAfter && machines != null && machines.ready()) machines.remoteViewerReady(player);
                 if (canUseSlot(player.getUniqueId())) try { machines.receive(player, EnvelopeCodec.decode(ownedMessage)); }
                 catch (ProtocolException invalid) { getLogger().fine("Rejected invalid gameplay envelope"); }
             }
@@ -145,7 +148,10 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
 
     @EventHandler public void onQuit(PlayerQuitEvent event) {
         handshake.disconnect(event.getPlayer().getUniqueId());
-        if (machines != null) machines.disconnect(event.getPlayer().getUniqueId());
+        if (machines != null) {
+            machines.remoteViewerGone(event.getPlayer().getUniqueId());
+            machines.disconnect(event.getPlayer().getUniqueId());
+        }
     }
 
     public boolean canUseSlot(UUID player) {
