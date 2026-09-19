@@ -1,0 +1,39 @@
+name: Phase12 real runtime
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  phase12:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Production tests and jars
+        shell: cmd
+        run: gradlew.bat test packagePiriJars --console=plain
+      - name: Runtime helper
+        shell: cmd
+        run: build-runtime-test-helper.bat --no-pause
+      - name: Real Paper + two Fabric clients
+        shell: cmd
+        run: python runtime-test-support\run_phase12.py
+      - name: Upload Phase12 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase12-runtime-evidence
+          path: |
+            runtime-evidence/PHASE_12/REPORT.md
+            runtime-evidence/PHASE_12/result.json
+            runtime-evidence/PHASE_12/attempts/**
