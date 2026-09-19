@@ -59,7 +59,7 @@ public final class MachineService implements Listener, CommandExecutor {
     private boolean expiring, simulating;
     private final RandomStreams random;
     private final RoleWeights weights;
-    private final GameEngine games;
+    private final GameEngines games;
     private final RemoteMachineSync remote;
     private record Saved<T>(T value, PiriDatabase.State state) {}
 
@@ -68,8 +68,8 @@ public final class MachineService implements Listener, CommandExecutor {
         this.config = config;
         random=RandomStreams.production();weights=new RoleWeights(config);
         var jugglerGame=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin),config);
-        games=new JugglerGameEngine(jugglerGame);
-        remote=new RemoteMachineSync(plugin,()->state,plugin::canUseSlot,games::capture);
+        games=new GameEngines().register(MachineType.JUGGLER,new JugglerGameEngine(jugglerGame));
+        remote=new RemoteMachineSync(plugin,()->state,plugin::canUseSlot,(saved,nowNanos)->engine(saved.machine()).capture(saved,nowNanos));
         var gameConfig=jp.pirijuggler.paper.database.StartupProfile.map(config.get("game"));
         graceMs = ((Number) gameConfig.get("disconnect_grace_seconds")).longValue() * 1000;
         idleMs = ((Number) gameConfig.get("idle_timeout_seconds")).longValue() * 1000;
@@ -99,6 +99,11 @@ public final class MachineService implements Listener, CommandExecutor {
     public PiriDatabase.State snapshot() { main(); return state; }
     public void updateRemoteDataLamp(JsonObject data) { main(); if (ready()) remote.updateDataLamp(data); }
     private boolean busy(int id) { return pendingMachines.contains(id) || state.busy(id); }
+    private GameEngine engine(int machineId) {
+        Machine machine=state==null?null:state.machine(machineId);
+        if(machine==null)throw new DomainException("INVALID_STATE");
+        return games.require(machine.type());
+    }
 
     @Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         main();
@@ -283,7 +288,7 @@ public final class MachineService implements Listener, CommandExecutor {
         }
         submit(player, owner, machine.id(), () -> database.seat(owner, machine.id(), System.currentTimeMillis()), seated -> {
             send(player, PacketType.OPEN_MACHINE, seated.openPacket()); send(player, PacketType.PUBLIC_STATE, seated.publicState());
-            games.resume(seated,System.nanoTime()).ifPresent(packet->{send(player,packet);remote.publishOwnerPacket(machine.id(),packet);});
+            engine(seated.machine()).resume(seated,System.nanoTime()).ifPresent(packet->{send(player,packet);remote.publishOwnerPacket(machine.id(),packet);});
         });
     }
 
@@ -485,10 +490,11 @@ public final class MachineService implements Listener, CommandExecutor {
         if(sequence<=session.sequence()){reject(player,sequence,"SEQUENCE_OLD");return;}
         if(pendingPlayers.contains(player.getUniqueId())||pendingMachines.contains(machine)){reject(player,sequence,"BUSY");return;}
         try {
-            var transition=games.plan(session,action,sequence,state.machine(machine).setting(),System.currentTimeMillis(),System.nanoTime(),player.getPing(),pressedIndex);
+            GameEngine game=engine(machine);
+            var transition=game.plan(session,action,sequence,state.machine(machine).setting(),System.currentTimeMillis(),System.nanoTime(),player.getPing(),pressedIndex);
             submit(player,player.getUniqueId(),machine,()->new GameStore(database).commit(transition),saved->{
-                for(var packet:games.committed(transition,System.nanoTime())){send(player,packet);if(packet.packetType()!=PacketType.PUBLIC_STATE)remote.publishOwnerPacket(machine,packet);}
-                for(var event:games.scheduled(transition))schedule(player,id,machine,event);
+                for(var packet:game.committed(transition,System.nanoTime())){send(player,packet);if(packet.packetType()!=PacketType.PUBLIC_STATE)remote.publishOwnerPacket(machine,packet);}
+                for(var event:game.scheduled(transition))schedule(player,id,machine,event);
             });
         } catch(DomainException error){reject(player,sequence,error.getMessage());}
         catch(ArithmeticException overflow){reject(player,sequence,"INVALID_STATE");}
@@ -510,9 +516,9 @@ public final class MachineService implements Listener, CommandExecutor {
         Session session = state.session(owner);
         if (session == null || !session.id().equals(id) || session.machine() != machine) { reject(player, sequence, "SESSION_MISMATCH"); return; }
         if (sequence <= session.sequence()) { reject(player, sequence, "SEQUENCE_OLD"); return; }
-        Session motion=games.capture(session,System.nanoTime());
+        Session motion=engine(machine).capture(session,System.nanoTime());
         submit(player, owner, machine, () -> database.closeSession(owner, id, machine, sequence, System.currentTimeMillis(), graceMs, motion), reason -> {
-            games.forget(session.id());
+            engine(machine).forget(session.id());
             JsonObject body = session.identity();
             if (reason.equals("SESSION_END")) { body.remove("machineId"); send(player, PacketType.SESSION_END, body); }
             else { body.addProperty("reason", reason); send(player, PacketType.SESSION_SUSPENDED, body); }
@@ -524,8 +530,8 @@ public final class MachineService implements Listener, CommandExecutor {
         if (!ready()) return;
         if (pendingPlayers.contains(player)) { deferredDisconnect.add(player); return; }
         Session session = state.session(player); if (session == null) return;
-        Session motion=games.capture(session,System.nanoTime());
-        submit(null, player, session.machine(), () -> { database.disconnect(player, System.currentTimeMillis(), graceMs, motion); return null; }, unused -> {games.forget(session.id());remote.broadcastSnapshot(session.machine());});
+        Session motion=engine(session.machine()).capture(session,System.nanoTime());
+        submit(null, player, session.machine(), () -> { database.disconnect(player, System.currentTimeMillis(), graceMs, motion); return null; }, unused -> {engine(session.machine()).forget(session.id());remote.broadcastSnapshot(session.machine());});
     }
     private <T> void submit(CommandSender sender, UUID player, int machine, Callable<T> operation, Consumer<T> success) {
         main();
@@ -570,7 +576,7 @@ public final class MachineService implements Listener, CommandExecutor {
             if(saved!=null){
                 state=saved.state;
                 for(UUID id:saved.value){
-                    Session session=state.session(id);if(session!=null)games.forget(session.id());
+                    Session session=state.session(id);if(session!=null)engine(session.machine()).forget(session.id());
                     Player player=Bukkit.getPlayer(id);if(player!=null&&player.isOnline()&&session!=null){JsonObject body=session.identity();body.addProperty("reason","IDLE_TIMEOUT");send(player,PacketType.SESSION_SUSPENDED,body);}
                     Integer changedMachine=dueMachines.get(id);if(changedMachine!=null)remote.broadcastSnapshot(changedMachine);
                 }
