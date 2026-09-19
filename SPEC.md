@@ -4209,7 +4209,7 @@ inactive segments alpha=0.08 of active color。
 既存v3 config内容を維持し、さらに以下を必須追加する。
 
 ```yaml
-protocol_version: 1
+protocol_version: 2
 
 economy:
   vault_per_medal: 20
