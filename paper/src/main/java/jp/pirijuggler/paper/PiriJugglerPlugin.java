@@ -71,6 +71,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
         }
         try {
             saveDefaultConfig();
+            migrateProtocolConfig(getDataFolder().toPath().resolve("config.yml"));
             try (var reader = Files.newBufferedReader(getDataFolder().toPath().resolve("config.yml"), StandardCharsets.UTF_8)) {
                 ConfigValidation.Result result = ConfigValidation.load(reader);
                 configurationValid = result.valid();
@@ -107,6 +108,19 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(new MedalRecoveryListener(this), this);
         getLogger().info("Protocol " + Protocol.VERSION + "; configuration " + (configurationValid ? "valid" : "invalid; gameplay disabled"));
+    }
+
+    /**
+     * Protocol 2 is a wire compatibility break introduced by Phase12. Preserve every
+     * operator setting while migrating only the previous fixed protocol marker.
+     */
+    private void migrateProtocolConfig(java.nio.file.Path path) throws IOException {
+        String original = Files.readString(path, StandardCharsets.UTF_8);
+        String migrated = original.replaceFirst("(?m)^protocol_version:\\s*1\\s*$", "protocol_version: " + Protocol.VERSION);
+        if (!migrated.equals(original)) {
+            Files.writeString(path, migrated, StandardCharsets.UTF_8);
+            getLogger().info("Migrated config protocol_version 1 -> " + Protocol.VERSION);
+        }
     }
 
     private boolean handleBuildIdentity(CommandSender sender,String[] args) {
