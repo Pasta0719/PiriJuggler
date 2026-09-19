@@ -177,7 +177,7 @@ public final class WorldCabinetRenderer {
         double ly=.50-(sy-CAB_Y)/CAB_H;
         float scale=(float)(screenScale*1.60/CAB_W);
         var origin=CabinetPlacement.point(b,lx,ly).add(b.front().scale(.0035));
-        var t=relative(origin,cam),r=b.right(),u=b.up(),f=b.front();
+        CabinetPlacement.Vec t=relative(origin,cam);\n        CabinetPlacement.Vec r=b.right();\n        CabinetPlacement.Vec u=b.up();\n        CabinetPlacement.Vec f=b.front();
         Matrix4f m=new Matrix4f().identity();
         m.m00((float)(r.x()*scale)).m01((float)(r.y()*scale)).m02((float)(r.z()*scale));
         m.m10((float)(-u.x()*scale)).m11((float)(-u.y()*scale)).m12((float)(-u.z()*scale));
