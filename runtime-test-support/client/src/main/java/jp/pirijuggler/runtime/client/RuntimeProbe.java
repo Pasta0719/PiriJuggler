@@ -24,20 +24,34 @@ public final class RuntimeProbe implements ClientModInitializer {
     private static boolean captured;
     private static boolean written;
 
-    public static boolean mismatch() { return "mismatch".equals(System.getProperty("piri.runtime.scenario")); }
+    private static boolean automatedRun() {
+        return System.getProperty("piri.runtime.clientResult") != null;
+    }
+
+    public static boolean mismatch() {
+        return automatedRun() && "mismatch".equals(System.getProperty("piri.runtime.scenario"));
+    }
 
     @Override public void onInitializeClient() {
         Phase11SecurityCommand.register();
         Phase12RemoteProbe.register();
+        if (!automatedRun()) {
+            LOG.info("PIRI_RUNTIME_CLIENT_READY interactive Phase12 probe mode");
+            return;
+        }
         if (Phase02Probe.enabled()) Phase02Probe.initialize();
         initializedAt = System.currentTimeMillis();
         ClientTickEvents.END_CLIENT_TICK.register(RuntimeProbe::tick);
         LOG.info("PIRI_RUNTIME_CLIENT_READY Minecraft={} FabricLoader={} scenario={}", SharedConstants.getGameVersion().getName(), version("fabricloader"), System.getProperty("piri.runtime.scenario"));
     }
 
-    public static void sent(Envelope hello) { LOG.info("PIRI_RUNTIME_HELLO protocol={} payload={}", hello.protocol(), hello.payload()); }
+    public static void sent(Envelope hello) {
+        if (!automatedRun()) return;
+        LOG.info("PIRI_RUNTIME_HELLO protocol={} payload={}", hello.protocol(), hello.payload());
+    }
 
     public static void received(Envelope envelope, boolean clientAllowed) {
+        if (!automatedRun()) return;
         if (Phase02Probe.enabled()) { Phase02Probe.received(envelope, clientAllowed); return; }
         if (result != null) return;
         boolean passed = mismatch()
