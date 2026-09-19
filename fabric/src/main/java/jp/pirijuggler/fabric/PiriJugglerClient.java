@@ -7,7 +7,6 @@ import jp.pirijuggler.fabric.network.PiriPayload;
 import jp.pirijuggler.fabric.network.RemoteMachineRegistry;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import jp.pirijuggler.fabric.render.WorldCabinetRenderer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -32,7 +31,6 @@ public final class PiriJugglerClient implements ClientModInitializer {
             sendHelloWhenChannelAvailable(client);
         }));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> { HANDSHAKE.reset(); SESSION.reset(); REMOTE.reset(); SlotUi.reset(); }));
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, world) -> REMOTE.reset());
         ClientTickEvents.END_CLIENT_TICK.register(PiriJugglerClient::sendHelloWhenChannelAvailable);
         ClientTickEvents.END_CLIENT_TICK.register(client -> SlotUi.tick());
         ClientPlayNetworking.registerGlobalReceiver(PiriPayload.ID, (payload, context) -> context.client().execute(() -> {
