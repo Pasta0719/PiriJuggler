@@ -15,6 +15,7 @@ import java.util.UUID;
 
 /** Periodic read-only projection publisher for the Slot Screen data lamp. */
 public final class DataLampPublisher implements AutoCloseable {
+    private record SnapshotBatch(Map<UUID,com.google.gson.JsonObject> owners, Map<Integer,com.google.gson.JsonObject> remotes) {}
     private final PiriJugglerPlugin plugin;
     private final Path databaseFile;
     private final BukkitTask task;
@@ -38,32 +39,55 @@ public final class DataLampPublisher implements AutoCloseable {
                 return;
             }
             warned=false;
-            for(var entry:packets.entrySet()){
+            for(var entry:packets.owners().entrySet()){
                 var player=Bukkit.getPlayer(entry.getKey());
                 if(player!=null&&player.isOnline())player.sendPluginMessage(plugin,Protocol.CHANNEL,EnvelopeCodec.encode(Envelope.current(PacketType.DATA_LAMP,entry.getValue())));
             }
+            if(plugin.machines()!=null)for(var snapshot:packets.remotes().values())plugin.machines().updateRemoteDataLamp(snapshot);
         });
     }
 
-    private Map<UUID,com.google.gson.JsonObject> readAll() throws Exception {
-        var result=new LinkedHashMap<UUID,com.google.gson.JsonObject>();
+    private SnapshotBatch readAll() throws Exception {
+        var owners=new LinkedHashMap<UUID,com.google.gson.JsonObject>();
+        var remotes=new LinkedHashMap<Integer,com.google.gson.JsonObject>();
         try(var connection=DriverManager.getConnection("jdbc:sqlite:"+databaseFile.toAbsolutePath())){
             String period=null;
             try(var ps=connection.prepareStatement("SELECT value FROM metadata WHERE key='current_business_period_id'");var rs=ps.executeQuery()){
                 if(rs.next())period=rs.getString(1);
             }
-            if(period==null||period.isBlank())return result;
+            if(period==null||period.isBlank())return new SnapshotBatch(owners,remotes);
+
+            try(var ps=connection.prepareStatement("""
+                    SELECT s.machine_id,s.total_games,s.big_count,s.reg_count
+                    FROM machine_period_stats s
+                    JOIN machines m ON m.machine_id=s.machine_id
+                    WHERE s.business_period_id=? AND m.deleted=0
+                    ORDER BY s.machine_id
+                    """)){
+                ps.setString(1,period);
+                try(var rs=ps.executeQuery()){
+                    while(rs.next()){
+                        var data=new com.google.gson.JsonObject();
+                        data.addProperty("machineId",rs.getInt(1));
+                        data.addProperty("totalGames",rs.getLong(2));
+                        data.addProperty("bigCount",rs.getLong(3));
+                        data.addProperty("regCount",rs.getLong(4));
+                        remotes.put(rs.getInt(1),data);
+                    }
+                }
+            }
+
             try(var ps=connection.prepareStatement("SELECT player_uuid,machine_id FROM player_sessions WHERE lifecycle='ACTIVE' ORDER BY machine_id");var rs=ps.executeQuery()){
                 var byMachine=new LinkedHashMap<Integer,com.google.gson.JsonObject>();
                 while(rs.next()){
                     UUID player=UUID.fromString(rs.getString(1));int machine=rs.getInt(2);
                     com.google.gson.JsonObject snapshot=byMachine.get(machine);
                     if(snapshot==null){snapshot=DataLampSnapshot.read(connection,machine,period);byMachine.put(machine,snapshot);}
-                    result.put(player,snapshot.deepCopy());
+                    owners.put(player,snapshot.deepCopy());
                 }
             }
         }
-        return result;
+        return new SnapshotBatch(owners,remotes);
     }
 
     @Override public void close(){task.cancel();inFlight=false;}
