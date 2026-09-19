@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EnvelopeCodecTest {
     @Test void wireBytesMatchTheSpecifiedHelloExactly() {
-        String json = "{\"protocol\":1,\"modVersion\":\"1.0.0\"}";
+        String json = "{\"protocol\":2,\"modVersion\":\"1.0.0\"}";
         byte[] encoded = EnvelopeCodec.encode(Handshake.hello());
         assertArrayEquals(new byte[]{0x50, 0x49, 0x52, 0x49, 0, 2, 1, (byte) json.length()}, Arrays.copyOf(encoded, 8));
         assertEquals(json, new String(encoded, 8, encoded.length - 8, StandardCharsets.UTF_8));
