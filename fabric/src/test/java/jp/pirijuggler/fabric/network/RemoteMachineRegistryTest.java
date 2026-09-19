@@ -130,6 +130,9 @@ class RemoteMachineRegistryTest {
         body.addProperty("pay", 0);
         body.addProperty("bonusCount", 0);
         body.addProperty("bonusMode", "NONE");
+        body.addProperty("totalGames", 3500);
+        body.addProperty("bigCount", 14);
+        body.addProperty("regCount", 11);
         body.addProperty("spinning", false);
         return body;
     }
