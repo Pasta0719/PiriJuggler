@@ -54,7 +54,7 @@ Important locked decisions:
 
 Current phase: 12
 Last completed phase: 11
-Open blockers: Phase12 real Paper+Fabric runtime acceptance remains
+Open blockers: Phase12 remote spectator sync runtime acceptance remains; owner gameplay regression PASS
 Next planned phase: Phase12 verification/completion
 Phase13 start condition: Phase12 COMPLETE only
 
