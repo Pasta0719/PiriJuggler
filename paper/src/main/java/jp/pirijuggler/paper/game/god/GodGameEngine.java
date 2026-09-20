@@ -172,7 +172,7 @@ public final class GodGameEngine implements GameEngine {
             return new Step(r.withGameplay(ns),payout);
         }
         GodSessionState ns=copy(s,GodPhase.NORMAL,0,0,null,0,0,0,0,0,0,0,s.totalGodGames()+1,"NORMAL_RETURN","NONE");
-        GodMachineRuntime nr=new GodMachineRuntime(r.frontMode(),0,0,0,r.gaiaBellCount(),r.totalNormalGames(),ns);
+        GodMachineRuntime nr=new GodMachineRuntime(r.frontMode(),0,0,0,r.gaiaMode(),r.gaiaBellCount(),r.gaiaTarget(),false,0,r.totalNormalGames(),ns);
         return new Step(nr,payout);
     }
 
