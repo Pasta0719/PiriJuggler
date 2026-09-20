@@ -145,7 +145,7 @@ public final class GodGameEngine implements GameEngine {
         putBalance(values,current.payout(payout));
         values.put("game_state",replay?"REPLAY_READY":"SEATED_READY");
         values.put("spin_id",null);values.put("internal_role",null);values.put("motion_profile",null);
-        values.put("current_bet",replay?3:0);values.put("pay_display");
+        values.put("current_bet",replay?3:0);values.put("pay_display",payout);
         values.put("machine_state_json",finalRuntime.gameplay().toJsonString());
 
         var scheduled=new ArrayList<GameTransition.Scheduled>();
