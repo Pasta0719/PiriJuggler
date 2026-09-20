@@ -106,6 +106,14 @@ public final class PiriDatabase implements AutoCloseable {
             initializeStats(id, now); return id;
         });
     }
+    public void setMachineType(int id, MachineType type, long now) throws Exception {
+        Objects.requireNonNull(type);
+        transaction(() -> {
+            requireMachine(id); requireFree(id);
+            sql("UPDATE machines SET machine_type=?,updated_at=? WHERE machine_id=?", type.name(), now, id);
+            return null;
+        });
+    }
     public void redefine(int id, Machine.Location location, long now) throws Exception {
         transaction(() -> {
             Machine machine = requireMachine(id); requireFree(id); rejectDuplicate(location, id);
