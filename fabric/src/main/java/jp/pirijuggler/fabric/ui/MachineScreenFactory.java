@@ -15,7 +15,8 @@ public final class MachineScreenFactory {
         String type = machineType == null ? "JUGGLER" : machineType;
         return switch (type) {
             case "JUGGLER" -> new SlotScreen(view, input);
-            case "OKIDOKI", "GOD", "DISC" -> new MachineUnavailableScreen(type, input);
+            case "GOD" -> new GodScreen(view,input);
+            case "OKIDOKI", "DISC" -> new MachineUnavailableScreen(type, input);
             default -> new MachineUnavailableScreen(type, input);
         };
     }

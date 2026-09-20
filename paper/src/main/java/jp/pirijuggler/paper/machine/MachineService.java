@@ -68,7 +68,7 @@ public final class MachineService implements Listener, CommandExecutor {
         this.config = config;
         random=RandomStreams.production();weights=new RoleWeights(config);
         var jugglerGame=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin),config);
-        games=new GameEngines().register(MachineType.JUGGLER,new JugglerGameEngine(jugglerGame));
+        games=new GameEngines().register(MachineType.JUGGLER,new JugglerGameEngine(jugglerGame)).register(MachineType.GOD,new jp.pirijuggler.paper.game.god.GodGameEngine(random));
         remote=new RemoteMachineSync(plugin,()->state,plugin::canUseSlot,(saved,nowNanos)->engine(saved.machine()).capture(saved,nowNanos));
         var gameConfig=jp.pirijuggler.paper.database.StartupProfile.map(config.get("game"));
         graceMs = ((Number) gameConfig.get("disconnect_grace_seconds")).longValue() * 1000;

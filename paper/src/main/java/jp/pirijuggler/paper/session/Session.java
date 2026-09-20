@@ -56,6 +56,9 @@ public record Session(Map<String, Object> snapshot) {
     public JsonObject openPacket() {
         JsonObject json = identity(); json.addProperty("expectedNextClientSequence", sequence() + 1); return json;
     }
+    private static void copy(JsonObject from,JsonObject to,String source,String target){
+        if(from.has(source))to.add(target,from.get(source).deepCopy());
+    }
     public JsonObject publicState() {
         JsonObject json = openPacket();
         json.addProperty("gameState", publicGameState().name()); json.addProperty("lifecycle", lifecycle().name());
@@ -66,6 +69,17 @@ public record Session(Map<String, Object> snapshot) {
         stops.addProperty("left", number("display_left_stop")); stops.addProperty("center", number("display_center_stop"));
         stops.addProperty("right", number("display_right_stop")); json.add("displayStops", stops);
         json.addProperty("stoppedMask", number("stopped_mask"));
+        JsonObject ms=machineState();
+        if(ms!=null&&ms.has("phase")){
+            json.addProperty("godPhase",ms.get("phase").getAsString());
+            copy(ms,json,"ggGamesRemaining","godGgRemaining");
+            copy(ms,json,"queuedGgStocks","godStocks");
+            copy(ms,json,"gZoneGamesRemaining","godGZoneRemaining");
+            copy(ms,json,"sggGamesRemaining","godSggRemaining");
+            copy(ms,json,"zZoneGamesRemaining","godZZoneRemaining");
+            copy(ms,json,"lastEvent","godLastEvent");
+            copy(ms,json,"lastRole","godLastRole");
+        }
         return json;
     }
 }
