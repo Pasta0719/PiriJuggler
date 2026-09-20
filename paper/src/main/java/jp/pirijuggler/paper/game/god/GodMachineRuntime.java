@@ -54,7 +54,7 @@ public record GodMachineRuntime(
 
     public GodMachineRuntime withGameplay(GodSessionState state){
         return new GodMachineRuntime(frontMode,normalGamesSinceGg,blue7History,yellow7History,gaiaMode,gaiaBellCount,gaiaTarget,
-                gaiaStageActive,gaiaStageGuarantee,ceilingTarget,totalNormalGames,state,forcedRole);
+                gaiaStageActive,gaiaStageGuarantee,ceilingTarget,totalNormalGames,state,null);
     }
 
     public GodMachineRuntime withForcedRole(String role){
