@@ -51,6 +51,8 @@ public final class GodScreen extends Screen {
             c.drawCenteredTextWithShadow(textRenderer,"G-ZONE  "+view.value("godGZoneRemaining")+"G",cx,155,0xffc8d8ff);
         }else if("SGG".equals(phase)){
             c.drawCenteredTextWithShadow(textRenderer,"SUPER GOD GAME  "+view.value("godSggRemaining")+"G",cx,155,0xffff5b5b);
+        }else if("SGG_COMEBACK".equals(phase)){
+            c.drawCenteredTextWithShadow(textRenderer,"SGG COMEBACK  "+view.value("godSggRemaining")+"G",cx,155,0xffff8c6b);
         }else if("Z_ZONE".equals(phase)){
             c.drawCenteredTextWithShadow(textRenderer,"Z-ZONE  CHANCE "+view.value("godZZoneRemaining"),cx,155,0xff74eaff);
         }else if("Z_GAME".equals(phase)){

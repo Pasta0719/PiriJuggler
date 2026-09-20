@@ -70,6 +70,7 @@ public final class GodGameEngine implements GameEngine {
             case GG -> gg(r,s,setting,rng);
             case G_ZONE -> gZone(r,s,rng);
             case SGG -> sgg(r,s,rng);
+            case SGG_COMEBACK -> sggComeback(r,s,rng);
             case Z_ZONE -> zZone(r,s,rng);
             case Z_GAME -> zGame(r,s,rng);
         };
@@ -190,11 +191,31 @@ public final class GodGameEngine implements GameEngine {
             GodSessionState ns=copy(s,GodPhase.SGG,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,rem,cont,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"SGG",role.name());
             return new Step(r.withGameplay(ns),payout);
         }
-        boolean keep=cont>0||rng.nextDouble()<0.753;
-        if(keep){
-            int nextCont=Math.max(0,cont-1),set=s.sggSetNumber()+1;
+        if(cont>0){
+            int nextCont=cont-1,set=s.sggSetNumber()+1;
             int len=sggLength(set%5==0,GodRole.MISS,rng);
-            GodSessionState ns=copy(s,GodPhase.SGG,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,len,nextCont,set,0,0,0,s.totalGodGames()+1,"SGG_CONTINUE","S");
+            GodSessionState ns=copy(s,GodPhase.SGG,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,len,nextCont,set,0,0,0,s.totalGodGames()+1,"SGG_STOCK_CONTINUE","S");
+            return new Step(r.withGameplay(ns),payout);
+        }
+        GodSessionState ns=copy(s,GodPhase.SGG_COMEBACK,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,3,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"SGG_COMEBACK","NONE");
+        return new Step(r.withGameplay(ns),payout);
+    }
+
+    private Step sggComeback(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
+        GodRole role=drawRole(rng);int payout=3;
+        boolean rare=role==GodRole.MIDDLE_BLUE7||role==GodRole.RISING_YELLOW7||role==GodRole.MIDDLE_YELLOW7||
+                role==GodRole.COMMON_YELLOW7||role==GodRole.SP||role==GodRole.RED7||role==GodRole.GOD;
+        boolean success=rare||rng.nextDouble()<0.344;
+        if(success){
+            int set=s.sggSetNumber()+1;
+            int len=sggLength(set%5==0,role,rng);
+            int cont=role==GodRole.SP?3:0;
+            GodSessionState ns=copy(s,GodPhase.SGG,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,len,cont,set,0,0,0,s.totalGodGames()+1,"SGG_COMEBACK_HIT",role.name());
+            return new Step(r.withGameplay(ns),payout);
+        }
+        int left=Math.max(0,s.sggGamesRemaining()-1);
+        if(left>0){
+            GodSessionState ns=copy(s,GodPhase.SGG_COMEBACK,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,left,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"SGG_COMEBACK","MISS");
             return new Step(r.withGameplay(ns),payout);
         }
         if(s.ggGamesRemaining()>0){

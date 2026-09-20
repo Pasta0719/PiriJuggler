@@ -6,6 +6,7 @@ public enum GodPhase {
     GG,
     G_ZONE,
     SGG,
+    SGG_COMEBACK,
     Z_ZONE,
     Z_GAME
 }
