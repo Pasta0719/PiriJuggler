@@ -66,8 +66,6 @@ public record Session(Map<String, Object> snapshot) {
         stops.addProperty("left", number("display_left_stop")); stops.addProperty("center", number("display_center_stop"));
         stops.addProperty("right", number("display_right_stop")); json.add("displayStops", stops);
         json.addProperty("stoppedMask", number("stopped_mask"));
-        JsonObject machineState = machineState();
-        if (machineState != null) json.add("machineState", machineState);
         return json;
     }
 }

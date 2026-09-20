@@ -29,7 +29,8 @@ public record GameTransition(
         long publicDelayMs,
         List<Envelope> packets,
         List<Envelope> afterStart,
-        List<Scheduled> scheduled
+        List<Scheduled> scheduled,
+        String machineRuntimeJson
 ) {
     public record Scheduled(long delayMs, Envelope packet) {
         public Scheduled {

@@ -505,7 +505,7 @@ public final class MachineService implements Listener, CommandExecutor {
         if(pendingPlayers.contains(player.getUniqueId())||pendingMachines.contains(machine)){reject(player,sequence,"BUSY");return;}
         try {
             GameEngine game=engine(machine);
-            var transition=game.plan(session,action,sequence,state.machine(machine).setting(),System.currentTimeMillis(),System.nanoTime(),player.getPing(),pressedIndex);
+            var transition=game.plan(session,state.machine(machine),action,sequence,System.currentTimeMillis(),System.nanoTime(),player.getPing(),pressedIndex);
             submit(player,player.getUniqueId(),machine,()->new GameStore(database).commit(transition),saved->{
                 for(var packet:game.committed(transition,System.nanoTime())){send(player,packet);if(packet.packetType()!=PacketType.PUBLIC_STATE)remote.publishOwnerPacket(machine,packet);}
                 for(var event:game.scheduled(transition))schedule(player,id,machine,event);

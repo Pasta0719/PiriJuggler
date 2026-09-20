@@ -3,6 +3,7 @@ package jp.pirijuggler.paper.game;
 import jp.pirijuggler.common.protocol.Envelope;
 import jp.pirijuggler.common.protocol.PacketType;
 import jp.pirijuggler.paper.session.Session;
+import jp.pirijuggler.paper.machine.Machine;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,9 +24,9 @@ public final class JugglerGameEngine implements GameEngine {
     }
 
     @Override
-    public GameTransition plan(Session before, PacketType action, long sequence, int setting,
+    public GameTransition plan(Session before, Machine machine, PacketType action, long sequence,
                                long now, long receivedNanos, int ping, Integer clientPressedIndex) {
-        return fromLegacy(delegate.plan(before, action, sequence, setting, now, receivedNanos, ping, clientPressedIndex));
+        return fromLegacy(delegate.plan(before, action, sequence, machine.setting(), now, receivedNanos, ping, clientPressedIndex));
     }
 
     @Override
@@ -62,7 +63,8 @@ public final class JugglerGameEngine implements GameEngine {
                 action.bonusEnded(), action.publicDelayMs(), action.packets(), action.afterStart(),
                 action.scheduled().stream()
                         .map(event -> new GameTransition.Scheduled(event.delayMs(), event.packet()))
-                        .toList()
+                        .toList(),
+                null
         );
     }
 
