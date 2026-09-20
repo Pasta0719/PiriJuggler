@@ -60,7 +60,8 @@ public final class GodGameEngine implements GameEngine {
         final GodRole internalRole;
         try { internalRole=GodRole.valueOf(role); }
         catch(RuntimeException invalidRole){ throw new DomainException("INVALID_STATE"); }
-        GodRoleOutcome.Outcome outcome=GodRoleOutcome.resolve(internalRole,runtime.gameplay().phase(),rng.nextDouble());
+        double outcomeUnit=runtime.forcedRole()!=null?0.0:rng.nextDouble();
+        GodRoleOutcome.Outcome outcome=GodRoleOutcome.resolve(internalRole,runtime.gameplay().phase(),outcomeUnit);
 
         JsonObject sessionState=runtime.gameplay().toJson();
         sessionState.add("_pendingRuntime",step.runtime().toJson());
