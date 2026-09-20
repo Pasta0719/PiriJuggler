@@ -49,6 +49,11 @@ tasks.processResources {
         include("**/*.png")
         into("assets/piri/textures/god_lcd")
     }
+    val userGodReels = rootProject.file("user-god-reels")
+    from(userGodReels) {
+        include("**/*.png")
+        into("assets/piri/textures/god_reels")
+    }
 
 }
 

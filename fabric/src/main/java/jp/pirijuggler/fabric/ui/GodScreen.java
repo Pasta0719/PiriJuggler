@@ -142,9 +142,16 @@ public final class GodScreen extends Screen {
     }
 
     private void drawSymbol(DrawContext c,GodReelStrip.Symbol symbol,int cx,int cy){
-        String text=switch(symbol){case GOD->"GOD";case RED7->"7";case BLUE7->"7";case YELLOW7->"7";case BELL->"BELL";case BLANK->"·";};
-        int color=switch(symbol){case GOD->0xffffc52e;case RED7->0xffff3535;case BLUE7->0xff4386ff;case YELLOW7->0xffffd83f;case BELL->0xffb8862e;case BLANK->0xff777777;};
-        center(c,text,cx,cy,color,symbol==GodReelStrip.Symbol.GOD?2.8f:symbol==GodReelStrip.Symbol.BELL?2.0f:3.5f);
+        String text=switch(symbol){
+            case GOD->"GOD";case RED7->"7";case BLUE7->"7";case YELLOW7->"7";
+            case MILLION->"MILLION";case DEKA_MILLION_TOP->"MILLION";case DEKA_MILLION_BOTTOM->"Ω";
+        };
+        int color=switch(symbol){
+            case GOD->0xffffc52e;case RED7->0xffff3535;case BLUE7->0xff4386ff;case YELLOW7->0xffffd83f;
+            case MILLION,DEKA_MILLION_TOP,DEKA_MILLION_BOTTOM->0xffd9aa35;
+        };
+        float scale=switch(symbol){case GOD->2.8f;case MILLION,DEKA_MILLION_TOP->1.55f;case DEKA_MILLION_BOTTOM->2.2f;default->3.5f;};
+        center(c,text,cx,cy,color,scale);
     }
 
     private void drawStatus(DrawContext c){

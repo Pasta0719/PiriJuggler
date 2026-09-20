@@ -5,6 +5,7 @@ import jp.pirijuggler.common.protocol.*;
 import java.util.*;
 import java.util.function.LongSupplier;
 import jp.pirijuggler.common.reel.ReelMotion;
+import jp.pirijuggler.common.reel.GodReelStrip;
 
 /** Public packets only; visual interpolation never computes a winning result. */
 public final class SlotViewState {
@@ -42,7 +43,7 @@ public final class SlotViewState {
                     presses[reel]=null;rest[reel]=target;
                 } else {
                     double from=phase(reel);presses[reel]=null;int requested=b.get("durationMs").getAsInt();
-                    double endpoint=ReelMotion.normalStopEndpoint(from,target);int visualMs=ReelMotion.visualDurationMs(from,endpoint,requested);
+                    double endpoint=stopEndpoint(from,target);int visualMs=visualDurationMs(from,endpoint,requested);
                     stops[reel]=new Stop(from,endpoint,now,visualMs*1_000_000L);rest[reel]=target;
                 }
                 if(b.has("nextStopHints"))stopHints=b.getAsJsonObject("nextStopHints").deepCopy();
@@ -64,7 +65,7 @@ public final class SlotViewState {
         if(reel<0||stops[reel]!=null)return -1;
         double from=phase(reel);int pressed=(int)Math.floor(from);JsonObject hint=hint(reel,pressed);if(hint==null)return -1;
         int target=hint.get("stopIndex").getAsInt(),requested=hint.get("durationMs").getAsInt();long now=time.getAsLong();
-        double endpoint=ReelMotion.normalStopEndpoint(from,target);int visualMs=ReelMotion.visualDurationMs(from,endpoint,requested);
+        double endpoint=stopEndpoint(from,target);int visualMs=visualDurationMs(from,endpoint,requested);
         stops[reel]=new Stop(from,endpoint,now,visualMs*1_000_000L);presses[reel]=new Press(pressed,target,now);rest[reel]=target;return pressed;
     }
     private JsonObject hint(int reel,int pressed){
@@ -87,10 +88,23 @@ public final class SlotViewState {
     public boolean matchesSpin(JsonObject b){return spin!=null&&b.has("spinId")&&spin.toString().equals(b.get("spinId").getAsString());}
     public static double wrap(double value){return ReelMotion.wrap(value);}
     public static double distance(String animation,double seconds){return ReelMotion.delta(ReelMotion.Profile.valueOf(animation),seconds);}
+    private double machineWrap(double value){return "GOD".equals(machineType)?GodReelStrip.wrap(value):ReelMotion.wrap(value);}
+    private double machineDistance(double seconds){
+        double delta=ReelMotion.delta(ReelMotion.Profile.valueOf(animation),seconds);
+        return "GOD".equals(machineType)?delta*(GodReelStrip.STOPS/21.0):delta;
+    }
+    private double stopEndpoint(double from,int target){
+        return "GOD".equals(machineType)?GodReelStrip.normalStopEndpoint(from,target):ReelMotion.normalStopEndpoint(from,target);
+    }
+    private int visualDurationMs(double from,double endpoint,int requested){
+        if(!"GOD".equals(machineType))return ReelMotion.visualDurationMs(from,endpoint,requested);
+        double exactMs=(from-endpoint)/(ReelMotion.NORMAL_SPEED*GodReelStrip.STOPS/21.0)*1000.0;
+        return Math.max(requested,(int)Math.ceil(exactMs-1e-9));
+    }
     public double phase(int reel){
         long now=time.getAsLong();Stop stop=stops[reel];
-        if(stop!=null){double p=stop.duration==0?1:Math.min(1,Math.max(0,(now-stop.at)/(double)stop.duration));return p>=1?rest[reel]:wrap(stop.from+(stop.target-stop.from)*p);}
-        return spinning?wrap(starts[reel]+distance(animation,(now-spinAt)/1e9)):rest[reel];
+        if(stop!=null){double p=stop.duration==0?1:Math.min(1,Math.max(0,(now-stop.at)/(double)stop.duration));return p>=1?rest[reel]:machineWrap(stop.from+(stop.target-stop.from)*p);}
+        return spinning?machineWrap(starts[reel]+machineDistance((now-spinAt)/1e9)):machineWrap(rest[reel]);
     }
     public boolean lampOn(){long elapsed=time.getAsLong()-noticeAt;return notice&&(!blink||elapsed>=1_000_000_000L||elapsed/100_000_000L%2==0);}
     public boolean canSend(PacketType action){

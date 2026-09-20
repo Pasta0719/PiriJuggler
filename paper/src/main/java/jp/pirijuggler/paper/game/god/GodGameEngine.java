@@ -93,14 +93,16 @@ public final class GodGameEngine implements GameEngine {
         if(reel<0)return rejected(before,action,sequence,now,ErrorCode.INVALID_STATE);
         int bit=1<<reel;
         if((mask&bit)!=0)return rejected(before,action,sequence,now,ErrorCode.ALREADY_STOPPED);
+        // Published basic play is left-1st when no push-order navigation is active.
+        if(mask==0&&reel!=0)return rejected(before,action,sequence,now,ErrorCode.INVALID_STATE);
 
         int pressed=clientPressedIndex==null
                 ? Math.floorMod((int)before.number("display_"+reelName(reel)+"_stop"),21)
                 : clientPressedIndex;
-        if(pressed<0||pressed>=21)return rejected(before,action,sequence,now,ErrorCode.SESSION_MISMATCH);
+        if(pressed<0||pressed>=GodReelStrip.STOPS)return rejected(before,action,sequence,now,ErrorCode.SESSION_MISMATCH);
 
         String role=state.has("_pendingRole")?state.get("_pendingRole").getAsString():before.text("internal_role");
-        var desired=GodReelStrip.symbolForRole(role);
+        var desired=GodReelStrip.symbolForRole(role,reel);
         int target=GodReelStrip.targetFor(reel,desired,pressed);
         int slip=GodReelStrip.slip(pressed,target);
         int duration=ReelMotion.durationMs(slip);
@@ -521,8 +523,8 @@ public final class GodGameEngine implements GameEngine {
         for(int reel=0;reel<3;reel++){
             if((mask&(1<<reel))!=0)continue;
             var choices=new com.google.gson.JsonArray();
-            var desired=GodReelStrip.symbolForRole(role);
-            for(int pressed=0;pressed<21;pressed++){
+            var desired=GodReelStrip.symbolForRole(role,reel);
+            for(int pressed=0;pressed<GodReelStrip.STOPS;pressed++){
                 int target=GodReelStrip.targetFor(reel,desired,pressed);
                 int slip=GodReelStrip.slip(pressed,target);
                 JsonObject item=new JsonObject();item.addProperty("stopIndex",target);item.addProperty("slip",slip);item.addProperty("durationMs",ReelMotion.durationMs(slip));
