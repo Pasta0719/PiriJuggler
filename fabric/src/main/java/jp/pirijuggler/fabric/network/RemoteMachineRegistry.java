@@ -191,6 +191,9 @@ public final class RemoteMachineRegistry {
         requireString(body, "facing");
         if (!Set.of("NORTH","SOUTH","EAST","WEST","UP","DOWN").contains(body.get("facing").getAsString()))
             throw new IllegalArgumentException("facing");
+        requireString(body, "machineType");
+        if (!Set.of("JUGGLER","OKIDOKI","GOD","DISC").contains(body.get("machineType").getAsString()))
+            throw new IllegalArgumentException("machineType");
         requireBoolean(body, "enabled"); requireBoolean(body, "occupied");
         requireString(body, "gameState");
         JsonObject stops = requireObject(body, "displayStops");
