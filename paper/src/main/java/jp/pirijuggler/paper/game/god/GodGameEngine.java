@@ -403,7 +403,7 @@ public final class GodGameEngine implements GameEngine {
         if(left==0){
             int stocks=s.queuedGgStocks();
             GodLoopType loop=s.loopType();
-            if(s.zYellowStreak()==0&&rng.nextDouble()<GodProductionSpec.Z_ZONE_ZERO_YELLOW_SPECIAL_D_RATE)loop=GodLoopType.D;
+            if(s.zYellowCount()==0&&rng.nextDouble()<GodProductionSpec.Z_ZONE_ZERO_YELLOW_SPECIAL_D_RATE)loop=GodLoopType.D;
             if(loop!=null)stocks+=rollLoop(loop,rng);
             stocks=Math.max(1,stocks);
             GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,stocks-1,null,0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"Z_FAIL_GG","MISS");
@@ -456,7 +456,12 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private static GodSessionState copy(GodSessionState old,GodPhase phase,int gg,int stocks,GodLoopType loop,int gz,int sgg,int cont,int set,int zz,int zstreak,int zstocks,long total,String event,String role){
-        return new GodSessionState(phase,gg,stocks,loop,gz,sgg,cont,set,zz,zstreak,zstocks,total,event,role);
+        int zYellowCount=0;
+        if(phase==GodPhase.Z_ZONE){
+            zYellowCount=old.phase()==GodPhase.Z_ZONE?old.zYellowCount():0;
+            if("ORDERED_YELLOW7".equals(role))zYellowCount++;
+        }
+        return new GodSessionState(phase,gg,stocks,loop,gz,sgg,cont,set,zz,zstreak,zYellowCount,zstocks,total,event,role);
     }
 
     private static boolean isBlue(GodRole r){return r==GodRole.UPPER_BLUE7||r==GodRole.MIDDLE_BLUE7;}
