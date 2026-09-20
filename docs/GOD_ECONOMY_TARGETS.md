@@ -24,9 +24,11 @@ Every positive payout source gets an explicit long-run EV budget before concrete
 - independent GOD
 - normal GG initial hit
 - loop/set stock
-- bell-chain V stock
 - SGG/red-7 path
 - any retained Z path
+- any other premium route
+
+Ordinary GG bell-streak V-stock is explicitly excluded from the production design.
 
 For each source:
 
@@ -34,24 +36,14 @@ EV contribution per game = trigger probability per game * expected net medals pe
 
 Those contributions, ordinary-symbol return, and normal-game losses must reconcile to the setting target.
 
-## Bell-chain rule
-
-Bell-chain V-stock parameters are not selected by appearance or nostalgia.
-
-We first decide the maximum share of total GG-side EV that bell-chain V stock may consume.
-Only then do we solve for a visible bell-chain threshold and stock probability that fit that budget under the actual GG bell probability.
-
-This is why the final bell-chain count is deliberately still unset.
-
 ## Next numeric unknowns
 
 Before gameplay code:
 1. expected net value of one GOD hit
 2. normal-game base return and average games per GG initial hit per setting
 3. loop-stock distribution
-4. GG bell probability under the high-pure-increase system
-5. bell-chain V-stock EV allocation
-6. SGG/red-7 EV
-7. optional Z-system EV
+4. SGG/red-7 EV
+5. optional Z-system EV
+6. any other retained premium route
 
-All seven are to be fit against the six payout targets and then verified by long-run simulation.
+All are to be fit against the six payout targets and then verified by long-run simulation.
