@@ -513,7 +513,7 @@ public final class MachineService implements Listener, CommandExecutor {
         } catch(DomainException error){reject(player,sequence,error.getMessage());}
         catch(ArithmeticException overflow){reject(player,sequence,"INVALID_STATE");}
     }
-    private void schedule(Player player,UUID sessionId,int machine,NormalGame.Scheduled event){
+    private void schedule(Player player,UUID sessionId,int machine,GameTransition.Scheduled event){
         long ticks=Math.max(1,(event.delayMs()+49)/50);
         plugin.getServer().getScheduler().runTaskLater(plugin,()->{
             if(stopped||state==null||!player.isOnline())return;Session current=state.session(player.getUniqueId());

@@ -11,20 +11,17 @@ import java.util.UUID;
 /**
  * Server-side machine game behavior seam.
  *
- * The first implementation is the existing Juggler behavior. New machine families
- * (Okidoki/GOD/Disc) can implement this contract without putting their state machine
- * inside MachineService.
- *
- * Transition/Scheduled remain NormalGame types for this first compatibility step so
- * the existing durable GameStore transaction format is unchanged.
+ * Engines now exchange machine-neutral GameTransition values. The Juggler adapter
+ * maps its legacy NormalGame transition into this contract while GOD can implement
+ * its own state machine without depending on Juggler bonus semantics.
  */
 public interface GameEngine {
-    NormalGame.Transition plan(Session before, PacketType action, long sequence, int setting,
-                               long now, long receivedNanos, int ping, Integer clientPressedIndex);
+    GameTransition plan(Session before, PacketType action, long sequence, int setting,
+                        long now, long receivedNanos, int ping, Integer clientPressedIndex);
 
-    List<Envelope> committed(NormalGame.Transition action, long sentNanos);
+    List<Envelope> committed(GameTransition action, long sentNanos);
 
-    List<NormalGame.Scheduled> scheduled(NormalGame.Transition action);
+    List<GameTransition.Scheduled> scheduled(GameTransition action);
 
     Optional<Envelope> resume(Session saved, long sentNanos);
 

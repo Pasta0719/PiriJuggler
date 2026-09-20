@@ -12,8 +12,8 @@ import java.util.UUID;
 /**
  * Compatibility adapter for the current Piri Juggler game.
  *
- * Deliberately contains no new game rules: it delegates 1:1 to NormalGame so the
- * multi-machine refactor can be introduced without changing current runtime behavior.
+ * NormalGame remains unchanged internally. This adapter translates its legacy
+ * transition shape to the machine-neutral GameTransition contract.
  */
 public final class JugglerGameEngine implements GameEngine {
     private final NormalGame delegate;
@@ -23,19 +23,21 @@ public final class JugglerGameEngine implements GameEngine {
     }
 
     @Override
-    public NormalGame.Transition plan(Session before, PacketType action, long sequence, int setting,
-                                      long now, long receivedNanos, int ping, Integer clientPressedIndex) {
-        return delegate.plan(before, action, sequence, setting, now, receivedNanos, ping, clientPressedIndex);
+    public GameTransition plan(Session before, PacketType action, long sequence, int setting,
+                               long now, long receivedNanos, int ping, Integer clientPressedIndex) {
+        return fromLegacy(delegate.plan(before, action, sequence, setting, now, receivedNanos, ping, clientPressedIndex));
     }
 
     @Override
-    public List<Envelope> committed(NormalGame.Transition action, long sentNanos) {
-        return delegate.committed(action, sentNanos);
+    public List<Envelope> committed(GameTransition action, long sentNanos) {
+        return delegate.committed(toLegacy(action), sentNanos);
     }
 
     @Override
-    public List<NormalGame.Scheduled> scheduled(NormalGame.Transition action) {
-        return delegate.scheduled(action);
+    public List<GameTransition.Scheduled> scheduled(GameTransition action) {
+        return delegate.scheduled(toLegacy(action)).stream()
+                .map(event -> new GameTransition.Scheduled(event.delayMs(), event.packet()))
+                .toList();
     }
 
     @Override
@@ -51,5 +53,27 @@ public final class JugglerGameEngine implements GameEngine {
     @Override
     public void forget(UUID session) {
         delegate.forget(session);
+    }
+
+    private static GameTransition fromLegacy(NormalGame.Transition action) {
+        return new GameTransition(
+                action.transaction(), action.before(), action.after(), action.bet(), action.payout(),
+                action.normalSpins(), action.finished(), action.lever(), action.bonusStarted(),
+                action.bonusEnded(), action.publicDelayMs(), action.packets(), action.afterStart(),
+                action.scheduled().stream()
+                        .map(event -> new GameTransition.Scheduled(event.delayMs(), event.packet()))
+                        .toList()
+        );
+    }
+
+    private static NormalGame.Transition toLegacy(GameTransition action) {
+        return new NormalGame.Transition(
+                action.transaction(), action.before(), action.after(), action.bet(), action.payout(),
+                action.normalSpins(), action.finished(), action.lever(), action.bonusStarted(),
+                action.bonusEnded(), action.publicDelayMs(), action.packets(), action.afterStart(),
+                action.scheduled().stream()
+                        .map(event -> new NormalGame.Scheduled(event.delayMs(), event.packet()))
+                        .toList()
+        );
     }
 }

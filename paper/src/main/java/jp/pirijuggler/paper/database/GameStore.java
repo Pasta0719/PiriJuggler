@@ -1,6 +1,6 @@
 package jp.pirijuggler.paper.database;
 
-import jp.pirijuggler.paper.game.NormalGame;
+import jp.pirijuggler.paper.game.GameTransition;
 import jp.pirijuggler.paper.machine.DomainException;
 import jp.pirijuggler.paper.session.Session;
 import java.util.*;
@@ -10,7 +10,7 @@ public final class GameStore {
     private static final List<String> COLUMNS=List.of("game_state","credit","held_medals","spin_id","internal_role","premium_type","notice_state","lamp_on","bonus_type","bonus_payout_count","current_bet","pay_display","display_left_stop","display_center_stop","display_right_stop","stopped_mask","phase_left","phase_center","phase_right","motion_profile","last_client_sequence","last_activity");
     private final PiriDatabase db;
     public GameStore(PiriDatabase db){this.db=db;}
-    public Session commit(NormalGame.Transition action) throws Exception {
+    public Session commit(GameTransition action) throws Exception {
         return db.transaction(()->{
             Session before=action.before(),after=action.after();String receipt="GAME_TX:"+action.transaction();
             var done=db.rows("SELECT value FROM metadata WHERE key=?",receipt);
