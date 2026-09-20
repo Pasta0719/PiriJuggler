@@ -1,10 +1,10 @@
-# Piri GOD — economic targets and fitting order
+# Piri GOD — economic target selection
 
-## Locked starting benchmark
+## Reference benchmark
 
-The first target payout curve is:
+Kamigami no Kiseki's published payout curve is retained as a reference benchmark:
 
-| Setting | Target payout |
+| Setting | Kiseki benchmark |
 |---:|---:|
 | 1 | 97.2% |
 | 2 | 99.1% |
@@ -13,37 +13,28 @@ The first target payout curve is:
 | 5 | 111.7% |
 | 6 | 114.6% |
 
-The initial GG baseline is 50 games at +7.0 net medals/game, therefore one plain GG set is +350 net medals before any stock continuation.
+This curve is **not yet automatically the locked Piri production target**.
 
-The GOD flag is fixed independently at exactly 1/8192 on every eligible game, all settings. It is not allowed to inherit a mode-dependent probability.
+The production curve must be passed explicitly through `GodPayoutCurve`.
 
-## Budget rule
+## Fixed Piri invariants
 
-Every positive payout source gets an explicit long-run EV budget before concrete hit probabilities are chosen:
+- GG baseline: 50 games
+- GG pure increase baseline: +7.0 net medals/game
+- one plain GG set: +350 net medals
+- GOD: exact independent 1/8192
+- ordinary GG bell-streak V-stock: excluded
 
-- independent GOD
+## Fitting rule
+
+Once the six-setting target curve is selected, all remaining EV sources are fitted against it:
+
 - normal GG initial hit
 - loop/set stock
 - SGG/red-7 path
-- any retained Z path
-- any other premium route
+- retained Z path
+- other premium routes
 
-Ordinary GG bell-streak V-stock is explicitly excluded from the production design.
+The Kiseki structure is the gameplay baseline, but numeric probabilities may need adjustment because Piri fixes GOD at 1/8192.
 
-For each source:
-
-EV contribution per game = trigger probability per game * expected net medals per trigger
-
-Those contributions, ordinary-symbol return, and normal-game losses must reconcile to the setting target.
-
-## Next numeric unknowns
-
-Before gameplay code:
-1. expected net value of one GOD hit
-2. normal-game base return and average games per GG initial hit per setting
-3. loop-stock distribution
-4. SGG/red-7 EV
-5. optional Z-system EV
-6. any other retained premium route
-
-All are to be fit against the six payout targets and then verified by long-run simulation.
+No production GOD engine should be considered economically complete until long-run simulation matches the selected target curve.
