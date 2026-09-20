@@ -8,8 +8,9 @@ class GodStopControlTest {
     @Test
     void publishedRolesAlwaysLandOnTheirPublishedRepresentativeForm(){
         String[] roles={
-                "UPPER_BLUE7","MIDDLE_BLUE7","LOWER_YELLOW7","RISING_YELLOW7",
-                "MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL","SP","RED7","GOD"
+                "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
+                "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7",
+                "GAIA_BELL","SP","RED7","GOD"
         };
         for(String role:roles){
             for(int leftPress=0;leftPress<GodReelStrip.STOPS;leftPress++){
@@ -29,9 +30,9 @@ class GodStopControlTest {
     }
 
     @Test
-    void ordinaryPublishedSmallRolesNeedAtMostFourFrameSlip(){
+    void ordinaryPublishedFormsNeedAtMostFourFrameSlip(){
         String[] roles={
-                "UPPER_BLUE7","MIDDLE_BLUE7","LOWER_YELLOW7",
+                "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
                 "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL","GOD"
         };
         for(String role:roles){
@@ -46,24 +47,29 @@ class GodStopControlTest {
     }
 
     @Test
-    void lowerYellowVariantsUseDifferentPublishedCenterWindows(){
-        for(int press=0;press<GodReelStrip.STOPS;press++){
-            int three=GodStopControl.targetFor("LOWER_YELLOW7",1,press);
-            int fifteen=GodStopControl.targetFor("COMMON_YELLOW7",1,press);
-            assertEquals(GodReelStrip.Symbol.RED7,GodReelStrip.symbol(1,three));
-            assertEquals(GodReelStrip.Symbol.YELLOW7,GodReelStrip.symbol(1,three+1));
-            assertEquals(GodReelStrip.Symbol.BLUE7,GodReelStrip.symbol(1,fifteen));
-            assertEquals(GodReelStrip.Symbol.YELLOW7,GodReelStrip.symbol(1,fifteen+1));
+    void lowerYellowPayoutVariantsShareOnlyThePublishedLineShape(){
+        assertTrue(GodStopControl.publishedRule("ORDERED_YELLOW7").isPresent());
+        assertTrue(GodStopControl.publishedRule("LOWER_YELLOW7").isPresent());
+        assertTrue(GodStopControl.publishedRule("COMMON_YELLOW7").isPresent());
+
+        for(String role:new String[]{"ORDERED_YELLOW7","LOWER_YELLOW7","COMMON_YELLOW7"}){
+            for(int reel=0;reel<3;reel++){
+                for(int press=0;press<GodReelStrip.STOPS;press++){
+                    int middle=GodStopControl.targetFor(role,reel,press);
+                    assertEquals(GodReelStrip.Symbol.YELLOW7,
+                            GodReelStrip.symbol(reel,middle+1),
+                            role+" must show yellow on bottom row");
+                }
+            }
         }
     }
 
     @Test
-    void unpublishedRoleDetailsRemainExplicitFallbacks(){
-        assertTrue(GodStopControl.publishedRule("ORDERED_YELLOW7").isEmpty());
+    void genuinelyUnpublishedExactFormsRemainFallbacks(){
         assertTrue(GodStopControl.publishedRule("RED7_FAKE").isEmpty());
         assertTrue(GodStopControl.publishedRule("MISS").isEmpty());
 
-        for(String role:new String[]{"ORDERED_YELLOW7","RED7_FAKE","MISS"}){
+        for(String role:new String[]{"RED7_FAKE","MISS"}){
             for(int reel=0;reel<3;reel++){
                 for(int press=0;press<GodReelStrip.STOPS;press++){
                     int target=GodStopControl.targetFor(role,reel,press);
