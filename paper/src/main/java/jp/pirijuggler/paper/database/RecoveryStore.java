@@ -136,7 +136,9 @@ public final class RecoveryStore {
             graph(values,stats,now);
             JsonObject state=before.machineState();
             finish(values,now);
-            return state==null?null:row("SELECT machine_runtime_json FROM machines WHERE machine_id=?",before.machine()).get("machine_runtime_json") instanceof String raw?raw:null;
+            if(state==null)return null;
+            Object raw=row("SELECT machine_runtime_json FROM machines WHERE machine_id=?",before.machine()).get("machine_runtime_json");
+            return raw instanceof String text?text:null;
         }
         if(before.state()!=Session.GameState.NORMAL_SPINNING)
             throw new IllegalStateException("Unexpected GOD recovery state: "+before.state());
