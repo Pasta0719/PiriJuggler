@@ -130,6 +130,9 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length==3 && args[0].equalsIgnoreCase("godtest")) {
                 commandGodTest(sender,Integer.parseInt(args[1]),args[2]); return true;
             }
+            if (args.length==3 && args[0].equalsIgnoreCase("godrole")) {
+                commandGodRole(sender,Integer.parseInt(args[1]),args[2]); return true;
+            }
             if (args.length >= 2 && args[0].equalsIgnoreCase("key") && args[1].equalsIgnoreCase("give") && args.length <= 3) {
                 Player target = args.length == 3 ? Bukkit.getPlayerExact(args[2]) : sender instanceof Player player ? player : null;
                 if (target == null) throw new DomainException("PLAYER_REQUIRED");
@@ -145,7 +148,7 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length >= 2 && args[0].equalsIgnoreCase("event")) {
                 commandEvent(sender,args); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
@@ -220,6 +223,22 @@ public final class MachineService implements Listener, CommandExecutor {
                 tell(player,"RECOVER_CASHOUT amount="+plan.amount()+" delivered="+finalDelivered+" pending="+(plan.amount()-finalDelivered));
             });
         });
+    }
+
+    private void commandGodRole(CommandSender sender,int id,String rawRole) {
+        Machine machine=state.machine(id);
+        if(machine==null||machine.type()!=MachineType.GOD)throw new DomainException("INVALID_STATE");
+        if(busy(id))throw new DomainException("MACHINE_OCCUPIED");
+
+        final GodRole role;
+        try { role=GodRole.valueOf(rawRole.toUpperCase(Locale.ROOT)); }
+        catch(IllegalArgumentException invalid){ throw new DomainException("INVALID_STATE"); }
+
+        GodMachineRuntime current=GodMachineRuntime.fromJson(machine.runtimeJson());
+        GodMachineRuntime next=current.withForcedRole(role.name());
+        long now=System.currentTimeMillis();
+        submit(sender,null,id,()->{database.setMachineRuntimeJson(id,next.toJsonString(),now);return id;},
+                done->{tell(sender,"GOD_ROLE_READY id="+done+" role="+role.name()+" nextSpinOnly=true");remote.machineChanged(done);});
     }
 
     private void commandGodTest(CommandSender sender,int id,String rawMode) {
