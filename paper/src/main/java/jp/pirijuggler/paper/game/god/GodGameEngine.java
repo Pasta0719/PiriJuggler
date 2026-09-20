@@ -354,7 +354,6 @@ public final class GodGameEngine implements GameEngine {
 
     private Step zZone(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
         boolean yellow=rng.nextDouble()<1.0/GodProductionSpec.Z_ZONE_YELLOW7_DENOMINATOR;
-        int payout=yellow?15:0;
         int left=s.zZoneGamesRemaining(),streak=s.zYellowStreak();
         if(yellow){
             streak++;
@@ -380,7 +379,6 @@ public final class GodGameEngine implements GameEngine {
 
     private Step zGame(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
         boolean yellow=rng.nextDouble()<1.0/GodProductionSpec.Z_ZONE_YELLOW7_DENOMINATOR;
-        int payout=yellow?15:0;
         if(yellow){
             GodSessionState ns=copy(s,GodPhase.Z_GAME,0,s.queuedGgStocks()+1,s.loopType(),0,0,0,s.sggSetNumber(),0,0,s.zGameStocks()+1,s.totalGodGames()+1,"Z_STOCK","ORDERED_YELLOW7");
             return new Step(r.withGameplay(ns));
