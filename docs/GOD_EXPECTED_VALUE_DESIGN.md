@@ -5,7 +5,7 @@ Gameplay/UI implementation is intentionally blocked until the long-run economics
 ## Fixed design decisions
 - GOD flag is an independent per-game draw at exactly 1/8192.
 - The machine should use a high-pure-increase GG as its base rather than copying Gaisen verbatim.
-- GG keeps a visible bell-streak V-stock mechanic, but its thresholds/probabilities are derived from an allowed EV budget rather than chosen by feel.
+- Ordinary GG bell-streak V-stock is not used.
 - Presentation, lamps, sounds and reel effects are downstream of the economics.
 
 ## EV model
@@ -27,7 +27,7 @@ Initial states to parameterize:
 - SGG
 - Z_ZONE / Z_GAME if retained
 
-GOD, red-7/SGG entry, loop/set stock and bell-streak V-stock are represented as transition/reward contributions, not visual features.
+GOD, red-7/SGG entry, loop/set stock and any retained premium paths are represented as transition/reward contributions, not visual features.
 
 ## Parameter-fitting order
 1. target payout percentages for settings 1..6
@@ -36,9 +36,8 @@ GOD, red-7/SGG entry, loop/set stock and bell-streak V-stock are represented as 
 4. independent GOD 1/8192 reward distribution
 5. normal GG initial-hit contribution
 6. loop/set-stock contribution
-7. bell-streak V-stock EV budget
-8. SGG and other premium paths
-9. solve/tune parameters until all six settings meet target payout
-10. only then freeze reel/UI/audio behavior
+7. SGG and other premium paths
+8. solve/tune parameters until all six settings meet target payout
+9. only then freeze reel/UI/audio behavior
 
 No production GOD engine should be written until this model has a stable parameter set.
