@@ -54,19 +54,20 @@ public final class GodGameEngine implements GameEngine {
         }
 
         GodMachineRuntime runtime=GodMachineRuntime.fromJson(machine.runtimeJson());
-        Step step=step(runtime,machine.setting(),random.gameplay(machine.id()));
+        RandomGenerator rng=random.gameplay(machine.id());
+        Step step=step(runtime,machine.setting(),rng);
         String role=step.runtime().gameplay().lastRole();
+        final GodRole internalRole;
+        try { internalRole=GodRole.valueOf(role); }
+        catch(RuntimeException invalidRole){ throw new DomainException("INVALID_STATE"); }
+        GodRoleOutcome.Outcome outcome=GodRoleOutcome.resolve(internalRole,runtime.gameplay().phase(),rng.nextDouble());
 
         JsonObject sessionState=runtime.gameplay().toJson();
         sessionState.add("_pendingRuntime",step.runtime().toJson());
-        sessionState.addProperty("_pendingPayout",step.payout());
-        boolean pendingReplay=false;
-        if(role!=null){
-            try{pendingReplay=GodRoleOutcome.forRole(GodRole.valueOf(role),runtime.gameplay().phase()).replay();}
-            catch(IllegalArgumentException ignored){}
-        }
-        sessionState.addProperty("_pendingReplay",pendingReplay);
-        sessionState.addProperty("_pendingRole",role==null?"NONE":role);
+        sessionState.addProperty("_pendingPayout",outcome.payout());
+        sessionState.addProperty("_pendingReplay",outcome.replay());
+        sessionState.addProperty("_pendingRole",internalRole.name());
+        sessionState.addProperty("_pendingDisplayRole",outcome.displayRole());
 
         String spin=UUID.randomUUID().toString();
         values.put("game_state","NORMAL_SPINNING");
@@ -111,7 +112,8 @@ public final class GodGameEngine implements GameEngine {
         if(pressed<0||pressed>=GodReelStrip.STOPS)return rejected(before,action,sequence,now,ErrorCode.SESSION_MISMATCH);
 
         String role=state.has("_pendingRole")?state.get("_pendingRole").getAsString():before.text("internal_role");
-        int target=GodStopControl.targetFor(role,reel,pressed);
+        String displayRole=state.has("_pendingDisplayRole")?state.get("_pendingDisplayRole").getAsString():role;
+        int target=GodStopControl.targetFor(displayRole,reel,pressed);
         int slip=GodReelStrip.slip(pressed,target);
         int duration=ReelMotion.durationMs(slip);
 
@@ -127,7 +129,7 @@ public final class GodGameEngine implements GameEngine {
         stop.addProperty("stopIndex",target);
         stop.addProperty("slip",slip);
         stop.addProperty("durationMs",duration);
-        stop.add("nextStopHints",stopHints(role,nextMask));
+        stop.add("nextStopHints",stopHints(displayRole,nextMask));
 
         var packets=new ArrayList<Envelope>();
         packets.add(accepted(action,sequence));
@@ -301,10 +303,10 @@ public final class GodGameEngine implements GameEngine {
         }
         if(stocks>0){
             stocks--;
-            GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,stocks,s.loopType(),0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"GG_CONTINUE","STOCK");
+            GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,stocks,s.loopType(),0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"GG_CONTINUE",role.name());
             return new Step(r.withGameplay(ns),payout);
         }
-        GodSessionState ns=copy(s,GodPhase.NORMAL,0,0,null,0,0,0,0,0,0,0,s.totalGodGames()+1,"NORMAL_RETURN","NONE");
+        GodSessionState ns=copy(s,GodPhase.NORMAL,0,0,null,0,0,0,0,0,0,0,s.totalGodGames()+1,"NORMAL_RETURN",role.name());
         GodMachineRuntime nr=new GodMachineRuntime(r.frontMode(),0,0,0,r.gaiaMode(),r.gaiaBellCount(),r.gaiaTarget(),false,0,r.ceilingTarget(),r.totalNormalGames(),ns);
         return new Step(nr,payout);
     }
@@ -323,10 +325,10 @@ public final class GodGameEngine implements GameEngine {
         if(cont>0){
             int nextCont=cont-1,set=s.sggSetNumber()+1;
             int len=sggLength(set%5==0,GodRole.MISS,rng);
-            GodSessionState ns=copy(s,GodPhase.SGG,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,len,nextCont,set,0,0,0,s.totalGodGames()+1,"SGG_STOCK_CONTINUE","S");
+            GodSessionState ns=copy(s,GodPhase.SGG,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,len,nextCont,set,0,0,0,s.totalGodGames()+1,"SGG_STOCK_CONTINUE",role.name());
             return new Step(r.withGameplay(ns),payout);
         }
-        GodSessionState ns=copy(s,GodPhase.SGG_COMEBACK,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,3,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"SGG_COMEBACK","NONE");
+        GodSessionState ns=copy(s,GodPhase.SGG_COMEBACK,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,3,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"SGG_COMEBACK",role.name());
         return new Step(r.withGameplay(ns),payout);
     }
 
@@ -344,15 +346,15 @@ public final class GodGameEngine implements GameEngine {
         }
         int left=Math.max(0,s.sggGamesRemaining()-1);
         if(left>0){
-            GodSessionState ns=copy(s,GodPhase.SGG_COMEBACK,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,left,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"SGG_COMEBACK","MISS");
+            GodSessionState ns=copy(s,GodPhase.SGG_COMEBACK,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,left,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"SGG_COMEBACK",role.name());
             return new Step(r.withGameplay(ns),payout);
         }
         if(s.ggGamesRemaining()>0){
-            GodSessionState ns=copy(s,GodPhase.GG,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"SGG_END_GG","NONE");
+            GodSessionState ns=copy(s,GodPhase.GG,s.ggGamesRemaining(),s.queuedGgStocks(),s.loopType(),0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"SGG_END_GG",role.name());
             return new Step(r.withGameplay(ns),payout);
         }
         int stocks=Math.max(1,s.queuedGgStocks());
-        GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,stocks-1,s.loopType(),0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"SGG_END_GG","NONE");
+        GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,stocks-1,s.loopType(),0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"SGG_END_GG",role.name());
         return new Step(r.withGameplay(ns),payout);
     }
 
@@ -363,7 +365,7 @@ public final class GodGameEngine implements GameEngine {
         if(yellow){
             streak++;
             if(streak>=GodProductionSpec.Z_ZONE_REQUIRED_YELLOW7_STREAK){
-                GodSessionState ns=copy(s,GodPhase.Z_GAME,0,s.queuedGgStocks()+1,s.loopType(),0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"Z_GAME","YELLOW7");
+                GodSessionState ns=copy(s,GodPhase.Z_GAME,0,s.queuedGgStocks()+1,s.loopType(),0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"Z_GAME","ORDERED_YELLOW7");
                 return new Step(r.withGameplay(ns),payout);
             }
         }else{
@@ -378,7 +380,7 @@ public final class GodGameEngine implements GameEngine {
             GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,stocks-1,null,0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"Z_FAIL_GG","NONE");
             return new Step(r.withGameplay(ns),payout);
         }
-        GodSessionState ns=copy(s,GodPhase.Z_ZONE,0,s.queuedGgStocks(),s.loopType(),0,0,0,s.sggSetNumber(),left,streak,0,s.totalGodGames()+1,"Z_ZONE",yellow?"YELLOW7":"MISS");
+        GodSessionState ns=copy(s,GodPhase.Z_ZONE,0,s.queuedGgStocks(),s.loopType(),0,0,0,s.sggSetNumber(),left,streak,0,s.totalGodGames()+1,"Z_ZONE",yellow?"ORDERED_YELLOW7":"MISS");
         return new Step(r.withGameplay(ns),payout);
     }
 
@@ -386,7 +388,7 @@ public final class GodGameEngine implements GameEngine {
         boolean yellow=rng.nextDouble()<1.0/GodProductionSpec.Z_ZONE_YELLOW7_DENOMINATOR;
         int payout=yellow?15:0;
         if(yellow){
-            GodSessionState ns=copy(s,GodPhase.Z_GAME,0,s.queuedGgStocks()+1,s.loopType(),0,0,0,s.sggSetNumber(),0,0,s.zGameStocks()+1,s.totalGodGames()+1,"Z_STOCK","YELLOW7");
+            GodSessionState ns=copy(s,GodPhase.Z_GAME,0,s.queuedGgStocks()+1,s.loopType(),0,0,0,s.sggSetNumber(),0,0,s.zGameStocks()+1,s.totalGodGames()+1,"Z_STOCK","ORDERED_YELLOW7");
             return new Step(r.withGameplay(ns),payout);
         }
         int stocks=Math.max(1,s.queuedGgStocks());
@@ -417,7 +419,7 @@ public final class GodGameEngine implements GameEngine {
         double x=rng.nextDouble();GodLoopType loop;boolean z=false;
         if(x<0.167)loop=GodLoopType.A;else if(x<0.334)loop=GodLoopType.B;else if(x<0.501)loop=GodLoopType.C;else if(x<0.668)loop=GodLoopType.D;else{loop=GodLoopType.A;z=true;}
         if(z){
-            GodSessionState ns=copy(s,GodPhase.Z_ZONE,0,1,loop,0,0,0,s.sggSetNumber(),GodProductionSpec.Z_ZONE_BASE_GAMES,0,0,s.totalGodGames()+1,"CEILING_Z","NONE");
+            GodSessionState ns=copy(s,GodPhase.Z_ZONE,0,1,loop,0,0,0,s.sggSetNumber(),GodProductionSpec.Z_ZONE_BASE_GAMES,0,0,s.totalGodGames()+1,"CEILING_Z",role.name());
             return new Step(resetNormal(r,ns),payout);
         }
         return enterGg(r,s,role,loop,1,payout,rng);
@@ -568,8 +570,11 @@ public final class GodGameEngine implements GameEngine {
         phases.addProperty("right",((Number)saved.snapshot().get("phase_right")).doubleValue());
         b.add("startPhase",phases);
         b.addProperty("stopEnableAfterMs","RESUME_NORMAL".equals(animation)?200:700);
-        String role=saved.machineState()!=null&&saved.machineState().has("_pendingRole")
-                ? saved.machineState().get("_pendingRole").getAsString():saved.text("internal_role");
+        String role=saved.machineState()!=null&&saved.machineState().has("_pendingDisplayRole")
+                ? saved.machineState().get("_pendingDisplayRole").getAsString()
+                : saved.machineState()!=null&&saved.machineState().has("_pendingRole")
+                    ? saved.machineState().get("_pendingRole").getAsString()
+                    : saved.text("internal_role");
         b.add("stopHints",stopHints(role,(int)saved.number("stopped_mask")));
         return Envelope.current(PacketType.SPIN_START,b);
     }
