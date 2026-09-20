@@ -78,4 +78,17 @@ class GodStopControlTest {
             }
         }
     }
+    @Test
+    void red7AndSpNeverUseAnImpossibleLongSlip(){
+        for(String role:new String[]{"RED7","SP"}){
+            boolean sawRepresentativeMiss=false;
+            for(int reel=0;reel<3;reel++)for(int press=0;press<GodReelStrip.STOPS;press++){
+                int target=GodStopControl.targetFor(role,reel,press);
+                assertTrue(GodReelStrip.slip(press,target)<=4,role+" reel="+reel+" press="+press);
+                if(target==press)sawRepresentativeMiss=true;
+            }
+            assertTrue(sawRepresentativeMiss,role+" should not be force-aligned from every press position");
+        }
+    }
+
 }
