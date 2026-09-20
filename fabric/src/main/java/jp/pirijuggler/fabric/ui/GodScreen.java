@@ -2,6 +2,7 @@ package jp.pirijuggler.fabric.ui;
 
 import com.google.gson.JsonObject;
 import jp.pirijuggler.common.protocol.PacketType;
+import jp.pirijuggler.common.reel.GodReelStrip;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
@@ -27,7 +28,9 @@ public final class GodScreen extends Screen {
     @Override public void close(){input.send(PacketType.CLOSE_REQUEST);}
 
     @Override public boolean keyPressed(int key,int scan,int modifiers){
-        if(key==GLFW.GLFW_KEY_SPACE){input.key(key,PacketType.SPACE_ACTION);pressed="PLAY";return true;}
+        if(key==GLFW.GLFW_KEY_T){input.releaseAll();client.setScreen(new SlotChatScreen(null));return true;}
+        PacketType action=SlotKeys.action(key,scan);
+        if(action!=null){input.key(key,action);pressed=action==PacketType.SPACE_ACTION?"PLAY":action.name();return true;}
         return false;
     }
     @Override public boolean keyReleased(int key,int scan,int modifiers){input.release(key);pressed="";return true;}
@@ -35,9 +38,12 @@ public final class GodScreen extends Screen {
     @Override public boolean mouseClicked(double x,double y,int button){
         if(button!=0)return false;
         Viewport v=viewport();double lx=v.logicalX(x),ly=v.logicalY(y);
-        if(in(lx,ly,760,895,400,105)){pressed="PLAY";return input.mouse("GOD_PLAY",button,PacketType.SPACE_ACTION);}
-        if(in(lx,ly,330,910,210,70)){pressed="INSERT";return input.mouse("GOD_INSERT",button,PacketType.INSERT_MEDALS);}
-        if(in(lx,ly,1380,910,210,70)){pressed="CASH";return input.mouse("GOD_CASHOUT",button,PacketType.CASH_OUT);}
+        if(in(lx,ly,285,900,230,85)){pressed="PLAY";return input.mouse("GOD_PLAY",button,PacketType.SPACE_ACTION);}
+        if(in(lx,ly,610,900,190,85)){pressed="STOP_LEFT";return input.mouse("GOD_LEFT",button,PacketType.STOP_LEFT);}
+        if(in(lx,ly,865,900,190,85)){pressed="STOP_CENTER";return input.mouse("GOD_CENTER",button,PacketType.STOP_CENTER);}
+        if(in(lx,ly,1120,900,190,85)){pressed="STOP_RIGHT";return input.mouse("GOD_RIGHT",button,PacketType.STOP_RIGHT);}
+        if(in(lx,ly,1380,900,210,85)){pressed="INSERT";return input.mouse("GOD_INSERT",button,PacketType.INSERT_MEDALS);}
+        if(in(lx,ly,1610,900,210,85)){pressed="CASH";return input.mouse("GOD_CASHOUT",button,PacketType.CASH_OUT);}
         return false;
     }
     @Override public boolean mouseReleased(double x,double y,int button){if(button==0)pressed="";return button==0;}
@@ -55,12 +61,16 @@ public final class GodScreen extends Screen {
         c.fill(LCD_X-15,LCD_Y-15,LCD_X+LCD_W+15,LCD_Y+LCD_H+15,0xffd1a642);
         drawLcd(c);
 
+        drawReels(c);
         // Lower status / controls.
         c.fill(330,785,1590,875,0xff080808);
         drawStatus(c);
-        button(c,330,910,210,70,"INSERT","INSERT".equals(pressed));
-        button(c,760,895,400,105,"PLAY / LEVER   [SPACE]","PLAY".equals(pressed));
-        button(c,1380,910,210,70,"CASH OUT","CASH".equals(pressed));
+        button(c,285,900,230,85,"LEVER / SPACE","PLAY".equals(pressed));
+        button(c,610,900,190,85,"LEFT","STOP_LEFT".equals(pressed));
+        button(c,865,900,190,85,"CENTER","STOP_CENTER".equals(pressed));
+        button(c,1120,900,190,85,"RIGHT","STOP_RIGHT".equals(pressed));
+        button(c,1380,900,210,85,"INSERT","INSERT".equals(pressed));
+        button(c,1610,900,210,85,"CASH OUT","CASH".equals(pressed));
 
         String err=view.error();
         if(!err.isEmpty())center(c,err,960,1015,0xffff6666,1.5f);
@@ -113,6 +123,28 @@ public final class GodScreen extends Screen {
         else if("SGG".equals(phase)||"SGG_COMEBACK".equals(phase))center(c,"REMAIN "+view.value("godSggRemaining")+"G",960,LCD_Y+480,0xffffffff,1.8f);
         else if("Z_ZONE".equals(phase))center(c,"CHANCE "+view.value("godZZoneRemaining"),960,LCD_Y+480,0xffffffff,1.8f);
         else if("Z_GAME".equals(phase))center(c,"STOCK "+view.value("godStocks"),960,LCD_Y+480,0xffffffff,1.8f);
+    }
+
+    private void drawReels(DrawContext c){
+        int top=470,left=560,reelW=245,reelH=235,gap=35;
+        for(int reel=0;reel<3;reel++){
+            int x=left+reel*(reelW+gap);
+            c.fill(x-4,top-4,x+reelW+4,top+reelH+4,0xffd2aa4a);
+            c.fill(x,top,x+reelW,top+reelH,0xfff4ead2);
+            double phase=view.phase(reel);int middle=(int)Math.floor(phase);double frac=phase-middle;
+            for(int row=-1;row<=1;row++){
+                int index=middle+row;
+                double y=top+reelH/2.0+(row-frac)*72-18;
+                drawSymbol(c,GodReelStrip.symbol(reel,index),x+reelW/2,(int)y);
+            }
+            c.fill(x,top+reelH/2-1,x+reelW,top+reelH/2+1,0x88705010);
+        }
+    }
+
+    private void drawSymbol(DrawContext c,GodReelStrip.Symbol symbol,int cx,int cy){
+        String text=switch(symbol){case GOD->"GOD";case RED7->"7";case BLUE7->"7";case YELLOW7->"7";case BELL->"BELL";case BLANK->"·";};
+        int color=switch(symbol){case GOD->0xffffc52e;case RED7->0xffff3535;case BLUE7->0xff4386ff;case YELLOW7->0xffffd83f;case BELL->0xffb8862e;case BLANK->0xff777777;};
+        center(c,text,cx,cy,color,symbol==GodReelStrip.Symbol.GOD?2.8f:symbol==GodReelStrip.Symbol.BELL?2.0f:3.5f);
     }
 
     private void drawStatus(DrawContext c){

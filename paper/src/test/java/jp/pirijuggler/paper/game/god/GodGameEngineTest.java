@@ -15,26 +15,51 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GodGameEngineTest {
     @Test
-    void oneSpaceActionResolvesOneDurableGame() {
+    void leverThenThreeStopsCompleteOneGame() {
         GodGameEngine engine=new GodGameEngine(RandomStreams.production());
-        Session before=session(50);
         Machine machine=machine();
-        var t=engine.plan(before,machine,PacketType.SPACE_ACTION,1,1_700_000_000_000L,0,0,null);
-        assertEquals(3,t.bet());
-        assertEquals(1,t.normalSpins());
-        assertEquals(Session.GameState.SEATED_READY,t.after().state());
-        assertNotNull(t.machineRuntimeJson());
-        assertNotNull(t.after().machineState());
-        assertTrue(t.after().publicState().has("godPhase"));
-        assertEquals(1,t.after().sequence());
+
+        var lever=engine.plan(session(50),machine,PacketType.SPACE_ACTION,1,1_700_000_000_000L,0,0,null);
+        assertEquals(3,lever.bet());
+        assertEquals(0,lever.normalSpins());
+        assertTrue(lever.lever());
+        assertEquals(Session.GameState.NORMAL_SPINNING,lever.after().state());
+        assertNull(lever.machineRuntimeJson());
+        assertTrue(engine.committed(lever,0).stream().anyMatch(p->p.packetType()==PacketType.SPIN_START));
+
+        var left=engine.plan(lever.after(),machine,PacketType.STOP_LEFT,2,1_700_000_000_100L,0,0,3);
+        assertEquals(1,left.after().number("stopped_mask"));
+        assertFalse(left.finished());
+
+        var center=engine.plan(left.after(),machine,PacketType.STOP_CENTER,3,1_700_000_000_200L,0,0,8);
+        assertEquals(3,center.after().number("stopped_mask"));
+        assertFalse(center.finished());
+
+        var right=engine.plan(center.after(),machine,PacketType.STOP_RIGHT,4,1_700_000_000_300L,0,0,12);
+        assertEquals(7,right.after().number("stopped_mask"));
+        assertTrue(right.finished());
+        assertEquals(1,right.normalSpins());
+        assertEquals(Session.GameState.SEATED_READY,right.after().state());
+        assertNotNull(right.machineRuntimeJson());
+        assertTrue(right.publicDelayMs()>0);
+        assertTrue(right.after().publicState().has("godPhase"));
     }
 
     @Test
-    void zeroCreditIsRejectedWithoutAdvancingCabinetRuntime() {
+    void spaceStopsNextPendingReelWhileSpinning() {
+        GodGameEngine engine=new GodGameEngine(RandomStreams.production());
+        Machine machine=machine();
+        var lever=engine.plan(session(50),machine,PacketType.SPACE_ACTION,1,1,0,0,null);
+        var stop=engine.plan(lever.after(),machine,PacketType.SPACE_ACTION,2,2,0,0,5);
+        assertEquals(1,stop.after().number("stopped_mask"));
+    }
+
+    @Test
+    void zeroCreditIsRejectedWithoutStartingSpin() {
         GodGameEngine engine=new GodGameEngine(RandomStreams.production());
         var t=engine.plan(session(0),machine(),PacketType.SPACE_ACTION,1,1_700_000_000_000L,0,0,null);
         assertEquals(0,t.bet());
-        assertEquals(0,t.normalSpins());
+        assertEquals(Session.GameState.SEATED_READY,t.after().state());
         assertNull(t.machineRuntimeJson());
         assertEquals("NOT_ENOUGH_CREDIT",t.packets().getFirst().payload().get("errorCode").getAsString());
     }

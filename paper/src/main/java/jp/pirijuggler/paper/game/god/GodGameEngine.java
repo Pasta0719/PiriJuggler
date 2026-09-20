@@ -2,6 +2,8 @@ package jp.pirijuggler.paper.game.god;
 
 import com.google.gson.JsonObject;
 import jp.pirijuggler.common.protocol.*;
+import jp.pirijuggler.common.reel.GodReelStrip;
+import jp.pirijuggler.common.reel.ReelMotion;
 import jp.pirijuggler.paper.game.*;
 import jp.pirijuggler.paper.machine.DomainException;
 import jp.pirijuggler.paper.machine.Machine;
@@ -31,35 +33,124 @@ public final class GodGameEngine implements GameEngine {
                                long now, long receivedNanos, int ping, Integer clientPressedIndex) {
         if(before.lifecycle()!=Session.Lifecycle.ACTIVE)throw new DomainException("SESSION_MISMATCH");
         if(sequence<=before.sequence())throw new DomainException("SEQUENCE_OLD");
-        if(action!=PacketType.SPACE_ACTION)throw new DomainException("INVALID_STATE");
+        return before.state()==Session.GameState.SEATED_READY
+                ? beginSpin(before,machine,action,sequence,now)
+                : before.state()==Session.GameState.NORMAL_SPINNING
+                    ? stopSpin(before,action,sequence,now,clientPressedIndex)
+                    : rejected(before,action,sequence,now,ErrorCode.INVALID_STATE);
+    }
 
+    private GameTransition beginSpin(Session before,Machine machine,PacketType action,long sequence,long now){
+        if(action!=PacketType.SPACE_ACTION)return rejected(before,action,sequence,now,ErrorCode.INVALID_STATE);
         var values=new LinkedHashMap<>(before.snapshot());
         values.put("last_client_sequence",sequence);values.put("last_activity",now);
-        var packets=new ArrayList<Envelope>();
-        var rng=random.gameplay(machine.id());
+
         var balance=new GameRules.Balance(Math.toIntExact(before.number("credit")),before.number("held_medals"));
         var bet=balance.bet(3);
-        if(!bet.accepted()){
-            packets.add(ErrorPackets.rejected(sequence,ErrorCode.NOT_ENOUGH_CREDIT));
-            return transition(before,new Session(values),0,0,0,false,packets,null);
-        }
+        if(!bet.accepted())return rejected(before,action,sequence,now,ErrorCode.NOT_ENOUGH_CREDIT);
         putBalance(values,bet.balance());
 
         GodMachineRuntime runtime=GodMachineRuntime.fromJson(machine.runtimeJson());
-        Step step=step(runtime,machine.setting(),rng);
-        GameRules.Balance paid=new GameRules.Balance(((Number)values.get("credit")).intValue(),((Number)values.get("held_medals")).longValue()).payout(step.payout);
-        putBalance(values,paid);
-        values.put("game_state","SEATED_READY");
-        values.put("current_bet",0);
-        values.put("pay_display",step.payout);
-        values.put("machine_state_json",step.runtime.gameplay().toJsonString());
-        values.put("display_left_stop",rng.nextInt(21));
-        values.put("display_center_stop",rng.nextInt(21));
-        values.put("display_right_stop",rng.nextInt(21));
-        packets.add(accepted(sequence));
-        if(step.payout>0)packets.add(Envelope.current(PacketType.PAYOUT,new JsonObject()));
-        return transition(before,new Session(values),3,step.payout,1,true,packets,step.runtime.toJsonString());
+        Step step=step(runtime,machine.setting(),random.gameplay(machine.id()));
+        String role=step.runtime().gameplay().lastRole();
+
+        JsonObject sessionState=runtime.gameplay().toJson();
+        sessionState.add("_pendingRuntime",step.runtime().toJson());
+        sessionState.addProperty("_pendingPayout",step.payout());
+        sessionState.addProperty("_pendingRole",role==null?"NONE":role);
+
+        String spin=UUID.randomUUID().toString();
+        values.put("game_state","NORMAL_SPINNING");
+        values.put("spin_id",spin);
+        values.put("internal_role",role==null?"NONE":role);
+        values.put("motion_profile","NORMAL");
+        values.put("current_bet",3);
+        values.put("pay_display",0);
+        values.put("stopped_mask",0);
+        values.put("phase_left",(double)before.number("display_left_stop"));
+        values.put("phase_center",(double)before.number("display_center_stop"));
+        values.put("phase_right",(double)before.number("display_right_stop"));
+        values.put("machine_state_json",sessionState.toString());
+
+        return transition(before,new Session(values),3,0,0,false,true,0,
+                List.of(accepted(action,sequence)),List.of(),null);
     }
+
+    private GameTransition stopSpin(Session before,PacketType action,long sequence,long now,Integer clientPressedIndex){
+        if(!Set.of(PacketType.SPACE_ACTION,PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT).contains(action))
+            return rejected(before,action,sequence,now,ErrorCode.INVALID_STATE);
+        JsonObject state=before.machineState();
+        if(state==null||!state.has("_pendingRuntime"))throw new DomainException("SPIN_MISMATCH");
+
+        int mask=(int)before.number("stopped_mask");
+        int reel=switch(action){
+            case STOP_LEFT -> 0;
+            case STOP_CENTER -> 1;
+            case STOP_RIGHT -> 2;
+            case SPACE_ACTION -> nextReel(mask);
+            default -> -1;
+        };
+        if(reel<0)return rejected(before,action,sequence,now,ErrorCode.INVALID_STATE);
+        int bit=1<<reel;
+        if((mask&bit)!=0)return rejected(before,action,sequence,now,ErrorCode.ALREADY_STOPPED);
+
+        int pressed=clientPressedIndex==null
+                ? Math.floorMod((int)before.number("display_"+reelName(reel)+"_stop"),21)
+                : clientPressedIndex;
+        if(pressed<0||pressed>=21)return rejected(before,action,sequence,now,ErrorCode.SESSION_MISMATCH);
+
+        String role=state.has("_pendingRole")?state.get("_pendingRole").getAsString():before.text("internal_role");
+        var desired=GodReelStrip.symbolForRole(role);
+        int target=GodReelStrip.targetFor(reel,desired,pressed);
+        int slip=GodReelStrip.slip(pressed,target);
+        int duration=ReelMotion.durationMs(slip);
+
+        var values=new LinkedHashMap<>(before.snapshot());
+        values.put("last_client_sequence",sequence);values.put("last_activity",now);
+        values.put("display_"+reelName(reel)+"_stop",target);
+        int nextMask=mask|bit;values.put("stopped_mask",nextMask);
+
+        JsonObject stop=new JsonObject();
+        stop.addProperty("spinId",before.text("spin_id"));
+        stop.addProperty("reel",reelEnumName(reel));
+        stop.addProperty("pressedIndex",pressed);
+        stop.addProperty("stopIndex",target);
+        stop.addProperty("slip",slip);
+        stop.addProperty("durationMs",duration);
+        stop.add("nextStopHints",stopHints(role,nextMask));
+
+        var packets=new ArrayList<Envelope>();
+        packets.add(accepted(action,sequence));
+        packets.add(Envelope.current(PacketType.REEL_STOP,stop));
+
+        if(nextMask!=7)
+            return transition(before,new Session(values),0,0,0,false,false,0,packets,List.of(),null);
+
+        GodMachineRuntime finalRuntime=GodMachineRuntime.fromJson(state.getAsJsonObject("_pendingRuntime").toString());
+        int payout=state.get("_pendingPayout").getAsInt();
+        var current=new GameRules.Balance(Math.toIntExact(((Number)values.get("credit")).longValue()),((Number)values.get("held_medals")).longValue());
+        putBalance(values,current.payout(payout));
+        values.put("game_state","SEATED_READY");
+        values.put("spin_id",null);values.put("internal_role",null);values.put("motion_profile",null);
+        values.put("current_bet",0);values.put("pay_display",payout);
+        values.put("machine_state_json",finalRuntime.gameplay().toJsonString());
+
+        var scheduled=new ArrayList<GameTransition.Scheduled>();
+        if(payout>0)scheduled.add(new GameTransition.Scheduled(duration,Envelope.current(PacketType.PAYOUT,new JsonObject())));
+        return transition(before,new Session(values),0,payout,1,true,false,duration,packets,scheduled,finalRuntime.toJsonString());
+    }
+
+    private GameTransition rejected(Session before,PacketType action,long sequence,long now,ErrorCode code){
+        var values=new LinkedHashMap<>(before.snapshot());
+        values.put("last_client_sequence",sequence);values.put("last_activity",now);
+        return transition(before,new Session(values),0,0,0,false,false,0,
+                List.of(ErrorPackets.rejected(sequence,code)),List.of(),null);
+    }
+
+    private static int nextReel(int mask){for(int i=0;i<3;i++)if((mask&(1<<i))==0)return i;return -1;}
+    private static String reelName(int reel){return new String[]{"left","center","right"}[reel];}
+    private static String reelEnumName(int reel){return new String[]{"LEFT","CENTER","RIGHT"}[reel];}
+
 
     private record Step(GodMachineRuntime runtime,int payout) {}
 
@@ -419,18 +510,67 @@ public final class GodGameEngine implements GameEngine {
         double x=rng.nextDouble()*sum,c=0;for(GodRole role:roles){c+=GodKisekiRoleTable.referenceProbability(role);if(x<c)return role;}return GodRole.MISS;
     }
 
-    private static Envelope accepted(long sequence){JsonObject b=new JsonObject();b.addProperty("clientSequence",sequence);b.addProperty("action",PacketType.SPACE_ACTION.name());return Envelope.current(PacketType.ACTION_ACCEPTED,b);}
+    private static Envelope accepted(PacketType action,long sequence){
+        JsonObject b=new JsonObject();b.addProperty("clientSequence",sequence);b.addProperty("action",action.name());
+        return Envelope.current(PacketType.ACTION_ACCEPTED,b);
+    }
     private static void putBalance(Map<String,Object> values,GameRules.Balance b){values.put("credit",b.credit());values.put("held_medals",b.held());}
 
-    private static GameTransition transition(Session before,Session after,int bet,int payout,int spins,boolean finished,List<Envelope> packets,String runtime){
-        return new GameTransition(UUID.randomUUID(),before,after,bet,payout,spins,finished,false,null,false,0,packets,List.of(),List.of(),runtime);
+    private static JsonObject stopHints(String role,int mask){
+        JsonObject all=new JsonObject();
+        for(int reel=0;reel<3;reel++){
+            if((mask&(1<<reel))!=0)continue;
+            var choices=new com.google.gson.JsonArray();
+            var desired=GodReelStrip.symbolForRole(role);
+            for(int pressed=0;pressed<21;pressed++){
+                int target=GodReelStrip.targetFor(reel,desired,pressed);
+                int slip=GodReelStrip.slip(pressed,target);
+                JsonObject item=new JsonObject();item.addProperty("stopIndex",target);item.addProperty("slip",slip);item.addProperty("durationMs",ReelMotion.durationMs(slip));
+                choices.add(item);
+            }
+            all.add(reelName(reel),choices);
+        }
+        return all;
+    }
+
+    private static Envelope start(Session saved,String animation){
+        JsonObject b=saved.identity();
+        b.addProperty("spinId",saved.text("spin_id"));
+        b.addProperty("mode","GOD");
+        b.addProperty("animation",animation);
+        JsonObject phases=new JsonObject();
+        phases.addProperty("left",((Number)saved.snapshot().get("phase_left")).doubleValue());
+        phases.addProperty("center",((Number)saved.snapshot().get("phase_center")).doubleValue());
+        phases.addProperty("right",((Number)saved.snapshot().get("phase_right")).doubleValue());
+        b.add("startPhase",phases);
+        b.addProperty("stopEnableAfterMs","RESUME_NORMAL".equals(animation)?200:700);
+        String role=saved.machineState()!=null&&saved.machineState().has("_pendingRole")
+                ? saved.machineState().get("_pendingRole").getAsString():saved.text("internal_role");
+        b.add("stopHints",stopHints(role,(int)saved.number("stopped_mask")));
+        return Envelope.current(PacketType.SPIN_START,b);
+    }
+
+    private static GameTransition transition(Session before,Session after,int bet,int payout,int spins,boolean finished,
+                                             boolean lever,long publicDelay,List<Envelope> packets,
+                                             List<GameTransition.Scheduled> scheduled,String runtime){
+        return new GameTransition(UUID.randomUUID(),before,after,bet,payout,spins,finished,lever,null,false,publicDelay,packets,List.of(),scheduled,runtime);
     }
 
     @Override public List<Envelope> committed(GameTransition a,long sentNanos){
-        var out=new ArrayList<>(a.packets());out.add(Envelope.current(PacketType.PUBLIC_STATE,a.after().publicState()));return List.copyOf(out);
+        var out=new ArrayList<>(a.packets());
+        if(a.publicDelayMs()==0)out.add(Envelope.current(PacketType.PUBLIC_STATE,a.after().publicState()));
+        if(a.lever())out.add(start(a.after(),"NORMAL"));
+        return List.copyOf(out);
     }
-    @Override public List<GameTransition.Scheduled> scheduled(GameTransition action){return List.of();}
-    @Override public Optional<Envelope> resume(Session saved,long sentNanos){return Optional.empty();}
+    @Override public List<GameTransition.Scheduled> scheduled(GameTransition action){
+        var out=new ArrayList<GameTransition.Scheduled>();
+        if(action.publicDelayMs()>0)out.add(new GameTransition.Scheduled(action.publicDelayMs(),Envelope.current(PacketType.PUBLIC_STATE,action.after().publicState())));
+        out.addAll(action.scheduled());
+        return List.copyOf(out);
+    }
+    @Override public Optional<Envelope> resume(Session saved,long sentNanos){
+        return saved.state()==Session.GameState.NORMAL_SPINNING?Optional.of(start(saved,"RESUME_NORMAL")):Optional.empty();
+    }
     @Override public Session capture(Session saved,long now){return saved;}
     @Override public void forget(UUID session){}
 }

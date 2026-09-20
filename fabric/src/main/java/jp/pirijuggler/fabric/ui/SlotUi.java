@@ -19,7 +19,7 @@ public final class SlotUi {
             reset();outbound=sender;view=new SlotViewState(System::nanoTime);input=new SlotInput(session,envelope->{
                 int pressed=view.localInput(envelope.packetType());
                 if(pressed>=0){envelope.payload().addProperty("pressedIndex",pressed);PiriSounds.queue("stop",1,0);}
-                if(envelope.packetType()==PacketType.SPACE_ACTION){String state=view.value("gameState");String sound=state.contains("BETTED")||state.equals("REPLAY_READY")?"lever":state.contains("SPINNING")?"stop":"bet";ACCEPT_SOUNDS.put(envelope.payload().get("clientSequence").getAsLong(),sound);if(ACCEPT_SOUNDS.size()>128)ACCEPT_SOUNDS.remove(ACCEPT_SOUNDS.keySet().iterator().next());}
+                if(envelope.packetType()==PacketType.SPACE_ACTION){String state=view.value("gameState");String sound="GOD".equals(view.machineType())?(state.contains("SPINNING")?"stop":"lever"):(state.contains("BETTED")||state.equals("REPLAY_READY")?"lever":state.contains("SPINNING")?"stop":"bet");ACCEPT_SOUNDS.put(envelope.payload().get("clientSequence").getAsLong(),sound);if(ACCEPT_SOUNDS.size()>128)ACCEPT_SOUNDS.remove(ACCEPT_SOUNDS.keySet().iterator().next());}
                 if(envelope.packetType()==PacketType.CLOSE_REQUEST)queuedLever=null;
                 if(envelope.packetType()==PacketType.SPACE_ACTION&&view.shouldQueueLever()){
                     if(queuedLever==null)queuedLever=envelope;
