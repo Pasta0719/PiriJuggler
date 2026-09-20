@@ -61,28 +61,5 @@ public final class GodRoleOutcome {
         };
     }
 
-    /**
-     * Compatibility helper for legacy transition code. New settlement uses
-     * resolve(...) once in beginSpin; this method is intentionally deterministic.
-     */
-    public static Outcome forRole(GodRole role,GodPhase phase){
-        return resolve(role,phase,0.5);
-    }
-
-    /**
-     * Visual role key used by stop control. Normal/G-ZONE ordered-yellow is a
-     * non-winning miss presentation because the 15-medal push-order navigation
-     * is not active there. AT-like ordered-yellow uses the published common
-     * 15-medal lower-line representative form.
-     */
-    public static String presentationRole(GodRole role,GodPhase phase){
-        if(role==GodRole.ORDERED_YELLOW7){
-            boolean atLike=phase==GodPhase.GG||phase==GodPhase.SGG||phase==GodPhase.SGG_COMEBACK||
-                    phase==GodPhase.Z_ZONE||phase==GodPhase.Z_GAME;
-            return atLike?"COMMON_YELLOW7":"ORDERED_YELLOW7_MISS";
-        }
-        return role.name();
-    }
-
     private GodRoleOutcome(){}
 }
