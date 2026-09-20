@@ -65,6 +65,7 @@ public final class GodScreen extends Screen {
         // Lower status / controls.
         c.fill(330,785,1590,875,0xff080808);
         drawStatus(c);
+        if(!view.godNav().isEmpty())center(c,"NAV  "+view.godNav(),960,755,0xffffd36a,1.8f);
         button(c,285,900,230,85,"LEVER / SPACE","PLAY".equals(pressed));
         button(c,610,900,190,85,"LEFT","STOP_LEFT".equals(pressed));
         button(c,865,900,190,85,"CENTER","STOP_CENTER".equals(pressed));
