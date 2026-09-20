@@ -67,4 +67,25 @@ class SlotViewStateTest {
             time.set(profile.clientDelayMs()*1_000_000L-1);assertFalse(view.canSend(PacketType.STOP_LEFT));assertFalse(view.canSend(PacketType.SPACE_ACTION));assertTrue(view.canSend(PacketType.CLOSE_REQUEST));time.incrementAndGet();assertTrue(view.canSend(PacketType.STOP_LEFT));
         }
     }
+    @Test void godPushOrderHintsGateButtonsAndSpaceUsesTheAllowedReel(){
+        var time=new AtomicLong();var view=open(time);var b=start().payload();
+        b.addProperty("godNav","R-C-L");
+        var onlyRight=new JsonObject();onlyRight.add("right",b.getAsJsonObject("stopHints").getAsJsonArray("right").deepCopy());
+        b.add("stopHints",onlyRight);view.receive(Envelope.current(PacketType.SPIN_START,b));
+        assertEquals("R-C-L",view.godNav());
+        time.set(700_000_000L);
+        assertFalse(view.canSend(PacketType.STOP_LEFT));
+        assertTrue(view.canSend(PacketType.STOP_RIGHT));
+        assertTrue(view.canSend(PacketType.SPACE_ACTION));
+
+        int pressed=view.localInput(PacketType.SPACE_ACTION);
+        assertTrue(pressed>=0);
+        var next=new JsonObject();next.add("center",hints().getAsJsonArray("center").deepCopy());
+        var stop=new JsonObject();stop.addProperty("spinId",SPIN);stop.addProperty("reel","RIGHT");
+        stop.addProperty("pressedIndex",pressed);stop.addProperty("stopIndex",pressed);stop.addProperty("durationMs",80);
+        stop.add("nextStopHints",next);view.receive(Envelope.current(PacketType.REEL_STOP,stop));
+        assertFalse(view.canSend(PacketType.STOP_LEFT));
+        assertTrue(view.canSend(PacketType.STOP_CENTER));
+    }
+
 }
