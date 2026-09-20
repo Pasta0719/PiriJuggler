@@ -228,7 +228,7 @@ public final class GodGameEngine implements GameEngine {
         if(history||roleHit||fitted){
             GodLoopType loop=loopForMode(mode,rng);
             if(gaiaActive&&rng.nextDouble()<.15){
-                GodSessionState zs=copy(s,GodPhase.Z_ZONE,0,1,loop,0,0,0,s.sggSetNumber(),GodProductionSpec.Z_ZONE_BASE_GAMES,0,0,s.totalGodGames()+1,"GAIA_Z","0");
+                GodSessionState zs=copy(s,GodPhase.Z_ZONE,0,1,loop,0,0,0,s.sggSetNumber(),GodProductionSpec.Z_ZONE_BASE_GAMES,0,0,s.totalGodGames()+1,"GAIA_Z",role.name());
                 return new Step(resetNormal(new GodMachineRuntime(nextBase.frontMode(),nextBase.normalGamesSinceGg(),nextBase.blue7History(),nextBase.yellow7History(),nextBase.gaiaMode(),nextBase.gaiaBellCount(),nextBase.gaiaTarget(),false,0,nextBase.ceilingTarget(),nextBase.totalNormalGames(),s),zs),payout);
             }
             GodMachineRuntime hitBase=new GodMachineRuntime(nextBase.frontMode(),nextBase.normalGamesSinceGg(),nextBase.blue7History(),nextBase.yellow7History(),nextBase.gaiaMode(),nextBase.gaiaBellCount(),nextBase.gaiaTarget(),false,0,nextBase.totalNormalGames(),s);
