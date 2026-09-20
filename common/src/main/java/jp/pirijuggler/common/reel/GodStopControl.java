@@ -39,9 +39,9 @@ public final class GodStopControl {
     /**
      * Representative published stop forms.
      *
-     * LOWER_YELLOW7 is the published lower-line yellow-7 form. The machine also
-     * publishes two lower-line payout variants; the current GodRole model does
-     * not yet distinguish those visual center-reel variants.
+     * LOWER_YELLOW7 is the published 3-medal lower-line form and
+     * COMMON_YELLOW7 is the published common 15-medal lower-line form.
+     * Their center-reel middle symbols distinguish the two published examples.
      */
     public static Optional<Rule> publishedRule(String role){
         if(role==null)return Optional.empty();
@@ -60,7 +60,12 @@ public final class GodStopControl {
                     req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
                     req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
                     req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
-                    "published lower-line yellow 7"));
+                    "published lower-line yellow 7 B (3 medals)"));
+            case "COMMON_YELLOW7" -> Optional.of(new Rule(
+                    req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
+                    req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
+                    req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
+                    "published lower-line yellow 7 A (15 medals)"));
             case "RISING_YELLOW7" -> Optional.of(new Rule(
                     req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
                     req(GodReelStrip.Symbol.YELLOW7,Row.MIDDLE),
@@ -107,6 +112,8 @@ public final class GodStopControl {
         for(int middle=0;middle<GodReelStrip.STOPS;middle++){
             int symbolIndex=Math.floorMod(middle+requirement.row().offset(),GodReelStrip.STOPS);
             if(GodReelStrip.symbol(reel,symbolIndex)!=requirement.symbol())continue;
+            if(reel==1&&"LOWER_YELLOW7".equalsIgnoreCase(role)&&GodReelStrip.symbol(reel,middle)!=GodReelStrip.Symbol.RED7)continue;
+            if(reel==1&&"COMMON_YELLOW7".equalsIgnoreCase(role)&&GodReelStrip.symbol(reel,middle)!=GodReelStrip.Symbol.BLUE7)continue;
             int slip=GodReelStrip.slip(pressed,middle);
             if(slip<bestSlip){
                 best=middle;
@@ -125,6 +132,8 @@ public final class GodStopControl {
             Requirement requirement=rule.get().requirement(reel);
             int symbolIndex=Math.floorMod(middles[reel]+requirement.row().offset(),GodReelStrip.STOPS);
             if(GodReelStrip.symbol(reel,symbolIndex)!=requirement.symbol())return false;
+            if(reel==1&&"LOWER_YELLOW7".equalsIgnoreCase(role)&&GodReelStrip.symbol(reel,middles[reel])!=GodReelStrip.Symbol.RED7)return false;
+            if(reel==1&&"COMMON_YELLOW7".equalsIgnoreCase(role)&&GodReelStrip.symbol(reel,middles[reel])!=GodReelStrip.Symbol.BLUE7)return false;
         }
         return true;
     }
