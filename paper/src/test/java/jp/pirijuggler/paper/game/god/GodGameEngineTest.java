@@ -104,6 +104,24 @@ class GodGameEngineTest {
         assertEquals(4,right.after().number("stopped_mask"));
     }
 
+
+    @Test
+    void pendingDisplayRoleAndPayoutComeFromSameResolvedOutcome(){
+        GodGameEngine engine=new GodGameEngine(RandomStreams.production());
+
+        var lower=engine.plan(session(50),machine("LOWER_YELLOW7"),PacketType.SPACE_ACTION,1,1,0,0,null);
+        assertEquals("LOWER_YELLOW7",lower.after().machineState().get("_pendingDisplayRole").getAsString());
+        assertEquals(3,lower.after().machineState().get("_pendingPayout").getAsInt());
+
+        var common=engine.plan(session(50),machine("COMMON_YELLOW7"),PacketType.SPACE_ACTION,1,1,0,0,null);
+        assertEquals("COMMON_YELLOW7",common.after().machineState().get("_pendingDisplayRole").getAsString());
+        assertEquals(15,common.after().machineState().get("_pendingPayout").getAsInt());
+
+        var ordered=engine.plan(session(50),machine("ORDERED_YELLOW7"),PacketType.SPACE_ACTION,1,1,0,0,null);
+        assertEquals("COMMON_YELLOW7",ordered.after().machineState().get("_pendingDisplayRole").getAsString());
+        assertEquals(15,ordered.after().machineState().get("_pendingPayout").getAsInt());
+    }
+
     private static jp.pirijuggler.paper.game.GameTransition finishForced(String role){
         GodGameEngine engine=new GodGameEngine(RandomStreams.production());
         Machine machine=machine(role);
