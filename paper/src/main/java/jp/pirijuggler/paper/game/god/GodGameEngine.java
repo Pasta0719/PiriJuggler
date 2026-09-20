@@ -68,6 +68,18 @@ public final class GodGameEngine implements GameEngine {
         sessionState.addProperty("_pendingReplay",outcome.replay());
         sessionState.addProperty("_pendingRole",internalRole.name());
         sessionState.addProperty("_pendingDisplayRole",outcome.displayRole());
+        GodPhase sourcePhase=runtime.gameplay().phase();
+        if(internalRole==GodRole.GAIA_BELL){
+            sessionState.addProperty("_pendingFirstReel",2);
+            sessionState.addProperty("_pendingNavText","R");
+        } else if(internalRole==GodRole.ORDERED_YELLOW7&&isAtLike(sourcePhase)&&outcome.payout()==15){
+            int[][] orders={{0,1,2},{0,2,1},{1,0,2},{1,2,0},{2,0,1},{2,1,0}};
+            int[] order=orders[rng.nextInt(orders.length)];
+            var jsonOrder=new com.google.gson.JsonArray();
+            for(int reel:order)jsonOrder.add(reel);
+            sessionState.add("_pendingStopOrder",jsonOrder);
+            sessionState.addProperty("_pendingNavText",navText(order));
+        }
 
         String spin=UUID.randomUUID().toString();
         values.put("game_state","NORMAL_SPINNING");
@@ -97,14 +109,14 @@ public final class GodGameEngine implements GameEngine {
             case STOP_LEFT -> 0;
             case STOP_CENTER -> 1;
             case STOP_RIGHT -> 2;
-            case SPACE_ACTION -> nextReel(mask);
+            case SPACE_ACTION -> expectedNextReel(state,mask);
             default -> -1;
         };
         if(reel<0)return rejected(before,action,sequence,now,ErrorCode.INVALID_STATE);
         int bit=1<<reel;
         if((mask&bit)!=0)return rejected(before,action,sequence,now,ErrorCode.ALREADY_STOPPED);
-        // Published basic play is left-1st when no push-order navigation is active.
-        if(mask==0&&reel!=0)return rejected(before,action,sequence,now,ErrorCode.INVALID_STATE);
+        int expected=expectedNextReel(state,mask);
+        if(expected>=0&&reel!=expected)return rejected(before,action,sequence,now,ErrorCode.INVALID_STATE);
 
         int pressed=clientPressedIndex==null
                 ? Math.floorMod((int)before.number("display_"+reelName(reel)+"_stop"),GodReelStrip.STOPS)
@@ -129,7 +141,7 @@ public final class GodGameEngine implements GameEngine {
         stop.addProperty("stopIndex",target);
         stop.addProperty("slip",slip);
         stop.addProperty("durationMs",duration);
-        stop.add("nextStopHints",stopHints(displayRole,nextMask));
+        stop.add("nextStopHints",stopHints(displayRole,nextMask,state));
 
         var packets=new ArrayList<Envelope>();
         packets.add(accepted(action,sequence));
@@ -161,6 +173,30 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private static int nextReel(int mask){for(int i=0;i<3;i++)if((mask&(1<<i))==0)return i;return -1;}
+    private static boolean isAtLike(GodPhase phase){
+        return phase==GodPhase.GG||phase==GodPhase.SGG||phase==GodPhase.SGG_COMEBACK||
+                phase==GodPhase.Z_ZONE||phase==GodPhase.Z_GAME;
+    }
+    private static int expectedNextReel(JsonObject state,int mask){
+        if(state!=null&&state.has("_pendingStopOrder")){
+            var order=state.getAsJsonArray("_pendingStopOrder");
+            int step=Integer.bitCount(mask);
+            return step<order.size()?order.get(step).getAsInt():-1;
+        }
+        if(mask==0){
+            if(state!=null&&state.has("_pendingFirstReel"))return state.get("_pendingFirstReel").getAsInt();
+            return 0;
+        }
+        return -1; // after a non-navigated first stop, either remaining reel is legal
+    }
+    private static String navText(int[] order){
+        StringBuilder b=new StringBuilder();
+        for(int i=0;i<order.length;i++){
+            if(i>0)b.append('-');
+            b.append(new String[]{"L","C","R"}[order[i]]);
+        }
+        return b.toString();
+    }
     private static String reelName(int reel){return new String[]{"left","center","right"}[reel];}
     private static String reelEnumName(int reel){return new String[]{"LEFT","CENTER","RIGHT"}[reel];}
 
@@ -533,10 +569,12 @@ public final class GodGameEngine implements GameEngine {
     }
     private static void putBalance(Map<String,Object> values,GameRules.Balance b){values.put("credit",b.credit());values.put("held_medals",b.held());}
 
-    private static JsonObject stopHints(String role,int mask){
+    private static JsonObject stopHints(String role,int mask,JsonObject state){
         JsonObject all=new JsonObject();
+        int expected=expectedNextReel(state,mask);
         for(int reel=0;reel<3;reel++){
             if((mask&(1<<reel))!=0)continue;
+            if(expected>=0&&reel!=expected)continue;
             var choices=new com.google.gson.JsonArray();
             for(int pressed=0;pressed<GodReelStrip.STOPS;pressed++){
                 int target=GodStopControl.targetFor(role,reel,pressed);
@@ -565,7 +603,10 @@ public final class GodGameEngine implements GameEngine {
                 : saved.machineState()!=null&&saved.machineState().has("_pendingRole")
                     ? saved.machineState().get("_pendingRole").getAsString()
                     : saved.text("internal_role");
-        b.add("stopHints",stopHints(role,(int)saved.number("stopped_mask")));
+        JsonObject machineState=saved.machineState();
+        b.add("stopHints",stopHints(role,(int)saved.number("stopped_mask"),machineState));
+        if(machineState!=null&&machineState.has("_pendingNavText"))
+            b.addProperty("godNav",machineState.get("_pendingNavText").getAsString());
         return Envelope.current(PacketType.SPIN_START,b);
     }
 
