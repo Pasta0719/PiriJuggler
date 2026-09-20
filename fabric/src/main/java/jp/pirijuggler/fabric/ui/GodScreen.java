@@ -28,7 +28,7 @@ public final class GodScreen extends Screen {
     @Override public void close(){input.send(PacketType.CLOSE_REQUEST);}
 
     @Override public boolean keyPressed(int key,int scan,int modifiers){
-        if(key==GLFW.GLFW_KEY_T){input.releaseAll();client.setScreen(new SlotChatScreen(null));return true;}
+        if(key==GLFW.GLFW_KEY_T){input.releaseAll();client.setScreen(new SlotChatScreen(this));return true;}
         PacketType action=SlotKeys.action(key,scan);
         if(action!=null){input.key(key,action);pressed=action==PacketType.SPACE_ACTION?"PLAY":action.name();return true;}
         return false;
