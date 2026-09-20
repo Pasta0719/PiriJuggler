@@ -251,7 +251,7 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step enterSgg(GodMachineRuntime r,GodSessionState s,GodRole role,RandomGenerator rng){
-        GodSessionState ns=copy(s,GodPhase.SGG,0,1,GodLoopType.C,0,sggLength(false,role,rng),0,1,0,0,0,s.totalGodGames()+1,"RED7_SGG",role.name());
+        GodSessionState ns=copy(s,GodPhase.SGG,0,1+rollLoop(GodLoopType.C,rng),GodLoopType.C,0,sggLength(false,role,rng),0,1,0,0,0,s.totalGodGames()+1,"RED7_SGG",role.name());
         return new Step(resetNormal(r,ns),0);
     }
 
