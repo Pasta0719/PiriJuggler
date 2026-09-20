@@ -115,13 +115,15 @@ public final class GodStopControl {
             int symbolIndex=Math.floorMod(middle+requirement.row().offset(),GodReelStrip.STOPS);
             if(GodReelStrip.symbol(reel,symbolIndex)!=requirement.symbol())continue;
             int slip=GodReelStrip.slip(pressed,middle);
+            if(slip>4)continue;
             if(slip<bestSlip){
                 best=middle;
                 bestSlip=slip;
             }
         }
-        if(best<0)throw new IllegalStateException("published stop form cannot exist on reel "+reel+" for "+role);
-        return best;
+        // Red7/SP representative forms are not guaranteed from every press
+        // position. Do not exceed the physical slip window just to force them.
+        return best<0?pressed:best;
     }
 
     public static boolean matchesPublishedForm(String role,int left,int center,int right){
