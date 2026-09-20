@@ -146,12 +146,13 @@ public final class RecoveryStore {
             throw new IllegalStateException("GOD spin missing pending recovery state");
 
         String role=state.get("_pendingRole").getAsString();
+        String displayRole=state.has("_pendingDisplayRole")?state.get("_pendingDisplayRole").getAsString():role;
         int mask=((Number)values.get("stopped_mask")).intValue();
         for(int reel=0;reel<3;reel++){
             if((mask&(1<<reel))!=0)continue;
             String name=new String[]{"left","center","right"}[reel];
             int pressed=Math.floorMod((int)Math.floor(((Number)values.get("phase_"+name)).doubleValue()),GodReelStrip.STOPS);
-            int target=GodStopControl.targetFor(role,reel,pressed);
+            int target=GodStopControl.targetFor(displayRole,reel,pressed);
             values.put("display_"+name+"_stop",target);
         }
 
