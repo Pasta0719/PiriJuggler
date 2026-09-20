@@ -63,20 +63,16 @@ public final class GodReelStrip {
 
     private static Symbol fallback(int reel){return reel==1?Symbol.YELLOW7:Symbol.BLUE7;}
 
-    /** Normal-direction stop, choosing the nearest requested display symbol. */
+    /** Normal-direction stop within the physical four-frame slip window. */
     public static int targetFor(int reel,Symbol desired,int pressed){
         if(pressed<0||pressed>=STOPS)throw new IllegalArgumentException("pressed");
-        for(int slip=0;slip<STOPS;slip++){
+        for(int slip=0;slip<=4;slip++){
             int target=Math.floorMod(pressed-slip,STOPS);
             if(symbol(reel,target)==desired)return target;
         }
-        // RED7 does not exist on every reel position family; use the nearest legal
-        // symbol instead of introducing an impossible reel symbol.
-        Symbol fallback=fallback(reel);
-        for(int slip=0;slip<STOPS;slip++){
-            int target=Math.floorMod(pressed-slip,STOPS);
-            if(symbol(reel,target)==fallback)return target;
-        }
+        // Do not invent an impossible long slip just to show a representative
+        // premium stop form. If the desired symbol is outside the four-frame
+        // window, keep the pressed stop; the internal role/benefit still applies.
         return pressed;
     }
 
