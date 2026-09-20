@@ -308,6 +308,7 @@ public final class RemoteMachineSync {
         body.addProperty("y", machine.location().y());
         body.addProperty("z", machine.location().z());
         body.addProperty("facing", machine.location().facing());
+        body.addProperty("machineType", machine.type().name());
         return body;
     }
 
