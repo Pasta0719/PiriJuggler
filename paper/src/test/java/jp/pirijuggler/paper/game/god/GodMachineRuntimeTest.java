@@ -10,12 +10,12 @@ class GodMachineRuntimeTest {
         GodMachineRuntime initial=GodMachineRuntime.initial();
         assertEquals(initial,GodMachineRuntime.fromJson(initial.toJsonString()));
         assertEquals(GodFrontMode.LOW_A,initial.frontMode());
-        assertEquals(0,initial.normalGamesSinceGg());
+        assertEquals(GodPhase.NORMAL,initial.gameplay().phase());
     }
 
     @Test
     void rejectsNegativeMachineCounters() {
         assertThrows(IllegalArgumentException.class,()->new GodMachineRuntime(
-                GodFrontMode.NORMAL,-1,0,0,0,0));
+                GodFrontMode.NORMAL,-1,0,0,0,0,GodSessionState.initial()));
     }
 }

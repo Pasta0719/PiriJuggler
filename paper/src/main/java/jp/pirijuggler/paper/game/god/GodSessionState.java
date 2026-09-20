@@ -5,52 +5,45 @@ import com.google.gson.JsonObject;
 
 import java.util.Objects;
 
-/**
- * Persisted machine-specific state for one seated Piri GOD player.
- *
- * The legacy session game_state remains the coarse transaction/lifecycle state used
- * by shared Juggler infrastructure. This object owns GOD-specific progression.
- */
+/** Persisted visible/active gameplay state for Piri GOD. */
 public record GodSessionState(
         GodPhase phase,
-        GodFrontMode frontMode,
-        int normalGamesSinceGg,
         int ggGamesRemaining,
-        int guaranteedGgStocks,
+        int queuedGgStocks,
         GodLoopType loopType,
         int gZoneGamesRemaining,
         int sggGamesRemaining,
         int sggContinuationStocks,
+        int sggSetNumber,
         int zZoneGamesRemaining,
         int zYellowStreak,
         int zGameStocks,
-        long totalGodGames
+        long totalGodGames,
+        String lastEvent,
+        String lastRole
 ) {
     private static final Gson GSON = new Gson();
 
     public GodSessionState {
         Objects.requireNonNull(phase);
-        Objects.requireNonNull(frontMode);
-        if (normalGamesSinceGg < 0 || ggGamesRemaining < 0 || guaranteedGgStocks < 0 ||
-                gZoneGamesRemaining < 0 || sggGamesRemaining < 0 || sggContinuationStocks < 0 ||
+        if (ggGamesRemaining < 0 || queuedGgStocks < 0 || gZoneGamesRemaining < 0 ||
+                sggGamesRemaining < 0 || sggContinuationStocks < 0 || sggSetNumber < 0 ||
                 zZoneGamesRemaining < 0 || zYellowStreak < 0 || zGameStocks < 0 || totalGodGames < 0)
             throw new IllegalArgumentException("negative GOD state counter");
+        if (lastEvent == null) lastEvent = "READY";
+        if (lastRole == null) lastRole = "NONE";
     }
 
     public static GodSessionState initial() {
         return new GodSessionState(
-                GodPhase.NORMAL, GodFrontMode.LOW_A, 0, 0, 0, null,
-                0, 0, 0, 0, 0, 0, 0
+                GodPhase.NORMAL, 0, 0, null,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                "READY", "NONE"
         );
     }
 
-    public JsonObject toJson() {
-        return GSON.toJsonTree(this).getAsJsonObject();
-    }
-
-    public String toJsonString() {
-        return GSON.toJson(this);
-    }
+    public JsonObject toJson() { return GSON.toJsonTree(this).getAsJsonObject(); }
+    public String toJsonString() { return GSON.toJson(this); }
 
     public static GodSessionState fromJson(JsonObject json) {
         if (json == null) return initial();

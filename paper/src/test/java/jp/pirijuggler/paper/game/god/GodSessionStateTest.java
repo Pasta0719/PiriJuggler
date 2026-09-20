@@ -7,17 +7,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class GodSessionStateTest {
     @Test
     void initialStateRoundTripsAsJson() {
-        GodSessionState initial = GodSessionState.initial();
-        GodSessionState decoded = GodSessionState.fromJson(initial.toJson());
-        assertEquals(initial, decoded);
-        assertEquals(GodPhase.NORMAL, decoded.phase());
-        assertEquals(GodFrontMode.LOW_A, decoded.frontMode());
+        GodSessionState initial=GodSessionState.initial();
+        assertEquals(initial,GodSessionState.fromJson(initial.toJson()));
+        assertEquals(GodPhase.NORMAL,initial.phase());
+        assertEquals("READY",initial.lastEvent());
     }
 
     @Test
     void rejectsNegativeCounters() {
-        assertThrows(IllegalArgumentException.class, () -> new GodSessionState(
-                GodPhase.NORMAL, GodFrontMode.LOW_A, -1, 0, 0, null,
-                0, 0, 0, 0, 0, 0, 0));
+        assertThrows(IllegalArgumentException.class,()->new GodSessionState(
+                GodPhase.NORMAL,-1,0,null,0,0,0,0,0,0,0,0,"READY","NONE"));
     }
 }
