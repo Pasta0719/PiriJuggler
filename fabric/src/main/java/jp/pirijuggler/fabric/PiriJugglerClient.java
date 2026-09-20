@@ -20,7 +20,7 @@ public final class PiriJugglerClient implements ClientModInitializer {
     private static final RemoteMachineRegistry REMOTE = new RemoteMachineRegistry();
 
     @Override public void onInitializeClient() {
-        SlotKeys.register(); PiriSounds.register(); WorldCabinetRenderer.register();
+        SlotKeys.register(); PiriSounds.register(); GodLcdTheme.register(); WorldCabinetRenderer.register();
         PayloadTypeRegistry.playC2S().register(PiriPayload.ID, PiriPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(PiriPayload.ID, PiriPayload.CODEC);
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> client.execute(() -> {

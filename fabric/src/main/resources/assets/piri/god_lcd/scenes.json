@@ -1,0 +1,67 @@
+{
+  "scenes": {
+    "NORMAL": {
+      "background": "#10213A",
+      "accent": "#FFD15A",
+      "title": "OLYMPUS",
+      "subtitle": "GOD SYSTEM",
+      "layers": []
+    },
+    "GG": {
+      "background": "#3B2308",
+      "accent": "#FFC53D",
+      "title": "GOD GAME",
+      "subtitle": "GG",
+      "layers": []
+    },
+    "G_ZONE": {
+      "background": "#172947",
+      "accent": "#B8D6FF",
+      "title": "G-ZONE",
+      "subtitle": "NEXT GOD GAME",
+      "layers": []
+    },
+    "SGG": {
+      "background": "#3B0808",
+      "accent": "#FF5050",
+      "title": "SUPER GOD GAME",
+      "subtitle": "SGG",
+      "layers": []
+    },
+    "SGG_COMEBACK": {
+      "background": "#38150B",
+      "accent": "#FF9966",
+      "title": "SGG",
+      "subtitle": "3G COMEBACK",
+      "layers": []
+    },
+    "Z_ZONE": {
+      "background": "#052F3B",
+      "accent": "#57E8FF",
+      "title": "Z-ZONE",
+      "subtitle": "YELLOW 7 CHANCE",
+      "layers": []
+    },
+    "Z_GAME": {
+      "background": "#053A31",
+      "accent": "#70FFD9",
+      "title": "Z-GAME",
+      "subtitle": "STOCK CHANCE",
+      "layers": []
+    },
+    "EVENT_GOD": {
+      "background": "#4A3100",
+      "accent": "#FFE16B",
+      "title": "G O D",
+      "subtitle": "PREMIUM GOD GAME",
+      "layers": []
+    },
+    "EVENT_RED7_SGG": {
+      "background": "#480707",
+      "accent": "#FF4545",
+      "title": "7 7 7",
+      "subtitle": "SUPER GOD GAME",
+      "layers": []
+    }
+  }
+}

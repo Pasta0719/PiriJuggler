@@ -7,10 +7,16 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 
-/** First playable full-screen Piri GOD cabinet UI. */
+/**
+ * Piri GOD cabinet screen with a resource-pack-driven LCD.
+ * Gameplay state remains server authoritative; this class only presents it.
+ */
 public final class GodScreen extends Screen {
+    private static final int LOGICAL_W=1920,LOGICAL_H=1080;
+    private static final int LCD_X=330,LCD_Y=105,LCD_W=1260,LCD_H=650;
     private final SlotViewState view;
     private final SlotInput input;
+    private String pressed="";
 
     public GodScreen(SlotViewState view,SlotInput input){
         super(Text.literal("Piri GOD"));this.view=view;this.input=input;
@@ -19,58 +25,132 @@ public final class GodScreen extends Screen {
     @Override public boolean shouldCloseOnEsc(){return false;}
     @Override protected void init(){client.mouse.unlockCursor();}
     @Override public void close(){input.send(PacketType.CLOSE_REQUEST);}
+
     @Override public boolean keyPressed(int key,int scan,int modifiers){
-        if(key==GLFW.GLFW_KEY_SPACE){input.key(key,PacketType.SPACE_ACTION);return true;}
+        if(key==GLFW.GLFW_KEY_SPACE){input.key(key,PacketType.SPACE_ACTION);pressed="PLAY";return true;}
+        if(key==GLFW.GLFW_KEY_T){input.releaseAll();client.setScreen(new SlotChatScreen(this));return true;}
         return false;
     }
-    @Override public boolean keyReleased(int key,int scan,int modifiers){input.release(key);return true;}
+    @Override public boolean keyReleased(int key,int scan,int modifiers){input.release(key);pressed="";return true;}
+
     @Override public boolean mouseClicked(double x,double y,int button){
         if(button!=0)return false;
-        int cx=width/2,cy=height-70;
-        if(x>=cx-100&&x<=cx+100&&y>=cy-24&&y<=cy+24){input.mouse("GOD_PLAY",button,PacketType.SPACE_ACTION);return true;}
-        if(x>=30&&x<=150&&y>=height-70&&y<=height-35){input.mouse("GOD_INSERT",button,PacketType.INSERT_MEDALS);return true;}
-        if(x>=160&&x<=280&&y>=height-70&&y<=height-35){input.mouse("GOD_CASHOUT",button,PacketType.CASH_OUT);return true;}
+        Viewport v=viewport();double lx=v.logicalX(x),ly=v.logicalY(y);
+        if(in(lx,ly,760,895,400,105)){pressed="PLAY";return input.mouse("GOD_PLAY",button,PacketType.SPACE_ACTION);}
+        if(in(lx,ly,330,910,210,70)){pressed="INSERT";return input.mouse("GOD_INSERT",button,PacketType.INSERT_MEDALS);}
+        if(in(lx,ly,1380,910,210,70)){pressed="CASH";return input.mouse("GOD_CASHOUT",button,PacketType.CASH_OUT);}
         return false;
     }
-    @Override public void renderBackground(DrawContext c,int mouseX,int mouseY,float delta){c.fill(0,0,width,height,0xff090701);}
+    @Override public boolean mouseReleased(double x,double y,int button){if(button==0)pressed="";return button==0;}
+    @Override public void renderBackground(DrawContext c,int mouseX,int mouseY,float delta){}
+
     @Override public void render(DrawContext c,int mouseX,int mouseY,float delta){
-        renderBackground(c,mouseX,mouseY,delta);
-        int cx=width/2;
-        c.drawCenteredTextWithShadow(textRenderer,"PIRI GOD",cx,24,0xffffd56a);
-        c.drawCenteredTextWithShadow(textRenderer,phaseTitle(),cx,55,0xffffffff);
-        c.drawCenteredTextWithShadow(textRenderer,"LAST  "+view.value("godLastEvent")+"  /  "+view.value("godLastRole"),cx,78,0xffffdf8a);
+        c.fill(0,0,width,height,0xff000000);
+        Viewport v=viewport();
+        c.getMatrices().push();c.getMatrices().translate(v.x,v.y,0);c.getMatrices().scale((float)v.scale,(float)v.scale,1);
 
-        JsonObject state=view.publicState();
-        int credit=num(state,"credit"),held=num(state,"heldMedals"),pay=num(state,"pay");
-        c.drawCenteredTextWithShadow(textRenderer,"CREDIT "+credit+"    MEDALS "+held+"    PAY "+pay,cx,110,0xffe8e8e8);
+        // Cabinet body.
+        c.fill(245,35,1675,1045,0xff120b06);
+        c.fill(265,55,1655,1025,0xff5b3408);
+        c.fill(285,75,1635,1005,0xff17100a);
+        c.fill(LCD_X-15,LCD_Y-15,LCD_X+LCD_W+15,LCD_Y+LCD_H+15,0xffd1a642);
+        drawLcd(c);
 
-        String phase=view.value("godPhase");
-        if("GG".equals(phase)){
-            c.drawCenteredTextWithShadow(textRenderer,"GG  "+view.value("godGgRemaining")+"G   STOCK "+view.value("godStocks"),cx,155,0xffffca3a);
-        }else if("G_ZONE".equals(phase)){
-            c.drawCenteredTextWithShadow(textRenderer,"G-ZONE  "+view.value("godGZoneRemaining")+"G",cx,155,0xffc8d8ff);
-        }else if("SGG".equals(phase)){
-            c.drawCenteredTextWithShadow(textRenderer,"SUPER GOD GAME  "+view.value("godSggRemaining")+"G",cx,155,0xffff5b5b);
-        }else if("SGG_COMEBACK".equals(phase)){
-            c.drawCenteredTextWithShadow(textRenderer,"SGG COMEBACK  "+view.value("godSggRemaining")+"G",cx,155,0xffff8c6b);
-        }else if("Z_ZONE".equals(phase)){
-            c.drawCenteredTextWithShadow(textRenderer,"Z-ZONE  CHANCE "+view.value("godZZoneRemaining"),cx,155,0xff74eaff);
-        }else if("Z_GAME".equals(phase)){
-            c.drawCenteredTextWithShadow(textRenderer,"Z-GAME  STOCK "+view.value("godStocks"),cx,155,0xff74eaff);
-        }else{
-            c.drawCenteredTextWithShadow(textRenderer,"NORMAL",cx,155,0xffdddddd);
-        }
+        // Lower status / controls.
+        c.fill(330,785,1590,875,0xff080808);
+        drawStatus(c);
+        button(c,330,910,210,70,"INSERT","INSERT".equals(pressed));
+        button(c,760,895,400,105,"PLAY / LEVER   [SPACE]","PLAY".equals(pressed));
+        button(c,1380,910,210,70,"CASH OUT","CASH".equals(pressed));
 
-        c.fill(cx-100,height-94,cx+100,height-46,0xff6b4700);
-        c.drawCenteredTextWithShadow(textRenderer,"PLAY / LEVER  [SPACE]",cx,height-78,0xffffffff);
-        c.fill(30,height-70,150,height-35,0xff303030);c.drawCenteredTextWithShadow(textRenderer,"INSERT",90,height-58,0xffffffff);
-        c.fill(160,height-70,280,height-35,0xff303030);c.drawCenteredTextWithShadow(textRenderer,"CASH OUT",220,height-58,0xffffffff);
-        if(!view.error().isEmpty())c.drawCenteredTextWithShadow(textRenderer,view.error(),cx,height-120,0xffff6666);
+        String err=view.error();
+        if(!err.isEmpty())center(c,err,960,1015,0xffff6666,1.5f);
+        c.getMatrices().pop();
         super.render(c,mouseX,mouseY,delta);
     }
-    private String phaseTitle(){
-        String e=view.value("godLastEvent");
-        return switch(e){case "GOD","GOD_IN_GG"->"PREMIUM GOD GAME";case "RED7_SGG"->"RED 7";case "CEILING_Z"->"0 0 0";default->"GOD GAME";};
+
+    private void drawLcd(DrawContext c){
+        String phase=view.value("godPhase"),event=view.value("godLastEvent");
+        var scene=GodLcdTheme.scene(event,phase);
+        c.fill(LCD_X,LCD_Y,LCD_X+LCD_W,LCD_Y+LCD_H,scene.background());
+
+        // Built-in visual remains useful even with zero external assets.
+        long pulse=(System.currentTimeMillis()/350)%2;
+        int accent=scene.accent();
+        c.fill(LCD_X+28,LCD_Y+28,LCD_X+34,LCD_Y+LCD_H-28,accent);
+        c.fill(LCD_X+LCD_W-34,LCD_Y+28,LCD_X+LCD_W-28,LCD_Y+LCD_H-28,accent);
+        if(pulse==0)c.fill(LCD_X+55,LCD_Y+90,LCD_X+LCD_W-55,LCD_Y+94,withAlpha(accent,0x88));
+
+        GodLcdTheme.renderLayers(c,scene,LCD_X,LCD_Y);
+
+        center(c,scene.title(),960,LCD_Y+92,accent,titleScale(scene.title()));
+        if(!scene.subtitle().isEmpty())center(c,scene.subtitle(),960,LCD_Y+190,0xfff5f0df,2.0f);
+
+        drawCentralDisplay(c,phase,event,accent);
+        String role=view.value("godLastRole");
+        center(c,"LAST  "+event+"  /  "+role,960,LCD_Y+575,0xffe7e1d1,1.35f);
     }
-    private static int num(JsonObject o,String key){return o!=null&&o.has(key)?o.get(key).getAsInt():0;}
+
+    private void drawCentralDisplay(DrawContext c,String phase,String event,int accent){
+        String main;
+        String sub="";
+        if("GOD".equals(event)||"GOD_IN_GG".equals(event)){main="7   7   7";sub="PREMIUM";}
+        else if("RED7_SGG".equals(event)){main="7   7   7";sub="RED 7";}
+        else if("CEILING_Z".equals(event)){main="0   0   0";sub="CEILING";}
+        else main=switch(phase){
+            case "GG" -> "GG";
+            case "G_ZONE" -> "G - ZONE";
+            case "SGG" -> "S G G";
+            case "SGG_COMEBACK" -> "3 G";
+            case "Z_ZONE" -> "Z - ZONE";
+            case "Z_GAME" -> "Z - GAME";
+            default -> "1   3   5";
+        };
+        center(c,main,960,LCD_Y+300,accent,main.length()>8?4.5f:6.0f);
+        if(!sub.isEmpty())center(c,sub,960,LCD_Y+420,0xffffffff,1.8f);
+
+        if("GG".equals(phase))center(c,"REMAIN "+view.value("godGgRemaining")+"G     STOCK "+view.value("godStocks"),960,LCD_Y+480,0xffffffff,1.8f);
+        else if("G_ZONE".equals(phase))center(c,"REMAIN "+view.value("godGZoneRemaining")+"G",960,LCD_Y+480,0xffffffff,1.8f);
+        else if("SGG".equals(phase)||"SGG_COMEBACK".equals(phase))center(c,"REMAIN "+view.value("godSggRemaining")+"G",960,LCD_Y+480,0xffffffff,1.8f);
+        else if("Z_ZONE".equals(phase))center(c,"CHANCE "+view.value("godZZoneRemaining"),960,LCD_Y+480,0xffffffff,1.8f);
+        else if("Z_GAME".equals(phase))center(c,"STOCK "+view.value("godStocks"),960,LCD_Y+480,0xffffffff,1.8f);
+    }
+
+    private void drawStatus(DrawContext c){
+        JsonObject state=view.publicState();
+        String credit=value(state,"credit"),held=value(state,"heldMedals"),pay=value(state,"pay");
+        labelValue(c,"CREDIT",credit,465,810);
+        labelValue(c,"PAY",pay,790,810);
+        labelValue(c,"MEDALS",held,1115,810);
+        labelValue(c,"STATE",view.value("godPhase"),1440,810);
+    }
+
+    private void labelValue(DrawContext c,String label,String value,int x,int y){
+        center(c,label,x,y,0xffffd36a,1.25f);
+        center(c,value,x,y+31,0xffffffff,1.65f);
+    }
+    private void button(DrawContext c,int x,int y,int w,int h,String label,boolean down){
+        c.fill(x,y,x+w,y+h,0xffc49b3f);
+        c.fill(x+5,y+5,x+w-5,y+h-5,down?0xff683a08:0xff241608);
+        center(c,label,x+w/2,y+h/2-8,0xffffffff,label.length()>10?1.35f:1.7f);
+    }
+
+    private static String value(JsonObject o,String key){return o!=null&&o.has(key)?o.get(key).getAsString():"—";}
+    private static boolean in(double x,double y,int rx,int ry,int rw,int rh){return x>=rx&&x<=rx+rw&&y>=ry&&y<=ry+rh;}
+    private static int withAlpha(int color,int alpha){return (alpha<<24)|(color&0x00ffffff);}
+    private static float titleScale(String value){return value.length()>14?2.8f:value.length()>8?3.5f:4.5f;}
+    private void center(DrawContext c,String value,int x,int y,int color,float scale){
+        c.getMatrices().push();c.getMatrices().translate(x,y,0);c.getMatrices().scale(scale,scale,1);
+        c.drawText(textRenderer,value,-textRenderer.getWidth(value)/2,0,color,true);c.getMatrices().pop();
+    }
+
+    private Viewport viewport(){return Viewport.fit(width,height);}
+    private record Viewport(double x,double y,double scale){
+        static Viewport fit(int width,int height){
+            double scale=Math.min(width/(double)LOGICAL_W,height/(double)LOGICAL_H);
+            return new Viewport((width-LOGICAL_W*scale)/2.0,(height-LOGICAL_H*scale)/2.0,scale);
+        }
+        double logicalX(double screen){return (screen-x)/scale;}
+        double logicalY(double screen){return (screen-y)/scale;}
+    }
 }
