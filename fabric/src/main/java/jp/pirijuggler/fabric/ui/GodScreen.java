@@ -28,7 +28,6 @@ public final class GodScreen extends Screen {
 
     @Override public boolean keyPressed(int key,int scan,int modifiers){
         if(key==GLFW.GLFW_KEY_SPACE){input.key(key,PacketType.SPACE_ACTION);pressed="PLAY";return true;}
-        if(key==GLFW.GLFW_KEY_T){input.releaseAll();client.setScreen(new SlotChatScreen(this));return true;}
         return false;
     }
     @Override public boolean keyReleased(int key,int scan,int modifiers){input.release(key);pressed="";return true;}
