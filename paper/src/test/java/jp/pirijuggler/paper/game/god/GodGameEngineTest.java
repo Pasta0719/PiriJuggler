@@ -118,6 +118,33 @@ class GodGameEngineTest {
         return engine.plan(center.after(),machine,PacketType.STOP_RIGHT,4,4,0,0,0);
     }
 
+    @Test
+    void orderedYellowInGgPublishesAndEnforcesPushOrder(){
+        GodGameEngine engine=new GodGameEngine(RandomStreams.production());
+        GodSessionState gg=new GodSessionState(GodPhase.GG,50,0,GodLoopType.A,0,0,0,0,0,0,0,0,"GG_TEST","TEST");
+        GodMachineRuntime runtime=GodMachineRuntime.initial().withGameplay(gg).withForcedRole("ORDERED_YELLOW7");
+        Machine machine=machineWithRuntime(runtime.toJsonString());
+        var lever=engine.plan(session(50),machine,PacketType.SPACE_ACTION,1,1,0,0,null);
+
+        var state=lever.after().machineState();
+        assertTrue(state.has("_pendingStopOrder"));
+        assertEquals(15,state.get("_pendingPayout").getAsInt());
+        int expected=state.getAsJsonArray("_pendingStopOrder").get(0).getAsInt();
+
+        var startPacket=engine.committed(lever,0).stream().filter(p->p.packetType()==PacketType.SPIN_START).findFirst().orElseThrow();
+        assertTrue(startPacket.payload().has("godNav"));
+        assertEquals(1,startPacket.payload().getAsJsonObject("stopHints").entrySet().size());
+
+        int wrong=(expected+1)%3;
+        var rejected=engine.plan(lever.after(),machine,actionFor(wrong),2,2,0,0,0);
+        assertEquals(0,rejected.after().number("stopped_mask"));
+        assertEquals("INVALID_STATE",rejected.packets().getFirst().payload().get("errorCode").getAsString());
+    }
+
+    private static PacketType actionFor(int reel){
+        return switch(reel){case 0->PacketType.STOP_LEFT;case 1->PacketType.STOP_CENTER;case 2->PacketType.STOP_RIGHT;default->throw new IllegalArgumentException();};
+    }
+
     private static Machine machine(String forcedRole){
         String runtime=GodMachineRuntime.initial().withForcedRole(forcedRole).toJsonString();
         return new Machine(1,new Machine.Location(UUID.randomUUID(),"world",0,64,0,"NORTH"),
