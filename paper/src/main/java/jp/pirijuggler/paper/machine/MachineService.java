@@ -298,7 +298,10 @@ public final class MachineService implements Listener, CommandExecutor {
             error(player, "MACHINE_OCCUPIED"); return;
         }
         submit(player, owner, machine.id(), () -> database.seat(owner, machine.id(), System.currentTimeMillis()), seated -> {
-            send(player, PacketType.OPEN_MACHINE, seated.openPacket()); send(player, PacketType.PUBLIC_STATE, seated.publicState());
+            Machine seatedMachine=state.machine(seated.machine());
+            JsonObject open=seated.openPacket();open.addProperty("machineType",seatedMachine.type().name());
+            JsonObject publicState=seated.publicState();publicState.addProperty("machineType",seatedMachine.type().name());
+            send(player, PacketType.OPEN_MACHINE, open); send(player, PacketType.PUBLIC_STATE, publicState);
             engine(seated.machine()).resume(seated,System.nanoTime()).ifPresent(packet->{send(player,packet);remote.publishOwnerPacket(machine.id(),packet);});
         });
     }
