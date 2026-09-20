@@ -213,10 +213,10 @@ public final class GodGameEngine implements GameEngine {
         if(role==GodRole.GOD)return enterGod(nextBase,s,role,rng);
         if(role==GodRole.RED7)return enterSgg(nextBase,s,role,rng);
         if(role==GodRole.SP && rng.nextDouble()<GodProductionSpec.SP_STOCK_HIT_RATE_NORMAL_OR_GG)
-            return enterGg(nextBase,s,role,GodLoopType.D,1,payout,rng);
+            return enterGg(nextBase,s,role,GodLoopType.D,1,rng);
 
         boolean ceiling=normalGames>=ceilingTarget;
-        if(ceiling)return ceiling(nextBase,s,role,payout,rng);
+        if(ceiling)return ceiling(nextBase,s,role,rng);
 
         boolean history=gaiaActive?GodGaiaRules.historyHit(blue,yellow,rng):historyHit(blue,yellow,setting,rng);
         boolean roleHit=gaiaActive
@@ -230,7 +230,7 @@ public final class GodGameEngine implements GameEngine {
                 return new Step(resetNormal(new GodMachineRuntime(nextBase.frontMode(),nextBase.normalGamesSinceGg(),nextBase.blue7History(),nextBase.yellow7History(),nextBase.gaiaMode(),nextBase.gaiaBellCount(),nextBase.gaiaTarget(),false,0,nextBase.ceilingTarget(),nextBase.totalNormalGames(),s),zs));
             }
             GodMachineRuntime hitBase=new GodMachineRuntime(nextBase.frontMode(),nextBase.normalGamesSinceGg(),nextBase.blue7History(),nextBase.yellow7History(),nextBase.gaiaMode(),nextBase.gaiaBellCount(),nextBase.gaiaTarget(),false,0,nextBase.totalNormalGames(),s);
-            return enterGg(hitBase,s,role,loop,1,payout,rng);
+            return enterGg(hitBase,s,role,loop,1,rng);
         }
         if(gaiaActive&&gaiaGuarantee==0&&GodGaiaRules.exitsAfterGuarantee(role,rng)){
             nextBase=new GodMachineRuntime(nextBase.frontMode(),nextBase.normalGamesSinceGg(),nextBase.blue7History(),nextBase.yellow7History(),nextBase.gaiaMode(),nextBase.gaiaBellCount(),nextBase.gaiaTarget(),false,0,nextBase.totalNormalGames(),s);
@@ -401,20 +401,20 @@ public final class GodGameEngine implements GameEngine {
         return new Step(resetNormal(r,ns));
     }
 
-    private Step enterGg(GodMachineRuntime r,GodSessionState s,GodRole role,GodLoopType loop,int guaranteed,int payout,RandomGenerator rng){
+    private Step enterGg(GodMachineRuntime r,GodSessionState s,GodRole role,GodLoopType loop,int guaranteed,RandomGenerator rng){
         int queued=Math.max(0,guaranteed-1)+rollLoop(loop,rng);
         GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,queued,loop,0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"GG_HIT",role.name());
         return new Step(resetNormal(r,ns));
     }
 
-    private Step ceiling(GodMachineRuntime r,GodSessionState s,GodRole role,int payout,RandomGenerator rng){
+    private Step ceiling(GodMachineRuntime r,GodSessionState s,GodRole role,RandomGenerator rng){
         double x=rng.nextDouble();GodLoopType loop;boolean z=false;
         if(x<0.167)loop=GodLoopType.A;else if(x<0.334)loop=GodLoopType.B;else if(x<0.501)loop=GodLoopType.C;else if(x<0.668)loop=GodLoopType.D;else{loop=GodLoopType.A;z=true;}
         if(z){
             GodSessionState ns=copy(s,GodPhase.Z_ZONE,0,1,loop,0,0,0,s.sggSetNumber(),GodProductionSpec.Z_ZONE_BASE_GAMES,0,0,s.totalGodGames()+1,"CEILING_Z",role.name());
             return new Step(resetNormal(r,ns));
         }
-        return enterGg(r,s,role,loop,1,payout,rng);
+        return enterGg(r,s,role,loop,1,rng);
     }
 
     private static GodMachineRuntime resetNormal(GodMachineRuntime r,GodSessionState s){
