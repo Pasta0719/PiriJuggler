@@ -102,7 +102,8 @@ public final class MachineService implements Listener, CommandExecutor {
     private GameEngine engine(int machineId) {
         Machine machine=state==null?null:state.machine(machineId);
         if(machine==null)throw new DomainException("INVALID_STATE");
-        return games.require(machine.type());
+        try { return games.require(machine.type()); }
+        catch (IllegalStateException notReady) { throw new DomainException("INVALID_STATE"); }
     }
 
     @Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -140,14 +141,24 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length >= 2 && args[0].equalsIgnoreCase("event")) {
                 commandEvent(sender,args); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create|redefine <id>|remove <id>|list|info <id>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
             }
-            if (action.equals("create") && args.length == 2) {
+            if (action.equals("create") && (args.length == 2 || args.length == 3)) {
+                MachineType type=args.length==3?MachineType.valueOf(args[2].toUpperCase(Locale.ROOT)):MachineType.JUGGLER;
                 Machine.Location target = target(sender);
-                submit(sender, null, 0, () -> database.create(target, System.currentTimeMillis()), id -> { tell(sender, "MACHINE_CREATED " + id); remote.machineChanged(id); }); return true;
+                submit(sender, null, 0, () -> database.create(target, type, System.currentTimeMillis()), id -> { tell(sender, "MACHINE_CREATED " + id + " type=" + type); remote.machineChanged(id); }); return true;
+            }
+            if (action.equals("type") && args.length == 4) {
+                int id=Integer.parseInt(args[2]); Machine machine=state.machine(id);
+                if(machine==null)throw new DomainException("INVALID_STATE");
+                if(busy(id))throw new DomainException("MACHINE_OCCUPIED");
+                MachineType type=MachineType.valueOf(args[3].toUpperCase(Locale.ROOT));
+                submit(sender,null,id,()->{database.setMachineType(id,type,System.currentTimeMillis());return id;},
+                        done->{tell(sender,"MACHINE_TYPE id="+done+" old="+machine.type()+" new="+type);remote.machineChanged(done);});
+                return true;
             }
             if (action.equals("setting") && args.length == 4) {
                 commandSetting(sender,Integer.parseInt(args[2]),Integer.parseInt(args[3])); return true;
