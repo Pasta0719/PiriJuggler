@@ -55,6 +55,7 @@ public final class PiriDatabase implements AutoCloseable {
                     metadata("schema_version", "4");
                 }
                 ensureMachineTypeColumn();
+                ensureMachineRuntimeColumn();
                 ensureMachineStateColumn();
                 String oldJvm = metadata("current_jvm_start_ms");
                 if (Long.toString(jvmStart).equals(oldJvm)) {
@@ -247,7 +248,8 @@ public final class PiriDatabase implements AutoCloseable {
             var location = new Machine.Location(UUID.fromString((String) row.get("world_uuid")), (String) row.get("world_name"), n(row,"x"), n(row,"y"), n(row,"z"), (String) row.get("facing"));
             MachineType type=MachineType.valueOf(Objects.toString(row.get("machine_type"),"JUGGLER"));
             result.add(new Machine(n(row,"machine_id"), location, type, n(row,"setting"), n(row,"enabled") != 0, n(row,"auto_setting") != 0,
-                    n(row,"deleted") != 0, n(row,"last_left_stop"), n(row,"last_center_stop"), n(row,"last_right_stop"), ((Number)row.get("created_at")).longValue(), ((Number)row.get("updated_at")).longValue()));
+                    n(row,"deleted") != 0, n(row,"last_left_stop"), n(row,"last_center_stop"), n(row,"last_right_stop"),
+                    (String)row.get("machine_runtime_json"), ((Number)row.get("created_at")).longValue(), ((Number)row.get("updated_at")).longValue()));
         }
         return result;
     }
@@ -255,9 +257,18 @@ public final class PiriDatabase implements AutoCloseable {
         boolean present=rows("PRAGMA table_info(machines)").stream().anyMatch(row->"machine_type".equals(row.get("name")));
         if(!present) sql("ALTER TABLE machines ADD COLUMN machine_type TEXT NOT NULL DEFAULT 'JUGGLER'");
     }
+    private void ensureMachineRuntimeColumn() throws SQLException {
+        boolean present=rows("PRAGMA table_info(machines)").stream().anyMatch(row->"machine_runtime_json".equals(row.get("name")));
+        if(!present) sql("ALTER TABLE machines ADD COLUMN machine_runtime_json TEXT");
+    }
     private void ensureMachineStateColumn() throws SQLException {
         boolean present=rows("PRAGMA table_info(player_sessions)").stream().anyMatch(row->"machine_state_json".equals(row.get("name")));
         if(!present) sql("ALTER TABLE player_sessions ADD COLUMN machine_state_json TEXT");
+    }
+
+    public void setMachineRuntimeJson(int id, String runtimeJson, long now) throws SQLException {
+        requireMachine(id);
+        sql("UPDATE machines SET machine_runtime_json=?,updated_at=? WHERE machine_id=?", runtimeJson, now, id);
     }
     private static int n(Map<String, Object> row, String key) { return ((Number) row.get(key)).intValue(); }
     private boolean tableExists(String name) throws SQLException { return !rows("SELECT name FROM sqlite_master WHERE type='table' AND name=?", name).isEmpty(); }

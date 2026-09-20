@@ -29,6 +29,7 @@ CREATE TABLE machines (
   last_left_stop INTEGER NOT NULL DEFAULT 0 CHECK(last_left_stop BETWEEN 0 AND 20),
   last_center_stop INTEGER NOT NULL DEFAULT 0 CHECK(last_center_stop BETWEEN 0 AND 20),
   last_right_stop INTEGER NOT NULL DEFAULT 0 CHECK(last_right_stop BETWEEN 0 AND 20),
+  machine_runtime_json TEXT,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );
