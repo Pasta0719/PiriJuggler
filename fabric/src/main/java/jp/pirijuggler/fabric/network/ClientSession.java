@@ -9,6 +9,7 @@ import java.util.UUID;
 public final class ClientSession {
     private UUID session;
     private int machine;
+    private String machineType = "JUGGLER";
     private long nextSequence;
     private JsonObject publicState;
     private JsonObject adminState;
@@ -22,6 +23,7 @@ public final class ClientSession {
         switch (envelope.packetType()) {
             case OPEN_MACHINE -> {
                 session = UUID.fromString(body.get("sessionId").getAsString()); machine = body.get("machineId").getAsInt();
+                machineType = body.has("machineType") ? body.get("machineType").getAsString() : "JUGGLER";
                 nextSequence = body.get("expectedNextClientSequence").getAsLong(); publicState = null; clearAdmin();
             }
             case PUBLIC_STATE -> { if (matches(body)) { publicState = body.deepCopy(); nextSequence = Math.max(nextSequence, body.get("expectedNextClientSequence").getAsLong()); } }
@@ -42,6 +44,7 @@ public final class ClientSession {
     }
     public UUID sessionId() { return session; }
     public int machineId() { return machine; }
+    public String machineType() { return machineType; }
     public long nextSequence() { return nextSequence; }
     public long takeSequence() {
         if (session == null) throw new IllegalStateException("No open session");
@@ -56,6 +59,6 @@ public final class ClientSession {
         long value = nextAdminSequence; nextAdminSequence = Math.addExact(nextAdminSequence, 1); return value;
     }
     public void clearAdmin() { adminState = null; adminSession = null; adminMachine = 0; nextAdminSequence = 0; }
-    private void clearGame() { session = null; machine = 0; nextSequence = 0; publicState = null; }
+    private void clearGame() { session = null; machine = 0; machineType = "JUGGLER"; nextSequence = 0; publicState = null; }
     public void reset() { clearGame(); clearAdmin(); }
 }
