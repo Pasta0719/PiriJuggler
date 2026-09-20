@@ -27,7 +27,7 @@ public final class GodRoleOutcome {
      * the published role odds and payouts. It is not presented as a manufacturer
      * control-table value.
      */
-    public static final double NORMAL_ORDERED_15_SUCCESS_RATE = 0.010897;
+    public static final double NORMAL_ORDERED_15_SUCCESS_RATE = 0.0104273;
 
     public static Outcome resolve(GodRole role,GodPhase phase,double unit){
         Objects.requireNonNull(role);
@@ -55,7 +55,7 @@ public final class GodRoleOutcome {
             case ORDERED_YELLOW7 -> {
                 boolean fullPay=navigated||unit<NORMAL_ORDERED_15_SUCCESS_RATE;
                 yield fullPay
-                        ? new Outcome("ORDERED_YELLOW7",15,false)
+                        ? new Outcome("COMMON_YELLOW7",15,false)
                         : new Outcome("MISS",1,false);
             }
         };
