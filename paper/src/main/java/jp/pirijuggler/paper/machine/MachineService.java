@@ -12,6 +12,7 @@ import jp.pirijuggler.paper.economy.EconomyStore;
 import jp.pirijuggler.paper.economy.MedalToken;
 import jp.pirijuggler.paper.economy.VaultBridge;
 import jp.pirijuggler.paper.game.*;
+import jp.pirijuggler.paper.game.god.*;
 import jp.pirijuggler.paper.session.AdminSessions;
 import jp.pirijuggler.paper.session.Session;
 import jp.pirijuggler.paper.threading.PaperMainThread;
@@ -126,6 +127,9 @@ public final class MachineService implements Listener, CommandExecutor {
                     finally {simulating=false;}
                 });return true;
             }
+            if (args.length==3 && args[0].equalsIgnoreCase("godtest")) {
+                commandGodTest(sender,Integer.parseInt(args[1]),args[2]); return true;
+            }
             if (args.length >= 2 && args[0].equalsIgnoreCase("key") && args[1].equalsIgnoreCase("give") && args.length <= 3) {
                 Player target = args.length == 3 ? Bukkit.getPlayerExact(args[2]) : sender instanceof Player player ? player : null;
                 if (target == null) throw new DomainException("PLAYER_REQUIRED");
@@ -141,7 +145,7 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length >= 2 && args[0].equalsIgnoreCase("event")) {
                 commandEvent(sender,args); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
@@ -216,6 +220,37 @@ public final class MachineService implements Listener, CommandExecutor {
                 tell(player,"RECOVER_CASHOUT amount="+plan.amount()+" delivered="+finalDelivered+" pending="+(plan.amount()-finalDelivered));
             });
         });
+    }
+
+    private void commandGodTest(CommandSender sender,int id,String rawMode) {
+        Machine machine=state.machine(id);
+        if(machine==null||machine.type()!=MachineType.GOD)throw new DomainException("INVALID_STATE");
+        if(busy(id))throw new DomainException("MACHINE_OCCUPIED");
+
+        String mode=rawMode.toLowerCase(Locale.ROOT);
+        GodMachineRuntime current=GodMachineRuntime.fromJson(machine.runtimeJson());
+        GodSessionState gameplay=switch(mode) {
+            case "normal" -> GodSessionState.initial();
+            case "gg" -> new GodSessionState(GodPhase.GG,GodProductionSpec.GG_GAMES,0,GodLoopType.A,0,0,0,0,0,0,0,0,"GG_TEST","TEST");
+            case "god" -> new GodSessionState(GodPhase.GG,GodProductionSpec.GG_GAMES,GodProductionSpec.GOD_GUARANTEED_GG_SETS-1,GodLoopType.D,0,0,0,0,0,0,0,0,"GOD","GOD");
+            case "red7","sgg" -> new GodSessionState(GodPhase.SGG,0,1,GodLoopType.C,0,10,0,1,0,0,0,0,"RED7_SGG","RED7");
+            case "gzone" -> new GodSessionState(GodPhase.G_ZONE,0,1,GodLoopType.A,GodProductionSpec.G_ZONE_MAX_GAMES,0,0,0,0,0,0,0,"G_ZONE","TEST");
+            case "zzone" -> new GodSessionState(GodPhase.Z_ZONE,0,1,GodLoopType.A,0,0,0,0,GodProductionSpec.Z_ZONE_BASE_GAMES,0,0,0,"Z_ZONE","TEST");
+            case "zgame" -> new GodSessionState(GodPhase.Z_GAME,0,1,GodLoopType.A,0,0,0,0,0,0,0,0,"Z_GAME","TEST");
+            case "reset" -> null;
+            default -> throw new DomainException("INVALID_STATE");
+        };
+
+        GodMachineRuntime next;
+        if("reset".equals(mode)) {
+            next=GodMachineRuntime.initial();
+        } else {
+            next=new GodMachineRuntime(current.frontMode(),0,0,0,current.gaiaMode(),current.gaiaBellCount(),current.gaiaTarget(),false,0,
+                    GodProductionSpec.NORMAL_CEILING_GAMES,current.totalNormalGames(),gameplay);
+        }
+        long now=System.currentTimeMillis();
+        submit(sender,null,id,()->{database.setMachineRuntimeJson(id,next.toJsonString(),now);return id;},
+                done->{tell(sender,"GOD_TEST_READY id="+done+" mode="+mode+"; sit on the machine to test");remote.machineChanged(done);});
     }
 
     private void commandSetting(CommandSender sender,int id,int setting) {
