@@ -17,7 +17,7 @@ class GodGameEngineTest {
     @Test
     void leverThenThreeStopsCompleteOneGame() {
         GodGameEngine engine=new GodGameEngine(RandomStreams.production());
-        Machine machine=machine();
+        Machine machine=machine("MISS");
 
         var lever=engine.plan(session(50),machine,PacketType.SPACE_ACTION,1,1_700_000_000_000L,0,0,null);
         assertEquals(3,lever.bet());
@@ -48,7 +48,7 @@ class GodGameEngineTest {
     @Test
     void spaceStopsNextPendingReelWhileSpinning() {
         GodGameEngine engine=new GodGameEngine(RandomStreams.production());
-        Machine machine=machine();
+        Machine machine=machine("MISS");
         var lever=engine.plan(session(50),machine,PacketType.SPACE_ACTION,1,1,0,0,null);
         var stop=engine.plan(lever.after(),machine,PacketType.SPACE_ACTION,2,2,0,0,5);
         assertEquals(1,stop.after().number("stopped_mask"));
@@ -57,16 +57,59 @@ class GodGameEngineTest {
     @Test
     void zeroCreditIsRejectedWithoutStartingSpin() {
         GodGameEngine engine=new GodGameEngine(RandomStreams.production());
-        var t=engine.plan(session(0),machine(),PacketType.SPACE_ACTION,1,1_700_000_000_000L,0,0,null);
+        var t=engine.plan(session(0),machine("MISS"),PacketType.SPACE_ACTION,1,1_700_000_000_000L,0,0,null);
         assertEquals(0,t.bet());
         assertEquals(Session.GameState.SEATED_READY,t.after().state());
         assertNull(t.machineRuntimeJson());
         assertEquals("NOT_ENOUGH_CREDIT",t.packets().getFirst().payload().get("errorCode").getAsString());
     }
 
-    private static Machine machine(){
+    @Test
+    void forcedPublishedPayoutsMatchSettlement(){
+        assertEquals(3,finishForced("LOWER_YELLOW7").payout());
+        assertEquals(15,finishForced("COMMON_YELLOW7").payout());
+        assertEquals(1,finishForced("GAIA_BELL").payout());
+        assertEquals(15,finishForced("SP").payout());
+        assertEquals(15,finishForced("RED7").payout());
+        assertEquals(15,finishForced("GOD").payout());
+    }
+
+    @Test
+    void replayRoleEndsReplayReadyAndNextLeverIsFree(){
+        GodGameEngine engine=new GodGameEngine(RandomStreams.production());
+        Machine machine=machine("UPPER_BLUE7");
+        Session start=session(50);
+        var lever=engine.plan(start,machine,PacketType.SPACE_ACTION,1,1,0,0,null);
+        var left=engine.plan(lever.after(),machine,PacketType.STOP_LEFT,2,2,0,0,1);
+        var center=engine.plan(left.after(),machine,PacketType.STOP_CENTER,3,3,0,0,2);
+        var right=engine.plan(center.after(),machine,PacketType.STOP_RIGHT,4,4,0,0,3);
+        assertEquals(Session.GameState.REPLAY_READY,right.after().state());
+        assertEquals(0,right.payout());
+
+        Machine afterMachine=machineWithRuntime(right.machineRuntimeJson());
+        var replayLever=engine.plan(right.after(),afterMachine,PacketType.SPACE_ACTION,5,5,0,0,null);
+        assertEquals(0,replayLever.bet());
+        assertEquals(47,replayLever.after().number("credit"));
+    }
+
+    private static jp.pirijuggler.paper.game.GameTransition finishForced(String role){
+        GodGameEngine engine=new GodGameEngine(RandomStreams.production());
+        Machine machine=machine(role);
+        var lever=engine.plan(session(50),machine,PacketType.SPACE_ACTION,1,1,0,0,null);
+        var left=engine.plan(lever.after(),machine,PacketType.STOP_LEFT,2,2,0,0,0);
+        var center=engine.plan(left.after(),machine,PacketType.STOP_CENTER,3,3,0,0,0);
+        return engine.plan(center.after(),machine,PacketType.STOP_RIGHT,4,4,0,0,0);
+    }
+
+    private static Machine machine(String forcedRole){
+        String runtime=GodMachineRuntime.initial().withForcedRole(forcedRole).toJsonString();
         return new Machine(1,new Machine.Location(UUID.randomUUID(),"world",0,64,0,"NORTH"),
-                MachineType.GOD,1,true,false,false,0,0,0,null,1,1);
+                MachineType.GOD,1,true,false,false,0,0,0,runtime,1,1);
+    }
+
+    private static Machine machineWithRuntime(String runtime){
+        return new Machine(1,new Machine.Location(UUID.randomUUID(),"world",0,64,0,"NORTH"),
+                MachineType.GOD,1,true,false,false,0,0,0,runtime,1,1);
     }
 
     private static Session session(int credit){
