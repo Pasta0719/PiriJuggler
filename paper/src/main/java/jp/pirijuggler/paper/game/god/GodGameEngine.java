@@ -110,7 +110,7 @@ public final class GodGameEngine implements GameEngine {
             case STOP_LEFT -> 0;
             case STOP_CENTER -> 1;
             case STOP_RIGHT -> 2;
-            case SPACE_ACTION -> expectedNextReel(state,mask);
+            case SPACE_ACTION -> spaceReel(state,mask);
             default -> -1;
         };
         if(reel<0)return rejected(before,action,sequence,now,ErrorCode.INVALID_STATE);
@@ -174,6 +174,10 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private static int nextReel(int mask){for(int i=0;i<3;i++)if((mask&(1<<i))==0)return i;return -1;}
+    private static int spaceReel(JsonObject state,int mask){
+        int expected=expectedNextReel(state,mask);
+        return expected>=0?expected:nextReel(mask);
+    }
     private static boolean isAtLike(GodPhase phase){
         return phase==GodPhase.GG||phase==GodPhase.SGG||phase==GodPhase.SGG_COMEBACK||
                 phase==GodPhase.Z_ZONE||phase==GodPhase.Z_GAME;
