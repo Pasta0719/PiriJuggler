@@ -191,6 +191,7 @@ public final class RemoteMachineRegistry {
         requireString(body, "facing");
         if (!Set.of("NORTH","SOUTH","EAST","WEST","UP","DOWN").contains(body.get("facing").getAsString()))
             throw new IllegalArgumentException("facing");
+        if (!body.has("machineType")) body.addProperty("machineType", "JUGGLER");
         requireString(body, "machineType");
         if (!Set.of("JUGGLER","OKIDOKI","GOD","DISC").contains(body.get("machineType").getAsString()))
             throw new IllegalArgumentException("machineType");
