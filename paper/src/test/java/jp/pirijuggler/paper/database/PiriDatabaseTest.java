@@ -69,7 +69,7 @@ class PiriDatabaseTest {
     }
     @Test void seatIsUniquePerPlayerAndMachineAndPersistsBeforeReturn() throws Exception {
         int first = create(0), second = create(1); Session seat = db.seat(player, first, NOW);
-        assertEquals(0, seat.number("credit")); assertEquals(0, seat.number("held_medals")); assertEquals(28, seat.snapshot().size());
+        assertEquals(0, seat.number("credit")); assertEquals(0, seat.number("held_medals")); assertEquals(29, seat.snapshot().size());
         assertTrue(db.state().busy(first)); code("RECOVERY_REQUIRED", () -> db.seat(player, second, NOW));
         code("MACHINE_OCCUPIED", () -> db.seat(other, first, NOW)); assertEquals(1, count("player_sessions"));
         assertEquals(seat.id(), db.seat(player, first, NOW + 1).id());
