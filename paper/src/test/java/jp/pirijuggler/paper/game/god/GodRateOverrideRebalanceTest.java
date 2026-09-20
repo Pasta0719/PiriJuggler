@@ -24,6 +24,6 @@ class GodRateOverrideRebalanceTest {
     @Test void rejectsCaseWhereNormalGgCannotCarryWholeAdjustment() {
         assertThrows(IllegalArgumentException.class,
                 ()->GodRateOverrideRebalance.absorbEntireGodDeltaInNormalGg(
-                        533.0, 100.0, 3000.0));
+                        533.0, 90.0, 3000.0));
     }
 }
