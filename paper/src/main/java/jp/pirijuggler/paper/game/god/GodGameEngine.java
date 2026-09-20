@@ -375,7 +375,7 @@ public final class GodGameEngine implements GameEngine {
             if(s.zYellowStreak()==0&&rng.nextDouble()<GodProductionSpec.Z_ZONE_ZERO_YELLOW_SPECIAL_D_RATE)loop=GodLoopType.D;
             if(loop!=null)stocks+=rollLoop(loop,rng);
             stocks=Math.max(1,stocks);
-            GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,stocks-1,null,0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"Z_FAIL_GG","NONE");
+            GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,stocks-1,null,0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"Z_FAIL_GG","MISS");
             return new Step(r.withGameplay(ns),payout);
         }
         GodSessionState ns=copy(s,GodPhase.Z_ZONE,0,s.queuedGgStocks(),s.loopType(),0,0,0,s.sggSetNumber(),left,streak,0,s.totalGodGames()+1,"Z_ZONE",yellow?"ORDERED_YELLOW7":"MISS");
@@ -390,7 +390,7 @@ public final class GodGameEngine implements GameEngine {
             return new Step(r.withGameplay(ns),payout);
         }
         int stocks=Math.max(1,s.queuedGgStocks());
-        GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,stocks-1,s.loopType(),0,0,0,s.sggSetNumber(),0,0,s.zGameStocks(),s.totalGodGames()+1,"Z_END_GG","NONE");
+        GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,stocks-1,s.loopType(),0,0,0,s.sggSetNumber(),0,0,s.zGameStocks(),s.totalGodGames()+1,"Z_END_GG","MISS");
         return new Step(r.withGameplay(ns),payout);
     }
 
