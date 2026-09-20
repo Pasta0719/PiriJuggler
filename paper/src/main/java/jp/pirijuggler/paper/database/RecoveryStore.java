@@ -1,7 +1,11 @@
 package jp.pirijuggler.paper.database;
 
+import com.google.gson.JsonObject;
+import jp.pirijuggler.common.reel.GodReelStrip;
+import jp.pirijuggler.common.reel.GodStopControl;
 import jp.pirijuggler.common.reel.Reel;
 import jp.pirijuggler.paper.game.GameRules;
+import jp.pirijuggler.paper.game.god.GodMachineRuntime;
 import jp.pirijuggler.paper.game.PremiumPolicy;
 import jp.pirijuggler.paper.game.RoleWeights;
 import jp.pirijuggler.paper.reel.DisplayRole;
@@ -61,9 +65,14 @@ public final class RecoveryStore {
         Map<String,Object> statRow=row("SELECT * FROM machine_period_stats WHERE machine_id=? AND business_period_id=?",machine,period);
         Stats stats=new Stats(statRow);
         Map<String,Object> values=new LinkedHashMap<>(before.snapshot());
-        int setting=((Number)row("SELECT setting FROM machines WHERE machine_id=?",machine).get("setting")).intValue();
+        Map<String,Object> machineRow=row("SELECT setting,machine_type FROM machines WHERE machine_id=?",machine);
+        int setting=((Number)machineRow.get("setting")).intValue();
+        boolean god="GOD".equals(machineRow.get("machine_type"));
+        String settledGodRuntime=null;
 
-        switch(before.state()) {
+        if(god){
+            settledGodRuntime=settleGod(before,values,stats,now);
+        } else switch(before.state()) {
             case NORMAL_BETTED -> settleFreshNormal(values,stats,setting,now);
             case NORMAL_SPINNING -> settleStoredNormal(values,stats,now);
             case REPLAY_READY -> settleReplayChain(values,stats,setting,now);
@@ -99,8 +108,12 @@ public final class RecoveryStore {
                 values.get("game_state"),values.get("credit"),values.get("held_medals"),values.get("spin_id"),values.get("internal_role"),values.get("premium_type"),values.get("notice_state"),values.get("lamp_on"),values.get("bonus_type"),values.get("bonus_payout_count"),values.get("current_bet"),values.get("pay_display"),values.get("display_left_stop"),values.get("display_center_stop"),values.get("display_right_stop"),values.get("stopped_mask"),values.get("phase_left"),values.get("phase_center"),values.get("phase_right"),values.get("motion_profile"),values.get("last_activity"),before.id().toString());
         db.sql("UPDATE machine_period_stats SET total_games=?,big_count=?,reg_count=?,current_games=?,today_difference=?,today_max_difference=?,last_bonus_type=?,last_bonus_at=? WHERE machine_id=? AND business_period_id=?",
                 stats.total,stats.big,stats.reg,stats.current,stats.difference,stats.max,stats.lastBonus,stats.lastBonusAt,machine,period);
-        db.sql("UPDATE machines SET last_left_stop=?,last_center_stop=?,last_right_stop=?,updated_at=? WHERE machine_id=?",
-                values.get("display_left_stop"),values.get("display_center_stop"),values.get("display_right_stop"),now,machine);
+        if(settledGodRuntime!=null)
+            db.sql("UPDATE machines SET last_left_stop=?,last_center_stop=?,last_right_stop=?,machine_runtime_json=?,updated_at=? WHERE machine_id=?",
+                    values.get("display_left_stop"),values.get("display_center_stop"),values.get("display_right_stop"),settledGodRuntime,now,machine);
+        else
+            db.sql("UPDATE machines SET last_left_stop=?,last_center_stop=?,last_right_stop=?,updated_at=? WHERE machine_id=?",
+                    values.get("display_left_stop"),values.get("display_center_stop"),values.get("display_right_stop"),now,machine);
         db.sql("INSERT INTO economy_transactions(transaction_id,player_uuid,operation,vault_amount,item_snapshot_json,balance_before,status,created_at,updated_at) VALUES(?,?,'FORCE_SETTLEMENT',0,?,NULL,'APPLIED',?,?)",
                 settlementId,before.player().toString(),before.state().name(),now,now);
         return new Session(values);
@@ -108,6 +121,57 @@ public final class RecoveryStore {
 
     static String settlementTransactionId(Session session){
         return "SETTLE:"+session.id()+":"+session.sequence();
+    }
+
+    /**
+     * GOD recovery never redraws a role. Lever-on already persisted the exact
+     * pending runtime/result in machine_state_json, so recovery completes that
+     * authoritative result and then returns the session to a safe ready state.
+     */
+    private String settleGod(Session before,Map<String,Object> values,Stats stats,long now) throws Exception {
+        if(before.state()==Session.GameState.REPLAY_READY){
+            // Preserve the value of the free replay when force-settling to SEATED_READY.
+            addAssets(values,3);
+            stats.addDifference(3);
+            graph(values,stats,now);
+            JsonObject state=before.machineState();
+            finish(values,now);
+            return state==null?null:row("SELECT machine_runtime_json FROM machines WHERE machine_id=?",before.machine()).get("machine_runtime_json") instanceof String raw?raw:null;
+        }
+        if(before.state()!=Session.GameState.NORMAL_SPINNING)
+            throw new IllegalStateException("Unexpected GOD recovery state: "+before.state());
+
+        JsonObject state=before.machineState();
+        if(state==null||!state.has("_pendingRuntime")||!state.has("_pendingPayout")||!state.has("_pendingRole"))
+            throw new IllegalStateException("GOD spin missing pending recovery state");
+
+        String role=state.get("_pendingRole").getAsString();
+        int mask=((Number)values.get("stopped_mask")).intValue();
+        for(int reel=0;reel<3;reel++){
+            if((mask&(1<<reel))!=0)continue;
+            String name=new String[]{"left","center","right"}[reel];
+            int pressed=Math.floorMod((int)Math.floor(((Number)values.get("phase_"+name)).doubleValue()),GodReelStrip.STOPS);
+            int target=GodStopControl.targetFor(role,reel,pressed);
+            values.put("display_"+name+"_stop",target);
+        }
+
+        int payout=state.get("_pendingPayout").getAsInt();
+        boolean replay=state.has("_pendingReplay")&&state.get("_pendingReplay").getAsBoolean();
+        addAssets(values,payout);
+        stats.addDifference(payout);
+        stats.total=Math.addExact(stats.total,1);
+        stats.current=Math.addExact(stats.current,1);
+        if(replay){
+            // Convert the pending free game into equivalent medals only for forced recovery.
+            addAssets(values,3);
+            stats.addDifference(3);
+        }
+        graph(values,stats,now);
+
+        GodMachineRuntime runtime=GodMachineRuntime.fromJson(state.getAsJsonObject("_pendingRuntime").toString());
+        values.put("machine_state_json",runtime.gameplay().toJsonString());
+        finish(values,now);
+        return runtime.toJsonString();
     }
 
     private void settleFreshNormal(Map<String,Object> values,Stats stats,int setting,long now) throws Exception {
