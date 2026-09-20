@@ -3,9 +3,8 @@ package jp.pirijuggler.paper.game.god;
 /**
  * Solves the setting-specific normal-GG initial hit rate from an explicit EV budget.
  *
- * The important constraint is that presentation probabilities are not chosen first:
- * once base-game loss and premium-path EV are fixed, the initial GG rate is the
- * remaining degree of freedom required to hit the target payout.
+ * The target payout curve must be supplied explicitly; the Kiseki curve is only
+ * a benchmark until the production target is chosen.
  */
 public final class GodParameterFitter {
     public record Inputs(
@@ -13,7 +12,6 @@ public final class GodParameterFitter {
             double expectedNetPerNormalGgInitial,
             double expectedNetPerGod,
             double sggNetPerGame,
-            double bellVNetPerGame,
             double loopStockNetPerGame,
             double otherPremiumNetPerGame
     ) {
@@ -22,7 +20,6 @@ public final class GodParameterFitter {
             positive(expectedNetPerNormalGgInitial, "expectedNetPerNormalGgInitial");
             nonNegative(expectedNetPerGod, "expectedNetPerGod");
             nonNegative(sggNetPerGame, "sggNetPerGame");
-            nonNegative(bellVNetPerGame, "bellVNetPerGame");
             nonNegative(loopStockNetPerGame, "loopStockNetPerGame");
             nonNegative(otherPremiumNetPerGame, "otherPremiumNetPerGame");
         }
@@ -39,16 +36,17 @@ public final class GodParameterFitter {
 
     private GodParameterFitter() {}
 
-    public static Result fit(int setting, Inputs in) {
-        double target=GodEconomyTargets.targetNetPerGame(setting);
+    public static Result fit(GodPayoutCurve targetCurve, int setting, Inputs in) {
+        if(targetCurve==null) throw new IllegalArgumentException("targetCurve");
+        double target=targetCurve.targetNetPerGame(setting);
         double god=GodEconomyTargets.godNetContributionPerGame(in.expectedNetPerGod());
-        double fixed=in.baseNetPerGame()+god+in.sggNetPerGame()+in.bellVNetPerGame()
+        double fixed=in.baseNetPerGame()+god+in.sggNetPerGame()
                 +in.loopStockNetPerGame()+in.otherPremiumNetPerGame();
         double needed=target-fixed;
         double rate=needed/in.expectedNetPerNormalGgInitial();
         if(!Double.isFinite(rate)||rate<=0||rate>1)
             throw new IllegalArgumentException("No feasible normal GG rate for setting "+setting);
-        return new Result(setting,GodEconomyTargets.payoutPercent(setting),target,fixed,rate,1.0/rate);
+        return new Result(setting,targetCurve.payoutPercent(setting),target,fixed,rate,1.0/rate);
     }
 
     private static void finite(double value,String name){
