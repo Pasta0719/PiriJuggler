@@ -92,10 +92,27 @@ class GodGameEngineTest {
         assertEquals(47,replayLever.after().number("credit"));
     }
 
+    @Test
+    void gaiaBellRejectsLeftFirstAndAcceptsRightFirstNavigation(){
+        GodGameEngine engine=new GodGameEngine(RandomStreams.production());
+        Machine machine=machine("GAIA_BELL");
+        var lever=engine.plan(session(50),machine,PacketType.SPACE_ACTION,1,1,0,0,null);
+        var rejected=engine.plan(lever.after(),machine,PacketType.STOP_LEFT,2,2,0,0,0);
+        assertEquals(0,rejected.after().number("stopped_mask"));
+        assertEquals("INVALID_STATE",rejected.packets().getFirst().payload().get("errorCode").getAsString());
+        var right=engine.plan(lever.after(),machine,PacketType.STOP_RIGHT,3,3,0,0,0);
+        assertEquals(4,right.after().number("stopped_mask"));
+    }
+
     private static jp.pirijuggler.paper.game.GameTransition finishForced(String role){
         GodGameEngine engine=new GodGameEngine(RandomStreams.production());
         Machine machine=machine(role);
         var lever=engine.plan(session(50),machine,PacketType.SPACE_ACTION,1,1,0,0,null);
+        if("GAIA_BELL".equals(role)){
+            var right=engine.plan(lever.after(),machine,PacketType.STOP_RIGHT,2,2,0,0,0);
+            var left=engine.plan(right.after(),machine,PacketType.STOP_LEFT,3,3,0,0,0);
+            return engine.plan(left.after(),machine,PacketType.STOP_CENTER,4,4,0,0,0);
+        }
         var left=engine.plan(lever.after(),machine,PacketType.STOP_LEFT,2,2,0,0,0);
         var center=engine.plan(left.after(),machine,PacketType.STOP_CENTER,3,3,0,0,0);
         return engine.plan(center.after(),machine,PacketType.STOP_RIGHT,4,4,0,0,0);
