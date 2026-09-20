@@ -3,6 +3,7 @@ package jp.pirijuggler.paper.game.god;
 import com.google.gson.JsonObject;
 import jp.pirijuggler.common.protocol.*;
 import jp.pirijuggler.common.reel.GodReelStrip;
+import jp.pirijuggler.common.reel.GodStopControl;
 import jp.pirijuggler.common.reel.ReelMotion;
 import jp.pirijuggler.paper.game.*;
 import jp.pirijuggler.paper.machine.DomainException;
@@ -102,8 +103,7 @@ public final class GodGameEngine implements GameEngine {
         if(pressed<0||pressed>=GodReelStrip.STOPS)return rejected(before,action,sequence,now,ErrorCode.SESSION_MISMATCH);
 
         String role=state.has("_pendingRole")?state.get("_pendingRole").getAsString():before.text("internal_role");
-        var desired=GodReelStrip.symbolForRole(role,reel);
-        int target=GodReelStrip.targetFor(reel,desired,pressed);
+        int target=GodStopControl.targetFor(role,reel,pressed);
         int slip=GodReelStrip.slip(pressed,target);
         int duration=ReelMotion.durationMs(slip);
 
@@ -523,9 +523,8 @@ public final class GodGameEngine implements GameEngine {
         for(int reel=0;reel<3;reel++){
             if((mask&(1<<reel))!=0)continue;
             var choices=new com.google.gson.JsonArray();
-            var desired=GodReelStrip.symbolForRole(role,reel);
             for(int pressed=0;pressed<GodReelStrip.STOPS;pressed++){
-                int target=GodReelStrip.targetFor(reel,desired,pressed);
+                int target=GodStopControl.targetFor(role,reel,pressed);
                 int slip=GodReelStrip.slip(pressed,target);
                 JsonObject item=new JsonObject();item.addProperty("stopIndex",target);item.addProperty("slip",slip);item.addProperty("durationMs",ReelMotion.durationMs(slip));
                 choices.add(item);
