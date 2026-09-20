@@ -79,6 +79,9 @@ public final class GodGameEngine implements GameEngine {
         GodRole role=drawRole(rng);
         int payout=rng.nextDouble()<NORMAL_THREE_MEDAL_PAYOUT_RATE?3:0;
         int normalGames=r.normalGamesSinceGg()+1;
+        int ceilingTarget=r.ceilingTarget()==0
+                ? GodProductionSpec.chooseResetCeiling(rng.nextDouble())
+                : r.ceilingTarget();
         int blue=isBlue(role)?r.blue7History()+1:role==GodRole.GAIA_BELL?r.blue7History()+1:0;
         int yellow=isYellow(role)?r.yellow7History()+1:role==GodRole.GAIA_BELL?r.yellow7History()+1:0;
         GodFrontMode mode=transitionMode(r.frontMode(),role,setting,rng);
@@ -101,14 +104,14 @@ public final class GodGameEngine implements GameEngine {
             gaiaGuarantee=Math.max(0,gaiaGuarantee-1);
             gaiaGuarantee=GodGaiaRules.maybeExtendGuarantee(gaiaGuarantee,role,rng);
         }
-        GodMachineRuntime nextBase=new GodMachineRuntime(mode,normalGames,blue,yellow,gaiaMode,gaiaCount,gaiaTarget,gaiaActive,gaiaGuarantee,r.totalNormalGames()+1,s);
+        GodMachineRuntime nextBase=new GodMachineRuntime(mode,normalGames,blue,yellow,gaiaMode,gaiaCount,gaiaTarget,gaiaActive,gaiaGuarantee,ceilingTarget,r.totalNormalGames()+1,s);
 
         if(role==GodRole.GOD)return enterGod(nextBase,s,role,rng);
         if(role==GodRole.RED7)return enterSgg(nextBase,s,role,rng);
         if(role==GodRole.SP && rng.nextDouble()<GodProductionSpec.SP_STOCK_HIT_RATE_NORMAL_OR_GG)
             return enterGg(nextBase,s,role,GodLoopType.D,1,0,rng);
 
-        boolean ceiling=normalGames>=GodProductionSpec.NORMAL_CEILING_GAMES;
+        boolean ceiling=normalGames>=ceilingTarget;
         if(ceiling)return ceiling(nextBase,s,role,rng);
 
         boolean history=gaiaActive?GodGaiaRules.historyHit(blue,yellow,rng):historyHit(blue,yellow,setting,rng);
@@ -120,7 +123,7 @@ public final class GodGameEngine implements GameEngine {
             GodLoopType loop=loopForMode(mode,rng);
             if(gaiaActive&&rng.nextDouble()<.15){
                 GodSessionState zs=copy(s,GodPhase.Z_ZONE,0,1,loop,0,0,0,s.sggSetNumber(),GodProductionSpec.Z_ZONE_BASE_GAMES,0,0,s.totalGodGames()+1,"GAIA_Z","0");
-                return new Step(resetNormal(new GodMachineRuntime(nextBase.frontMode(),nextBase.normalGamesSinceGg(),nextBase.blue7History(),nextBase.yellow7History(),nextBase.gaiaMode(),nextBase.gaiaBellCount(),nextBase.gaiaTarget(),false,0,nextBase.totalNormalGames(),s),zs),payout);
+                return new Step(resetNormal(new GodMachineRuntime(nextBase.frontMode(),nextBase.normalGamesSinceGg(),nextBase.blue7History(),nextBase.yellow7History(),nextBase.gaiaMode(),nextBase.gaiaBellCount(),nextBase.gaiaTarget(),false,0,nextBase.ceilingTarget(),nextBase.totalNormalGames(),s),zs),payout);
             }
             GodMachineRuntime hitBase=new GodMachineRuntime(nextBase.frontMode(),nextBase.normalGamesSinceGg(),nextBase.blue7History(),nextBase.yellow7History(),nextBase.gaiaMode(),nextBase.gaiaBellCount(),nextBase.gaiaTarget(),false,0,nextBase.totalNormalGames(),s);
             return enterGg(hitBase,s,role,loop,1,payout,rng);

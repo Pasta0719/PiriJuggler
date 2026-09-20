@@ -13,10 +13,11 @@ class GodMachineRuntimeTest {
         assertEquals(GodFrontMode.LOW_A,initial.frontMode());
         assertEquals(GodGaiaMode.LOW,initial.gaiaMode());
         assertEquals(GodPhase.NORMAL,initial.gameplay().phase());
+        assertEquals(0,initial.ceilingTarget());
     }
     @Test void rejectsNegativeMachineCounters(){
         assertThrows(IllegalArgumentException.class,()->new GodMachineRuntime(
-                GodFrontMode.NORMAL,-1,0,0,GodGaiaMode.LOW,0,0,false,0,0,GodSessionState.initial()));
+                GodFrontMode.NORMAL,-1,0,0,GodGaiaMode.LOW,0,0,false,0,1480,0,GodSessionState.initial()));
     }
     @Test void heavenTargetAlwaysWithinThree(){
         var rng=new SplittableRandom(7);
