@@ -40,6 +40,7 @@ public final class WorldCabinetRenderer {
         long now=System.nanoTime();
 
         for(RemoteMachineViewState state:PiriJugglerClient.remoteMachines().viewSnapshot()){
+            if(!MachineWorldRendererRegistry.hasRenderer(state.machineType()))continue;
             if(!state.dimension().isEmpty()&&!dimension.equals(state.dimension()))continue;
             double ax=state.x()+.5,ay=state.y()+.5,az=state.z()+.5;
             double dx=camera.x-ax,dy=camera.y-ay,dz=camera.z-az;
