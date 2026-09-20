@@ -39,6 +39,17 @@ tasks.processResources {
     eachFile {
         if (path.startsWith("assets/piri/sounds/") && userAudio.resolve(name).isFile && file.canonicalFile != userAudio.resolve(name).canonicalFile) exclude()
     }
+
+    val userGodLcd = rootProject.file("user-god-lcd")
+    from(userGodLcd) {
+        include("scenes.json")
+        into("assets/piri/god_lcd")
+    }
+    from(userGodLcd.resolve("textures")) {
+        include("**/*.png")
+        into("assets/piri/textures/god_lcd")
+    }
+
 }
 
 tasks.jar {

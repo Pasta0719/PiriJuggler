@@ -1,31 +1,33 @@
 # GOD LCD customization
 
-The GOD LCD is intentionally data-driven so that images and scene presentation can be changed without rebuilding the mod.
+GODの液晶素材は、ジャグラーの user-audio と同じ考え方で、リソースパックではなくリポジトリ直下の `user-god-lcd` からビルド時にJARへ取り込みます。
 
-## Easiest workflow
-
-Create a normal Minecraft resource pack, for example:
+## フォルダ
 
 ```text
-.minecraft/resourcepacks/PiriGodCustom/
-  pack.mcmeta
-  assets/
-    piri/
-      god_lcd/
-        scenes.json
-      textures/
-        god_lcd/
-          normal.png
-          gg.png
-          god.png
-          anything_you_want.png
+PiriJuggler_Codex_Workflow_v4_AUDITED/
+  user-god-lcd/
+    scenes.json
+    textures/
+      normal.png
+      gg.png
+      god.png
+      sgg.png
+      z_zone.png
+      好きな名前.png
 ```
 
-Enable the resource pack in Minecraft. After changing files, use Minecraft's normal resource reload (F3+T). No Java/Gradle build is required.
+PNGは何枚でも追加できます。
+
+変更後はいつもの:
+
+```powershell
+.\build-jars.bat
+```
+
+だけで反映されます。ChatGPTやCodexにコード変更を頼む必要はありません。
 
 ## scenes.json
-
-The pack can override `assets/piri/god_lcd/scenes.json`. A scene can change colors/text and can contain any number of PNG layers:
 
 ```json
 {
@@ -33,8 +35,8 @@ The pack can override `assets/piri/god_lcd/scenes.json`. A scene can change colo
     "NORMAL": {
       "background": "#10213A",
       "accent": "#FFD15A",
-      "title": "MY NORMAL SCREEN",
-      "subtitle": "CUSTOM",
+      "title": "OLYMPUS",
+      "subtitle": "GOD SYSTEM",
       "layers": [
         {
           "texture": "piri:textures/god_lcd/normal.png",
@@ -52,16 +54,14 @@ The pack can override `assets/piri/god_lcd/scenes.json`. A scene can change colo
 }
 ```
 
-Coordinates are relative to the LCD's 1260x650 canvas. Layer order is array order; later entries draw over earlier entries.
+液晶キャンバスは1260x650。layersは上から順に描画されるため、背景・エフェクト・文字素材などを自由に重ねられます。
 
-Supported base scene keys:
+使える基本シーン:
 
-`NORMAL`, `GG`, `G_ZONE`, `SGG`, `SGG_COMEBACK`, `Z_ZONE`, `Z_GAME`.
+`NORMAL`, `GG`, `G_ZONE`, `SGG`, `SGG_COMEBACK`, `Z_ZONE`, `Z_GAME`
 
-Event scenes override the phase scene when present. Current event keys include:
+イベント専用:
 
-`EVENT_GOD`, `EVENT_GOD_IN_GG`, `EVENT_RED7_SGG`, `EVENT_CEILING_Z`, `EVENT_GAIA_Z`.
+`EVENT_GOD`, `EVENT_GOD_IN_GG`, `EVENT_RED7_SGG`, `EVENT_CEILING_Z`, `EVENT_GAIA_Z`
 
-You may omit any scene: built-in defaults remain active. You may add PNGs freely and reference them from any scene. Invalid/missing custom resources fall back safely instead of changing gameplay.
-
-This system is client presentation only. Probabilities, stocks, settings and other hidden machine state stay server-owned.
+scenes.jsonに書いていないシーンは内蔵デフォルト表示を使います。ゲーム確率・設定・ストック等の内部状態には一切影響しません。
