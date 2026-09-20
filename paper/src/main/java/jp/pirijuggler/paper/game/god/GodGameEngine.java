@@ -165,7 +165,7 @@ public final class GodGameEngine implements GameEngine {
     private static String reelEnumName(int reel){return new String[]{"LEFT","CENTER","RIGHT"}[reel];}
 
 
-    private record Step(GodMachineRuntime runtime,int payout) {}
+    private record Step(GodMachineRuntime runtime) {}
 
     private Step step(GodMachineRuntime r,int setting,RandomGenerator rng){
         GodSessionState s=r.gameplay();
