@@ -158,25 +158,48 @@ public final class GodGameEngine implements GameEngine {
             GodSessionState ns=copy(s,GodPhase.GG,remaining,stocks,loop,0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,event,role.name());
             return new Step(r.withGameplay(ns),payout);
         }
-        GodSessionState ns=copy(s,GodPhase.G_ZONE,0,stocks,loop,GodProductionSpec.G_ZONE_MAX_GAMES,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"G_ZONE",role.name());
+        int delay=stocks>0?gZoneAnnouncementDelay(rng):GodProductionSpec.G_ZONE_MAX_GAMES;
+        GodSessionState ns=copy(s,GodPhase.G_ZONE,0,stocks,loop,delay,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"G_ZONE",role.name());
         return new Step(r.withGameplay(ns),payout);
     }
 
     private Step gZone(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
         int payout=3;
         int stocks=s.queuedGgStocks();
+        GodRole role=drawRole(rng);
+
+        if(role==GodRole.GOD){
+            stocks+=GodProductionSpec.GOD_GUARANTEED_GG_SETS+rollLoop(GodLoopType.D,rng);
+            GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,stocks-1,GodLoopType.D,0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"GOD","GOD");
+            return new Step(r.withGameplay(ns),payout);
+        }
+        if(role==GodRole.RED7){
+            GodSessionState ns=copy(s,GodPhase.SGG,0,stocks+1+rollLoop(GodLoopType.C,rng),GodLoopType.C,0,sggLength(false,role,rng),0,1,0,0,0,s.totalGodGames()+1,"RED7_SGG",role.name());
+            return new Step(r.withGameplay(ns),payout);
+        }
+        if(role==GodRole.SP&&rng.nextDouble()<GodProductionSpec.SP_STOCK_HIT_RATE_NORMAL_OR_GG)
+            stocks+=1+rollLoop(GodLoopType.D,rng);
+
+        if(stocks>0){
+            double z=gZoneZChance(role);
+            if(z>0&&rng.nextDouble()<z){
+                GodSessionState ns=copy(s,GodPhase.Z_ZONE,0,stocks,s.loopType(),0,0,0,s.sggSetNumber(),GodProductionSpec.Z_ZONE_BASE_GAMES,0,0,s.totalGodGames()+1,"G_ZONE_TO_Z",role.name());
+                return new Step(r.withGameplay(ns),payout);
+            }
+        }
+
+        int left=Math.max(0,s.gZoneGamesRemaining()-1);
+        if(left>0){
+            GodSessionState ns=copy(s,GodPhase.G_ZONE,0,stocks,s.loopType(),left,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"G_ZONE",role.name());
+            return new Step(r.withGameplay(ns),payout);
+        }
         if(stocks>0){
             stocks--;
             GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,stocks,s.loopType(),0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"GG_CONTINUE","STOCK");
             return new Step(r.withGameplay(ns),payout);
         }
-        int left=Math.max(0,s.gZoneGamesRemaining()-1);
-        if(left>0){
-            GodSessionState ns=copy(s,GodPhase.G_ZONE,0,0,s.loopType(),left,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"G_ZONE","NONE");
-            return new Step(r.withGameplay(ns),payout);
-        }
         GodSessionState ns=copy(s,GodPhase.NORMAL,0,0,null,0,0,0,0,0,0,0,s.totalGodGames()+1,"NORMAL_RETURN","NONE");
-        GodMachineRuntime nr=new GodMachineRuntime(r.frontMode(),0,0,0,r.gaiaMode(),r.gaiaBellCount(),r.gaiaTarget(),false,0,r.totalNormalGames(),ns);
+        GodMachineRuntime nr=new GodMachineRuntime(r.frontMode(),0,0,0,r.gaiaMode(),r.gaiaBellCount(),r.gaiaTarget(),false,0,r.ceilingTarget(),r.totalNormalGames(),ns);
         return new Step(nr,payout);
     }
 
@@ -362,6 +385,22 @@ public final class GodGameEngine implements GameEngine {
         if(rng.nextDouble()<up)return GodFrontMode.values()[Math.min(GodFrontMode.values().length-1,idx+(role==GodRole.MIDDLE_YELLOW7?2:1))];
         if(idx>0&&rng.nextDouble()<.012)return GodFrontMode.values()[idx-1];
         return mode;
+    }
+
+    private static int gZoneAnnouncementDelay(RandomGenerator rng){
+        double x=rng.nextDouble();
+        if(x<.078)return 1;if(x<.156)return 2;if(x<.234)return 3;if(x<.312)return 4;return 5;
+    }
+
+    private static double gZoneZChance(GodRole role){
+        return switch(role){
+            case UPPER_BLUE7,RED7_FAKE -> .001;
+            case MIDDLE_BLUE7 -> .040;
+            case RISING_YELLOW7 -> .180;
+            case MIDDLE_YELLOW7 -> .250;
+            case SP -> .300;
+            default -> 0.0;
+        };
     }
 
     private static int sggLength(boolean fifth,GodRole trigger,RandomGenerator rng){
