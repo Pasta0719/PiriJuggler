@@ -1,36 +1,63 @@
 package jp.pirijuggler.paper.game.god;
 
+import java.util.Objects;
+
 /**
- * Server-authoritative settlement facts for one GOD role.
+ * Single settlement/presentation result for one internal GOD role.
  *
- * Published facts are kept separate from stop-control presentation so the
- * displayed result and credited medals cannot silently drift apart again.
+ * This prevents the reel result, PAY display and credited medals from being
+ * calculated by unrelated code paths.
  */
 public final class GodRoleOutcome {
-    public record Outcome(int payout, boolean replay) {
+    public record Outcome(String displayRole,int payout,boolean replay) {
         public Outcome {
+            Objects.requireNonNull(displayRole);
             if(payout<0)throw new IllegalArgumentException("payout");
+            if(replay&&payout!=0)throw new IllegalArgumentException("replay is not a medal payout");
         }
     }
 
     /**
-     * Published role settlement where the payout is role-defined.
+     * Piri calibration for an un-navigated ORDERED_YELLOW7 in NORMAL/G-ZONE.
      *
-     * ORDERED_YELLOW7 is phase-dependent: in AT-like phases it is the navigated
-     * 15-medal role. In normal/G-ZONE the exact 1-medal miss distribution is not
-     * publicly specified; Piri uses a 1-medal non-winning settlement there and
-     * documents it as a calibration assumption rather than an exact machine rule.
+     * Public sources identify the flag as a 15-medal push-order yellow and also
+     * state that one-medal roles can occur when that flag is missed, but do not
+     * publish the complete order/miss distribution. The rate below keeps the
+     * published setting-1 normal base (about 30.8G/50 medals) when combined with
+     * the published role odds and payouts. It is not presented as a manufacturer
+     * control-table value.
      */
-    public static Outcome forRole(GodRole role,GodPhase phase){
-        boolean atLike=phase==GodPhase.GG||phase==GodPhase.SGG||phase==GodPhase.SGG_COMEBACK||
-                phase==GodPhase.Z_ZONE||phase==GodPhase.Z_GAME;
+    public static final double NORMAL_ORDERED_15_SUCCESS_RATE = 0.010897;
+
+    public static Outcome resolve(GodRole role,GodPhase phase,double unit){
+        Objects.requireNonNull(role);
+        Objects.requireNonNull(phase);
+        if(!(unit>=0.0&&unit<1.0))throw new IllegalArgumentException("unit");
+
+        boolean navigated=phase==GodPhase.GG||phase==GodPhase.SGG||
+                phase==GodPhase.SGG_COMEBACK||phase==GodPhase.Z_ZONE||phase==GodPhase.Z_GAME;
+
         return switch(role){
-            case UPPER_BLUE7,MIDDLE_BLUE7,RED7_FAKE -> new Outcome(0,true);
-            case LOWER_YELLOW7 -> new Outcome(3,false);
-            case RISING_YELLOW7,MIDDLE_YELLOW7,COMMON_YELLOW7,SP,RED7,GOD -> new Outcome(15,false);
-            case GAIA_BELL -> new Outcome(1,false);
-            case ORDERED_YELLOW7 -> new Outcome(atLike?15:1,false);
-            case MISS -> new Outcome(0,false);
+            case MISS -> new Outcome("MISS",0,false);
+            case UPPER_BLUE7 -> new Outcome("UPPER_BLUE7",0,true);
+            case MIDDLE_BLUE7 -> new Outcome("MIDDLE_BLUE7",0,true);
+            case RED7_FAKE -> new Outcome("RED7_FAKE",0,true);
+
+            case LOWER_YELLOW7 -> new Outcome("LOWER_YELLOW7",3,false);
+            case RISING_YELLOW7 -> new Outcome("RISING_YELLOW7",15,false);
+            case MIDDLE_YELLOW7 -> new Outcome("MIDDLE_YELLOW7",15,false);
+            case COMMON_YELLOW7 -> new Outcome("COMMON_YELLOW7",15,false);
+            case GAIA_BELL -> new Outcome("GAIA_BELL",1,false);
+            case SP -> new Outcome("SP",15,false);
+            case RED7 -> new Outcome("RED7",15,false);
+            case GOD -> new Outcome("GOD",15,false);
+
+            case ORDERED_YELLOW7 -> {
+                boolean fullPay=navigated||unit<NORMAL_ORDERED_15_SUCCESS_RATE;
+                yield fullPay
+                        ? new Outcome("ORDERED_YELLOW7",15,false)
+                        : new Outcome("MISS",1,false);
+            }
         };
     }
 
