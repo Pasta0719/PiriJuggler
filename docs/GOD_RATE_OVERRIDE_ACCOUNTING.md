@@ -1,26 +1,32 @@
 # GOD 1/8192 override — exact payout accounting direction
 
-A correction to the earlier quick estimate:
-
-Treating "3000 expected medals from one GOD" as an instantaneous +3000 net-medal reward and dividing by 3 medals/game gives a useful rough EV scale, but it is **not an exact machine payout calculation**.
+Treating "3000 expected medals from one GOD" as an instantaneous +3000 net-medal reward and dividing by 3 medals/game is only a rough EV scale, not an exact machine payout calculation.
 
 GOD creates additional AT games. Those games add both:
 - wagered medals to the payout denominator
 - paid medals to the payout numerator
 
-Therefore the exact new payout curve cannot be obtained by simply adding a fixed number of percentage points to Kiseki's published payout percentages.
+The exact payout must therefore be calculated from the complete NORMAL/GG/G-ZONE/SGG/Z state model.
 
-The project now has explicit cycle accounting for an added premium trigger. The final calculation must use the complete NORMAL/GG/G-ZONE/SGG/Z state model so premium-added play time is included.
-
-## Locked production interpretation
-
-The user's direction is now interpreted literally:
+## Locked design constraints
 
 - gameplay baseline = Kamigami no Kiseki
 - ordinary GG bell-chain V-stock = excluded
-- GOD trigger = independent 1/8192 instead of Kiseki's 1/16384
-- do **not** silently nerf published Kiseki mechanics merely to force the original payout curve
+- GOD trigger = independent 1/8192
+- setting-independent GOD probability
+- payout design is target-first
 
-The resulting Piri payout curve is therefore allowed to be higher than Kiseki's. We will calculate that curve from the finished state model rather than forcing it in advance.
+## Target-first rule
 
-The earlier +6.1 point number remains only a rough premium-EV scale under simplified assumptions; it is not a locked target.
+The production payout curve must be selected first.
+
+Then:
+1. GOD remains fixed at independent 1/8192.
+2. Kiseki-style mechanics are retained as far as possible.
+3. probabilities/distributions are fitted so the completed machine reaches the selected payout curve.
+4. no parameter is changed merely by feel.
+5. if a Kiseki reference probability conflicts with the target EV after the 1/8192 change, it becomes a fitting variable rather than an untouchable constant.
+
+The published Kiseki payout curve is currently a benchmark, not an automatically locked Piri target.
+
+The earlier +6.1 point figure is only a simplified premium-EV scale and must not be used as the final payout result.
