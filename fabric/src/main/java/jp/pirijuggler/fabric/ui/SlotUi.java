@@ -30,7 +30,7 @@ public final class SlotUi {
                     &&!(action==PacketType.SPACE_ACTION&&queuedLever!=null)
                     &&(view.nextGameRemainingNanos()==0||action==PacketType.SPACE_ACTION||action==PacketType.CLOSE_REQUEST));view.receive(packet);
             String state=view.value("gameState");if(state.startsWith("BIG_"))PiriSounds.startLoop("big_bgm");else if(state.startsWith("REG_"))PiriSounds.startLoop("reg_bgm");
-            client.setScreen(new SlotScreen(view,input));return;
+            client.setScreen(MachineScreenFactory.create(view.machineType(),view,input));return;
         }
         if(view==null)return;
         switch(packet.packetType()) {
