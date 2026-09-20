@@ -50,7 +50,7 @@ public final class RemoteMachineViewState {
         state.y = body.get("y").getAsInt();
         state.z = body.get("z").getAsInt();
         state.facing = body.get("facing").getAsString();
-        state.machineType = body.get("machineType").getAsString();
+        state.machineType = body.has("machineType") ? body.get("machineType").getAsString() : "JUGGLER";
         state.enabled = body.get("enabled").getAsBoolean();
         state.occupied = body.get("occupied").getAsBoolean();
         state.gameState = body.get("gameState").getAsString();
