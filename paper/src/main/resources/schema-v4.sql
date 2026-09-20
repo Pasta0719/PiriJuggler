@@ -124,6 +124,7 @@ CREATE TABLE player_sessions (
   phase_center REAL NOT NULL DEFAULT 0,
   phase_right REAL NOT NULL DEFAULT 0,
   motion_profile TEXT,
+  machine_state_json TEXT,
   last_client_sequence INTEGER NOT NULL DEFAULT 0,
   last_activity INTEGER NOT NULL,
   lock_expires_at INTEGER,

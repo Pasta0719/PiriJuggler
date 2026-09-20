@@ -55,6 +55,7 @@ public final class PiriDatabase implements AutoCloseable {
                     metadata("schema_version", "4");
                 }
                 ensureMachineTypeColumn();
+                ensureMachineStateColumn();
                 String oldJvm = metadata("current_jvm_start_ms");
                 if (Long.toString(jvmStart).equals(oldJvm)) {
                     period = Objects.requireNonNull(metadata("current_business_period_id"));
@@ -253,6 +254,10 @@ public final class PiriDatabase implements AutoCloseable {
     private void ensureMachineTypeColumn() throws SQLException {
         boolean present=rows("PRAGMA table_info(machines)").stream().anyMatch(row->"machine_type".equals(row.get("name")));
         if(!present) sql("ALTER TABLE machines ADD COLUMN machine_type TEXT NOT NULL DEFAULT 'JUGGLER'");
+    }
+    private void ensureMachineStateColumn() throws SQLException {
+        boolean present=rows("PRAGMA table_info(player_sessions)").stream().anyMatch(row->"machine_state_json".equals(row.get("name")));
+        if(!present) sql("ALTER TABLE player_sessions ADD COLUMN machine_state_json TEXT");
     }
     private static int n(Map<String, Object> row, String key) { return ((Number) row.get(key)).intValue(); }
     private boolean tableExists(String name) throws SQLException { return !rows("SELECT name FROM sqlite_master WHERE type='table' AND name=?", name).isEmpty(); }

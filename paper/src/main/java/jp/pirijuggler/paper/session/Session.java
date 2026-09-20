@@ -1,6 +1,7 @@
 package jp.pirijuggler.paper.session;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import jp.pirijuggler.common.protocol.PublicGameState;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -25,6 +26,11 @@ public record Session(Map<String, Object> snapshot) {
     public boolean ownsLock() { return lifecycle() != Lifecycle.SUSPENDED_SAFE; }
     public long sequence() { return number("last_client_sequence"); }
     public boolean ready() { return state() == GameState.SEATED_READY; }
+    public JsonObject machineState() {
+        Object raw = snapshot.get("machine_state_json");
+        if (!(raw instanceof String json) || json.isBlank()) return null;
+        return JsonParser.parseString(json).getAsJsonObject();
+    }
     public PublicGameState publicGameState() {
         return switch (state()) {
             case SEATED_READY -> PublicGameState.SEATED_READY;
@@ -59,6 +65,9 @@ public record Session(Map<String, Object> snapshot) {
         JsonObject stops = new JsonObject();
         stops.addProperty("left", number("display_left_stop")); stops.addProperty("center", number("display_center_stop"));
         stops.addProperty("right", number("display_right_stop")); json.add("displayStops", stops);
-        json.addProperty("stoppedMask", number("stopped_mask")); return json;
+        json.addProperty("stoppedMask", number("stopped_mask"));
+        JsonObject machineState = machineState();
+        if (machineState != null) json.add("machineState", machineState);
+        return json;
     }
 }
