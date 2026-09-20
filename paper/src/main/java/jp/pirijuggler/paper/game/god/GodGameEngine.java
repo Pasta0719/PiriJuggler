@@ -21,7 +21,6 @@ import java.util.random.RandomGenerator;
  * reel-stop presentation is built independently on Fabric.
  */
 public final class GodGameEngine implements GameEngine {
-    private static final double NORMAL_THREE_MEDAL_PAYOUT_RATE = (3.0 - 50.0 / 30.8) / 3.0;
     private static final double[] TARGET_NORMAL_GG_DENOM = {0,573.7,466.8,507.8,334.2,439.6,266.5};
     private final RandomStreams random;
 
@@ -34,7 +33,7 @@ public final class GodGameEngine implements GameEngine {
                                long now, long receivedNanos, int ping, Integer clientPressedIndex) {
         if(before.lifecycle()!=Session.Lifecycle.ACTIVE)throw new DomainException("SESSION_MISMATCH");
         if(sequence<=before.sequence())throw new DomainException("SEQUENCE_OLD");
-        return before.state()==Session.GameState.SEATED_READY
+        return (before.state()==Session.GameState.SEATED_READY||before.state()==Session.GameState.REPLAY_READY)
                 ? beginSpin(before,machine,action,sequence,now)
                 : before.state()==Session.GameState.NORMAL_SPINNING
                     ? stopSpin(before,action,sequence,now,clientPressedIndex)
@@ -46,10 +45,13 @@ public final class GodGameEngine implements GameEngine {
         var values=new LinkedHashMap<>(before.snapshot());
         values.put("last_client_sequence",sequence);values.put("last_activity",now);
 
+        boolean replayStart=before.state()==Session.GameState.REPLAY_READY;
         var balance=new GameRules.Balance(Math.toIntExact(before.number("credit")),before.number("held_medals"));
-        var bet=balance.bet(3);
-        if(!bet.accepted())return rejected(before,action,sequence,now,ErrorCode.NOT_ENOUGH_CREDIT);
-        putBalance(values,bet.balance());
+        if(!replayStart){
+            var bet=balance.bet(3);
+            if(!bet.accepted())return rejected(before,action,sequence,now,ErrorCode.NOT_ENOUGH_CREDIT);
+            putBalance(values,bet.balance());
+        }
 
         GodMachineRuntime runtime=GodMachineRuntime.fromJson(machine.runtimeJson());
         Step step=step(runtime,machine.setting(),random.gameplay(machine.id()));
@@ -58,6 +60,7 @@ public final class GodGameEngine implements GameEngine {
         JsonObject sessionState=runtime.gameplay().toJson();
         sessionState.add("_pendingRuntime",step.runtime().toJson());
         sessionState.addProperty("_pendingPayout",step.payout());
+        sessionState.addProperty("_pendingReplay",step.replay());
         sessionState.addProperty("_pendingRole",role==null?"NONE":role);
 
         String spin=UUID.randomUUID().toString();
@@ -73,7 +76,7 @@ public final class GodGameEngine implements GameEngine {
         values.put("phase_right",(double)before.number("display_right_stop"));
         values.put("machine_state_json",sessionState.toString());
 
-        return transition(before,new Session(values),3,0,0,false,true,0,
+        return transition(before,new Session(values),replayStart?0:3,0,0,false,true,0,
                 List.of(accepted(action,sequence)),List.of(),null);
     }
 
@@ -98,7 +101,7 @@ public final class GodGameEngine implements GameEngine {
         if(mask==0&&reel!=0)return rejected(before,action,sequence,now,ErrorCode.INVALID_STATE);
 
         int pressed=clientPressedIndex==null
-                ? Math.floorMod((int)before.number("display_"+reelName(reel)+"_stop"),21)
+                ? Math.floorMod((int)before.number("display_"+reelName(reel)+"_stop"),GodReelStrip.STOPS)
                 : clientPressedIndex;
         if(pressed<0||pressed>=GodReelStrip.STOPS)return rejected(before,action,sequence,now,ErrorCode.SESSION_MISMATCH);
 
@@ -130,11 +133,12 @@ public final class GodGameEngine implements GameEngine {
 
         GodMachineRuntime finalRuntime=GodMachineRuntime.fromJson(state.getAsJsonObject("_pendingRuntime").toString());
         int payout=state.get("_pendingPayout").getAsInt();
+        boolean replay=state.has("_pendingReplay")&&state.get("_pendingReplay").getAsBoolean();
         var current=new GameRules.Balance(Math.toIntExact(((Number)values.get("credit")).longValue()),((Number)values.get("held_medals")).longValue());
         putBalance(values,current.payout(payout));
-        values.put("game_state","SEATED_READY");
+        values.put("game_state",replay?"REPLAY_READY":"SEATED_READY");
         values.put("spin_id",null);values.put("internal_role",null);values.put("motion_profile",null);
-        values.put("current_bet",0);values.put("pay_display",payout);
+        values.put("current_bet",replay?3:0);values.put("pay_display",payout);
         values.put("machine_state_json",finalRuntime.gameplay().toJsonString());
 
         var scheduled=new ArrayList<GameTransition.Scheduled>();
@@ -154,7 +158,9 @@ public final class GodGameEngine implements GameEngine {
     private static String reelEnumName(int reel){return new String[]{"LEFT","CENTER","RIGHT"}[reel];}
 
 
-    private record Step(GodMachineRuntime runtime,int payout) {}
+    private record Step(GodMachineRuntime runtime,int payout,boolean replay) {
+        private Step(GodMachineRuntime runtime,int payout){this(runtime,payout,false);}
+    }
 
     private Step step(GodMachineRuntime r,int setting,RandomGenerator rng){
         GodSessionState s=r.gameplay();
@@ -171,7 +177,9 @@ public final class GodGameEngine implements GameEngine {
 
     private Step normal(GodMachineRuntime r,GodSessionState s,int setting,RandomGenerator rng){
         GodRole role=drawRole(r,rng);
-        int payout=rng.nextDouble()<NORMAL_THREE_MEDAL_PAYOUT_RATE?3:0;
+        var outcome=GodRoleOutcome.forRole(role,s.phase());
+        int payout=outcome.payout();
+        boolean replay=outcome.replay();
         int normalGames=r.normalGamesSinceGg()+1;
         int ceilingTarget=r.ceilingTarget()==0
                 ? GodProductionSpec.chooseResetCeiling(rng.nextDouble())
@@ -206,7 +214,7 @@ public final class GodGameEngine implements GameEngine {
             return enterGg(nextBase,s,role,GodLoopType.D,1,0,rng);
 
         boolean ceiling=normalGames>=ceilingTarget;
-        if(ceiling)return ceiling(nextBase,s,role,rng);
+        if(ceiling)return ceiling(nextBase,s,role,payout,replay,rng);
 
         boolean history=gaiaActive?GodGaiaRules.historyHit(blue,yellow,rng):historyHit(blue,yellow,setting,rng);
         boolean roleHit=gaiaActive
@@ -226,11 +234,11 @@ public final class GodGameEngine implements GameEngine {
             nextBase=new GodMachineRuntime(nextBase.frontMode(),nextBase.normalGamesSinceGg(),nextBase.blue7History(),nextBase.yellow7History(),nextBase.gaiaMode(),nextBase.gaiaBellCount(),nextBase.gaiaTarget(),false,0,nextBase.totalNormalGames(),s);
         }
         GodSessionState ns=copy(s,GodPhase.NORMAL,0,0,null,0,0,0,0,0,0,0,s.totalGodGames()+1,"NORMAL",role.name());
-        return new Step(nextBase.withGameplay(ns),payout);
+        return new Step(nextBase.withGameplay(ns),payout,replay);
     }
 
     private Step gg(GodMachineRuntime r,GodSessionState s,int setting,RandomGenerator rng){
-        GodRole role=drawRole(r,rng);int payout=10;
+        GodRole role=drawRole(r,rng);var outcome=GodRoleOutcome.forRole(role,s.phase());int payout=outcome.payout();boolean replay=outcome.replay();
         int remaining=Math.max(0,s.ggGamesRemaining()-1),stocks=s.queuedGgStocks();
         GodLoopType loop=s.loopType();
 
@@ -257,9 +265,11 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step gZone(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
-        int payout=3;
         int stocks=s.queuedGgStocks();
         GodRole role=drawRole(r,rng);
+        var outcome=GodRoleOutcome.forRole(role,s.phase());
+        int payout=outcome.payout();
+        boolean replay=outcome.replay();
 
         if(role==GodRole.GOD){
             stocks+=GodProductionSpec.GOD_GUARANTEED_GG_SETS+rollLoop(GodLoopType.D,rng);
@@ -297,7 +307,7 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step sgg(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
-        GodRole role=drawRole(r,rng);int payout=10;
+        GodRole role=drawRole(r,rng);var outcome=GodRoleOutcome.forRole(role,s.phase());int payout=outcome.payout();boolean replay=outcome.replay();
         int rem=Math.max(0,s.sggGamesRemaining()-1),cont=s.sggContinuationStocks();
         if(role==GodRole.SP)cont+=3;
         else if((role==GodRole.MIDDLE_BLUE7||role==GodRole.RISING_YELLOW7)&&rng.nextDouble()<0.102)cont++;
@@ -318,7 +328,7 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step sggComeback(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
-        GodRole role=drawRole(r,rng);int payout=3;
+        GodRole role=drawRole(r,rng);var outcome=GodRoleOutcome.forRole(role,s.phase());int payout=outcome.payout();boolean replay=outcome.replay();
         boolean rare=role==GodRole.MIDDLE_BLUE7||role==GodRole.RISING_YELLOW7||role==GodRole.MIDDLE_YELLOW7||
                 role==GodRole.COMMON_YELLOW7||role==GodRole.SP||role==GodRole.RED7||role==GodRole.GOD;
         boolean success=rare||rng.nextDouble()<0.344;
@@ -344,8 +354,8 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step zZone(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
-        int payout=10;
         boolean yellow=rng.nextDouble()<1.0/GodProductionSpec.Z_ZONE_YELLOW7_DENOMINATOR;
+        int payout=yellow?15:0;
         int left=s.zZoneGamesRemaining(),streak=s.zYellowStreak();
         if(yellow){
             streak++;
@@ -370,8 +380,8 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step zGame(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
-        int payout=10;
         boolean yellow=rng.nextDouble()<1.0/GodProductionSpec.Z_ZONE_YELLOW7_DENOMINATOR;
+        int payout=yellow?15:0;
         if(yellow){
             GodSessionState ns=copy(s,GodPhase.Z_GAME,0,s.queuedGgStocks()+1,s.loopType(),0,0,0,s.sggSetNumber(),0,0,s.zGameStocks()+1,s.totalGodGames()+1,"Z_STOCK","YELLOW7");
             return new Step(r.withGameplay(ns),payout);
@@ -384,12 +394,14 @@ public final class GodGameEngine implements GameEngine {
     private Step enterGod(GodMachineRuntime r,GodSessionState s,GodRole role,RandomGenerator rng){
         int queued=GodProductionSpec.GOD_GUARANTEED_GG_SETS-1+rollLoop(GodLoopType.D,rng);
         GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,queued,GodLoopType.D,0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"GOD","GOD");
-        return new Step(resetNormal(r,ns),0);
+        var outcome=GodRoleOutcome.forRole(role,s.phase());
+        return new Step(resetNormal(r,ns),outcome.payout(),outcome.replay());
     }
 
     private Step enterSgg(GodMachineRuntime r,GodSessionState s,GodRole role,RandomGenerator rng){
         GodSessionState ns=copy(s,GodPhase.SGG,0,1+rollLoop(GodLoopType.C,rng),GodLoopType.C,0,sggLength(false,role,rng),0,1,0,0,0,s.totalGodGames()+1,"RED7_SGG",role.name());
-        return new Step(resetNormal(r,ns),0);
+        var outcome=GodRoleOutcome.forRole(role,s.phase());
+        return new Step(resetNormal(r,ns),outcome.payout(),outcome.replay());
     }
 
     private Step enterGg(GodMachineRuntime r,GodSessionState s,GodRole role,GodLoopType loop,int guaranteed,int payout,RandomGenerator rng){
@@ -398,14 +410,14 @@ public final class GodGameEngine implements GameEngine {
         return new Step(resetNormal(r,ns),payout);
     }
 
-    private Step ceiling(GodMachineRuntime r,GodSessionState s,GodRole role,RandomGenerator rng){
+    private Step ceiling(GodMachineRuntime r,GodSessionState s,GodRole role,int payout,boolean replay,RandomGenerator rng){
         double x=rng.nextDouble();GodLoopType loop;boolean z=false;
         if(x<0.167)loop=GodLoopType.A;else if(x<0.334)loop=GodLoopType.B;else if(x<0.501)loop=GodLoopType.C;else if(x<0.668)loop=GodLoopType.D;else{loop=GodLoopType.A;z=true;}
         if(z){
             GodSessionState ns=copy(s,GodPhase.Z_ZONE,0,1,loop,0,0,0,s.sggSetNumber(),GodProductionSpec.Z_ZONE_BASE_GAMES,0,0,s.totalGodGames()+1,"CEILING_Z","NONE");
-            return new Step(resetNormal(r,ns),0);
+            return new Step(resetNormal(r,ns),payout,replay);
         }
-        return enterGg(r,s,role,loop,1,0,rng);
+        return enterGg(r,s,role,loop,1,payout,rng);
     }
 
     private static GodMachineRuntime resetNormal(GodMachineRuntime r,GodSessionState s){
@@ -509,9 +521,12 @@ public final class GodGameEngine implements GameEngine {
             catch(IllegalArgumentException invalid){throw new DomainException("INVALID_STATE");}
         }
 
-        double premium=rng.nextDouble();
-        double pg=1.0/GodProductionSpec.GOD_DENOMINATOR, pr=1.0/GodProductionSpec.RED7_DENOMINATOR, ps=1.0/GodProductionSpec.SP_DENOMINATOR;
-        if(premium<pg)return GodRole.GOD;if(premium<pg+pr)return GodRole.RED7;if(premium<pg+pr+ps)return GodRole.SP;
+        // Piri lock: GOD is an independent exact 1/8192 draw.
+        // RED7 and SP are separate draws; simultaneous hits use GOD > RED7 > SP precedence.
+        boolean god=rng.nextInt(GodProductionSpec.GOD_DENOMINATOR)==0;
+        boolean red7=rng.nextInt(GodProductionSpec.RED7_DENOMINATOR)==0;
+        boolean sp=rng.nextInt(GodProductionSpec.SP_DENOMINATOR)==0;
+        if(god)return GodRole.GOD;if(red7)return GodRole.RED7;if(sp)return GodRole.SP;
         GodRole[] roles={GodRole.MISS,GodRole.UPPER_BLUE7,GodRole.MIDDLE_BLUE7,GodRole.ORDERED_YELLOW7,GodRole.LOWER_YELLOW7,GodRole.RISING_YELLOW7,GodRole.MIDDLE_YELLOW7,GodRole.COMMON_YELLOW7,GodRole.GAIA_BELL,GodRole.RED7_FAKE};
         double sum=0;for(GodRole role:roles)sum+=GodKisekiRoleTable.referenceProbability(role);
         double x=rng.nextDouble()*sum,c=0;for(GodRole role:roles){c+=GodKisekiRoleTable.referenceProbability(role);if(x<c)return role;}return GodRole.MISS;
