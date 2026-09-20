@@ -30,11 +30,11 @@ class GodRoleOutcomeTest {
 
         var coincidentalHit=GodRoleOutcome.resolve(GodRole.ORDERED_YELLOW7,GodPhase.NORMAL,0.0);
         assertEquals(15,coincidentalHit.payout());
-        assertEquals("ORDERED_YELLOW7",coincidentalHit.displayRole());
+        assertEquals("COMMON_YELLOW7",coincidentalHit.displayRole());
 
         var navigated=GodRoleOutcome.resolve(GodRole.ORDERED_YELLOW7,GodPhase.GG,0.999);
         assertEquals(15,navigated.payout());
-        assertEquals("ORDERED_YELLOW7",navigated.displayRole());
+        assertEquals("COMMON_YELLOW7",navigated.displayRole());
     }
 
     @Test
