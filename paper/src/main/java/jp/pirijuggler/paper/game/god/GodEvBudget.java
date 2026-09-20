@@ -4,30 +4,25 @@ public record GodEvBudget(
         double expectedNetPerGod,
         double expectedNetPerNormalGgInitial,
         double expectedNetPerSgg,
-        double expectedNetPerBellVStock,
         double godRatePerGame,
         double normalGgInitialRatePerGame,
-        double sggRatePerGame,
-        double bellVStockRatePerGame
+        double sggRatePerGame
 ) {
     public GodEvBudget {
         nonNegative(expectedNetPerGod, "expectedNetPerGod");
         nonNegative(expectedNetPerNormalGgInitial, "expectedNetPerNormalGgInitial");
         nonNegative(expectedNetPerSgg, "expectedNetPerSgg");
-        nonNegative(expectedNetPerBellVStock, "expectedNetPerBellVStock");
         probability(godRatePerGame, "godRatePerGame");
         probability(normalGgInitialRatePerGame, "normalGgInitialRatePerGame");
         probability(sggRatePerGame, "sggRatePerGame");
-        probability(bellVStockRatePerGame, "bellVStockRatePerGame");
     }
 
     public double godPerGame() { return expectedNetPerGod * godRatePerGame; }
     public double normalGgPerGame() { return expectedNetPerNormalGgInitial * normalGgInitialRatePerGame; }
     public double sggPerGame() { return expectedNetPerSgg * sggRatePerGame; }
-    public double bellVPerGame() { return expectedNetPerBellVStock * bellVStockRatePerGame; }
 
     public double totalPositiveNetPerGame() {
-        return godPerGame() + normalGgPerGame() + sggPerGame() + bellVPerGame();
+        return godPerGame() + normalGgPerGame() + sggPerGame();
     }
 
     private static void nonNegative(double value, String name) {
