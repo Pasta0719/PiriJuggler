@@ -170,7 +170,7 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step normal(GodMachineRuntime r,GodSessionState s,int setting,RandomGenerator rng){
-        GodRole role=drawRole(rng);
+        GodRole role=drawRole(r,rng);
         int payout=rng.nextDouble()<NORMAL_THREE_MEDAL_PAYOUT_RATE?3:0;
         int normalGames=r.normalGamesSinceGg()+1;
         int ceilingTarget=r.ceilingTarget()==0
@@ -230,7 +230,7 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step gg(GodMachineRuntime r,GodSessionState s,int setting,RandomGenerator rng){
-        GodRole role=drawRole(rng);int payout=10;
+        GodRole role=drawRole(r,rng);int payout=10;
         int remaining=Math.max(0,s.ggGamesRemaining()-1),stocks=s.queuedGgStocks();
         GodLoopType loop=s.loopType();
 
@@ -259,7 +259,7 @@ public final class GodGameEngine implements GameEngine {
     private Step gZone(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
         int payout=3;
         int stocks=s.queuedGgStocks();
-        GodRole role=drawRole(rng);
+        GodRole role=drawRole(r,rng);
 
         if(role==GodRole.GOD){
             stocks+=GodProductionSpec.GOD_GUARANTEED_GG_SETS+rollLoop(GodLoopType.D,rng);
@@ -297,7 +297,7 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step sgg(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
-        GodRole role=drawRole(rng);int payout=10;
+        GodRole role=drawRole(r,rng);int payout=10;
         int rem=Math.max(0,s.sggGamesRemaining()-1),cont=s.sggContinuationStocks();
         if(role==GodRole.SP)cont+=3;
         else if((role==GodRole.MIDDLE_BLUE7||role==GodRole.RISING_YELLOW7)&&rng.nextDouble()<0.102)cont++;
@@ -318,7 +318,7 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step sggComeback(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
-        GodRole role=drawRole(rng);int payout=3;
+        GodRole role=drawRole(r,rng);int payout=3;
         boolean rare=role==GodRole.MIDDLE_BLUE7||role==GodRole.RISING_YELLOW7||role==GodRole.MIDDLE_YELLOW7||
                 role==GodRole.COMMON_YELLOW7||role==GodRole.SP||role==GodRole.RED7||role==GodRole.GOD;
         boolean success=rare||rng.nextDouble()<0.344;
@@ -503,7 +503,12 @@ public final class GodGameEngine implements GameEngine {
         if(x<.830)return 10;if(x<.944)return 20;if(x<.978)return 30;if(x<.989)return 50;return 100;
     }
 
-    private static GodRole drawRole(RandomGenerator rng){
+    private static GodRole drawRole(GodMachineRuntime runtime,RandomGenerator rng){
+        if(runtime.forcedRole()!=null){
+            try{return GodRole.valueOf(runtime.forcedRole());}
+            catch(IllegalArgumentException invalid){throw new DomainException("INVALID_STATE");}
+        }
+
         double premium=rng.nextDouble();
         double pg=1.0/GodProductionSpec.GOD_DENOMINATOR, pr=1.0/GodProductionSpec.RED7_DENOMINATOR, ps=1.0/GodProductionSpec.SP_DENOMINATOR;
         if(premium<pg)return GodRole.GOD;if(premium<pg+pr)return GodRole.RED7;if(premium<pg+pr+ps)return GodRole.SP;
