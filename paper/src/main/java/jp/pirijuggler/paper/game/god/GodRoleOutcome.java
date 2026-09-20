@@ -61,5 +61,13 @@ public final class GodRoleOutcome {
         };
     }
 
+    /**
+     * Compatibility helper for legacy transition code. New settlement uses
+     * resolve(...) once in beginSpin; this method is intentionally deterministic.
+     */
+    public static Outcome forRole(GodRole role,GodPhase phase){
+        return resolve(role,phase,0.5);
+    }
+
     private GodRoleOutcome(){}
 }
