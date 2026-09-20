@@ -2,17 +2,17 @@
 
 ## Production direction
 
-Piri GOD uses **Million God: Kamigami no Kiseki as the basic gameplay baseline**.
+Piri GOD uses **Million God: Kamigami no Kiseki as the gameplay baseline**.
 
-The intended rule is:
+The design intent is:
 
-> Keep the Kiseki-style game structure and core behavior, but make the GOD flag an independent 1/8192 draw.
+> Keep the Kiseki-style structure and feel, make GOD an independent 1/8192 draw, and fit the numeric probabilities to an explicit Piri payout target.
 
-This replaces the previous idea of mixing in Gaisen's ordinary GG bell-streak V-stock. That mechanic remains rejected.
+The rejected Gaisen-style ordinary GG bell-streak V-stock is not included.
 
 ## Baseline mechanics to preserve
 
-Reference values/mechanics from Kamigami no Kiseki:
+Reference mechanics/values from Kamigami no Kiseki:
 
 - Main AT: GOD GAME (GG)
 - GG: 1 set = 50 games
@@ -24,38 +24,30 @@ Reference values/mechanics from Kamigami no Kiseki:
 - SGG: 10–100 games per set, 75%+ continuation
 - Z-ZONE: 5G+alpha challenge zone
 - Z-GAME: high-frequency GG-stock acquisition route
-- normal play still uses role/mode/history based GG draws
-- setting-specific published AT initial-hit benchmark:
-  - 1: 1/533
-  - 2: 1/420
-  - 3: 1/496
-  - 4: 1/338
-  - 5: 1/455
-  - 6: 1/295
+- normal play uses role/mode/history based GG draws
+- published AT initial-hit benchmark:
+  - setting 1: 1/533
+  - setting 2: 1/420
+  - setting 3: 1/496
+  - setting 4: 1/338
+  - setting 5: 1/455
+  - setting 6: 1/295
 - published Kiseki GOD probability: 1/16384
 - published Kiseki RED 7 probability: 1/6900
 
-## Intentional Piri change
+These published probabilities are reference inputs, not automatically immutable Piri production numbers.
 
-Piri GOD changes only the premium GOD trigger rule at the baseline-design level:
+## Intentional Piri invariant
 
-- GOD = **exact independent 1/8192**
+- GOD = exact independent 1/8192
 - same probability at settings 1–6
 - no mode dependence
 - no hidden cooling/heating adjustment
-- eligible during normal play and AT play
 
-## Important EV consequence
+## Economic rule
 
-"Basic mechanics are the same" does **not** mean the original Kiseki payout percentages can remain unchanged automatically.
+The Piri payout target must be chosen explicitly before final fitting.
 
-Changing GOD from 1/16384 to 1/8192 doubles its long-run trigger frequency. If its reward stays Kiseki-like, that adds a large amount of EV.
-
-Therefore the project must keep two concepts separate:
-
-1. **gameplay baseline**: Kiseki
-2. **economic fit**: recalculated for Piri with GOD fixed at 1/8192
-
-The final six-setting payout curve is not considered solved until the complete simulator reproduces it with the 1/8192 GOD rule.
+Changing GOD from 1/16384 to 1/8192 changes the EV budget. The remaining numeric probabilities must then be solved against the chosen Piri target while preserving Kiseki-style mechanics as closely as possible.
 
 No ordinary GG bell-streak V-stock is included.
