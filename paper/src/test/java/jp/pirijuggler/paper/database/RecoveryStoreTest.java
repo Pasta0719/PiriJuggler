@@ -85,7 +85,7 @@ class RecoveryStoreTest {
         assertEquals(Session.GameState.SEATED_READY,settled.state());
         assertEquals(50,settled.number("credit"));
         assertEquals(12,settled.number("held_medals"));
-        assertEquals(GodPhase.GG,settled.machineState().get("phase").getAsString().equals("GG")?GodPhase.GG:GodPhase.NORMAL);
+        assertEquals("GG",settled.machineState().get("phase").getAsString());
         assertEquals(1,scalar("SELECT total_games FROM machine_period_stats WHERE machine_id="+machine));
 
         String stored=(String)db.rows("SELECT machine_runtime_json FROM machines WHERE machine_id="+machine).getFirst().get("machine_runtime_json");
