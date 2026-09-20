@@ -184,7 +184,6 @@ public final class GodGameEngine implements GameEngine {
         GodRole role=drawRole(r,rng);
         var outcome=GodRoleOutcome.forRole(role,s.phase());
         int payout=outcome.payout();
-        boolean replay=outcome.replay();
         int normalGames=r.normalGamesSinceGg()+1;
         int ceilingTarget=r.ceilingTarget()==0
                 ? GodProductionSpec.chooseResetCeiling(rng.nextDouble())
@@ -216,10 +215,10 @@ public final class GodGameEngine implements GameEngine {
         if(role==GodRole.GOD)return enterGod(nextBase,s,role,rng);
         if(role==GodRole.RED7)return enterSgg(nextBase,s,role,rng);
         if(role==GodRole.SP && rng.nextDouble()<GodProductionSpec.SP_STOCK_HIT_RATE_NORMAL_OR_GG)
-            return enterGg(nextBase,s,role,GodLoopType.D,1,0,rng);
+            return enterGg(nextBase,s,role,GodLoopType.D,1,payout,rng);
 
         boolean ceiling=normalGames>=ceilingTarget;
-        if(ceiling)return ceiling(nextBase,s,role,payout,replay,rng);
+        if(ceiling)return ceiling(nextBase,s,role,payout,rng);
 
         boolean history=gaiaActive?GodGaiaRules.historyHit(blue,yellow,rng):historyHit(blue,yellow,setting,rng);
         boolean roleHit=gaiaActive
@@ -243,7 +242,7 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step gg(GodMachineRuntime r,GodSessionState s,int setting,RandomGenerator rng){
-        GodRole role=drawRole(r,rng);var outcome=GodRoleOutcome.forRole(role,s.phase());int payout=outcome.payout();boolean replay=outcome.replay();
+        GodRole role=drawRole(r,rng);var outcome=GodRoleOutcome.forRole(role,s.phase());int payout=outcome.payout();
         int remaining=Math.max(0,s.ggGamesRemaining()-1),stocks=s.queuedGgStocks();
         GodLoopType loop=s.loopType();
 
@@ -274,7 +273,6 @@ public final class GodGameEngine implements GameEngine {
         GodRole role=drawRole(r,rng);
         var outcome=GodRoleOutcome.forRole(role,s.phase());
         int payout=outcome.payout();
-        boolean replay=outcome.replay();
 
         if(role==GodRole.GOD){
             stocks+=GodProductionSpec.GOD_GUARANTEED_GG_SETS+rollLoop(GodLoopType.D,rng);
@@ -312,7 +310,7 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step sgg(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
-        GodRole role=drawRole(r,rng);var outcome=GodRoleOutcome.forRole(role,s.phase());int payout=outcome.payout();boolean replay=outcome.replay();
+        GodRole role=drawRole(r,rng);var outcome=GodRoleOutcome.forRole(role,s.phase());int payout=outcome.payout();
         int rem=Math.max(0,s.sggGamesRemaining()-1),cont=s.sggContinuationStocks();
         if(role==GodRole.SP)cont+=3;
         else if((role==GodRole.MIDDLE_BLUE7||role==GodRole.RISING_YELLOW7)&&rng.nextDouble()<0.102)cont++;
@@ -333,7 +331,7 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step sggComeback(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
-        GodRole role=drawRole(r,rng);var outcome=GodRoleOutcome.forRole(role,s.phase());int payout=outcome.payout();boolean replay=outcome.replay();
+        GodRole role=drawRole(r,rng);var outcome=GodRoleOutcome.forRole(role,s.phase());int payout=outcome.payout();
         boolean rare=role==GodRole.MIDDLE_BLUE7||role==GodRole.RISING_YELLOW7||role==GodRole.MIDDLE_YELLOW7||
                 role==GodRole.COMMON_YELLOW7||role==GodRole.SP||role==GodRole.RED7||role==GodRole.GOD;
         boolean success=rare||rng.nextDouble()<0.344;
@@ -415,7 +413,7 @@ public final class GodGameEngine implements GameEngine {
         return new Step(resetNormal(r,ns),payout);
     }
 
-    private Step ceiling(GodMachineRuntime r,GodSessionState s,GodRole role,int payout,boolean replay,RandomGenerator rng){
+    private Step ceiling(GodMachineRuntime r,GodSessionState s,GodRole role,int payout,RandomGenerator rng){
         double x=rng.nextDouble();GodLoopType loop;boolean z=false;
         if(x<0.167)loop=GodLoopType.A;else if(x<0.334)loop=GodLoopType.B;else if(x<0.501)loop=GodLoopType.C;else if(x<0.668)loop=GodLoopType.D;else{loop=GodLoopType.A;z=true;}
         if(z){
