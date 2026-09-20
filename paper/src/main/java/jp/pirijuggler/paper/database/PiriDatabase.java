@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import jp.pirijuggler.paper.machine.DomainException;
 import jp.pirijuggler.paper.machine.Machine;
 import jp.pirijuggler.paper.machine.MachineType;
+import jp.pirijuggler.paper.game.god.GodMachineRuntime;
 import jp.pirijuggler.paper.reel.StopCatalogue;
 import jp.pirijuggler.paper.reel.StopSolver;
 import jp.pirijuggler.paper.session.Session;
@@ -136,9 +137,12 @@ public final class PiriDatabase implements AutoCloseable {
             if (existing != null && existing.machine() != id) throw new DomainException("RECOVERY_REQUIRED");
             if (!rows("SELECT session_id FROM player_sessions WHERE machine_id=? AND lifecycle IN ('ACTIVE','SUSPENDED_GRACE') AND player_uuid<>?", id, player.toString()).isEmpty())
                 throw new DomainException("MACHINE_OCCUPIED");
+            String machineState=machine.type()==MachineType.GOD
+                    ? GodMachineRuntime.fromJson(machine.runtimeJson()).gameplay().toJsonString()
+                    : null;
             if (existing == null) {
-                sql("INSERT INTO player_sessions(session_id,player_uuid,machine_id,source_business_period_id,game_state,lifecycle,credit,held_medals,display_left_stop,display_center_stop,display_right_stop,last_activity) VALUES(?,?,?,?,'SEATED_READY','ACTIVE',0,0,?,?,?,?)",
-                        UUID.randomUUID().toString(), player.toString(), id, period, machine.left(), machine.center(), machine.right(), now);
+                sql("INSERT INTO player_sessions(session_id,player_uuid,machine_id,source_business_period_id,game_state,lifecycle,credit,held_medals,display_left_stop,display_center_stop,display_right_stop,machine_state_json,last_activity) VALUES(?,?,?,?,'SEATED_READY','ACTIVE',0,0,?,?,?,?,?)",
+                        UUID.randomUUID().toString(), player.toString(), id, period, machine.left(), machine.center(), machine.right(), machineState, now);
             } else {
                 if (existing.lifecycle() == Session.Lifecycle.SUSPENDED_GRACE && existing.number("lock_expires_at") <= now) {
                     if(!existing.ready()) recovery().settle(existing,now);
@@ -147,7 +151,7 @@ public final class PiriDatabase implements AutoCloseable {
                 }
                 if (existing.lifecycle() == Session.Lifecycle.SUSPENDED_SAFE)
                     sql("UPDATE player_sessions SET source_business_period_id=? WHERE player_uuid=?", period, player.toString());
-                sql("UPDATE player_sessions SET lifecycle='ACTIVE',lock_expires_at=NULL,last_activity=? WHERE player_uuid=?", now, player.toString());
+                sql("UPDATE player_sessions SET lifecycle='ACTIVE',lock_expires_at=NULL,machine_state_json=?,last_activity=? WHERE player_uuid=?", machineState, now, player.toString());
             }
             return session(player);
         });
