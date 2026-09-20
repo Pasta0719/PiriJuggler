@@ -182,8 +182,6 @@ public final class GodGameEngine implements GameEngine {
 
     private Step normal(GodMachineRuntime r,GodSessionState s,int setting,RandomGenerator rng){
         GodRole role=drawRole(r,rng);
-        var outcome=GodRoleOutcome.forRole(role,s.phase());
-        int payout=outcome.payout();
         int normalGames=r.normalGamesSinceGg()+1;
         int ceilingTarget=r.ceilingTarget()==0
                 ? GodProductionSpec.chooseResetCeiling(rng.nextDouble())
@@ -242,7 +240,7 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step gg(GodMachineRuntime r,GodSessionState s,int setting,RandomGenerator rng){
-        GodRole role=drawRole(r,rng);var outcome=GodRoleOutcome.forRole(role,s.phase());int payout=outcome.payout();
+        GodRole role=drawRole(r,rng);
         int remaining=Math.max(0,s.ggGamesRemaining()-1),stocks=s.queuedGgStocks();
         GodLoopType loop=s.loopType();
 
@@ -271,8 +269,6 @@ public final class GodGameEngine implements GameEngine {
     private Step gZone(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
         int stocks=s.queuedGgStocks();
         GodRole role=drawRole(r,rng);
-        var outcome=GodRoleOutcome.forRole(role,s.phase());
-        int payout=outcome.payout();
 
         if(role==GodRole.GOD){
             stocks+=GodProductionSpec.GOD_GUARANTEED_GG_SETS+rollLoop(GodLoopType.D,rng);
@@ -310,7 +306,7 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step sgg(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
-        GodRole role=drawRole(r,rng);var outcome=GodRoleOutcome.forRole(role,s.phase());int payout=outcome.payout();
+        GodRole role=drawRole(r,rng);
         int rem=Math.max(0,s.sggGamesRemaining()-1),cont=s.sggContinuationStocks();
         if(role==GodRole.SP)cont+=3;
         else if((role==GodRole.MIDDLE_BLUE7||role==GodRole.RISING_YELLOW7)&&rng.nextDouble()<0.102)cont++;
@@ -331,7 +327,7 @@ public final class GodGameEngine implements GameEngine {
     }
 
     private Step sggComeback(GodMachineRuntime r,GodSessionState s,RandomGenerator rng){
-        GodRole role=drawRole(r,rng);var outcome=GodRoleOutcome.forRole(role,s.phase());int payout=outcome.payout();
+        GodRole role=drawRole(r,rng);
         boolean rare=role==GodRole.MIDDLE_BLUE7||role==GodRole.RISING_YELLOW7||role==GodRole.MIDDLE_YELLOW7||
                 role==GodRole.COMMON_YELLOW7||role==GodRole.SP||role==GodRole.RED7||role==GodRole.GOD;
         boolean success=rare||rng.nextDouble()<0.344;
@@ -397,13 +393,11 @@ public final class GodGameEngine implements GameEngine {
     private Step enterGod(GodMachineRuntime r,GodSessionState s,GodRole role,RandomGenerator rng){
         int queued=GodProductionSpec.GOD_GUARANTEED_GG_SETS-1+rollLoop(GodLoopType.D,rng);
         GodSessionState ns=copy(s,GodPhase.GG,GodProductionSpec.GG_GAMES,queued,GodLoopType.D,0,0,0,s.sggSetNumber(),0,0,0,s.totalGodGames()+1,"GOD","GOD");
-        var outcome=GodRoleOutcome.forRole(role,s.phase());
         return new Step(resetNormal(r,ns));
     }
 
     private Step enterSgg(GodMachineRuntime r,GodSessionState s,GodRole role,RandomGenerator rng){
         GodSessionState ns=copy(s,GodPhase.SGG,0,1+rollLoop(GodLoopType.C,rng),GodLoopType.C,0,sggLength(false,role,rng),0,1,0,0,0,s.totalGodGames()+1,"RED7_SGG",role.name());
-        var outcome=GodRoleOutcome.forRole(role,s.phase());
         return new Step(resetNormal(r,ns));
     }
 
