@@ -47,4 +47,21 @@ public final class GodKisekiRoleTable {
     public static double piriProbability(GodRole role) {
         return 1.0/piriDenominator(role);
     }
+
+    /**
+     * Final mutually-exclusive Piri categorical probability.
+     *
+     * Published rounded denominators are kept for all explicit non-MISS roles.
+     * MISS is the residual cell because treating every rounded denominator,
+     * including MISS 1/5.2, as an exact independent categorical cell would sum
+     * above 100%. This is the Phase-01 accepted PIRI_SPECIFIC residual rule.
+     */
+    public static double categoricalProbability(GodRole role) {
+        if(role!=GodRole.MISS)return piriProbability(role);
+        double explicit=0.0;
+        for(GodRole r:GodRole.values())if(r!=GodRole.MISS)explicit+=piriProbability(r);
+        double residual=1.0-explicit;
+        if(!(residual>0.0&&residual<1.0))throw new IllegalStateException("invalid GOD role residual "+residual);
+        return residual;
+    }
 }
