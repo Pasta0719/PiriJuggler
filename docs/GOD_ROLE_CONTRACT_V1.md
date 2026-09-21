@@ -1,6 +1,6 @@
 # Piri GOD role contract v1
 
-Status: **DRAFT — source consolidated for GOD Phase 01**
+Status: **LOCKED — GOD Phase 01**
 
 This document defines semantic role outcomes. It deliberately does **not** invent a complete press-index control table where public sources publish only representative stop forms.
 
@@ -158,3 +158,11 @@ This replaces any earlier idea of approximating a missed ORDERED_YELLOW7 by a ra
 - Normal ordered-yellow left-first payout calibration accepted: when ordinary ordered 15-medal yellow is internally selected in normal play without a navigation exception, process the left-first outcome rather than awarding 15 medals. Public information indicates a miss-side outcome can include a 1-medal role; the exact 0/1-medal split is not public, so that split is PIRI_SPECIFIC and will be calibrated in Phase 04 against the published normal-game base (~30.8G/50 medals) without altering the locked role occurrence rates.
 
 - Premium slip exception accepted by user: for GOD / RED7 / SP, preserving the locked visible premium formation is more important than the ordinary 4-frame slip limit; allow deterministic >4-frame slip when required. Ordinary-role control remains subject to its normal slip rules unless separately specified.
+
+
+## Phase-01 role-draw final lock
+
+- All roles, including GOD / RED7 / SP, participate in one mutually-exclusive categorical draw.
+- GOD's Piri override is an exact 1/8192 marginal probability, not a separate boolean roll layered on top of another role.
+- RED7 and SP likewise cannot coexist with another role in the same game.
+- Rounded public denominators that do not sum exactly to 100% are reconciled only by an explicit PIRI_SPECIFIC residual-allocation method; role probabilities may not be silently renormalized in a way that changes the locked premium marginals.
