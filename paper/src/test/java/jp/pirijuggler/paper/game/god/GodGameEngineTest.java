@@ -118,8 +118,9 @@ class GodGameEngineTest {
         assertEquals(15,common.after().machineState().get("_pendingPayout").getAsInt());
 
         var ordered=engine.plan(session(50),machine("ORDERED_YELLOW7"),PacketType.SPACE_ACTION,1,1,0,0,null);
-        assertEquals("COMMON_YELLOW7",ordered.after().machineState().get("_pendingDisplayRole").getAsString());
-        assertEquals(15,ordered.after().machineState().get("_pendingPayout").getAsInt());
+        assertEquals("MISS",ordered.after().machineState().get("_pendingDisplayRole").getAsString());
+        assertEquals(1,ordered.after().machineState().get("_pendingPayout").getAsInt());
+        assertFalse(ordered.after().machineState().has("_pendingStopOrder"));
     }
 
     private static jp.pirijuggler.paper.game.GameTransition finishForced(String role){
