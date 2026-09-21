@@ -151,11 +151,18 @@ public final class RecoveryStore {
         String displayRole=state.has("_pendingDisplayRole")?state.get("_pendingDisplayRole").getAsString():role;
         int mask=((Number)values.get("stopped_mask")).intValue();
         for(int reel=0;reel<3;reel++){
-            if((mask&(1<<reel))!=0)continue;
+            int bit=1<<reel;
+            if((mask&bit)!=0)continue;
             String name=new String[]{"left","center","right"}[reel];
             int pressed=Math.floorMod((int)Math.floor(((Number)values.get("phase_"+name)).doubleValue()),GodReelStrip.STOPS);
-            int target=GodStopControl.targetFor(displayRole,reel,pressed);
+            int target=GodStopControl.targetFor(
+                    displayRole,reel,pressed,mask,
+                    ((Number)values.get("display_left_stop")).intValue(),
+                    ((Number)values.get("display_center_stop")).intValue(),
+                    ((Number)values.get("display_right_stop")).intValue()
+            );
             values.put("display_"+name+"_stop",target);
+            mask|=bit;
         }
 
         int payout=state.get("_pendingPayout").getAsInt();
