@@ -5,6 +5,9 @@ Status: GOD Phase 01 research registry.
 ## Tier A/B production references
 
 ### Play / reel / stop forms
+- パチ＆スロ必勝本 — 打ち方&フラグ解説
+  - https://p.hisshobon.jp/vpage/2761/3
+  - current-machine stop-form chart explicitly shows fake RED7 as a RED7/RED7/miss representative middle-row form and states fake RED7 changes stop form when aiming near the DEKA-MILLION area; also classifies fake RED7 under the blue/replay flag family
 - 1geki — 打ち方とレア役の停止形・リール配列
   - https://1geki.jp/slot/l_milliongod_kiseki/2/
   - supports left-first play, AT nav compliance, reel-chart presence, representative stop forms, lower-yellow A/B distinction, Gaia bell, SP, RED7, GOD
