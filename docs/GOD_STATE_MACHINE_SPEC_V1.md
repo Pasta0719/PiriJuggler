@@ -253,3 +253,5 @@ Accepted during Phase 01 review:
 - Loop/Z setting-character refinement accepted: where published, setting-specific GG-loop and Z-ZONE selection/promotion tables are authoritative; preserve the machine's odd/even character rather than treating higher setting as uniformly stronger in every sub-system. Unpublished cells remain PIRI_SPECIFIC Phase-04 tuning values only.
 
 - GG-internal stock-draw policy accepted: during GG, keep the published six front-mode structure and resolve additional GG stock draws from the current front mode plus the established role. Do not invent a separate opaque GG-only stock probability when source-backed mode/role tables exist; only genuinely unpublished cells may be PIRI_SPECIFIC.
+
+- GG-preparation stock-draw policy accepted: model GG preparation as an independent gameplay state from initial GG hit until the published preparation-end cue (e.g. ×・?・?) resolves. During that state, use the published preparation-specific role × front-mode stock-draw table; do not reuse the in-GG 50G stock table. After preparation ends, begin the 50G GG set.
