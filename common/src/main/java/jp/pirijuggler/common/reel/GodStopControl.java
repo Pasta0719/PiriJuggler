@@ -85,6 +85,16 @@ public final class GodStopControl {
                     req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
                     req(GodReelStrip.Symbol.YELLOW7,Row.TOP),
                     "published small-V yellow 7"));
+            case "RED7_FAKE" -> Optional.of(new Rule(
+                    req(GodReelStrip.Symbol.RED7,Row.MIDDLE),
+                    req(GodReelStrip.Symbol.BLUE7,Row.MIDDLE),
+                    req(GodReelStrip.Symbol.BLUE7,Row.MIDDLE),
+                    "Piri deterministic fake-RED replay form; intentionally not RED7 straight/SP/GOD/yellow"));
+            case "MISS" -> Optional.of(new Rule(
+                    req(GodReelStrip.Symbol.BLUE7,Row.MIDDLE),
+                    req(GodReelStrip.Symbol.GOD,Row.MIDDLE),
+                    req(GodReelStrip.Symbol.BLUE7,Row.MIDDLE),
+                    "Piri deterministic non-winning form"));
             case "SP" -> Optional.of(new Rule(
                     req(GodReelStrip.Symbol.RED7,Row.MIDDLE),
                     req(GodReelStrip.Symbol.RED7,Row.MIDDLE),
@@ -105,27 +115,38 @@ public final class GodStopControl {
     }
 
     public static int targetFor(String role,int reel,int pressed){
+        if(pressed<0||pressed>=GodReelStrip.STOPS)throw new IllegalArgumentException("pressed");
         var rule=publishedRule(role);
         if(rule.isEmpty()){
             var desired=GodReelStrip.symbolForRole(role,reel);
             return GodReelStrip.targetFor(reel,desired,pressed);
         }
+
         Requirement requirement=rule.get().requirement(reel);
+        boolean premiumLongSlip=isPremiumLongSlipRole(role);
         int best=-1;
         int bestSlip=Integer.MAX_VALUE;
         for(int middle=0;middle<GodReelStrip.STOPS;middle++){
             int symbolIndex=Math.floorMod(middle+requirement.row().offset(),GodReelStrip.STOPS);
             if(GodReelStrip.symbol(reel,symbolIndex)!=requirement.symbol())continue;
             int slip=GodReelStrip.slip(pressed,middle);
-            if(slip>4)continue;
+            if(!premiumLongSlip&&slip>4)continue;
             if(slip<bestSlip){
                 best=middle;
                 bestSlip=slip;
             }
         }
-        // Red7/SP representative forms are not guaranteed from every press
-        // position. Do not exceed the physical slip window just to force them.
-        return best<0?pressed:best;
+
+        if(best>=0)return best;
+        throw new IllegalStateException("No legal GOD stop target role="+role+" reel="+reel+" pressed="+pressed);
+    }
+
+    public static boolean isPremiumLongSlipRole(String role){
+        if(role==null)return false;
+        return switch(role.toUpperCase(Locale.ROOT)){
+            case "GOD","RED7","SP" -> true;
+            default -> false;
+        };
     }
 
     public static boolean matchesPublishedForm(String role,int left,int center,int right){
