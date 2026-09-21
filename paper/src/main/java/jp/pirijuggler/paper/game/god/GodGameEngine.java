@@ -582,7 +582,7 @@ public final class GodGameEngine implements GameEngine {
         double x=rng.nextDouble();
         double cumulative=0.0;
         for(GodRole role:explicit){
-            cumulative+=GodKisekiRoleTable.piriProbability(role);
+            cumulative+=GodKisekiRoleTable.categoricalProbability(role);
             if(x<cumulative)return role;
         }
         if(cumulative>=1.0)throw new IllegalStateException("GOD categorical role probabilities exceed 1.0");
