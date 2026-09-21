@@ -19,7 +19,7 @@ Primary sources:
 
 | Internal role | Reference odds | Wager result | Visible result required by Piri | Navigation | Gameplay meaning | Classification |
 |---|---:|---|---|---|---|---|
-| MISS | 1/5.2 | 0 medal, no replay | deterministic non-winning combination that matches none of the published winning/replay/premium formations | left-first unless a state-specific nav exists | ordinary miss | REFERENCE_BACKED odds / PIRI_SPECIFIC presentation |
+| MISS | 1/5.2 | 0 medal, no replay | any physical three-reel stop window that matches none of the locked winning/replay/premium formations and forms no straight/diagonal GOD/RED7/BLUE7/YELLOW7 line; selection remains within the ordinary 0..4-frame slip policy | left-first unless a state-specific nav exists | ordinary miss | REFERENCE_BACKED odds / PIRI_SPECIFIC presentation-control classification |
 | UPPER_BLUE7 | 1/7.9 | replay | blue7 line on upper row | left-first | replay | REFERENCE_BACKED |
 | MIDDLE_BLUE7 | 1/109.2 | replay | blue7 line on middle row | left-first | replay | REFERENCE_BACKED |
 | ORDERED_YELLOW7 | 1/1.7 | AT/navigation state: 15 medals when the shown order is completed; ordinary normal play: winning order is concealed and the accepted left-first miss-side 0/1-medal calibration applies | lower yellow-7 A / navigated yellow result when acquired; normal-play miss-side form must not masquerade as a 15-medal acquisition | obey displayed push order when navigation exists; ordinary normal play accepts the locked left-first path; wrong instructed input is rejected by Piri | high-frequency ordered yellow whose realized payout is state/navigation dependent | REFERENCE_BACKED role concept / PIRI_SPECIFIC normal miss-side calibration and input-safety policy |
