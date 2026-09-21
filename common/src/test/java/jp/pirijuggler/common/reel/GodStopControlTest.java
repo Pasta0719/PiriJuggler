@@ -139,7 +139,8 @@ class GodStopControlTest {
                 }
             }
         }
-        assertTrue(observed.size()>4,"actual MISS control should expose more than four final windows");
+        assertEquals(new LinkedHashSet<>(GodStopControl.missCandidates()),observed,
+                "every safe physical MISS candidate must be reachable by legal <=4-frame control");
     }
 
     @Test
