@@ -221,6 +221,26 @@ Forbidden fitting methods:
 
 ---
 
+## 8A. Fun-preservation guardrails
+
+User acceptance condition for payout fitting:
+
+**The target payout curve may not be achieved by tuning the machine to a noticeably boring level.**
+
+This means Phase 04 must preserve gameplay frequency/variety first, and only use economy knobs that do not materially flatten the experience.
+
+Mandatory guardrails:
+
+- Do not reduce GOD, RED7, SP, Z-ZONE, Z-GAME, SGG, loop behavior, or GG length/pure-increase below their locked values.
+- Do not remove or heavily suppress source-backed mode movement, history draws, Gaia routes, rare-role hits, or visible chance routes merely to hit payout.
+- Do not make low settings achieve target payout mainly by long stretches of near-zero event frequency.
+- Prefer distributing required adjustment across normal-side hit rates/mode transitions/history probabilities rather than crushing one visible mechanic.
+- Preserve meaningful setting differences without making lower settings feel dead and higher settings feel like a different game.
+- Before accepting a fitted curve, Phase 04 must publish event-frequency comparisons by setting (GG initial hit, Z entry, SGG entry, premium occurrence, average interval between meaningful events) alongside payout.
+- If a target payout can only be reached by violating these guardrails, stop and reopen the design instead of forcing the numbers.
+
+Classification: LOCKED_PIRI design constraint.
+
 ## 9. Source hierarchy
 
 When resolving a disputed spec item:
@@ -281,3 +301,8 @@ Research pass dated 2026-09-21 established:
 - PGG baseline is GOD stage 50G + three further GG sets (four total) plus a strong/high-continuation loop; the exact reference loop class is unpublished. Piri intentionally fixes it to D.
 
 See `docs/GOD_SOURCE_REGISTRY.md` for source URLs and `docs/GOD_ROLE_CONTRACT_V1.md` for the semantic role contract.
+
+
+## User acceptance note
+
+- Setting payout curve 97.2 / 99.1 / 102.1 / 106.9 / 111.7 / 114.6% accepted **with the explicit condition that fitting must not make the game boring by excessively suppressing event frequency or variety**.
