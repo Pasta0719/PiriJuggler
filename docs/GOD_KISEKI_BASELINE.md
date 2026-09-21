@@ -39,7 +39,7 @@ These published probabilities are reference inputs, not automatically immutable 
 
 ## Intentional Piri invariant
 
-- GOD = exact independent 1/8192
+- GOD = exact 1/8192 marginal probability inside the mutually-exclusive whole-game role draw
 - same probability at settings 1–6
 - no mode dependence
 - no hidden cooling/heating adjustment
