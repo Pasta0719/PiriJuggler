@@ -10,7 +10,7 @@ class GodStopControlTest {
         String[] roles={
                 "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
                 "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7",
-                "GAIA_BELL","SP","RED7","GOD"
+                "GAIA_BELL","GOD"
         };
         for(String role:roles){
             for(int leftPress=0;leftPress<GodReelStrip.STOPS;leftPress++){
@@ -78,6 +78,26 @@ class GodStopControlTest {
             }
         }
     }
+    @Test
+    void red7AndSpUseRepresentativeFormOnlyWhenReachableWithinFourFrames(){
+        for(String role:new String[]{"RED7","SP"}){
+            boolean sawRepresentative=false;
+            boolean sawUnreachable=false;
+            for(int reel=0;reel<3;reel++)for(int press=0;press<GodReelStrip.STOPS;press++){
+                int target=GodStopControl.targetFor(role,reel,press);
+                int slip=GodReelStrip.slip(press,target);
+                assertTrue(slip<=4,role+" reel="+reel+" press="+press);
+                var rule=GodStopControl.publishedRule(role).orElseThrow();
+                var requirement=rule.requirement(reel);
+                int symbolIndex=Math.floorMod(target+requirement.row().offset(),GodReelStrip.STOPS);
+                boolean matches=GodReelStrip.symbol(reel,symbolIndex)==requirement.symbol();
+                if(matches)sawRepresentative=true; else sawUnreachable=true;
+            }
+            assertTrue(sawRepresentative,role+" should show the representative form from reachable press positions");
+            assertTrue(sawUnreachable,role+" should not be force-aligned from every press position");
+        }
+    }
+
     @Test
     void red7AndSpNeverUseAnImpossibleLongSlip(){
         for(String role:new String[]{"RED7","SP"}){
