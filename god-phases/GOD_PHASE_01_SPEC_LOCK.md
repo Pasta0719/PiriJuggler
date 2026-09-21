@@ -1,6 +1,6 @@
 # GOD PHASE 01 — Specification Consolidation / Lock
 
-Status: **IN_PROGRESS — SPEC ONLY**
+Status: **READY_FOR_REVIEW — SPEC ONLY**
 
 ## Goal
 
@@ -8,6 +8,9 @@ Status: **IN_PROGRESS — SPEC ONLY**
 
 Canonical document:
 - `../docs/GOD_MASTER_SPEC.md`
+- `../docs/GOD_ROLE_CONTRACT_V1.md`
+- `../docs/GOD_STATE_MACHINE_SPEC_V1.md`
+- `../docs/GOD_SOURCE_REGISTRY.md`
 
 Research/reference notes:
 - `../docs/GOD_PRODUCTION_SPEC_V1.md`
@@ -94,3 +97,21 @@ Do not mark COMPLETE until:
 ## Stop condition
 
 When Phase 01 is complete, stop. Do not begin GOD Phase 02 automatically.
+
+
+## 2026-09-21 consolidation result
+
+Completed in spec/research only:
+- source hierarchy and registry
+- source-backed role/payout/representative-form contract
+- explicit 3-medal vs 15-medal lower-yellow distinction
+- Piri-specific shared visible-row stop-control policy
+- Piri-specific input-order safety policy
+- state-machine semantic contract
+- correction of SP and Z-ZONE rules from Piri-specific to reference-backed where sources exist
+
+Remaining gate before COMPLETE:
+- user acceptance of the Phase 01 specification
+- any explicit user changes to Piri-specific choices
+
+No production gameplay code was changed in this Phase 01 consolidation.
