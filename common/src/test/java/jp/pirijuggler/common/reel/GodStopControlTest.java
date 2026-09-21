@@ -47,20 +47,25 @@ class GodStopControlTest {
     }
 
     @Test
-    void lowerYellowPayoutVariantsShareOnlyThePublishedLineShape(){
+    void lowerYellowThreeAndFifteenMedalFormsAreVisuallyDistinct(){
         assertTrue(GodStopControl.publishedRule("ORDERED_YELLOW7").isPresent());
         assertTrue(GodStopControl.publishedRule("LOWER_YELLOW7").isPresent());
         assertTrue(GodStopControl.publishedRule("COMMON_YELLOW7").isPresent());
 
-        for(String role:new String[]{"ORDERED_YELLOW7","LOWER_YELLOW7","COMMON_YELLOW7"}){
-            for(int reel=0;reel<3;reel++){
-                for(int press=0;press<GodReelStrip.STOPS;press++){
-                    int middle=GodStopControl.targetFor(role,reel,press);
-                    assertEquals(GodReelStrip.Symbol.YELLOW7,
-                            GodReelStrip.symbol(reel,middle+1),
-                            role+" must show yellow on bottom row");
-                }
-            }
+        for(int press=0;press<GodReelStrip.STOPS;press++){
+            int lowerLeft=GodStopControl.targetFor("LOWER_YELLOW7",0,press);
+            int lowerCenter=GodStopControl.targetFor("LOWER_YELLOW7",1,press);
+            int lowerRight=GodStopControl.targetFor("LOWER_YELLOW7",2,press);
+            assertEquals(GodReelStrip.Symbol.YELLOW7,GodReelStrip.symbol(0,lowerLeft-1));
+            assertEquals(GodReelStrip.Symbol.RED7,GodReelStrip.symbol(1,lowerCenter));
+            assertEquals(GodReelStrip.Symbol.YELLOW7,GodReelStrip.symbol(2,lowerRight-1));
+
+            int commonLeft=GodStopControl.targetFor("COMMON_YELLOW7",0,press);
+            int commonCenter=GodStopControl.targetFor("COMMON_YELLOW7",1,press);
+            int commonRight=GodStopControl.targetFor("COMMON_YELLOW7",2,press);
+            assertEquals(GodReelStrip.Symbol.YELLOW7,GodReelStrip.symbol(0,commonLeft-1));
+            assertEquals(GodReelStrip.Symbol.BLUE7,GodReelStrip.symbol(1,commonCenter));
+            assertEquals(GodReelStrip.Symbol.YELLOW7,GodReelStrip.symbol(2,commonRight-1));
         }
     }
 
