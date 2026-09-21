@@ -138,3 +138,5 @@ Reference sources warn that non-left-first play and navigation mistakes may caus
 This replaces any earlier idea of approximating a missed ORDERED_YELLOW7 by a random 1-medal outcome.
 
 - User accepted Piri input-order safety policy: normal left-first; navigation accepts only instructed reel; wrong input is rejected without stopping reel, redrawing/changing role or payout, or consuming forced-role tests.
+
+- User accepted the yellow-role visual/payout consistency rule: 3-medal and 15-medal yellow outcomes must have distinct source-backed visible formations; server stop control and Fabric rendering must share one visible-row convention; no silent fallback to a visually incorrect result is permitted.
