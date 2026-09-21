@@ -1,6 +1,6 @@
 # GOD PHASE 01 — Specification Consolidation / Lock
 
-Status: **READY_FOR_REVIEW — SPEC ONLY**
+Status: **COMPLETE — SPEC ONLY**
 
 ## Goal
 
@@ -110,8 +110,12 @@ Completed in spec/research only:
 - state-machine semantic contract
 - correction of SP and Z-ZONE rules from Piri-specific to reference-backed where sources exist
 
-Remaining gate before COMPLETE:
-- user acceptance of the Phase 01 specification
-- any explicit user changes to Piri-specific choices
+Final gate result:
+- user review/acceptance completed across the Phase 01 decisions
+- mutually-exclusive whole-game role draw locked
+- premium slip exception locked
+- precursor/latent entitlement arbitration locked
+- canonical contradictions cleaned
+- final audit recorded in `../docs/GOD_PHASE_01_FINAL_AUDIT.md`
 
 No production gameplay code was changed in this Phase 01 consolidation.
