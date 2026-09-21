@@ -16,6 +16,17 @@ public final class GodReelStrip {
         GOD, RED7, BLUE7, YELLOW7, MILLION, DEKA_MILLION_BOTTOM, DEKA_MILLION_TOP
     }
 
+    /**
+     * Shared visible-window convention used by both Paper stop control and Fabric.
+     * Published chart positions increase upward: TOP = middle + 1, BOTTOM = middle - 1.
+     */
+    public enum VisibleRow {
+        TOP(1), MIDDLE(0), BOTTOM(-1);
+        private final int offset;
+        VisibleRow(int offset){this.offset=offset;}
+        public int offset(){return offset;}
+    }
+
     // Published positions 1 -> 20.
     private static final Symbol[] LEFT={
             Symbol.GOD,Symbol.BLUE7,Symbol.RED7,Symbol.MILLION,Symbol.YELLOW7,
@@ -40,6 +51,16 @@ public final class GodReelStrip {
     public static Symbol symbol(int reel,int index){
         if(reel<0||reel>2)throw new IllegalArgumentException("reel");
         return STRIPS[reel][Math.floorMod(index,STOPS)];
+    }
+
+    public static int visibleIndex(int middleStop,VisibleRow row){
+        if(middleStop<0||middleStop>=STOPS)throw new IllegalArgumentException("middleStop");
+        if(row==null)throw new IllegalArgumentException("row");
+        return Math.floorMod(middleStop+row.offset(),STOPS);
+    }
+
+    public static Symbol visibleSymbol(int reel,int middleStop,VisibleRow row){
+        return symbol(reel,visibleIndex(middleStop,row));
     }
 
     /**
