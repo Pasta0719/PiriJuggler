@@ -62,11 +62,11 @@ Lock:
 
 ### C. State machine
 Lock:
-- NORMAL / GG / G_ZONE / SGG / SGG_COMEBACK / Z_ZONE / Z_GAME
+- NORMAL / GG_PREP / GG / G_ZONE / SGG / SGG_COMEBACK / Z_ZONE / Z_GAME, plus durable precursor/latent/Gaia/Zeus/front/rear overlays
 - entry/exit conditions
 - stock handling
 - loop handling
-- premium precedence
+- premium/state overlap arbitration
 - replay behavior
 
 ### D. Economy constraints
