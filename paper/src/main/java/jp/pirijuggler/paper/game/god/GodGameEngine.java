@@ -130,13 +130,15 @@ public final class GodGameEngine implements GameEngine {
 
         String role=state.has("_pendingRole")?state.get("_pendingRole").getAsString():before.text("internal_role");
         String displayRole=state.has("_pendingDisplayRole")?state.get("_pendingDisplayRole").getAsString():role;
-        long missSeed=state.has("_missControlSeed")?state.get("_missControlSeed").getAsLong():0L;
+        long presentationSeed=state.has("_presentationControlSeed")
+                ?state.get("_presentationControlSeed").getAsLong()
+                :state.has("_missControlSeed")?state.get("_missControlSeed").getAsLong():0L;
         int target=GodStopControl.targetFor(
                 displayRole,reel,pressed,mask,
                 (int)before.number("display_left_stop"),
                 (int)before.number("display_center_stop"),
                 (int)before.number("display_right_stop"),
-                missSeed
+                presentationSeed
         );
         int slip=GodReelStrip.slip(pressed,target);
         int duration=ReelMotion.durationMs(slip);
@@ -619,8 +621,10 @@ public final class GodGameEngine implements GameEngine {
             if(expected>=0&&reel!=expected)continue;
             var choices=new com.google.gson.JsonArray();
             for(int pressed=0;pressed<GodReelStrip.STOPS;pressed++){
-                long missSeed=state!=null&&state.has("_missControlSeed")?state.get("_missControlSeed").getAsLong():0L;
-                int target=GodStopControl.targetFor(role,reel,pressed,mask,left,center,right,missSeed);
+                long presentationSeed=state!=null&&state.has("_presentationControlSeed")
+                        ?state.get("_presentationControlSeed").getAsLong()
+                        :state!=null&&state.has("_missControlSeed")?state.get("_missControlSeed").getAsLong():0L;
+                int target=GodStopControl.targetFor(role,reel,pressed,mask,left,center,right,presentationSeed);
                 int slip=GodReelStrip.slip(pressed,target);
                 JsonObject item=new JsonObject();item.addProperty("stopIndex",target);item.addProperty("slip",slip);item.addProperty("durationMs",ReelMotion.durationMs(slip));
                 choices.add(item);
