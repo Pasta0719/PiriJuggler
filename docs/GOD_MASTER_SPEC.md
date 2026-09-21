@@ -38,7 +38,7 @@ These are already selected and remain authoritative.
 | reset ceiling | 510G 15.2%, 1000G 20.3%, 1480G 64.5% | LOCKED_PIRI |
 | ordinary GG bell-chain V stock | disabled | REJECTED |
 | payout targets settings 1–6 | 97.2 / 99.1 / 102.1 / 106.9 / 111.7 / 114.6% | LOCKED_PIRI |
-| payout fitting | normal-side unpublished/calibration parameters only | LOCKED_PIRI |
+| payout fitting | only explicitly PIRI_SPECIFIC / unpublished calibration parameters may move; source-backed and LOCKED_PIRI mechanics stay fixed unless the spec is explicitly reopened | LOCKED_PIRI |
 
 Source baseline: `docs/GOD_PRODUCTION_SPEC_V1.md`, `docs/GOD_PRODUCTION_TARGET.md`.
 
@@ -200,7 +200,7 @@ Reference front modes currently represented:
 
 Mode existence is REFERENCE_BACKED.
 
-Exact production transition tables, history-hit tables and setting substitutions must be individually locked before implementation audit. Existing code values are not automatically accepted spec.
+Published transition/history/setting tables are authoritative where available. Any genuinely unpublished cells are already classified as PIRI_SPECIFIC Phase-04 calibration parameters in the state contract and therefore do not block Phase 02/03 implementation. Existing code values are not automatically accepted spec.
 
 ---
 
