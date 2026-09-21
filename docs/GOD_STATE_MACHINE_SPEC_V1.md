@@ -251,3 +251,5 @@ Accepted during Phase 01 review:
 - Setting-character policy accepted: preserve the published machine-level tendency that even settings lean relatively toward lighter GG initial hits while odd settings lean relatively toward stronger Z-ZONE/loop-side behavior. Do not flatten this distinction during Phase 04 payout fitting; use published setting-specific loop/Z tables where available and mark only unpublished cells as PIRI_SPECIFIC.
 
 - Loop/Z setting-character refinement accepted: where published, setting-specific GG-loop and Z-ZONE selection/promotion tables are authoritative; preserve the machine's odd/even character rather than treating higher setting as uniformly stronger in every sub-system. Unpublished cells remain PIRI_SPECIFIC Phase-04 tuning values only.
+
+- GG-internal stock-draw policy accepted: during GG, keep the published six front-mode structure and resolve additional GG stock draws from the current front mode plus the established role. Do not invent a separate opaque GG-only stock probability when source-backed mode/role tables exist; only genuinely unpublished cells may be PIRI_SPECIFIC.
