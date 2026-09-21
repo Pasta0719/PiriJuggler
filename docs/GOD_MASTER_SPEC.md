@@ -93,27 +93,29 @@ Until this table is complete, GOD Phase 02 remains blocked.
 | UPPER_BLUE7 | replay / 0 medal payout | upper blue-7 line | normal | formation needs final source lock |
 | MIDDLE_BLUE7 | replay / 0 | middle blue-7 line | normal | formation needs final source lock |
 | RED7_FAKE | replay / 0 | exact form not yet locked | normal | UNKNOWN visible control |
-| LOWER_YELLOW7 | 3 medals | **not locked yet** | normal | UNKNOWN until source+reel-chart reconciliation |
-| ORDERED_YELLOW7 | 15 when navigation succeeds; miss behavior requires lock | **not locked yet** | push-order where applicable | partial |
-| RISING_YELLOW7 | 15 medals | rising yellow-7 form | normal | needs final source lock |
-| MIDDLE_YELLOW7 | 15 medals | middle yellow-7 line | normal | needs final source lock |
-| COMMON_YELLOW7 | 15 medals | **not locked yet** | normal | UNKNOWN until source+reel-chart reconciliation |
-| GAIA_BELL | 1 medal | small-V style form | right-first behavior currently intended | needs final source lock |
+| LOWER_YELLOW7 | 3 medals | lower-row yellow B; center reel uses the yellow directly below RED7, published example center-middle RED7 | left-first | REFERENCE_BACKED |
+| ORDERED_YELLOW7 | 15 when correctly navigated; wrong-order settlement is not claimed as exact Kiseki without a source | lower-yellow A/navigated yellow result | obey nav when shown | REFERENCE_BACKED concept; miss handling PIRI_SPECIFIC until sourced |
+| RISING_YELLOW7 | 15 medals | rising/right-up yellow line | left-first | REFERENCE_BACKED |
+| MIDDLE_YELLOW7 | 15 medals | middle yellow line | left-first | REFERENCE_BACKED |
+| COMMON_YELLOW7 | 15 medals | lower-row yellow A; published example center-middle BLUE7 | left-first unless nav applies | REFERENCE_BACKED |
+| GAIA_BELL | 1 medal | yellow small-V | right-first navigation | REFERENCE_BACKED |
 | RED7 | 15 medals | red-7 straight representative form | normal | reference form known; full press table UNKNOWN |
 | GOD | 15 medals | GOD straight | normal | reference form known |
 | SP | 15 medals | RED7 / RED7 / GOD representative form | normal | reference form known; full press table UNKNOWN |
 | MISS | 0 | non-winning | normal | exact visual control UNKNOWN |
 
-### Explicit unresolved issue: 3-medal vs 15-medal yellow
+### Resolved specification: 3-medal vs 15-medal lower yellow
 
-Current runtime observation from the development build:
+The source-backed semantic distinction is now locked:
 
-- forced `LOWER_YELLOW7` displayed a yellow line and paid 3.
-- forced `COMMON_YELLOW7` displayed the same apparent yellow line and paid 15.
+- 15-medal lower yellow A: lower-row yellow line; NanaPress example identifies center-middle BLUE7.
+- 3-medal lower yellow B: lower-row yellow line using the center yellow immediately below RED7; NanaPress example identifies center-middle RED7.
 
-This is an **implementation inconsistency**, not accepted specification.
+The development build that displayed these as visually identical is therefore confirmed wrong and is not a specification source.
 
-No further reel-control implementation should be changed until the exact visible distinction is established from source-backed reel chart / stop-form information and written here as LOCKED.
+What remains UNKNOWN is the complete real-machine press-index control table, not the semantic stop-form distinction.
+
+See `docs/GOD_ROLE_CONTRACT_V1.md`.
 
 ---
 
@@ -125,12 +127,19 @@ No further reel-control implementation should be changed until the exact visible
 - symbols currently represented: GOD, RED7, BLUE7, YELLOW7, MILLION, two-cell DEKA MILLION.
 - normal physical slip constraint currently targeted: maximum 4 frames.
 
-### Not yet locked
+### Locked semantic convention
 
-- exact mapping between published reel-chart numbering and client top/middle/bottom rendering.
-- exact lower-yellow A/B stop forms.
-- exact press-index-specific control table for all roles.
-- whether every representative premium form is reachable from every press index within four frames.
+- TOP/MIDDLE/BOTTOM in the spec refer to the **visible window rows**, not array arithmetic.
+- lower-yellow A/B forms are semantically locked in `docs/GOD_ROLE_CONTRACT_V1.md`.
+- implementation tests must assert visible rows first; internal array offsets are an implementation detail derived afterward.
+
+### Still not publicly known
+
+- complete press-index-specific control table for all roles.
+- exact slip/control behavior for every press position.
+- whether every representative premium form is reachable from every press index under the real machine's control.
+
+These unknowns must not be filled by claiming authenticity. Phase 02 may use a labelled PIRI_SPECIFIC deterministic control policy once its fallback behavior is explicitly written and accepted.
 
 Rule: representative screenshots/forms must not be promoted into a full press-specific control table without evidence.
 
@@ -163,8 +172,8 @@ These phase names are accepted as the Piri state model. Exact transition probabi
 
 ### Piri-specific / requires explicit label
 
-- Z-ZONE zero-yellow failure -> 50% D-loop is PIRI_SPECIFIC.
-- exact Gaia->Z rate currently used in code must not be called reference behavior unless sourced.
+- Z-ZONE zero-yellow failure -> 50% D-loop is REFERENCE_BACKED.
+- Gaia-stage GG -> Z-ZONE promotion has published data and setting dependence; a flat 15% for all settings must not be called authentic. 1geki reports 15.0% for setting 1 and notes likely setting dependence.
 - any normal mode-transition probability not in a cited published table is PIRI_SPECIFIC/calibration.
 
 ---
@@ -252,3 +261,23 @@ GOD Phase 01 may be marked COMPLETE only when:
 - user has accepted the locked spec.
 
 Until then, GOD Phase 02 is BLOCKED.
+
+
+---
+
+## 12. Source-backed corrections locked during Phase 01
+
+Research pass dated 2026-09-21 established:
+
+- Lower yellow A/B are visually distinguishable by the center-reel symbol identity; they are not allowed to be identical in production.
+- Z-ZONE zero-yellow failure 50% -> loop D is published reference behavior.
+- SP 1/65536 and normal/GG 50% GG-stock + loop-D behavior are published reference behavior.
+- Gaia bell small-V is associated with right-side navigation in published stop-form guidance.
+- Public stop-form pages explicitly describe forms as examples; they do not provide a complete press-index control table.
+- Six front modes are source-backed and there is also a separate 裏天国 axis in the reference machine.
+- Z-ZONE is full-nav, yellow ~1/1.4, yellow holds countdown, five yellow successes route to Z-GAME, rising/middle yellow can direct-success.
+- Z-GAME stocks one GG per yellow and ends on miss/blue.
+- SGG is 10–100G/set, >=75% continuation, followed by a 3G comeback zone.
+- PGG baseline is GOD stage 50G + three further GG sets (four total) plus a strong/high-continuation loop; the exact reference loop class is unpublished. Piri intentionally fixes it to D.
+
+See `docs/GOD_SOURCE_REGISTRY.md` for source URLs and `docs/GOD_ROLE_CONTRACT_V1.md` for the semantic role contract.
