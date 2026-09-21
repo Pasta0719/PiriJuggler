@@ -86,23 +86,23 @@ For every internal role the locked spec must define all of:
 
 The semantic role contract is complete for Phase 02. Exact hidden real-machine press-index control remains unavailable, but the accepted PIRI_SPECIFIC deterministic stop-control policy resolves that gap without claiming authenticity.
 
-### Current provisional outcome knowledge
+### Locked semantic outcome knowledge
 
 | Role | Payout/replay | Visible formation | Navigation | Status |
 |---|---|---|---|---|
-| UPPER_BLUE7 | replay / 0 medal payout | upper blue-7 line | normal | formation needs final source lock |
-| MIDDLE_BLUE7 | replay / 0 | middle blue-7 line | normal | formation needs final source lock |
-| RED7_FAKE | replay / 0 | exact form not yet locked | normal | UNKNOWN visible control |
+| UPPER_BLUE7 | replay / 0 medal payout | upper blue-7 line | left-first | REFERENCE_BACKED |
+| MIDDLE_BLUE7 | replay / 0 | middle blue-7 line | left-first | REFERENCE_BACKED |
+| RED7_FAKE | replay / 0 | deterministic fake-RED form that cannot equal RED7 straight, SP, GOD, or a paying yellow result | left-first | REFERENCE_BACKED semantics / PIRI_SPECIFIC presentation |
 | LOWER_YELLOW7 | 3 medals | lower-row yellow B; center reel uses the yellow directly below RED7, published example center-middle RED7 | left-first | REFERENCE_BACKED |
-| ORDERED_YELLOW7 | 15 when correctly navigated; wrong-order settlement is not claimed as exact Kiseki without a source | lower-yellow A/navigated yellow result | obey nav when shown | REFERENCE_BACKED concept; miss handling PIRI_SPECIFIC until sourced |
+| ORDERED_YELLOW7 | 15 medals when correctly navigated in AT; normal-play miss-side settlement uses the locked 0/1-medal calibration path | lower-yellow A / navigated yellow result | state navigation; normal play hides ordinary winning order | REFERENCE_BACKED role concept / PIRI_SPECIFIC normal miss-side calibration |
 | RISING_YELLOW7 | 15 medals | rising/right-up yellow line | left-first | REFERENCE_BACKED |
 | MIDDLE_YELLOW7 | 15 medals | middle yellow line | left-first | REFERENCE_BACKED |
-| COMMON_YELLOW7 | 15 medals | lower-row yellow A; published example center-middle BLUE7 | left-first unless nav applies | REFERENCE_BACKED |
+| COMMON_YELLOW7 | 15 medals | lower-row yellow A; published example center-middle BLUE7 | left-first unless state nav applies | REFERENCE_BACKED |
 | GAIA_BELL | 1 medal | yellow small-V | right-first navigation | REFERENCE_BACKED |
-| RED7 | 15 medals | red-7 straight representative form | normal | reference form known; full press table UNKNOWN |
-| GOD | 15 medals | GOD straight | normal | reference form known |
-| SP | 15 medals | RED7 / RED7 / GOD representative form | normal | reference form known; full press table UNKNOWN |
-| MISS | 0 | non-winning | normal | exact visual control UNKNOWN |
+| RED7 | 15 medals | RED7 straight | left-first | REFERENCE_BACKED visible form/benefit; Piri may exceed ordinary 4-frame slip to guarantee form |
+| GOD | 15 medals | GOD straight | left-first | LOCKED_PIRI odds / REFERENCE_BACKED visible form; Piri may exceed ordinary 4-frame slip |
+| SP | 15 medals | RED7 / RED7 / GOD | left-first | REFERENCE_BACKED visible form/behavior; Piri may exceed ordinary 4-frame slip |
+| MISS | 0 | deterministic non-winning form that matches no locked winning/replay/premium result | left-first | PIRI_SPECIFIC presentation |
 
 ### Resolved specification: 3-medal vs 15-medal lower yellow
 
@@ -139,7 +139,7 @@ See `docs/GOD_ROLE_CONTRACT_V1.md`.
 - exact slip/control behavior for every press position.
 - whether every representative premium form is reachable from every press index under the real machine's control.
 
-These unknowns must not be filled by claiming authenticity. Phase 02 may use a labelled PIRI_SPECIFIC deterministic control policy once its fallback behavior is explicitly written and accepted.
+These unknown reference-machine details must not be filled by claiming authenticity. Phase 02 will use the already accepted labelled PIRI_SPECIFIC deterministic control policy: ordinary roles use the locked normal slip policy, while GOD/RED7/SP may exceed 4 frames by the minimum deterministic amount required to guarantee their locked visible forms.
 
 Rule: representative screenshots/forms must not be promoted into a full press-specific control table without evidence.
 
@@ -147,9 +147,11 @@ Rule: representative screenshots/forms must not be promoted into a full press-sp
 
 ## 6. Gameplay phases
 
-Intended persisted high-level phases:
+Persisted gameplay model:
 
+Primary phases:
 - NORMAL
+- GG_PREP
 - GG
 - G_ZONE
 - SGG
@@ -157,7 +159,14 @@ Intended persisted high-level phases:
 - Z_ZONE
 - Z_GAME
 
-These phase names are accepted as the Piri state model. Exact transition probabilities must be separately classified.
+Durable overlays/flags:
+- ordinary-GG precursor countdown / pending GG queue
+- post-G-ZONE latent-continuation countdown
+- Gaia-stage state
+- Zeus-mode state
+- front mode and rear mode
+
+Precursor and latent-continuation presentation do not erase the underlying GG entitlement. Exact transition probabilities remain source-backed or explicitly PIRI_SPECIFIC as classified in the state contract.
 
 ### Locked / accepted mechanics
 
