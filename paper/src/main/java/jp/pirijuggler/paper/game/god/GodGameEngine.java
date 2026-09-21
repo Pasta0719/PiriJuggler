@@ -179,7 +179,7 @@ public final class GodGameEngine implements GameEngine {
         return expected>=0?expected:nextReel(mask);
     }
     private static boolean isAtLike(GodPhase phase){
-        return phase==GodPhase.GG||phase==GodPhase.SGG||phase==GodPhase.SGG_COMEBACK||
+        return phase==GodPhase.GG||phase==GodPhase.G_ZONE||phase==GodPhase.SGG||phase==GodPhase.SGG_COMEBACK||
                 phase==GodPhase.Z_ZONE||phase==GodPhase.Z_GAME;
     }
     private static int expectedNextReel(JsonObject state,int mask){
@@ -558,21 +558,35 @@ public final class GodGameEngine implements GameEngine {
         if(x<.830)return 10;if(x<.944)return 20;if(x<.978)return 30;if(x<.989)return 50;return 100;
     }
 
-    private static GodRole drawRole(GodMachineRuntime runtime,RandomGenerator rng){
+    static GodRole drawRole(GodMachineRuntime runtime,RandomGenerator rng){
         if(runtime.forcedRole()!=null){
             try{return GodRole.valueOf(runtime.forcedRole());}
             catch(IllegalArgumentException invalid){throw new DomainException("INVALID_STATE");}
         }
 
-        // Piri lock: GOD is an independent exact 1/8192 draw.
-        // RED7 and SP are separate draws; simultaneous hits use GOD > RED7 > SP precedence.
-        boolean god=rng.nextInt(GodProductionSpec.GOD_DENOMINATOR)==0;
-        boolean red7=rng.nextInt(GodProductionSpec.RED7_DENOMINATOR)==0;
-        boolean sp=rng.nextInt(GodProductionSpec.SP_DENOMINATOR)==0;
-        if(god)return GodRole.GOD;if(red7)return GodRole.RED7;if(sp)return GodRole.SP;
-        GodRole[] roles={GodRole.MISS,GodRole.UPPER_BLUE7,GodRole.MIDDLE_BLUE7,GodRole.ORDERED_YELLOW7,GodRole.LOWER_YELLOW7,GodRole.RISING_YELLOW7,GodRole.MIDDLE_YELLOW7,GodRole.COMMON_YELLOW7,GodRole.GAIA_BELL,GodRole.RED7_FAKE};
-        double sum=0;for(GodRole role:roles)sum+=GodKisekiRoleTable.referenceProbability(role);
-        double x=rng.nextDouble()*sum,c=0;for(GodRole role:roles){c+=GodKisekiRoleTable.referenceProbability(role);if(x<c)return role;}return GodRole.MISS;
+        /*
+         * Phase-01 lock: one game resolves to exactly one role.
+         *
+         * Preserve every non-MISS Piri/reference marginal directly in a single
+         * categorical draw. The published rounded denominators sum to slightly
+         * more than 100% if MISS is also treated as an independent exact cell,
+         * so MISS is the explicit Piri residual instead of silently renormalizing
+         * premium/rare-role odds. In particular GOD remains exactly 1/8192.
+         */
+        GodRole[] explicit={
+                GodRole.GOD,GodRole.RED7,GodRole.SP,
+                GodRole.UPPER_BLUE7,GodRole.MIDDLE_BLUE7,GodRole.ORDERED_YELLOW7,
+                GodRole.LOWER_YELLOW7,GodRole.RISING_YELLOW7,GodRole.MIDDLE_YELLOW7,
+                GodRole.COMMON_YELLOW7,GodRole.GAIA_BELL,GodRole.RED7_FAKE
+        };
+        double x=rng.nextDouble();
+        double cumulative=0.0;
+        for(GodRole role:explicit){
+            cumulative+=GodKisekiRoleTable.piriProbability(role);
+            if(x<cumulative)return role;
+        }
+        if(cumulative>=1.0)throw new IllegalStateException("GOD categorical role probabilities exceed 1.0");
+        return GodRole.MISS;
     }
 
     private static Envelope accepted(PacketType action,long sequence){
