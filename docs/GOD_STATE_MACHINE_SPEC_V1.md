@@ -233,3 +233,5 @@ Accepted during Phase 01 review:
 - Ordinary GG yellow/bell streak V-stock mechanic rejected and remains disabled; yellow-related rewards remain in their separate Z-ZONE/Z-GAME and other source-backed routes.
 
 - Normal-role processing accepted: role occurrence and GG-hit processing are separate. After a role is drawn, evaluate GG hit from current front mode × role, then apply any role-history and mode-transition processing according to the locked tables. Role probabilities themselves are not to be distorted merely to emulate GG hit rates.
+
+- GG-hit announcement flow accepted: normal/history/mode-based GG hits are held internally and enter a source-backed precursor period rather than transitioning to GG immediately. GOD and RED7 are exceptions and enter PGG/SGG without normal precursor handling. Precursor-game distributions must follow published Kiseki data where available; they are not to be collapsed into immediate GG.
