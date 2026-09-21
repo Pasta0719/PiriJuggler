@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "scope": "Piri GOD only",
+  "canonical_spec": "docs/GOD_MASTER_SPEC.md",
+  "one_phase_per_run": true,
+  "phases": [
+    {
+      "number": 1,
+      "file": "god-phases/GOD_PHASE_01_SPEC_LOCK.md",
+      "title": "Specification Consolidation / Lock",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "number": 2,
+      "file": "god-phases/GOD_PHASE_02_ROLE_REEL_PAYOUT.md",
+      "title": "Role / Reel / Payout Implementation",
+      "status": "BLOCKED_BY_PHASE_01"
+    },
+    {
+      "number": 3,
+      "file": "god-phases/GOD_PHASE_03_GAMEPLAY_STATE_MACHINE.md",
+      "title": "Gameplay State Machine / Benefits",
+      "status": "BLOCKED_BY_PHASE_02"
+    },
+    {
+      "number": 4,
+      "file": "god-phases/GOD_PHASE_04_ECONOMY_SIMULATION.md",
+      "title": "Economy Fitting / Long-run Simulation",
+      "status": "BLOCKED_BY_PHASE_03"
+    },
+    {
+      "number": 5,
+      "file": "god-phases/GOD_PHASE_05_CLIENT_PRESENTATION.md",
+      "title": "Client Presentation / Replaceable Assets",
+      "status": "BLOCKED_BY_PHASE_04"
+    },
+    {
+      "number": 6,
+      "file": "god-phases/GOD_PHASE_06_RECOVERY_RUNTIME.md",
+      "title": "Recovery / Runtime Acceptance / Final Audit",
+      "status": "BLOCKED_BY_PHASE_05"
+    }
+  ]
+}
