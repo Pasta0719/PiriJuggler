@@ -18,23 +18,21 @@ public final class GodRoleOutcome {
     }
 
     /**
-     * Piri calibration for an un-navigated ORDERED_YELLOW7 in NORMAL/G-ZONE.
+     * Provisional Piri calibration for an un-navigated ORDERED_YELLOW7 in normal flow.
      *
-     * Public sources identify the flag as a 15-medal push-order yellow and also
-     * state that one-medal roles can occur when that flag is missed, but do not
-     * publish the complete order/miss distribution. The rate below keeps the
-     * published setting-1 normal base (about 30.8G/50 medals) when combined with
-     * the published role odds and payouts. It is not presented as a manufacturer
-     * control-table value.
+     * Phase 01 locked the normal-play result to the miss side (0 or 1 medal), never
+     * the navigated 15-medal acquisition. Public material does not publish the exact
+     * 0/1 split, so Phase 04 owns the final calibration. Until then we preserve the
+     * previous calibration mass as a labelled provisional one-medal probability.
      */
-    public static final double NORMAL_ORDERED_15_SUCCESS_RATE = 0.0104273;
+    public static final double NORMAL_ORDERED_ONE_MEDAL_RATE = 1.0 - 0.0104273;
 
     public static Outcome resolve(GodRole role,GodPhase phase,double unit){
         Objects.requireNonNull(role);
         Objects.requireNonNull(phase);
         if(!(unit>=0.0&&unit<1.0))throw new IllegalArgumentException("unit");
 
-        boolean navigated=phase==GodPhase.GG||phase==GodPhase.SGG||
+        boolean navigated=phase==GodPhase.GG||phase==GodPhase.G_ZONE||phase==GodPhase.SGG||
                 phase==GodPhase.SGG_COMEBACK||phase==GodPhase.Z_ZONE||phase==GodPhase.Z_GAME;
 
         return switch(role){
@@ -53,10 +51,9 @@ public final class GodRoleOutcome {
             case GOD -> new Outcome("GOD",15,false);
 
             case ORDERED_YELLOW7 -> {
-                boolean fullPay=navigated||unit<NORMAL_ORDERED_15_SUCCESS_RATE;
-                yield fullPay
-                        ? new Outcome("COMMON_YELLOW7",15,false)
-                        : new Outcome("MISS",1,false);
+                if(navigated)yield new Outcome("COMMON_YELLOW7",15,false);
+                boolean oneMedal=unit<NORMAL_ORDERED_ONE_MEDAL_RATE;
+                yield new Outcome("MISS",oneMedal?1:0,false);
             }
         };
     }
