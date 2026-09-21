@@ -194,4 +194,61 @@ class GodGameEngineTest {
         v.put("last_client_sequence",0L);v.put("last_activity",0L);v.put("lock_expires_at",null);
         return new Session(v);
     }
+    @Test
+    void everyForcedRoleCompletesWithMatchingPayoutReplayAndVisibleFormation(){
+        record Expect(String role,int payout,boolean replay,String display){}
+        Expect[] expects={
+                new Expect("MISS",0,false,"MISS"),
+                new Expect("UPPER_BLUE7",0,true,"UPPER_BLUE7"),
+                new Expect("MIDDLE_BLUE7",0,true,"MIDDLE_BLUE7"),
+                new Expect("ORDERED_YELLOW7",1,false,"MISS"),
+                new Expect("LOWER_YELLOW7",3,false,"LOWER_YELLOW7"),
+                new Expect("RISING_YELLOW7",15,false,"RISING_YELLOW7"),
+                new Expect("MIDDLE_YELLOW7",15,false,"MIDDLE_YELLOW7"),
+                new Expect("COMMON_YELLOW7",15,false,"COMMON_YELLOW7"),
+                new Expect("GAIA_BELL",1,false,"GAIA_BELL"),
+                new Expect("RED7_FAKE",0,true,"RED7_FAKE"),
+                new Expect("RED7",15,false,"RED7"),
+                new Expect("GOD",15,false,"GOD"),
+                new Expect("SP",15,false,"SP")
+        };
+
+        for(Expect e:expects){
+            GodGameEngine engine=new GodGameEngine(RandomStreams.production());
+            Machine machine=machine(e.role());
+            var t=engine.plan(session(50),machine,PacketType.SPACE_ACTION,1,1,0,0,null);
+            var pending=t.after().machineState();
+            assertEquals(e.role(),pending.get("_pendingRole").getAsString(),e.role());
+            assertEquals(e.display(),pending.get("_pendingDisplayRole").getAsString(),e.role());
+            assertEquals(e.payout(),pending.get("_pendingPayout").getAsInt(),e.role());
+            assertEquals(e.replay(),pending.get("_pendingReplay").getAsBoolean(),e.role());
+
+            long seq=2;
+            while(t.after().state()==Session.GameState.NORMAL_SPINNING){
+                var state=t.after().machineState();
+                int mask=(int)t.after().number("stopped_mask");
+                int reel;
+                if(state.has("_pendingStopOrder")){
+                    int step=Integer.bitCount(mask);
+                    reel=state.getAsJsonArray("_pendingStopOrder").get(step).getAsInt();
+                }else if(mask==0&&state.has("_pendingFirstReel")){
+                    reel=state.get("_pendingFirstReel").getAsInt();
+                }else{
+                    reel=-1;
+                    for(int i=0;i<3;i++)if((mask&(1<<i))==0){reel=i;break;}
+                }
+                t=engine.plan(t.after(),machine,actionFor(reel),seq,seq,0,0,0);
+                seq++;
+            }
+
+            assertEquals(e.payout(),t.payout(),e.role());
+            assertEquals(e.replay()?Session.GameState.REPLAY_READY:Session.GameState.SEATED_READY,t.after().state(),e.role());
+
+            int l=(int)t.after().number("display_left_stop");
+            int m=(int)t.after().number("display_center_stop");
+            int r=(int)t.after().number("display_right_stop");
+            assertTrue(jp.pirijuggler.common.reel.GodStopControl.matchesPublishedForm(e.display(),l,m,r),e.role());
+        }
+    }
+
 }
