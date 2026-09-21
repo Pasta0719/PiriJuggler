@@ -79,13 +79,13 @@ public final class GodStopControl {
             case "RED7_FAKE" -> Optional.of(new Rule(
                     req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
                     req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
-                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
-                    "Piri deterministic fake-RED replay form; center RED7 is always reachable within ordinary slip and cannot form RED7 straight/SP/GOD/yellow"));
+                    req(GodReelStrip.Symbol.GOD,GodReelStrip.VisibleRow.MIDDLE),
+                    "Piri deterministic fake-RED replay form; contains RED7 but does not form RED7 straight/SP/GOD/yellow"));
             case "MISS" -> Optional.of(new Rule(
                     req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
-                    req(GodReelStrip.Symbol.GOD,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
                     req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
-                    "Piri deterministic non-winning form"));
+                    "Piri deterministic non-winning form chosen to avoid all five visible straight/diagonal winning lines"));
             case "SP" -> Optional.of(new Rule(
                     req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
                     req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
