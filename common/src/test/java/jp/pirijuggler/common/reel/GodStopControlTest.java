@@ -12,7 +12,7 @@ class GodStopControlTest {
     private static final String[] LOCKED_FORMS={
             "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
             "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL",
-            "RED7_FAKE","RED7","GOD","SP"
+            "RED7","GOD","SP"
     };
 
     @Test
@@ -39,7 +39,7 @@ class GodStopControlTest {
     void ordinaryFixedFormsStayInsideFourFrameSlip(){
         String[] roles={
                 "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
-                "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL","RED7_FAKE"
+                "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL"
         };
         for(String role:roles){
             assertFalse(GodStopControl.isPremiumLongSlipRole(role));
@@ -159,21 +159,41 @@ class GodStopControlTest {
     }
 
     @Test
-    void red7FakeCannotMasqueradeAsPremiumOrPayingYellow(){
-        for(int lp=0;lp<GodReelStrip.STOPS;lp++){
-            int l=GodStopControl.targetFor("RED7_FAKE",0,lp);
-            for(int cp=0;cp<GodReelStrip.STOPS;cp++){
-                int c=GodStopControl.targetFor("RED7_FAKE",1,cp);
-                for(int rp=0;rp<GodReelStrip.STOPS;rp++){
-                    int r=GodStopControl.targetFor("RED7_FAKE",2,rp);
-                    assertFalse(GodStopControl.matchesPublishedForm("GOD",l,c,r));
-                    assertFalse(GodStopControl.matchesPublishedForm("RED7",l,c,r));
-                    assertFalse(GodStopControl.matchesPublishedForm("SP",l,c,r));
-                    assertFalse(GodStopControl.matchesPublishedForm("LOWER_YELLOW7",l,c,r));
-                    assertFalse(GodStopControl.matchesPublishedForm("COMMON_YELLOW7",l,c,r));
+    void fakeRedUsesVariableSafeReplayFormsWithinFourFrames(){
+        Set<GodStopControl.MissStop> observed=new LinkedHashSet<>();
+        boolean sawRepresentative=false;
+        int[][] secondOrders={{1,2},{2,1}};
+
+        for(long seed=1;seed<=16;seed++){
+            for(int leftPress=0;leftPress<GodReelStrip.STOPS;leftPress++){
+                int left=GodStopControl.targetFor("RED7_FAKE",0,leftPress,0,0,0,0,seed);
+                assertTrue(GodReelStrip.slip(leftPress,left)<=4);
+
+                for(int[] order:secondOrders){
+                    int second=order[0],third=order[1];
+                    for(int secondPress=0;secondPress<GodReelStrip.STOPS;secondPress++){
+                        int[] stops={left,0,0};
+                        int secondTarget=GodStopControl.targetFor(
+                                "RED7_FAKE",second,secondPress,1,stops[0],stops[1],stops[2],seed);
+                        assertTrue(GodReelStrip.slip(secondPress,secondTarget)<=4);
+                        stops[second]=secondTarget;
+                        int secondMask=1|(1<<second);
+
+                        for(int thirdPress=0;thirdPress<GodReelStrip.STOPS;thirdPress++){
+                            int thirdTarget=GodStopControl.targetFor(
+                                    "RED7_FAKE",third,thirdPress,secondMask,stops[0],stops[1],stops[2],seed);
+                            assertTrue(GodReelStrip.slip(thirdPress,thirdTarget)<=4);
+                            int[] fin=stops.clone();fin[third]=thirdTarget;
+                            assertTrue(GodStopControl.isSafeFakeRed(fin[0],fin[1],fin[2]));
+                            sawRepresentative|=GodStopControl.matchesFakeRedRepresentative(fin[0],fin[1],fin[2]);
+                            observed.add(new GodStopControl.MissStop(fin[0],fin[1],fin[2]));
+                        }
+                    }
                 }
             }
         }
+        assertTrue(sawRepresentative,"source representative RED7/RED7/miss form should occur when reachable");
+        assertTrue(observed.size()>1,"fake RED must not collapse to one fixed visible result");
     }
 
     @Test
@@ -187,7 +207,6 @@ class GodStopControlTest {
         expected.put("MIDDLE_YELLOW7",Set.of("MIDDLE:YELLOW7"));
         expected.put("COMMON_YELLOW7",Set.of("BOTTOM:YELLOW7"));
         expected.put("GAIA_BELL",Set.of());
-        expected.put("RED7_FAKE",Set.of());
         expected.put("RED7",Set.of("MIDDLE:RED7"));
         expected.put("GOD",Set.of("MIDDLE:GOD"));
         expected.put("SP",Set.of());
