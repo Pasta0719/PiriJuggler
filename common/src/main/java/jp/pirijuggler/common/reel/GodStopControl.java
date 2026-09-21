@@ -14,7 +14,9 @@ import java.util.Optional;
  */
 public final class GodStopControl {
     public enum Row {
-        TOP(-1), MIDDLE(0), BOTTOM(1);
+        // Published reel charts number positions upward; on-screen TOP is the next
+        // chart position and BOTTOM is the previous chart position.
+        TOP(1), MIDDLE(0), BOTTOM(-1);
         private final int offset;
         Row(int offset){this.offset=offset;}
         int offset(){return offset;}
@@ -60,14 +62,14 @@ public final class GodStopControl {
                     "published middle-line replay"));
             case "LOWER_YELLOW7" -> Optional.of(new Rule(
                     req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
+                    req(GodReelStrip.Symbol.RED7,Row.MIDDLE),
                     req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
-                    req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
-                    "published lower-line yellow 7 B (3 medals)"));
+                    "published 3-medal lower yellow: center reel RED7 on middle row"));
             case "COMMON_YELLOW7","ORDERED_YELLOW7" -> Optional.of(new Rule(
                     req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
+                    req(GodReelStrip.Symbol.BLUE7,Row.MIDDLE),
                     req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
-                    req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
-                    "published lower-line 15-medal yellow 7 representative form"));
+                    "published 15-medal lower yellow: center reel BLUE7 on middle row"));
             case "RISING_YELLOW7" -> Optional.of(new Rule(
                     req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
                     req(GodReelStrip.Symbol.YELLOW7,Row.MIDDLE),
