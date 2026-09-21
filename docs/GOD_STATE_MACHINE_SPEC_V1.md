@@ -235,3 +235,5 @@ Accepted during Phase 01 review:
 - Normal-role processing accepted: role occurrence and GG-hit processing are separate. After a role is drawn, evaluate GG hit from current front mode × role, then apply any role-history and mode-transition processing according to the locked tables. Role probabilities themselves are not to be distorted merely to emulate GG hit rates.
 
 - GG-hit announcement flow accepted: normal/history/mode-based GG hits are held internally and enter a source-backed precursor period rather than transitioning to GG immediately. GOD and RED7 are exceptions and enter PGG/SGG without normal precursor handling. Precursor-game distributions must follow published Kiseki data where available; they are not to be collapsed into immediate GG.
+
+- Precursor-state processing accepted: ordinary role drawing continues during precursor games; existing pending GG entitlement is preserved. GOD/RED7/SP and other stronger state effects may resolve during precursor without deleting the previously earned GG entitlement; premium handling may temporarily take precedence, but queued entitlement must remain durable.
