@@ -135,7 +135,7 @@ Reference sources warn that non-left-first play and navigation mistakes may caus
 - Client and server show the same navigation state.
 - Recovery must preserve the remaining required stop order.
 
-This replaces any earlier idea of approximating a missed ORDERED_YELLOW7 by a random 1-medal outcome.
+This applies to **wrong instructed input** only: a wrong button press is rejected and must never be converted into a synthetic 1-medal result. It does **not** replace the separately locked normal-play ORDERED_YELLOW7 miss-side calibration, where concealed navigation followed by valid left-first play may settle to 0 or 1 medal.
 
 - User accepted Piri input-order safety policy: normal left-first; navigation accepts only instructed reel; wrong input is rejected without stopping reel, redrawing/changing role or payout, or consuming forced-role tests.
 
