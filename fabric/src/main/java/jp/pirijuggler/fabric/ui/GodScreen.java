@@ -134,7 +134,9 @@ public final class GodScreen extends Screen {
             c.fill(x,top,x+reelW,top+reelH,0xfff4ead2);
             double phase=view.phase(reel);int middle=(int)Math.floor(phase);double frac=phase-middle;
             for(int row=-1;row<=1;row++){
-                int index=middle+row;
+                // Published reel charts increase upward, so the visible top row
+                // is +1 from the middle stop and the bottom row is -1.
+                int index=middle-row;
                 double y=top+reelH/2.0+(row-frac)*72-18;
                 drawSymbol(c,GodReelStrip.symbol(reel,index),x+reelW/2,(int)y);
             }
