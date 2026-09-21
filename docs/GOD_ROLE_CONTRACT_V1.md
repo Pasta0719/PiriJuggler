@@ -28,7 +28,7 @@ Primary sources:
 | MIDDLE_YELLOW7 | 1/963.8 | 15 medals | middle-row yellow line | left-first | rare yellow | REFERENCE_BACKED |
 | COMMON_YELLOW7 | 1/1524.1 | 15 medals | **lower-row yellow line with the center reel using the blue7-adjacent A pattern; published example has center BLUE7 on the middle row** | left-first unless state nav applies | common 15-medal lower-yellow A | REFERENCE_BACKED |
 | GAIA_BELL | 1/37.6 | 1 medal | yellow small-V | **right-first navigation is shown for this role** | Gaia-history role | REFERENCE_BACKED |
-| RED7_FAKE | 1/936.2 | replay | deterministic fake-RED presentation: at least one RED7 is visible, but it must not form RED7 straight and must not match SP/GOD or any paying yellow formation | left-first | replay / fake premium pattern | REFERENCE_BACKED odds+replay identity; PIRI_SPECIFIC presentation |
+| RED7_FAKE | 1/936.2 | replay | source example is a middle-row RED7/RED7/ハズレテンパイ外れ; public material also states the stop form changes when aiming near the DEKA-MILLION area. Piri therefore uses a variable fake-RED family: prefer the representative middle RED7/RED7 + right miss form when reachable within ordinary control; otherwise use a safe RED7-visible replay form that cannot equal RED7 straight, SP, GOD, a blue replay line, or any paying yellow formation | left-first | replay / fake-RED replay | REFERENCE_BACKED odds+replay identity+representative form+form variability; PIRI_SPECIFIC exact press-index selection/fallback |
 | RED7 | 1/6900 | 15 medals | RED7 straight | left-first; representative form only unless exact control is sourced | enters SGG | LOCKED_PIRI odds; REFERENCE_BACKED form/benefit |
 | GOD | reference 1/16384, Piri 1/8192 | 15 medals | GOD straight | left-first; representative form only unless exact control is sourced | PGG/GOD stage + locked Piri benefit | LOCKED_PIRI odds; REFERENCE_BACKED form/baseline benefit |
 | SP | 1/65536 | 15 medals | middle RED7 / RED7 / GOD | left-first; representative form only unless exact control is sourced | special GG/stock behavior by state | LOCKED_PIRI odds; REFERENCE_BACKED form/behavior |
@@ -101,7 +101,7 @@ This policy is mandatory for GOD Phase 02:
 2. Server stop control and Fabric rendering must use that same convention. They may not maintain separate +/- row arithmetic.
 3. A role describes a **visible formation constraint**, never a raw array offset.
 4. On each reel stop, search normal slip distance 0..4 and choose the nearest middle-stop index satisfying that role's visible-row constraint.
-5. If multiple candidates exist at the same nearest distance, choose deterministically by strip order; no RNG is allowed in presentation control.
+5. If multiple legal presentation candidates exist, a persisted per-spin presentation selector may choose among them so repeated identical timing does not collapse to one visible result. The selector may affect only presentation/stop choice; it may never redraw the internal role, alter payout/replay, navigation, or gameplay benefit. Recovery must reuse the same selector.
 6. A role may not change payout/replay because a representative visual target is inconvenient.
 7. A role may not silently display another paying role's formation.
 8. Ordinary non-premium role control keeps the normal 0..4 slip search unless a separate source-backed rule says otherwise. If no ordinary-role stop within 0..4 satisfies its locked visible formation, do not silently substitute an unrelated result.
@@ -143,7 +143,7 @@ This applies to **wrong instructed input** only: a wrong button press is rejecte
 
 - User accepted premium visible-result policy: GOD must visibly resolve as GOD straight, RED7 as RED7 straight, and SP as RED7/RED7/GOD. Press-position/slip behavior for forcing these forms is PIRI_SPECIFIC and must not be claimed as exact Kiseki control.
 
-- User accepted replay semantics/presentation: UPPER_BLUE7 and MIDDLE_BLUE7 are true replay outcomes; RED7_FAKE is also replay. Replay grants the next game without consuming a new bet, and RED7_FAKE must not visually match RED7 straight, SP, GOD, or a paying yellow formation.
+- Replay semantics/presentation: UPPER_BLUE7 and MIDDLE_BLUE7 are true replay outcomes; RED7_FAKE is also replay. Replay grants the next game without consuming a new bet. For RED7_FAKE, the current-machine source example is a middle-row RED7/RED7/ハズレテンパイ外れ and the source explicitly notes that aiming near DEKA-MILLION changes its stop form. Piri therefore must not collapse RED7_FAKE to one fixed BLUE7/RED7/GOD form; exact hidden press-index behavior remains unavailable and is implemented with the labelled variable safe-fallback policy above.
 
 - Premium-role draw model accepted: GOD, RED7, and SP are mutually exclusive role outcomes within a single game. The production draw must use one exclusive role-selection process rather than three independent boolean draws with a GOD > RED7 > SP tie-breaker. Therefore simultaneous premium hits must be structurally impossible, and the old precedence rule is rejected for the final implementation.
 
