@@ -229,3 +229,5 @@ Accepted during Phase 01 review:
 - Normal front-mode structure accepted: LOW_A / LOW_B / NORMAL / HEAVEN_PREP / HEAVEN / SUPER_HEAVEN plus separate 裏天国 axis; use source-backed structure, and treat unpublished fine-grained transition probabilities as Piri calibration values rather than authentic Kiseki data.
 
 - Ceiling/reset accepted: normal ceiling 1480G; reset ceiling distribution 510G 15.2%, 1000G 20.3%, 1480G 64.5%.
+
+- Ordinary GG yellow/bell streak V-stock mechanic rejected and remains disabled; yellow-related rewards remain in their separate Z-ZONE/Z-GAME and other source-backed routes.
