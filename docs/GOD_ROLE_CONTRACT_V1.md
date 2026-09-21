@@ -85,3 +85,37 @@ A forced-role test passes only when all of these agree in the same game:
 7. persisted recovery state
 
 This contract is the basis of GOD Phase 02 tests.
+
+
+## Piri v1 stop-control policy
+
+Classification: **PIRI_SPECIFIC**, because a complete Kiseki press-index control table is not publicly available in the sources currently locked.
+
+This policy is mandatory for GOD Phase 02:
+
+1. There must be exactly one shared function/convention that maps:
+   - reel index
+   - middle stop index
+   - visible row TOP/MIDDLE/BOTTOM
+   to the actual visible symbol.
+2. Server stop control and Fabric rendering must use that same convention. They may not maintain separate +/- row arithmetic.
+3. A role describes a **visible formation constraint**, never a raw array offset.
+4. On each reel stop, search normal slip distance 0..4 and choose the nearest middle-stop index satisfying that role's visible-row constraint.
+5. If multiple candidates exist at the same nearest distance, choose deterministically by strip order; no RNG is allowed in presentation control.
+6. A role may not change payout/replay because a representative visual target is inconvenient.
+7. A role may not silently display another paying role's formation.
+8. If no stop within 0..4 satisfies the locked visible formation, that role/strip specification is invalid and the build/test must fail. Do not fall back to an unrelated pressed position.
+9. Premium roles whose public form is only representative must be handled explicitly in the role contract. If a premium form cannot satisfy rule 8, Phase 01 must be reopened rather than inventing a long slip.
+10. Runtime tests compare the **three visible rows**, not just the middle stop index.
+
+### Required lower-yellow assertions
+
+For every legal press index 0..19 and for all three reels:
+
+- LOWER_YELLOW7 must resolve within 0..4 frames to a final three-row presentation satisfying the 3-medal B form.
+- COMMON_YELLOW7 must resolve within 0..4 frames to a final three-row presentation satisfying the 15-medal A form.
+- Those two final three-row presentations must not be identical.
+- payout must be 3 and 15 respectively.
+- renderer and server must report the same final visible symbols.
+
+This is a Piri control policy, not a claim that the hidden Kiseki control table is identical.
