@@ -8,13 +8,13 @@
       "number": 1,
       "file": "god-phases/GOD_PHASE_01_SPEC_LOCK.md",
       "title": "Specification Consolidation / Lock",
-      "status": "READY_FOR_REVIEW"
+      "status": "COMPLETE"
     },
     {
       "number": 2,
       "file": "god-phases/GOD_PHASE_02_ROLE_REEL_PAYOUT.md",
       "title": "Role / Reel / Payout Implementation",
-      "status": "BLOCKED_BY_PHASE_01"
+      "status": "READY"
     },
     {
       "number": 3,
