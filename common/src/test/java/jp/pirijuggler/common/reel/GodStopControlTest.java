@@ -197,6 +197,96 @@ class GodStopControlTest {
     }
 
     @Test
+    void everyDeclaredVisibleStopPatternIsActuallyReachable(){
+        var expectedFixed=new LinkedHashMap<String,Integer>();
+        expectedFixed.put("UPPER_BLUE7",2);
+        expectedFixed.put("MIDDLE_BLUE7",4);
+        expectedFixed.put("ORDERED_YELLOW7",2);
+        expectedFixed.put("LOWER_YELLOW7",2);
+        expectedFixed.put("RISING_YELLOW7",2);
+        expectedFixed.put("MIDDLE_YELLOW7",8);
+        expectedFixed.put("COMMON_YELLOW7",2);
+        expectedFixed.put("GAIA_BELL",4);
+        expectedFixed.put("RED7",1);
+        expectedFixed.put("GOD",1);
+        expectedFixed.put("SP",1);
+
+        for(var entry:expectedFixed.entrySet()){
+            String role=entry.getKey();
+            Set<String> seen=new LinkedHashSet<>();
+            for(int lp=0;lp<GodReelStrip.STOPS;lp++){
+                int l=GodStopControl.targetFor(role,0,lp);
+                for(int cp=0;cp<GodReelStrip.STOPS;cp++){
+                    int m=GodStopControl.targetFor(role,1,cp);
+                    for(int rp=0;rp<GodReelStrip.STOPS;rp++){
+                        int r=GodStopControl.targetFor(role,2,rp);
+                        assertTrue(GodStopControl.matchesPublishedForm(role,l,m,r),role);
+                        seen.add(visibleSignature(l,m,r));
+                    }
+                }
+            }
+            assertEquals(entry.getValue(),seen.size(),role+" reachable visible stop-pattern count");
+        }
+
+        Set<String> allSafeMissVisible=new LinkedHashSet<>();
+        for(var s:GodStopControl.missCandidates())
+            allSafeMissVisible.add(visibleSignature(s.left(),s.center(),s.right()));
+        assertEquals(339,allSafeMissVisible.size(),"declared MISS visible-pattern universe");
+
+        Set<String> reachedMiss=new LinkedHashSet<>();
+        Set<String> reachedFake=new LinkedHashSet<>();
+        for(long seed=1;seed<=4;seed++){
+            collectVariableRoleVisiblePatterns("MISS",seed,reachedMiss);
+            collectVariableRoleVisiblePatterns("RED7_FAKE",seed,reachedFake);
+        }
+
+        assertEquals(allSafeMissVisible,reachedMiss,
+                "every one of the 339 safe MISS visible patterns must actually be stoppable");
+        assertEquals(99,reachedFake.size(),
+                "every declared RED7_FAKE visible pattern must actually be stoppable");
+    }
+
+    private static void collectVariableRoleVisiblePatterns(String role,long seed,Set<String> out){
+        for(int lp=0;lp<GodReelStrip.STOPS;lp++){
+            int l=GodStopControl.targetFor(role,0,lp,0,0,0,0,seed);
+
+            for(int cp=0;cp<GodReelStrip.STOPS;cp++){
+                int m=GodStopControl.targetFor(role,1,cp,1,l,0,0,seed);
+                for(int rp=0;rp<GodReelStrip.STOPS;rp++){
+                    int r=GodStopControl.targetFor(role,2,rp,3,l,m,0,seed);
+                    if("MISS".equals(role))assertTrue(GodStopControl.isSafeMiss(l,m,r));
+                    else assertTrue(GodStopControl.isSafeFakeRed(l,m,r));
+                    out.add(visibleSignature(l,m,r));
+                }
+            }
+
+            for(int rp=0;rp<GodReelStrip.STOPS;rp++){
+                int r=GodStopControl.targetFor(role,2,rp,1,l,0,0,seed);
+                for(int cp=0;cp<GodReelStrip.STOPS;cp++){
+                    int m=GodStopControl.targetFor(role,1,cp,5,l,0,r,seed);
+                    if("MISS".equals(role))assertTrue(GodStopControl.isSafeMiss(l,m,r));
+                    else assertTrue(GodStopControl.isSafeFakeRed(l,m,r));
+                    out.add(visibleSignature(l,m,r));
+                }
+            }
+        }
+    }
+
+    private static String visibleSignature(int left,int center,int right){
+        StringBuilder b=new StringBuilder();
+        int[] stops={left,center,right};
+        GodReelStrip.VisibleRow[] rows={
+                GodReelStrip.VisibleRow.TOP,
+                GodReelStrip.VisibleRow.MIDDLE,
+                GodReelStrip.VisibleRow.BOTTOM
+        };
+        for(var row:rows)
+            for(int reel=0;reel<3;reel++)
+                b.append(GodReelStrip.visibleSymbol(reel,stops[reel],row).name()).append('|');
+        return b.toString();
+    }
+
+    @Test
     void everyFixedRoleHasOnlyItsIntendedWinningLookingStraightOrDiagonalLines(){
         var expected=new LinkedHashMap<String,Set<String>>();
         expected.put("UPPER_BLUE7",Set.of("TOP:BLUE7"));
