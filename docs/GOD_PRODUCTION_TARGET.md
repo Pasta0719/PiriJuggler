@@ -18,7 +18,7 @@ This does **not** mean the underlying probabilities are copied unchanged.
 Piri GOD keeps:
 - Kiseki-style gameplay structure as the baseline
 - GG 50G / about +7.0 medals per game as the current baseline
-- GOD as an exact independent 1/8192
+- GOD as an exact 1/8192 marginal probability inside the mutually-exclusive whole-game role draw
 - ordinary GG bell-streak V-stock excluded
 
 All remaining probabilities and distributions are fitting variables and must be solved so long-run simulation reproduces the target curve above.
