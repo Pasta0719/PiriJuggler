@@ -28,9 +28,13 @@ class GodRoleOutcomeTest {
         assertEquals(1,miss.payout());
         assertEquals("MISS",miss.displayRole());
 
-        var coincidentalHit=GodRoleOutcome.resolve(GodRole.ORDERED_YELLOW7,GodPhase.NORMAL,0.0);
-        assertEquals(15,coincidentalHit.payout());
-        assertEquals("COMMON_YELLOW7",coincidentalHit.displayRole());
+        var oneMedal=GodRoleOutcome.resolve(GodRole.ORDERED_YELLOW7,GodPhase.NORMAL,0.0);
+        assertEquals(1,oneMedal.payout());
+        assertEquals("MISS",oneMedal.displayRole());
+
+        var zeroMedal=GodRoleOutcome.resolve(GodRole.ORDERED_YELLOW7,GodPhase.NORMAL,0.999999);
+        assertEquals(0,zeroMedal.payout());
+        assertEquals("MISS",zeroMedal.displayRole());
 
         var navigated=GodRoleOutcome.resolve(GodRole.ORDERED_YELLOW7,GodPhase.GG,0.999);
         assertEquals(15,navigated.payout());
@@ -38,36 +42,21 @@ class GodRoleOutcomeTest {
     }
 
     @Test
-    void normalSettlementCalibrationMatchesPublishedBase(){
-        GodRole[] ordinary={
-                GodRole.MISS,GodRole.UPPER_BLUE7,GodRole.MIDDLE_BLUE7,GodRole.ORDERED_YELLOW7,
-                GodRole.LOWER_YELLOW7,GodRole.RISING_YELLOW7,GodRole.MIDDLE_YELLOW7,
-                GodRole.COMMON_YELLOW7,GodRole.GAIA_BELL,GodRole.RED7_FAKE
-        };
-        double sum=0;
-        for(GodRole r:ordinary)sum+=GodKisekiRoleTable.referenceProbability(r);
+    void normalOrderedYellowCalibrationIsExplicitlyMissSideOnly(){
+        assertTrue(GodRoleOutcome.NORMAL_ORDERED_ONE_MEDAL_RATE>0.0);
+        assertTrue(GodRoleOutcome.NORMAL_ORDERED_ONE_MEDAL_RATE<1.0);
 
-        double ordinaryGross=0;
-        for(GodRole r:ordinary){
-            double value;
-            if(r==GodRole.ORDERED_YELLOW7){
-                double q=GodRoleOutcome.NORMAL_ORDERED_15_SUCCESS_RATE;
-                value=(1.0-q)+15.0*q;
-            }else{
-                var o=normal(r);
-                value=o.replay()?3.0:o.payout();
-            }
-            ordinaryGross+=GodKisekiRoleTable.referenceProbability(r)/sum*value;
-        }
+        var below=GodRoleOutcome.resolve(
+                GodRole.ORDERED_YELLOW7,GodPhase.NORMAL,
+                Math.nextDown(GodRoleOutcome.NORMAL_ORDERED_ONE_MEDAL_RATE));
+        var above=GodRoleOutcome.resolve(
+                GodRole.ORDERED_YELLOW7,GodPhase.NORMAL,
+                Math.min(0.999999999999,GodRoleOutcome.NORMAL_ORDERED_ONE_MEDAL_RATE+1.0e-9));
 
-        double pGod=1.0/GodProductionSpec.GOD_DENOMINATOR;
-        double pRed=(1-pGod)/GodProductionSpec.RED7_DENOMINATOR;
-        double pSp=(1-pGod)*(1.0-1.0/GodProductionSpec.RED7_DENOMINATOR)/GodProductionSpec.SP_DENOMINATOR;
-        double pOrdinary=(1-pGod)*(1.0-1.0/GodProductionSpec.RED7_DENOMINATOR)*(1.0-1.0/GodProductionSpec.SP_DENOMINATOR);
-        double gross=pOrdinary*ordinaryGross+15.0*(pGod+pRed+pSp);
-        double gamesPer50=50.0/(3.0-gross);
-
-        assertEquals(30.8,gamesPer50,0.2);
+        assertEquals("MISS",below.displayRole());
+        assertEquals("MISS",above.displayRole());
+        assertEquals(1,below.payout());
+        assertEquals(0,above.payout());
     }
 
     private static GodRoleOutcome.Outcome normal(GodRole role){
