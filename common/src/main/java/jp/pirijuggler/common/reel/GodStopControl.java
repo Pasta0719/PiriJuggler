@@ -44,6 +44,7 @@ public final class GodStopControl {
     };
     private static final List<MissStop> MISS_CANDIDATES=buildMissCandidates();
     private static final Map<Integer,Boolean> MISS_VIABILITY=new HashMap<>();
+    private static final Map<Integer,Boolean> FAKE_RED_VIABILITY=new HashMap<>();
 
     private static Requirement req(GodReelStrip.Symbol symbol,GodReelStrip.VisibleRow row){
         return new Requirement(symbol,row);
@@ -92,11 +93,7 @@ public final class GodStopControl {
                     req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.MIDDLE),
                     req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.TOP),
                     "published small-V yellow 7: left/top, center/middle, right/top"));
-            case "RED7_FAKE" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
-                    req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
-                    req(GodReelStrip.Symbol.GOD,GodReelStrip.VisibleRow.MIDDLE),
-                    "Piri deterministic fake-RED replay form; contains RED7 but does not form RED7 straight/SP/GOD/yellow"));
+            case "RED7_FAKE" -> Optional.empty();
             case "SP" -> Optional.of(new Rule(
                     req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
                     req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
@@ -122,8 +119,8 @@ public final class GodStopControl {
      * the reels already stopped in the current game.
      */
     public static int targetFor(String role,int reel,int pressed){
-        if(role!=null&&"MISS".equalsIgnoreCase(role))
-            throw new IllegalArgumentException("MISS requires contextual stop state");
+        if(role!=null&&("MISS".equalsIgnoreCase(role)||"RED7_FAKE".equalsIgnoreCase(role)))
+            throw new IllegalArgumentException(role+" requires contextual stop state");
         if(pressed<0||pressed>=GodReelStrip.STOPS)throw new IllegalArgumentException("pressed");
         var rule=publishedRule(role);
         if(rule.isEmpty()){
@@ -148,7 +145,8 @@ public final class GodStopControl {
      * plays onto one deterministic window. The selector never changes role/payout.
      */
     public static int targetFor(String role,int reel,int pressed,int stoppedMask,int left,int center,int right,long selector){
-        if(role==null||!"MISS".equalsIgnoreCase(role))return targetFor(role,reel,pressed);
+        if(role==null||(!"MISS".equalsIgnoreCase(role)&&!"RED7_FAKE".equalsIgnoreCase(role)))
+            return targetFor(role,reel,pressed);
         if(reel<0||reel>2)throw new IllegalArgumentException("reel");
         if(pressed<0||pressed>=GodReelStrip.STOPS)throw new IllegalArgumentException("pressed");
         if((stoppedMask&(1<<reel))!=0)throw new IllegalArgumentException("reel already stopped");
@@ -159,10 +157,21 @@ public final class GodStopControl {
             int target=Math.floorMod(pressed-slip,GodReelStrip.STOPS);
             stops[reel]=target;
             int nextMask=stoppedMask|(1<<reel);
-            if(canAlwaysCompleteMiss(nextMask,stops[0],stops[1],stops[2]))legal.add(target);
+            boolean viable="MISS".equalsIgnoreCase(role)
+                    ? canAlwaysCompleteMiss(nextMask,stops[0],stops[1],stops[2])
+                    : canAlwaysCompleteFakeRed(nextMask,stops[0],stops[1],stops[2]);
+            if(viable)legal.add(target);
         }
         if(legal.isEmpty())
-            throw new IllegalStateException("No safe MISS stop target reel="+reel+" pressed="+pressed+" mask="+stoppedMask);
+            throw new IllegalStateException("No safe "+role+" stop target reel="+reel+" pressed="+pressed+" mask="+stoppedMask);
+
+        if("RED7_FAKE".equalsIgnoreCase(role)&&(reel==0||reel==1)){
+            var redMiddle=new ArrayList<Integer>();
+            for(int target:legal)
+                if(GodReelStrip.visibleSymbol(reel,target,GodReelStrip.VisibleRow.MIDDLE)==GodReelStrip.Symbol.RED7)
+                    redMiddle.add(target);
+            if(!redMiddle.isEmpty())legal=redMiddle;
+        }
 
         long mixed=selector;
         mixed^=(long)(reel+1)*0x9E3779B97F4A7C15L;
@@ -229,6 +238,76 @@ public final class GodStopControl {
             if(a==b&&b==c&&(a==GodReelStrip.Symbol.GOD||a==GodReelStrip.Symbol.RED7||
                     a==GodReelStrip.Symbol.BLUE7||a==GodReelStrip.Symbol.YELLOW7))
                 return false;
+        }
+        return true;
+    }
+
+    /** Current-machine representative fake-RED form: middle RED7 / RED7 / miss. */
+    public static boolean matchesFakeRedRepresentative(int left,int center,int right){
+        return GodReelStrip.visibleSymbol(0,left,GodReelStrip.VisibleRow.MIDDLE)==GodReelStrip.Symbol.RED7
+                &&GodReelStrip.visibleSymbol(1,center,GodReelStrip.VisibleRow.MIDDLE)==GodReelStrip.Symbol.RED7
+                &&GodReelStrip.visibleSymbol(2,right,GodReelStrip.VisibleRow.MIDDLE)!=GodReelStrip.Symbol.RED7
+                &&GodReelStrip.visibleSymbol(2,right,GodReelStrip.VisibleRow.MIDDLE)!=GodReelStrip.Symbol.GOD
+                &&isSafeFakeRed(left,center,right);
+    }
+
+    /** Safe variable fake-RED replay fallback used where the representative form is unreachable in 0..4 frames. */
+    public static boolean isSafeFakeRed(int left,int center,int right){
+        if(left<0||left>=GodReelStrip.STOPS||center<0||center>=GodReelStrip.STOPS||right<0||right>=GodReelStrip.STOPS)
+            throw new IllegalArgumentException("stop");
+        int[] stops={left,center,right};
+
+        for(String role:NON_MISS_FORMS){
+            if("RED7_FAKE".equals(role))continue;
+            if(matchesPublishedForm(role,left,center,right))return false;
+        }
+
+        boolean redVisible=false;
+        for(int reel=0;reel<3;reel++)
+            for(GodReelStrip.VisibleRow row:GodReelStrip.VisibleRow.values())
+                if(GodReelStrip.visibleSymbol(reel,stops[reel],row)==GodReelStrip.Symbol.RED7)redVisible=true;
+        if(!redVisible)return false;
+
+        for(var line:PAYLINES){
+            var a=GodReelStrip.visibleSymbol(0,stops[0],line[0]);
+            var b=GodReelStrip.visibleSymbol(1,stops[1],line[1]);
+            var d=GodReelStrip.visibleSymbol(2,stops[2],line[2]);
+            if(a==b&&b==d&&(a==GodReelStrip.Symbol.GOD||a==GodReelStrip.Symbol.RED7||
+                    a==GodReelStrip.Symbol.BLUE7||a==GodReelStrip.Symbol.YELLOW7))
+                return false;
+        }
+        return true;
+    }
+
+    private static boolean canAlwaysCompleteFakeRed(int mask,int left,int center,int right){
+        int key=missStateKey(mask,left,center,right);
+        synchronized(FAKE_RED_VIABILITY){
+            Boolean cached=FAKE_RED_VIABILITY.get(key);
+            if(cached!=null)return cached;
+            boolean result=computeCanAlwaysCompleteFakeRed(mask,left,center,right);
+            FAKE_RED_VIABILITY.put(key,result);
+            return result;
+        }
+    }
+
+    private static boolean computeCanAlwaysCompleteFakeRed(int mask,int left,int center,int right){
+        if(mask==7)return isSafeFakeRed(left,center,right);
+        int[] base={left,center,right};
+        for(int reel=0;reel<3;reel++){
+            int bit=1<<reel;
+            if((mask&bit)!=0)continue;
+            for(int press=0;press<GodReelStrip.STOPS;press++){
+                boolean found=false;
+                for(int slip=0;slip<=4;slip++){
+                    int[] next=base.clone();
+                    next[reel]=Math.floorMod(press-slip,GodReelStrip.STOPS);
+                    if(canAlwaysCompleteFakeRed(mask|bit,next[0],next[1],next[2])){
+                        found=true;
+                        break;
+                    }
+                }
+                if(!found)return false;
+            }
         }
         return true;
     }
