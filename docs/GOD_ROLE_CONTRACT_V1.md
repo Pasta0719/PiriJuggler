@@ -140,3 +140,5 @@ This replaces any earlier idea of approximating a missed ORDERED_YELLOW7 by a ra
 - User accepted Piri input-order safety policy: normal left-first; navigation accepts only instructed reel; wrong input is rejected without stopping reel, redrawing/changing role or payout, or consuming forced-role tests.
 
 - User accepted the yellow-role visual/payout consistency rule: 3-medal and 15-medal yellow outcomes must have distinct source-backed visible formations; server stop control and Fabric rendering must share one visible-row convention; no silent fallback to a visually incorrect result is permitted.
+
+- User accepted premium visible-result policy: GOD must visibly resolve as GOD straight, RED7 as RED7 straight, and SP as RED7/RED7/GOD. Press-position/slip behavior for forcing these forms is PIRI_SPECIFIC and must not be claimed as exact Kiseki control.
