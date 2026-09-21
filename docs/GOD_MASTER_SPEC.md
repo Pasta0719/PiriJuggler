@@ -92,7 +92,7 @@ The semantic role contract is complete for Phase 02. Exact hidden real-machine p
 |---|---|---|---|---|
 | UPPER_BLUE7 | replay / 0 medal payout | upper blue-7 line | left-first | REFERENCE_BACKED |
 | MIDDLE_BLUE7 | replay / 0 | middle blue-7 line | left-first | REFERENCE_BACKED |
-| RED7_FAKE | replay / 0 | deterministic fake-RED form that cannot equal RED7 straight, SP, GOD, or a paying yellow result | left-first | REFERENCE_BACKED semantics / PIRI_SPECIFIC presentation |
+| RED7_FAKE | replay / 0 | current-machine source example: middle RED7 / RED7 / miss; source explicitly says the form changes when aiming near DEKA-MILLION. Piri uses that representative form when physically reachable, otherwise a RED7-visible safe replay fallback that cannot equal RED7 straight, SP, GOD, a blue replay line, or a paying yellow result | left-first | REFERENCE_BACKED semantics+representative form+variability / PIRI_SPECIFIC exact control |
 | LOWER_YELLOW7 | 3 medals | lower-row yellow B; center reel uses the yellow directly below RED7, published example center-middle RED7 | left-first | REFERENCE_BACKED |
 | ORDERED_YELLOW7 | 15 medals when correctly navigated in AT; normal-play miss-side settlement uses the locked 0/1-medal calibration path | lower-yellow A / navigated yellow result | state navigation; normal play hides ordinary winning order | REFERENCE_BACKED role concept / PIRI_SPECIFIC normal miss-side calibration |
 | RISING_YELLOW7 | 15 medals | rising/right-up yellow line | left-first | REFERENCE_BACKED |
@@ -137,6 +137,7 @@ See `docs/GOD_ROLE_CONTRACT_V1.md`.
 
 - complete press-index-specific control table for all roles.
 - exact slip/control behavior for every press position.
+- exact RED7_FAKE alternate stop mapping for each aim point (public material confirms variation near DEKA-MILLION but does not publish the complete table).
 - whether every representative premium form is reachable from every press index under the real machine's control.
 
 These unknown reference-machine details must not be filled by claiming authenticity. Phase 02 will use the already accepted labelled PIRI_SPECIFIC deterministic control policy: ordinary roles use the locked normal slip policy, while GOD/RED7/SP may exceed 4 frames by the minimum deterministic amount required to guarantee their locked visible forms.
