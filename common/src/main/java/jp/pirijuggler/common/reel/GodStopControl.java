@@ -139,19 +139,42 @@ public final class GodStopControl {
      * safe completion regardless of the later legal stop order/press positions.
      */
     public static int targetFor(String role,int reel,int pressed,int stoppedMask,int left,int center,int right){
+        return targetFor(role,reel,pressed,stoppedMask,left,center,right,0L);
+    }
+
+    /**
+     * Selector-aware MISS control. A per-spin selector lets identical button timing
+     * resolve to different safe <=4-frame MISS targets instead of collapsing repeated
+     * plays onto one deterministic window. The selector never changes role/payout.
+     */
+    public static int targetFor(String role,int reel,int pressed,int stoppedMask,int left,int center,int right,long selector){
         if(role==null||!"MISS".equalsIgnoreCase(role))return targetFor(role,reel,pressed);
         if(reel<0||reel>2)throw new IllegalArgumentException("reel");
         if(pressed<0||pressed>=GodReelStrip.STOPS)throw new IllegalArgumentException("pressed");
         if((stoppedMask&(1<<reel))!=0)throw new IllegalArgumentException("reel already stopped");
 
         int[] stops={Math.floorMod(left,GodReelStrip.STOPS),Math.floorMod(center,GodReelStrip.STOPS),Math.floorMod(right,GodReelStrip.STOPS)};
+        var legal=new ArrayList<Integer>(5);
         for(int slip=0;slip<=4;slip++){
             int target=Math.floorMod(pressed-slip,GodReelStrip.STOPS);
             stops[reel]=target;
             int nextMask=stoppedMask|(1<<reel);
-            if(canAlwaysCompleteMiss(nextMask,stops[0],stops[1],stops[2]))return target;
+            if(canAlwaysCompleteMiss(nextMask,stops[0],stops[1],stops[2]))legal.add(target);
         }
-        throw new IllegalStateException("No safe MISS stop target reel="+reel+" pressed="+pressed+" mask="+stoppedMask);
+        if(legal.isEmpty())
+            throw new IllegalStateException("No safe MISS stop target reel="+reel+" pressed="+pressed+" mask="+stoppedMask);
+
+        long mixed=selector;
+        mixed^=(long)(reel+1)*0x9E3779B97F4A7C15L;
+        mixed^=(long)(pressed+1)*0xBF58476D1CE4E5B9L;
+        mixed^=(long)(stoppedMask+1)*0x94D049BB133111EBL;
+        mixed^=(long)(Math.floorMod(left,GodReelStrip.STOPS)+1)<<7;
+        mixed^=(long)(Math.floorMod(center,GodReelStrip.STOPS)+1)<<17;
+        mixed^=(long)(Math.floorMod(right,GodReelStrip.STOPS)+1)<<27;
+        mixed^=mixed>>>30;mixed*=0xBF58476D1CE4E5B9L;
+        mixed^=mixed>>>27;mixed*=0x94D049BB133111EBL;
+        mixed^=mixed>>>31;
+        return legal.get(Math.floorMod((int)(mixed^(mixed>>>32)),legal.size()));
     }
 
     private static int targetForRequirement(String role,int reel,int pressed,Requirement requirement){
