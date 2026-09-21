@@ -42,64 +42,64 @@ public final class GodStopControl {
         if(role==null)return Optional.empty();
         return switch(role.toUpperCase(Locale.ROOT)){
             case "UPPER_BLUE7" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.BLUE7,Row.TOP),
-                    req(GodReelStrip.Symbol.BLUE7,Row.TOP),
-                    req(GodReelStrip.Symbol.BLUE7,Row.TOP),
+                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.TOP),
+                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.TOP),
+                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.TOP),
                     "published upper-line replay"));
             case "MIDDLE_BLUE7" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.BLUE7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.BLUE7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.BLUE7,Row.MIDDLE),
+                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
                     "published middle-line replay"));
             case "LOWER_YELLOW7" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
-                    req(GodReelStrip.Symbol.RED7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.BOTTOM),
+                    req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.BOTTOM),
                     "published 3-medal lower yellow: center reel RED7 on middle row"));
             case "COMMON_YELLOW7","ORDERED_YELLOW7" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
-                    req(GodReelStrip.Symbol.BLUE7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.BOTTOM),
+                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.BOTTOM),
                     "published 15-medal lower yellow: center reel BLUE7 on middle row"));
             case "RISING_YELLOW7" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
-                    req(GodReelStrip.Symbol.YELLOW7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.YELLOW7,Row.TOP),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.BOTTOM),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.TOP),
                     "published rising yellow 7"));
             case "MIDDLE_YELLOW7" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.YELLOW7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.YELLOW7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.YELLOW7,Row.MIDDLE),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.MIDDLE),
                     "published middle-line yellow 7"));
             case "GAIA_BELL" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.YELLOW7,Row.TOP),
-                    req(GodReelStrip.Symbol.YELLOW7,Row.BOTTOM),
-                    req(GodReelStrip.Symbol.YELLOW7,Row.TOP),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.TOP),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.BOTTOM),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.TOP),
                     "published small-V yellow 7"));
             case "RED7_FAKE" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.RED7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.BLUE7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.BLUE7,Row.MIDDLE),
-                    "Piri deterministic fake-RED replay form; intentionally not RED7 straight/SP/GOD/yellow"));
+                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
+                    "Piri deterministic fake-RED replay form; center RED7 is always reachable within ordinary slip and cannot form RED7 straight/SP/GOD/yellow"));
             case "MISS" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.BLUE7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.GOD,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.BLUE7,Row.MIDDLE),
+                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.GOD,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
                     "Piri deterministic non-winning form"));
             case "SP" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.RED7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.RED7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.GOD,Row.MIDDLE),
+                    req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.GOD,GodReelStrip.VisibleRow.MIDDLE),
                     "published middle RED7/RED7/GOD"));
             case "RED7" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.RED7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.RED7,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.RED7,Row.MIDDLE),
+                    req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
                     "published red-7 straight"));
             case "GOD" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.GOD,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.GOD,Row.MIDDLE),
-                    req(GodReelStrip.Symbol.GOD,Row.MIDDLE),
+                    req(GodReelStrip.Symbol.GOD,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.GOD,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.GOD,GodReelStrip.VisibleRow.MIDDLE),
                     "published GOD straight"));
             default -> Optional.empty();
         };
