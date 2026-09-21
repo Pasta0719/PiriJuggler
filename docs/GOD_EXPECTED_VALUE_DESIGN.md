@@ -3,7 +3,7 @@
 Gameplay/UI implementation is intentionally blocked until the long-run economics are defined.
 
 ## Fixed design decisions
-- GOD flag is an independent per-game draw at exactly 1/8192.
+- GOD has an exact per-game marginal probability of 1/8192 inside the mutually-exclusive whole-game role draw.
 - The machine should use a high-pure-increase GG as its base rather than copying Gaisen verbatim.
 - Ordinary GG bell-streak V-stock is not used.
 - Presentation, lamps, sounds and reel effects are downstream of the economics.
