@@ -243,3 +243,5 @@ Accepted during Phase 01 review:
 - Role-history draw policy accepted: use published yellow-history hit rates as-is; use published blue-history hit rates where available; Gaia bell acts as the published white-7 substitute for both histories. If settings 3–6 blue-history rates remain unpublished, treat only those missing values as PIRI_SPECIFIC economy-tuning parameters. Published white-7 history special behavior, including loop-D reward on qualifying history-hit conditions, is retained.
 
 - Mode-transition policy accepted: use published front/normal-mode transition rates as source-backed values where available. Any genuinely unpublished transition cells are PIRI_SPECIFIC tuning parameters only, and Phase 04 must not flatten or freeze mode movement merely to force target payout; fun-preservation guardrails remain binding.
+
+- Gaia-stage GG processing accepted: while in Gaia stage, use the published Gaia-specific role-by-role GG hit table instead of layering the ordinary front-mode GG draw on top. Use the published Gaia-specific history draw table as well. These source-backed Gaia tables are not to be replaced by the old flat Piri probability.
