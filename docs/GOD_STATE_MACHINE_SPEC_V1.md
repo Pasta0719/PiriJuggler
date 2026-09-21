@@ -221,3 +221,5 @@ Accepted during Phase 01 review:
 - GG basic performance: 50G/set, about +7 medals/G.
 - G-ZONE: max 5G after GG; continue if stock exists, otherwise return to normal.
 - RED7 / SGG flow: RED7 1/6900 -> SGG; SGG set 10–100G with 75%+ continuation concept; 3G comeback section between sets; after SGG fully ends, return to GG.
+
+- SP role behavior accepted: use the source-backed state-specific behavior (normal/GG 50% GG stock + D loop; Gaia stage GG 100%; SGG prep/SGG continuation stock 3; SGG comeback normal-set continuation 100% with 50G/100G 1:1; 5th-multiple comeback 100G).
