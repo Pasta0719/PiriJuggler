@@ -249,6 +249,8 @@ class GodGameEngineTest {
             int r=(int)t.after().number("display_right_stop");
             if("MISS".equals(e.display()))
                 assertTrue(jp.pirijuggler.common.reel.GodStopControl.isSafeMiss(l,m,r),e.role());
+            else if("RED7_FAKE".equals(e.display()))
+                assertTrue(jp.pirijuggler.common.reel.GodStopControl.isSafeFakeRed(l,m,r),e.role());
             else
                 assertTrue(jp.pirijuggler.common.reel.GodStopControl.matchesPublishedForm(e.display(),l,m,r),e.role());
         }
