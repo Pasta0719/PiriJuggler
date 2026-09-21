@@ -225,3 +225,5 @@ Accepted during Phase 01 review:
 - SP role behavior accepted: use the source-backed state-specific behavior (normal/GG 50% GG stock + D loop; Gaia stage GG 100%; SGG prep/SGG continuation stock 3; SGG comeback normal-set continuation 100% with 50G/100G 1:1; 5th-multiple comeback 100G).
 
 - Z-ZONE / Z-GAME behavior accepted: 5G+alpha base; yellow about 1/1.4; yellow holds countdown; five yellow results succeeds into GG stock + Z-GAME; rising/middle yellow direct-success behavior retained; zero-yellow failure has 50% loop-D; Z-GAME adds one GG stock per yellow and ends on miss/blue into GG.
+
+- Normal front-mode structure accepted: LOW_A / LOW_B / NORMAL / HEAVEN_PREP / HEAVEN / SUPER_HEAVEN plus separate 裏天国 axis; use source-backed structure, and treat unpublished fine-grained transition probabilities as Piri calibration values rather than authentic Kiseki data.
