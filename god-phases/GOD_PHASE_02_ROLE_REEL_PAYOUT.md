@@ -1,10 +1,10 @@
 # GOD PHASE 02 — Role / Reel / Payout Implementation
 
-Status: **BLOCKED_BY_PHASE_01**
+Status: **IN_PROGRESS**
 
 Implement only the locked role contract from `docs/GOD_MASTER_SPEC.md`.
 
-Scope after unblocking:
+Scope:
 - internal role -> payout/replay
 - internal role -> visible formation
 - navigation/order enforcement
