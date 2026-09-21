@@ -102,7 +102,7 @@ The semantic role contract is complete for Phase 02. Exact hidden real-machine p
 | RED7 | 15 medals | RED7 straight | left-first | REFERENCE_BACKED visible form/benefit; Piri may exceed ordinary 4-frame slip to guarantee form |
 | GOD | 15 medals | GOD straight | left-first | LOCKED_PIRI odds / REFERENCE_BACKED visible form; Piri may exceed ordinary 4-frame slip |
 | SP | 15 medals | RED7 / RED7 / GOD | left-first | REFERENCE_BACKED visible form/behavior; Piri may exceed ordinary 4-frame slip |
-| MISS | 0 | deterministic non-winning form that matches no locked winning/replay/premium result | left-first | PIRI_SPECIFIC presentation |
+| MISS | 0 | any safe physical stop window that matches no locked winning/replay/premium result and forms no straight/diagonal GOD/RED7/BLUE7/YELLOW7 line; ordinary 0..4-frame slip only | left-first | PIRI_SPECIFIC presentation control |
 
 ### Resolved specification: 3-medal vs 15-medal lower yellow
 
