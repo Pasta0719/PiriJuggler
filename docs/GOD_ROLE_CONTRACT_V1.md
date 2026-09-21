@@ -166,3 +166,14 @@ This replaces any earlier idea of approximating a missed ORDERED_YELLOW7 by a ra
 - GOD's Piri override is an exact 1/8192 marginal probability, not a separate boolean roll layered on top of another role.
 - RED7 and SP likewise cannot coexist with another role in the same game.
 - Rounded public denominators that do not sum exactly to 100% are reconciled only by an explicit PIRI_SPECIFIC residual-allocation method; role probabilities may not be silently renormalized in a way that changes the locked premium marginals.
+
+
+## Production categorical MISS cell
+
+Because the published rounded denominators exceed 100% when every row, including MISS 1/5.2, is treated as an exact mutually-exclusive category, production does **not** use 1/5.2 as an exact categorical MISS probability.
+
+Piri preserves the locked/non-MISS marginals and assigns MISS the residual:
+- production MISS probability ≈ 0.1866666891
+- effective denominator ≈ 1/5.3571422
+
+This is PIRI_SPECIFIC residual allocation and is not claimed as the hidden Kiseki MISS value.
