@@ -144,3 +144,5 @@ This replaces any earlier idea of approximating a missed ORDERED_YELLOW7 by a ra
 - User accepted premium visible-result policy: GOD must visibly resolve as GOD straight, RED7 as RED7 straight, and SP as RED7/RED7/GOD. Press-position/slip behavior for forcing these forms is PIRI_SPECIFIC and must not be claimed as exact Kiseki control.
 
 - User accepted replay semantics/presentation: UPPER_BLUE7 and MIDDLE_BLUE7 are true replay outcomes; RED7_FAKE is also replay. Replay grants the next game without consuming a new bet, and RED7_FAKE must not visually match RED7 straight, SP, GOD, or a paying yellow formation.
+
+- Premium-role draw model accepted: GOD, RED7, and SP are mutually exclusive role outcomes within a single game. The production draw must use one exclusive role-selection process rather than three independent boolean draws with a GOD > RED7 > SP tie-breaker. Therefore simultaneous premium hits must be structurally impossible, and the old precedence rule is rejected for the final implementation.
