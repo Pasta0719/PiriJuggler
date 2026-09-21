@@ -5,14 +5,16 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GodStopControlTest {
+    private static final String[] LOCKED_FORMS={
+            "MISS","UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
+            "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL",
+            "RED7_FAKE","RED7","GOD","SP"
+    };
+
     @Test
-    void publishedRolesAlwaysLandOnTheirPublishedRepresentativeForm(){
-        String[] roles={
-                "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
-                "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7",
-                "GAIA_BELL","GOD"
-        };
-        for(String role:roles){
+    void everyLockedRoleAlwaysResolvesToItsLockedVisibleForm(){
+        for(String role:LOCKED_FORMS){
+            assertTrue(GodStopControl.publishedRule(role).isPresent(),role);
             for(int leftPress=0;leftPress<GodReelStrip.STOPS;leftPress++){
                 int left=GodStopControl.targetFor(role,0,leftPress);
                 for(int centerPress=0;centerPress<GodReelStrip.STOPS;centerPress++){
@@ -30,28 +32,42 @@ class GodStopControlTest {
     }
 
     @Test
-    void ordinaryPublishedFormsNeedAtMostFourFrameSlip(){
+    void ordinaryLockedFormsStayInsideFourFrameSlip(){
         String[] roles={
-                "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
-                "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL","GOD"
+                "MISS","UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
+                "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL","RED7_FAKE"
         };
         for(String role:roles){
-            for(int reel=0;reel<3;reel++){
-                for(int press=0;press<GodReelStrip.STOPS;press++){
-                    int target=GodStopControl.targetFor(role,reel,press);
-                    assertTrue(GodReelStrip.slip(press,target)<=4,
-                            role+" reel="+reel+" press="+press);
-                }
+            assertFalse(GodStopControl.isPremiumLongSlipRole(role));
+            for(int reel=0;reel<3;reel++)for(int press=0;press<GodReelStrip.STOPS;press++){
+                int target=GodStopControl.targetFor(role,reel,press);
+                assertTrue(GodReelStrip.slip(press,target)<=4,
+                        role+" reel="+reel+" press="+press);
             }
         }
     }
 
     @Test
-    void lowerYellowThreeAndFifteenMedalFormsAreVisuallyDistinct(){
-        assertTrue(GodStopControl.publishedRule("ORDERED_YELLOW7").isPresent());
-        assertTrue(GodStopControl.publishedRule("LOWER_YELLOW7").isPresent());
-        assertTrue(GodStopControl.publishedRule("COMMON_YELLOW7").isPresent());
+    void premiumRolesAlwaysShowTheirFormAndMayUseLongSlip(){
+        for(String role:new String[]{"GOD","RED7","SP"}){
+            assertTrue(GodStopControl.isPremiumLongSlipRole(role));
+            boolean sawLongSlip=false;
+            for(int reel=0;reel<3;reel++)for(int press=0;press<GodReelStrip.STOPS;press++){
+                int target=GodStopControl.targetFor(role,reel,press);
+                int slip=GodReelStrip.slip(press,target);
+                if(slip>4)sawLongSlip=true;
 
+                var requirement=GodStopControl.publishedRule(role).orElseThrow().requirement(reel);
+                int symbolIndex=Math.floorMod(target+requirement.row().offset(),GodReelStrip.STOPS);
+                assertEquals(requirement.symbol(),GodReelStrip.symbol(reel,symbolIndex),
+                        role+" reel="+reel+" press="+press+" slip="+slip);
+            }
+            assertTrue(sawLongSlip,role+" should exercise the accepted >4-frame premium exception");
+        }
+    }
+
+    @Test
+    void lowerYellowThreeAndFifteenMedalFormsAreVisuallyDistinct(){
         for(int press=0;press<GodReelStrip.STOPS;press++){
             int lowerLeft=GodStopControl.targetFor("LOWER_YELLOW7",0,press);
             int lowerCenter=GodStopControl.targetFor("LOWER_YELLOW7",1,press);
@@ -66,54 +82,23 @@ class GodStopControlTest {
             assertEquals(GodReelStrip.Symbol.YELLOW7,GodReelStrip.symbol(0,commonLeft-1));
             assertEquals(GodReelStrip.Symbol.BLUE7,GodReelStrip.symbol(1,commonCenter));
             assertEquals(GodReelStrip.Symbol.YELLOW7,GodReelStrip.symbol(2,commonRight-1));
+
+            assertNotEquals(lowerCenter,commonCenter,
+                    "3-medal and 15-medal yellow must not collapse to the same center stop");
         }
     }
 
     @Test
-    void genuinelyUnpublishedExactFormsRemainFallbacks(){
-        assertTrue(GodStopControl.publishedRule("RED7_FAKE").isEmpty());
-        assertTrue(GodStopControl.publishedRule("MISS").isEmpty());
-
-        for(String role:new String[]{"RED7_FAKE","MISS"}){
-            for(int reel=0;reel<3;reel++){
-                for(int press=0;press<GodReelStrip.STOPS;press++){
-                    int target=GodStopControl.targetFor(role,reel,press);
-                    assertTrue(target>=0&&target<GodReelStrip.STOPS);
-                }
-            }
+    void missAndRed7FakeCannotMasqueradeAsPremiumOrPayingYellow(){
+        for(String role:new String[]{"MISS","RED7_FAKE"}){
+            int l=GodStopControl.targetFor(role,0,0);
+            int c=GodStopControl.targetFor(role,1,0);
+            int r=GodStopControl.targetFor(role,2,0);
+            assertFalse(GodStopControl.matchesPublishedForm("GOD",l,c,r));
+            assertFalse(GodStopControl.matchesPublishedForm("RED7",l,c,r));
+            assertFalse(GodStopControl.matchesPublishedForm("SP",l,c,r));
+            assertFalse(GodStopControl.matchesPublishedForm("LOWER_YELLOW7",l,c,r));
+            assertFalse(GodStopControl.matchesPublishedForm("COMMON_YELLOW7",l,c,r));
         }
     }
-    @Test
-    void red7AndSpUseRepresentativeFormOnlyWhenReachableWithinFourFrames(){
-        for(String role:new String[]{"RED7","SP"}){
-            boolean sawRepresentative=false;
-            boolean sawUnreachable=false;
-            for(int reel=0;reel<3;reel++)for(int press=0;press<GodReelStrip.STOPS;press++){
-                int target=GodStopControl.targetFor(role,reel,press);
-                int slip=GodReelStrip.slip(press,target);
-                assertTrue(slip<=4,role+" reel="+reel+" press="+press);
-                var rule=GodStopControl.publishedRule(role).orElseThrow();
-                var requirement=rule.requirement(reel);
-                int symbolIndex=Math.floorMod(target+requirement.row().offset(),GodReelStrip.STOPS);
-                boolean matches=GodReelStrip.symbol(reel,symbolIndex)==requirement.symbol();
-                if(matches)sawRepresentative=true; else sawUnreachable=true;
-            }
-            assertTrue(sawRepresentative,role+" should show the representative form from reachable press positions");
-            assertTrue(sawUnreachable,role+" should not be force-aligned from every press position");
-        }
-    }
-
-    @Test
-    void red7AndSpNeverUseAnImpossibleLongSlip(){
-        for(String role:new String[]{"RED7","SP"}){
-            boolean sawRepresentativeMiss=false;
-            for(int reel=0;reel<3;reel++)for(int press=0;press<GodReelStrip.STOPS;press++){
-                int target=GodStopControl.targetFor(role,reel,press);
-                assertTrue(GodReelStrip.slip(press,target)<=4,role+" reel="+reel+" press="+press);
-                if(target==press)sawRepresentativeMiss=true;
-            }
-            assertTrue(sawRepresentativeMiss,role+" should not be force-aligned from every press position");
-        }
-    }
-
 }
