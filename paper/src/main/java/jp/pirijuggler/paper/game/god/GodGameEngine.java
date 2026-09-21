@@ -65,7 +65,7 @@ public final class GodGameEngine implements GameEngine {
 
         JsonObject sessionState=runtime.gameplay().toJson();
         sessionState.add("_pendingRuntime",step.runtime().toJson());
-        sessionState.addProperty("_pendingPayout");
+        sessionState.addProperty("_pendingPayout",outcome.payout());
         sessionState.addProperty("_pendingReplay",outcome.replay());
         sessionState.addProperty("_pendingRole",internalRole.name());
         sessionState.addProperty("_pendingDisplayRole",outcome.displayRole());
