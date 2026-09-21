@@ -104,8 +104,8 @@ This policy is mandatory for GOD Phase 02:
 5. If multiple candidates exist at the same nearest distance, choose deterministically by strip order; no RNG is allowed in presentation control.
 6. A role may not change payout/replay because a representative visual target is inconvenient.
 7. A role may not silently display another paying role's formation.
-8. If no stop within 0..4 satisfies the locked visible formation, that role/strip specification is invalid and the build/test must fail. Do not fall back to an unrelated pressed position.
-9. Premium roles whose public form is only representative must be handled explicitly in the role contract. If a premium form cannot satisfy rule 8, Phase 01 must be reopened rather than inventing a long slip.
+8. Ordinary non-premium role control keeps the normal 0..4 slip search unless a separate source-backed rule says otherwise. If no ordinary-role stop within 0..4 satisfies its locked visible formation, do not silently substitute an unrelated result.
+9. Premium roles GOD / RED7 / SP are an explicit Piri exception: their locked visible result takes priority over the normal 0..4 slip window. If necessary, the reel may slip beyond 4 frames by the minimum deterministic amount required to produce GOD straight / RED7 straight / RED7-RED7-GOD. This long-slip behavior is PIRI_SPECIFIC and must not be represented as exact Kiseki reel control.
 10. Runtime tests compare the **three visible rows**, not just the middle stop index.
 
 ### Required lower-yellow assertions
@@ -156,3 +156,5 @@ This replaces any earlier idea of approximating a missed ORDERED_YELLOW7 by a ra
 - Gaia-yellow normal-play navigation accepted: GAIA_BELL / Gaia-yellow occurs at the published setting-common rate 1/37.6 and, when it occurs in normal play, its right-first navigation is shown. Ordinary ordered 15-medal yellow remains non-navigated in normal play unless another source-backed exception applies. Gaia-yellow handling is source-backed, not Piri-specific.
 
 - Normal ordered-yellow left-first payout calibration accepted: when ordinary ordered 15-medal yellow is internally selected in normal play without a navigation exception, process the left-first outcome rather than awarding 15 medals. Public information indicates a miss-side outcome can include a 1-medal role; the exact 0/1-medal split is not public, so that split is PIRI_SPECIFIC and will be calibrated in Phase 04 against the published normal-game base (~30.8G/50 medals) without altering the locked role occurrence rates.
+
+- Premium slip exception accepted by user: for GOD / RED7 / SP, preserving the locked visible premium formation is more important than the ordinary 4-frame slip limit; allow deterministic >4-frame slip when required. Ordinary-role control remains subject to its normal slip rules unless separately specified.
