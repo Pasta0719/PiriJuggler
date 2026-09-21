@@ -142,3 +142,5 @@ This replaces any earlier idea of approximating a missed ORDERED_YELLOW7 by a ra
 - User accepted the yellow-role visual/payout consistency rule: 3-medal and 15-medal yellow outcomes must have distinct source-backed visible formations; server stop control and Fabric rendering must share one visible-row convention; no silent fallback to a visually incorrect result is permitted.
 
 - User accepted premium visible-result policy: GOD must visibly resolve as GOD straight, RED7 as RED7 straight, and SP as RED7/RED7/GOD. Press-position/slip behavior for forcing these forms is PIRI_SPECIFIC and must not be claimed as exact Kiseki control.
+
+- User accepted replay semantics/presentation: UPPER_BLUE7 and MIDDLE_BLUE7 are true replay outcomes; RED7_FAKE is also replay. Replay grants the next game without consuming a new bet, and RED7_FAKE must not visually match RED7 straight, SP, GOD, or a paying yellow formation.
