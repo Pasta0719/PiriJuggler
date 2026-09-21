@@ -83,9 +83,9 @@ public final class GodGameEngine implements GameEngine {
         }
 
         String spin=UUID.randomUUID().toString();
-        if("MISS".equals(outcome.displayRole())){
+        if("MISS".equals(outcome.displayRole())||"RED7_FAKE".equals(outcome.displayRole())){
             UUID spinUuid=UUID.fromString(spin);
-            sessionState.addProperty("_missControlSeed",spinUuid.getMostSignificantBits()^spinUuid.getLeastSignificantBits());
+            sessionState.addProperty("_presentationControlSeed",spinUuid.getMostSignificantBits()^spinUuid.getLeastSignificantBits());
         }
         values.put("game_state","NORMAL_SPINNING");
         values.put("spin_id",spin);
