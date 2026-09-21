@@ -22,7 +22,7 @@ The production curve must be passed explicitly through `GodPayoutCurve`.
 - GG baseline: 50 games
 - GG pure increase baseline: +7.0 net medals/game
 - one plain GG set: +350 net medals
-- GOD: exact independent 1/8192
+- GOD: exact 1/8192 marginal probability inside the mutually-exclusive whole-game role draw
 - ordinary GG bell-streak V-stock: excluded
 
 ## Fitting rule
