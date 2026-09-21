@@ -73,9 +73,9 @@ public final class GodStopControl {
                     "published middle-line yellow 7"));
             case "GAIA_BELL" -> Optional.of(new Rule(
                     req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.TOP),
-                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.BOTTOM),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.MIDDLE),
                     req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.TOP),
-                    "published small-V yellow 7"));
+                    "published small-V yellow 7: left/top, center/middle, right/top"));
             case "RED7_FAKE" -> Optional.of(new Rule(
                     req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
                     req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
