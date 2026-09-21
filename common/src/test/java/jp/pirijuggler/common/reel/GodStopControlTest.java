@@ -102,4 +102,39 @@ class GodStopControlTest {
             assertFalse(GodStopControl.matchesPublishedForm("COMMON_YELLOW7",l,c,r));
         }
     }
+    @Test
+    void missNeverFormsAnyStraightOrDiagonalGodRedBlueOrYellowLine(){
+        GodReelStrip.VisibleRow[][] lines={
+                {GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.TOP},
+                {GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.MIDDLE},
+                {GodReelStrip.VisibleRow.BOTTOM,GodReelStrip.VisibleRow.BOTTOM,GodReelStrip.VisibleRow.BOTTOM},
+                {GodReelStrip.VisibleRow.BOTTOM,GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.TOP},
+                {GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.BOTTOM}
+        };
+        for(int lp=0;lp<GodReelStrip.STOPS;lp++){
+            int l=GodStopControl.targetFor("MISS",0,lp);
+            for(int cp=0;cp<GodReelStrip.STOPS;cp++){
+                int m=GodStopControl.targetFor("MISS",1,cp);
+                for(int rp=0;rp<GodReelStrip.STOPS;rp++){
+                    int r=GodStopControl.targetFor("MISS",2,rp);
+                    int[] stops={l,m,r};
+                    for(var line:lines){
+                        var a=GodReelStrip.visibleSymbol(0,stops[0],line[0]);
+                        var b=GodReelStrip.visibleSymbol(1,stops[1],line[1]);
+                        var d=GodReelStrip.visibleSymbol(2,stops[2],line[2]);
+                        if(a==b&&b==d){
+                            assertFalse(
+                                    a==GodReelStrip.Symbol.GOD||
+                                    a==GodReelStrip.Symbol.RED7||
+                                    a==GodReelStrip.Symbol.BLUE7||
+                                    a==GodReelStrip.Symbol.YELLOW7,
+                                    "MISS formed winning-looking line "+a+" for presses "+lp+","+cp+","+rp
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }
