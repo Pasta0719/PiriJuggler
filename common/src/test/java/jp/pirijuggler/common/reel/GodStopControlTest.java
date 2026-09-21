@@ -137,4 +137,56 @@ class GodStopControlTest {
         }
     }
 
+    @Test
+    void everyRoleHasOnlyItsIntendedWinningLookingStraightOrDiagonalLines(){
+        var expected=new java.util.LinkedHashMap<String,java.util.Set<String>>();
+        expected.put("MISS",java.util.Set.of());
+        expected.put("UPPER_BLUE7",java.util.Set.of("TOP:BLUE7"));
+        expected.put("MIDDLE_BLUE7",java.util.Set.of("MIDDLE:BLUE7"));
+        expected.put("ORDERED_YELLOW7",java.util.Set.of("BOTTOM:YELLOW7"));
+        expected.put("LOWER_YELLOW7",java.util.Set.of("BOTTOM:YELLOW7"));
+        expected.put("RISING_YELLOW7",java.util.Set.of("RISING:YELLOW7"));
+        expected.put("MIDDLE_YELLOW7",java.util.Set.of("MIDDLE:YELLOW7"));
+        expected.put("COMMON_YELLOW7",java.util.Set.of("BOTTOM:YELLOW7"));
+        expected.put("GAIA_BELL",java.util.Set.of());
+        expected.put("RED7_FAKE",java.util.Set.of());
+        expected.put("RED7",java.util.Set.of("MIDDLE:RED7"));
+        expected.put("GOD",java.util.Set.of("MIDDLE:GOD"));
+        expected.put("SP",java.util.Set.of());
+
+        GodReelStrip.VisibleRow[][] rows={
+                {GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.TOP},
+                {GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.MIDDLE},
+                {GodReelStrip.VisibleRow.BOTTOM,GodReelStrip.VisibleRow.BOTTOM,GodReelStrip.VisibleRow.BOTTOM},
+                {GodReelStrip.VisibleRow.BOTTOM,GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.TOP},
+                {GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.BOTTOM}
+        };
+        String[] names={"TOP","MIDDLE","BOTTOM","RISING","FALLING"};
+
+        for(var entry:expected.entrySet()){
+            String role=entry.getKey();
+            for(int lp=0;lp<GodReelStrip.STOPS;lp++){
+                int l=GodStopControl.targetFor(role,0,lp);
+                for(int cp=0;cp<GodReelStrip.STOPS;cp++){
+                    int c=GodStopControl.targetFor(role,1,cp);
+                    for(int rp=0;rp<GodReelStrip.STOPS;rp++){
+                        int r=GodStopControl.targetFor(role,2,rp);
+                        int[] stops={l,c,r};
+                        var actual=new java.util.LinkedHashSet<String>();
+                        for(int i=0;i<rows.length;i++){
+                            var a=GodReelStrip.visibleSymbol(0,stops[0],rows[i][0]);
+                            var b=GodReelStrip.visibleSymbol(1,stops[1],rows[i][1]);
+                            var d=GodReelStrip.visibleSymbol(2,stops[2],rows[i][2]);
+                            if(a==b&&b==d&&(a==GodReelStrip.Symbol.GOD||a==GodReelStrip.Symbol.RED7||
+                                    a==GodReelStrip.Symbol.BLUE7||a==GodReelStrip.Symbol.YELLOW7))
+                                actual.add(names[i]+":"+a.name());
+                        }
+                        assertEquals(entry.getValue(),actual,
+                                role+" unexpected visible line(s) for presses "+lp+","+cp+","+rp);
+                    }
+                }
+            }
+        }
+    }
+
 }
