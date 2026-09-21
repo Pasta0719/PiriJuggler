@@ -247,7 +247,10 @@ class GodGameEngineTest {
             int l=(int)t.after().number("display_left_stop");
             int m=(int)t.after().number("display_center_stop");
             int r=(int)t.after().number("display_right_stop");
-            assertTrue(jp.pirijuggler.common.reel.GodStopControl.matchesPublishedForm(e.display(),l,m,r),e.role());
+            if("MISS".equals(e.display()))
+                assertTrue(jp.pirijuggler.common.reel.GodStopControl.isSafeMiss(l,m,r),e.role());
+            else
+                assertTrue(jp.pirijuggler.common.reel.GodStopControl.matchesPublishedForm(e.display(),l,m,r),e.role());
         }
     }
 
