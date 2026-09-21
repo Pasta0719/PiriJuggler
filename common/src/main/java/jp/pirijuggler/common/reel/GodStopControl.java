@@ -1,16 +1,20 @@
 package jp.pirijuggler.common.reel;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 /**
  * Published stop-form controller for SmaSlo Million God: Kamigami no Kiseki.
  *
- * The public analysis pages publish representative stop forms, not the complete
- * press-position-by-press-position control table. This class therefore encodes
- * only those published forms. Roles whose exact visual distinction is not
- * published here deliberately fall back to the legacy physical-strip target in
- * GodReelStrip instead of inventing an "exact" machine rule.
+ * Public analysis pages publish representative winning/replay forms, not the complete
+ * press-position-by-press-position control table. Piri therefore keeps source-backed
+ * role formations, while MISS is selected from every physically valid three-reel stop
+ * combination that does not reproduce any known role formation or a straight/diagonal
+ * GOD/RED7/BLUE7/YELLOW7 line.
  */
 public final class GodStopControl {
     public record Requirement(GodReelStrip.Symbol symbol,GodReelStrip.VisibleRow row) {}
@@ -24,19 +28,31 @@ public final class GodStopControl {
             };
         }
     }
+    public record MissStop(int left,int center,int right) {}
+
+    private static final GodReelStrip.VisibleRow[][] PAYLINES={
+            {GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.TOP},
+            {GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.MIDDLE},
+            {GodReelStrip.VisibleRow.BOTTOM,GodReelStrip.VisibleRow.BOTTOM,GodReelStrip.VisibleRow.BOTTOM},
+            {GodReelStrip.VisibleRow.BOTTOM,GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.TOP},
+            {GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.BOTTOM}
+    };
+    private static final String[] NON_MISS_FORMS={
+            "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
+            "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL",
+            "RED7_FAKE","RED7","GOD","SP"
+    };
+    private static final List<MissStop> MISS_CANDIDATES=buildMissCandidates();
+    private static final Map<Integer,Boolean> MISS_VIABILITY=new HashMap<>();
 
     private static Requirement req(GodReelStrip.Symbol symbol,GodReelStrip.VisibleRow row){
         return new Requirement(symbol,row);
     }
 
     /**
-     * Representative published stop forms.
-     *
-     * LOWER_YELLOW7 is the published 3-medal lower-line form. COMMON_YELLOW7
-     * and a successfully navigated ORDERED_YELLOW7 use the published lower-line
-     * 15-medal representative form. Public screenshots distinguish lower-line
-     * variants more finely than this symbol enum can encode, so that distinction
-     * is intentionally not fabricated here.
+     * Representative published/source-locked stop forms for non-MISS roles.
+     * MISS deliberately has no fixed representative form: every safe physical
+     * three-reel combination is eligible through the contextual MISS controller.
      */
     public static Optional<Rule> publishedRule(String role){
         if(role==null)return Optional.empty();
@@ -81,11 +97,6 @@ public final class GodStopControl {
                     req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
                     req(GodReelStrip.Symbol.GOD,GodReelStrip.VisibleRow.MIDDLE),
                     "Piri deterministic fake-RED replay form; contains RED7 but does not form RED7 straight/SP/GOD/yellow"));
-            case "MISS" -> Optional.of(new Rule(
-                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
-                    req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
-                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
-                    "Piri deterministic non-winning form chosen to avoid all five visible straight/diagonal winning lines"));
             case "SP" -> Optional.of(new Rule(
                     req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
                     req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
@@ -105,15 +116,45 @@ public final class GodStopControl {
         };
     }
 
+    /**
+     * Context-free controller for fixed-form roles.
+     * MISS must use the contextual overload because its safe target depends on
+     * the reels already stopped in the current game.
+     */
     public static int targetFor(String role,int reel,int pressed){
+        if(role!=null&&"MISS".equalsIgnoreCase(role))
+            throw new IllegalArgumentException("MISS requires contextual stop state");
         if(pressed<0||pressed>=GodReelStrip.STOPS)throw new IllegalArgumentException("pressed");
         var rule=publishedRule(role);
         if(rule.isEmpty()){
             var desired=GodReelStrip.symbolForRole(role,reel);
             return GodReelStrip.targetFor(reel,desired,pressed);
         }
+        return targetForRequirement(role,reel,pressed,rule.get().requirement(reel));
+    }
 
-        Requirement requirement=rule.get().requirement(reel);
+    /**
+     * Stateful controller used by Paper/recovery. For MISS, it searches the complete
+     * safe-stop catalogue and picks the nearest <=4-frame target that guarantees a
+     * safe completion regardless of the later legal stop order/press positions.
+     */
+    public static int targetFor(String role,int reel,int pressed,int stoppedMask,int left,int center,int right){
+        if(role==null||!"MISS".equalsIgnoreCase(role))return targetFor(role,reel,pressed);
+        if(reel<0||reel>2)throw new IllegalArgumentException("reel");
+        if(pressed<0||pressed>=GodReelStrip.STOPS)throw new IllegalArgumentException("pressed");
+        if((stoppedMask&(1<<reel))!=0)throw new IllegalArgumentException("reel already stopped");
+
+        int[] stops={Math.floorMod(left,GodReelStrip.STOPS),Math.floorMod(center,GodReelStrip.STOPS),Math.floorMod(right,GodReelStrip.STOPS)};
+        for(int slip=0;slip<=4;slip++){
+            int target=Math.floorMod(pressed-slip,GodReelStrip.STOPS);
+            stops[reel]=target;
+            int nextMask=stoppedMask|(1<<reel);
+            if(canAlwaysCompleteMiss(nextMask,stops[0],stops[1],stops[2]))return target;
+        }
+        throw new IllegalStateException("No safe MISS stop target reel="+reel+" pressed="+pressed+" mask="+stoppedMask);
+    }
+
+    private static int targetForRequirement(String role,int reel,int pressed,Requirement requirement){
         boolean premiumLongSlip=isPremiumLongSlipRole(role);
         int best=-1;
         int bestSlip=Integer.MAX_VALUE;
@@ -126,7 +167,6 @@ public final class GodStopControl {
                 bestSlip=slip;
             }
         }
-
         if(best>=0)return best;
         throw new IllegalStateException("No legal GOD stop target role="+role+" reel="+reel+" pressed="+pressed);
     }
@@ -148,6 +188,81 @@ public final class GodStopControl {
             if(GodReelStrip.visibleSymbol(reel,middles[reel],requirement.row())!=requirement.symbol())return false;
         }
         return true;
+    }
+
+    /** True only when the complete three-reel window is safe to present as MISS. */
+    public static boolean isSafeMiss(int left,int center,int right){
+        if(left<0||left>=GodReelStrip.STOPS||center<0||center>=GodReelStrip.STOPS||right<0||right>=GodReelStrip.STOPS)
+            throw new IllegalArgumentException("stop");
+
+        for(String role:NON_MISS_FORMS)
+            if(matchesPublishedForm(role,left,center,right))return false;
+
+        int[] stops={left,center,right};
+        for(var line:PAYLINES){
+            var a=GodReelStrip.visibleSymbol(0,stops[0],line[0]);
+            var b=GodReelStrip.visibleSymbol(1,stops[1],line[1]);
+            var c=GodReelStrip.visibleSymbol(2,stops[2],line[2]);
+            if(a==b&&b==c&&(a==GodReelStrip.Symbol.GOD||a==GodReelStrip.Symbol.RED7||
+                    a==GodReelStrip.Symbol.BLUE7||a==GodReelStrip.Symbol.YELLOW7))
+                return false;
+        }
+        return true;
+    }
+
+    /** All 20^3 physical stop combinations classified as legal Piri MISS windows. */
+    public static List<MissStop> missCandidates(){return MISS_CANDIDATES;}
+
+    private static List<MissStop> buildMissCandidates(){
+        var out=new ArrayList<MissStop>();
+        for(int l=0;l<GodReelStrip.STOPS;l++)
+            for(int c=0;c<GodReelStrip.STOPS;c++)
+                for(int r=0;r<GodReelStrip.STOPS;r++)
+                    if(isSafeMiss(l,c,r))out.add(new MissStop(l,c,r));
+        if(out.isEmpty())throw new IllegalStateException("No safe MISS stop combinations");
+        return List.copyOf(out);
+    }
+
+    private static boolean canAlwaysCompleteMiss(int mask,int left,int center,int right){
+        int key=missStateKey(mask,left,center,right);
+        synchronized(MISS_VIABILITY){
+            Boolean cached=MISS_VIABILITY.get(key);
+            if(cached!=null)return cached;
+            boolean result=computeCanAlwaysCompleteMiss(mask,left,center,right);
+            MISS_VIABILITY.put(key,result);
+            return result;
+        }
+    }
+
+    private static boolean computeCanAlwaysCompleteMiss(int mask,int left,int center,int right){
+        if(mask==7)return isSafeMiss(left,center,right);
+
+        int[] base={left,center,right};
+        for(int reel=0;reel<3;reel++){
+            int bit=1<<reel;
+            if((mask&bit)!=0)continue;
+            for(int press=0;press<GodReelStrip.STOPS;press++){
+                boolean found=false;
+                for(int slip=0;slip<=4;slip++){
+                    int[] next=base.clone();
+                    next[reel]=Math.floorMod(press-slip,GodReelStrip.STOPS);
+                    if(canAlwaysCompleteMiss(mask|bit,next[0],next[1],next[2])){
+                        found=true;
+                        break;
+                    }
+                }
+                if(!found)return false;
+            }
+        }
+        return true;
+    }
+
+    private static int missStateKey(int mask,int left,int center,int right){
+        int key=mask&7;
+        if((mask&1)!=0)key|=(Math.floorMod(left,GodReelStrip.STOPS)<<3);
+        if((mask&2)!=0)key|=(Math.floorMod(center,GodReelStrip.STOPS)<<8);
+        if((mask&4)!=0)key|=(Math.floorMod(right,GodReelStrip.STOPS)<<13);
+        return key;
     }
 
     private GodStopControl(){}
