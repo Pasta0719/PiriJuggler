@@ -231,3 +231,5 @@ Accepted during Phase 01 review:
 - Ceiling/reset accepted: normal ceiling 1480G; reset ceiling distribution 510G 15.2%, 1000G 20.3%, 1480G 64.5%.
 
 - Ordinary GG yellow/bell streak V-stock mechanic rejected and remains disabled; yellow-related rewards remain in their separate Z-ZONE/Z-GAME and other source-backed routes.
+
+- Normal-role processing accepted: role occurrence and GG-hit processing are separate. After a role is drawn, evaluate GG hit from current front mode × role, then apply any role-history and mode-transition processing according to the locked tables. Role probabilities themselves are not to be distorted merely to emulate GG hit rates.
