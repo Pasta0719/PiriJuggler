@@ -126,7 +126,12 @@ public final class GodGameEngine implements GameEngine {
 
         String role=state.has("_pendingRole")?state.get("_pendingRole").getAsString():before.text("internal_role");
         String displayRole=state.has("_pendingDisplayRole")?state.get("_pendingDisplayRole").getAsString():role;
-        int target=GodStopControl.targetFor(displayRole,reel,pressed);
+        int target=GodStopControl.targetFor(
+                displayRole,reel,pressed,mask,
+                (int)before.number("display_left_stop"),
+                (int)before.number("display_center_stop"),
+                (int)before.number("display_right_stop")
+        );
         int slip=GodReelStrip.slip(pressed,target);
         int duration=ReelMotion.durationMs(slip);
 
@@ -142,7 +147,12 @@ public final class GodGameEngine implements GameEngine {
         stop.addProperty("stopIndex",target);
         stop.addProperty("slip",slip);
         stop.addProperty("durationMs",duration);
-        stop.add("nextStopHints",stopHints(displayRole,nextMask,state));
+        stop.add("nextStopHints",stopHints(
+                displayRole,nextMask,state,
+                ((Number)values.get("display_left_stop")).intValue(),
+                ((Number)values.get("display_center_stop")).intValue(),
+                ((Number)values.get("display_right_stop")).intValue()
+        ));
 
         var packets=new ArrayList<Envelope>();
         packets.add(accepted(action,sequence));
@@ -595,7 +605,7 @@ public final class GodGameEngine implements GameEngine {
     }
     private static void putBalance(Map<String,Object> values,GameRules.Balance b){values.put("credit",b.credit());values.put("held_medals",b.held());}
 
-    private static JsonObject stopHints(String role,int mask,JsonObject state){
+    private static JsonObject stopHints(String role,int mask,JsonObject state,int left,int center,int right){
         JsonObject all=new JsonObject();
         int expected=expectedNextReel(state,mask);
         for(int reel=0;reel<3;reel++){
@@ -603,7 +613,7 @@ public final class GodGameEngine implements GameEngine {
             if(expected>=0&&reel!=expected)continue;
             var choices=new com.google.gson.JsonArray();
             for(int pressed=0;pressed<GodReelStrip.STOPS;pressed++){
-                int target=GodStopControl.targetFor(role,reel,pressed);
+                int target=GodStopControl.targetFor(role,reel,pressed,mask,left,center,right);
                 int slip=GodReelStrip.slip(pressed,target);
                 JsonObject item=new JsonObject();item.addProperty("stopIndex",target);item.addProperty("slip",slip);item.addProperty("durationMs",ReelMotion.durationMs(slip));
                 choices.add(item);
@@ -630,7 +640,12 @@ public final class GodGameEngine implements GameEngine {
                     ? saved.machineState().get("_pendingRole").getAsString()
                     : saved.text("internal_role");
         JsonObject machineState=saved.machineState();
-        b.add("stopHints",stopHints(role,(int)saved.number("stopped_mask"),machineState));
+        b.add("stopHints",stopHints(
+                role,(int)saved.number("stopped_mask"),machineState,
+                (int)saved.number("display_left_stop"),
+                (int)saved.number("display_center_stop"),
+                (int)saved.number("display_right_stop")
+        ));
         if(machineState!=null&&machineState.has("_pendingNavText"))
             b.addProperty("godNav",machineState.get("_pendingNavText").getAsString());
         return Envelope.current(PacketType.SPIN_START,b);
