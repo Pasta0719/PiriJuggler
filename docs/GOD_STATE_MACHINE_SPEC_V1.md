@@ -1,6 +1,6 @@
 # Piri GOD gameplay state contract v1
 
-Status: **DRAFT — GOD Phase 01**
+Status: **LOCKED — GOD Phase 01**
 
 This document defines state semantics and classifies each transition. Existing code is not authority.
 
@@ -156,18 +156,26 @@ Reference-backed processing:
 Piri locked:
 - GOD uses D.
 
-## Transition precedence
+## Transition arbitration / overlap handling
 
-Piri v1 authoritative precedence for simultaneously eligible top-level premium flags:
+The whole-game role draw is mutually exclusive. GOD, RED7, SP and ordinary roles cannot be simultaneously selected in the same game, so the old `GOD > RED7 > SP` same-game tie-breaker is rejected.
 
-1. GOD
-2. RED7
-3. SP
-4. ordinary role/state draw
+Authoritative overlap rules concern **already-pending state entitlements**, not simultaneous role flags:
 
-Classification: PIRI_SPECIFIC deterministic arbitration needed because Piri draws GOD independently at 1/8192.
+1. Resolve exactly one role for the current game.
+2. Settle its reel result and payout/replay first.
+3. If the resolved role is GOD, enter the PGG/GOD-stage route on the next game without normal precursor handling. Any previously pending ordinary-GG entitlement or latent G-ZONE continuation remains queued and is not deleted.
+4. If the resolved role is RED7, enter SGG on the next game without normal precursor handling. Any previously pending ordinary-GG entitlement or latent continuation remains queued and is consumed only after the SGG route finishes and returns to GG flow.
+5. SP never uses a generic premium-precedence shortcut. Apply the published SP effect for the current state. Any stock/loop entitlement SP creates is added without deleting an already-pending entitlement.
+6. If an ordinary GG-winning route (mode/role, history, ceiling, rear-mode route, Gaia route where applicable) resolves while an ordinary GG is already pending, preserve it as an additional queued GG entitlement under the accepted conditional Piri rule.
+7. A premium route may temporarily pre-empt the **announcement timing** of an ordinary pending GG, but never its ownership. Queued entitlements survive the detour.
+8. G-ZONE latent continuation is treated as a real held entitlement. GOD/RED7 may interrupt with their immediate premium routes, but the latent continuation remains durable afterward.
+9. No role or transition may be redrawn merely because another entitlement is pending.
 
-This precedence must be explicit in tests and recovery; no second premium draw may replace a resolved premium role.
+Classification:
+- immediate GOD/RED7 entry and state-specific SP effects: REFERENCE_BACKED where published
+- preservation/queue ordering when overlapping public details are unavailable: PIRI_SPECIFIC
+- no same-game premium tie-breaker exists in the final model.
 
 ## Settlement ordering
 
@@ -216,7 +224,7 @@ Recovery completes the same game outcome or restores the exact remaining stop st
 ## User acceptance status
 
 Accepted during Phase 01 review:
-- GOD probability: exact independent 1/8192 across settings/states.
+- GOD probability: exact 1/8192 marginal probability across settings/states, selected inside the mutually-exclusive whole-game role draw.
 - GOD benefit: current Piri design retained — GOD stage 50G + 3 GG sets (4 total) + D loop.
 - GG basic performance: 50G/set, about +7 medals/G.
 - G-ZONE: max 5G after GG; continue if stock exists, otherwise return to normal.
@@ -273,3 +281,11 @@ Accepted during Phase 01 review:
 - Rear-heaven lower-yellow reward calibration accepted: while rear-heaven is active, lower-yellow uses its dedicated enhanced GG route; on hit, award multiple GG stocks and no loop stock for that route. The exact lower-yellow GG-hit rate and stock-count distribution are unpublished and therefore PIRI_SPECIFIC Phase-04 tuning values, to be calibrated for payout while preserving a meaningfully strong rear-heaven experience.
 
 - Rear-heaven transition calibration accepted: current Kiseki-specific rear-heaven promotion and fall triggers/rates are unpublished, so those cells are PIRI_SPECIFIC rather than copied from prior GOD titles. Phase 04 may tune them for payout and feel, but must preserve rear-heaven as a meaningful state rather than making it effectively unreachable or instantly transient.
+
+
+## Phase-01 final state-model clarifications
+
+- NORMAL precursor and post-G-ZONE latent continuation are modeled as durable overlays on the normal-flow state, not as reasons to lose an already-awarded GG entitlement.
+- GG preparation is a distinct semantic state before each 50G GG set where the published preparation-specific stock table applies.
+- Entitlement ownership and presentation timing are separate: a route may be announced later or temporarily pre-empted by GOD/RED7, but earned stock/continuation is never silently discarded.
+- Ceiling and other ordinary GG-winning routes that resolve while a GG is already pending follow the accepted precursor re-hit rule and become queued entitlement; Phase 04 may reopen this Piri-specific rule only if payout fitting cannot satisfy the locked targets without violating fun-preservation guardrails.
