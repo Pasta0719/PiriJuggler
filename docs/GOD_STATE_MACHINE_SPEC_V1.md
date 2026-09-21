@@ -211,3 +211,13 @@ Recovery completes the same game outcome or restores the exact remaining stop st
 - Z-GAME: https://nana-press.com/kaiseki/machine/1112/35726/
 - Loop stock: https://nana-press.com/kaiseki/machine/1112/36532/
 - Reset: https://nana-press.com/kaiseki/machine/1112/35716/
+
+
+## User acceptance status
+
+Accepted during Phase 01 review:
+- GOD probability: exact independent 1/8192 across settings/states.
+- GOD benefit: current Piri design retained — GOD stage 50G + 3 GG sets (4 total) + D loop.
+- GG basic performance: 50G/set, about +7 medals/G.
+- G-ZONE: max 5G after GG; continue if stock exists, otherwise return to normal.
+- RED7 / SGG flow: RED7 1/6900 -> SGG; SGG set 10–100G with 75%+ continuation concept; 3G comeback section between sets; after SGG fully ends, return to GG.
