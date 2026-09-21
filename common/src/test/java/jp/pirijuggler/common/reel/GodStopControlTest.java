@@ -143,6 +143,21 @@ class GodStopControlTest {
                 "every safe physical MISS candidate must be reachable by legal <=4-frame control");
     }
 
+
+    @Test
+    void missSelectorVariesIdenticalPressTimingAcrossSpins(){
+        Set<GodStopControl.MissStop> observed=new LinkedHashSet<>();
+        int lp=7,cp=11,rp=3;
+        for(long seed=1;seed<=128;seed++){
+            int l=GodStopControl.targetFor("MISS",0,lp,0,0,0,0,seed);
+            int c=GodStopControl.targetFor("MISS",1,cp,1,l,0,0,seed);
+            int r=GodStopControl.targetFor("MISS",2,rp,3,l,c,0,seed);
+            assertTrue(GodStopControl.isSafeMiss(l,c,r));
+            observed.add(new GodStopControl.MissStop(l,c,r));
+        }
+        assertTrue(observed.size()>1,"identical press timing must not collapse MISS to one visible result");
+    }
+
     @Test
     void red7FakeCannotMasqueradeAsPremiumOrPayingYellow(){
         for(int lp=0;lp<GodReelStrip.STOPS;lp++){
