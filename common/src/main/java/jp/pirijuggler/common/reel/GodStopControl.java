@@ -13,16 +13,7 @@ import java.util.Optional;
  * GodReelStrip instead of inventing an "exact" machine rule.
  */
 public final class GodStopControl {
-    public enum Row {
-        // Published reel charts number positions upward; on-screen TOP is the next
-        // chart position and BOTTOM is the previous chart position.
-        TOP(1), MIDDLE(0), BOTTOM(-1);
-        private final int offset;
-        Row(int offset){this.offset=offset;}
-        int offset(){return offset;}
-    }
-
-    public record Requirement(GodReelStrip.Symbol symbol,Row row) {}
+    public record Requirement(GodReelStrip.Symbol symbol,GodReelStrip.VisibleRow row) {}
     public record Rule(Requirement left,Requirement center,Requirement right,String sourceNote) {
         public Requirement requirement(int reel){
             return switch(reel){
@@ -34,7 +25,7 @@ public final class GodStopControl {
         }
     }
 
-    private static Requirement req(GodReelStrip.Symbol symbol,Row row){
+    private static Requirement req(GodReelStrip.Symbol symbol,GodReelStrip.VisibleRow row){
         return new Requirement(symbol,row);
     }
 
@@ -127,8 +118,7 @@ public final class GodStopControl {
         int best=-1;
         int bestSlip=Integer.MAX_VALUE;
         for(int middle=0;middle<GodReelStrip.STOPS;middle++){
-            int symbolIndex=Math.floorMod(middle+requirement.row().offset(),GodReelStrip.STOPS);
-            if(GodReelStrip.symbol(reel,symbolIndex)!=requirement.symbol())continue;
+            if(GodReelStrip.visibleSymbol(reel,middle,requirement.row())!=requirement.symbol())continue;
             int slip=GodReelStrip.slip(pressed,middle);
             if(!premiumLongSlip&&slip>4)continue;
             if(slip<bestSlip){
@@ -155,8 +145,7 @@ public final class GodStopControl {
         int[] middles={left,center,right};
         for(int reel=0;reel<3;reel++){
             Requirement requirement=rule.get().requirement(reel);
-            int symbolIndex=Math.floorMod(middles[reel]+requirement.row().offset(),GodReelStrip.STOPS);
-            if(GodReelStrip.symbol(reel,symbolIndex)!=requirement.symbol())return false;
+            if(GodReelStrip.visibleSymbol(reel,middles[reel],requirement.row())!=requirement.symbol())return false;
         }
         return true;
     }
