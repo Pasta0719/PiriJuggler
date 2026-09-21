@@ -1,6 +1,6 @@
 # Piri GOD master specification
 
-Status: **DRAFT — GOD Phase 01**
+Status: **LOCKED — GOD Phase 01**
 Authority: canonical GOD specification document.
 Implementation must not be changed to "make this document true" until the relevant item is explicitly LOCKED.
 
@@ -24,9 +24,9 @@ These are already selected and remain authoritative.
 
 | Item | Specification | Class |
 |---|---|---|
-| GOD probability | exact independent 1/8192 | LOCKED_PIRI |
+| GOD probability | exact per-game marginal 1/8192 inside the mutually-exclusive whole-game role draw | LOCKED_PIRI |
 | GOD setting dependence | none; settings 1–6 identical for the GOD flag | LOCKED_PIRI |
-| GOD state dependence | none; independent draw in every eligible state | LOCKED_PIRI |
+| GOD state dependence | none; 1/8192 marginal probability is invariant across eligible states | LOCKED_PIRI |
 | GOD reward | GOD stage 50G + 3 additional GG sets; total 4 GG-equivalent sets, plus D-loop stock | LOCKED_PIRI |
 | RED7 probability | 1/6900 | LOCKED_PIRI |
 | SP probability | 1/65536 | LOCKED_PIRI |
@@ -70,7 +70,7 @@ Source baseline: `docs/GOD_ROLE_MODE_BASELINE.md`.
 
 ---
 
-## 4. Role outcome contract — MUST be completed before implementation
+## 4. Role outcome contract — LOCKED for implementation
 
 For every internal role the locked spec must define all of:
 
@@ -84,7 +84,7 @@ For every internal role the locked spec must define all of:
 8. public display event
 9. source/classification
 
-Until this table is complete, GOD Phase 02 remains blocked.
+The semantic role contract is complete for Phase 02. Exact hidden real-machine press-index control remains unavailable, but the accepted PIRI_SPECIFIC deterministic stop-control policy resolves that gap without claiming authenticity.
 
 ### Current provisional outcome knowledge
 
@@ -308,3 +308,15 @@ See `docs/GOD_SOURCE_REGISTRY.md` for source URLs and `docs/GOD_ROLE_CONTRACT_V1
 - Setting payout curve 97.2 / 99.1 / 102.1 / 106.9 / 111.7 / 114.6% accepted **with the explicit condition that fitting must not make the game boring by excessively suppressing event frequency or variety**.
 
 - Premium visible-form priority locked: GOD, RED7, and SP may exceed the ordinary 4-frame slip window when necessary to guarantee GOD straight, RED7 straight, and RED7/RED7/GOD respectively. This is PIRI_SPECIFIC control behavior, not an authenticity claim.
+
+
+## Phase-01 final arbitration lock
+
+- One game produces exactly one mutually-exclusive role outcome. GOD/RED7/SP cannot collide as simultaneous flags.
+- The obsolete `GOD > RED7 > SP` tie-breaker is rejected.
+- GOD and RED7 bypass ordinary precursor announcement and enter their premium route next game.
+- Existing pending ordinary GG / latent continuation survives a premium detour and remains queued.
+- SP uses only its state-specific published behavior; it does not invoke a generic priority rule.
+- Ordinary GG re-hits while one is pending become queued GG entitlement under the accepted conditional Piri rule.
+- Premium visible forms take priority over the ordinary 4-frame slip limit; ordinary roles retain normal slip constraints.
+- Complete real-machine press-index control remains UNKNOWN as reference data, but it is not an implementation blocker because the deterministic PIRI_SPECIFIC control policy is locked.
