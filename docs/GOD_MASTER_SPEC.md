@@ -125,7 +125,7 @@ See `docs/GOD_ROLE_CONTRACT_V1.md`.
 
 - physical/reference reel count recorded in project: 20 stops per reel.
 - symbols currently represented: GOD, RED7, BLUE7, YELLOW7, MILLION, two-cell DEKA MILLION.
-- normal physical slip constraint currently targeted: maximum 4 frames.
+- ordinary-role physical slip target: maximum 4 frames. GOD / RED7 / SP are an explicit Piri exception: when needed to guarantee their locked visible premium forms, deterministic slip beyond 4 frames is allowed.
 
 ### Locked semantic convention
 
@@ -306,3 +306,5 @@ See `docs/GOD_SOURCE_REGISTRY.md` for source URLs and `docs/GOD_ROLE_CONTRACT_V1
 ## User acceptance note
 
 - Setting payout curve 97.2 / 99.1 / 102.1 / 106.9 / 111.7 / 114.6% accepted **with the explicit condition that fitting must not make the game boring by excessively suppressing event frequency or variety**.
+
+- Premium visible-form priority locked: GOD, RED7, and SP may exceed the ordinary 4-frame slip window when necessary to guarantee GOD straight, RED7 straight, and RED7/RED7/GOD respectively. This is PIRI_SPECIFIC control behavior, not an authenticity claim.
