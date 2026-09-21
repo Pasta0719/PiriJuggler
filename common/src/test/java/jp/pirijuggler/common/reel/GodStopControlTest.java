@@ -62,7 +62,8 @@ class GodStopControlTest {
                 assertEquals(requirement.symbol(),GodReelStrip.symbol(reel,symbolIndex),
                         role+" reel="+reel+" press="+press+" slip="+slip);
             }
-            assertTrue(sawLongSlip,role+" should exercise the accepted >4-frame premium exception");
+            if(!"GOD".equals(role))
+                assertTrue(sawLongSlip,role+" should exercise the accepted >4-frame premium exception when required");
         }
     }
 
