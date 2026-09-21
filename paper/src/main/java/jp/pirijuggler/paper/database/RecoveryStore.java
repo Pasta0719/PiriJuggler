@@ -155,13 +155,15 @@ public final class RecoveryStore {
             if((mask&bit)!=0)continue;
             String name=new String[]{"left","center","right"}[reel];
             int pressed=Math.floorMod((int)Math.floor(((Number)values.get("phase_"+name)).doubleValue()),GodReelStrip.STOPS);
-            long missSeed=state.has("_missControlSeed")?state.get("_missControlSeed").getAsLong():0L;
+            long presentationSeed=state.has("_presentationControlSeed")
+                    ?state.get("_presentationControlSeed").getAsLong()
+                    :state.has("_missControlSeed")?state.get("_missControlSeed").getAsLong():0L;
             int target=GodStopControl.targetFor(
                     displayRole,reel,pressed,mask,
                     ((Number)values.get("display_left_stop")).intValue(),
                     ((Number)values.get("display_center_stop")).intValue(),
                     ((Number)values.get("display_right_stop")).intValue(),
-                    missSeed
+                    presentationSeed
             );
             values.put("display_"+name+"_stop",target);
             mask|=bit;
