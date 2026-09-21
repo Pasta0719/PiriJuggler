@@ -2,17 +2,21 @@ package jp.pirijuggler.common.reel;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class GodStopControlTest {
     private static final String[] LOCKED_FORMS={
-            "MISS","UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
+            "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
             "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL",
             "RED7_FAKE","RED7","GOD","SP"
     };
 
     @Test
-    void everyLockedRoleAlwaysResolvesToItsLockedVisibleForm(){
+    void everyFixedRoleAlwaysResolvesToItsLockedVisibleForm(){
         for(String role:LOCKED_FORMS){
             assertTrue(GodStopControl.publishedRule(role).isPresent(),role);
             for(int leftPress=0;leftPress<GodReelStrip.STOPS;leftPress++){
@@ -32,9 +36,9 @@ class GodStopControlTest {
     }
 
     @Test
-    void ordinaryLockedFormsStayInsideFourFrameSlip(){
+    void ordinaryFixedFormsStayInsideFourFrameSlip(){
         String[] roles={
-                "MISS","UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
+                "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
                 "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL","RED7_FAKE"
         };
         for(String role:roles){
@@ -90,69 +94,87 @@ class GodStopControlTest {
     }
 
     @Test
-    void missAndRed7FakeCannotMasqueradeAsPremiumOrPayingYellow(){
-        for(String role:new String[]{"MISS","RED7_FAKE"}){
-            int l=GodStopControl.targetFor(role,0,0);
-            int c=GodStopControl.targetFor(role,1,0);
-            int r=GodStopControl.targetFor(role,2,0);
-            assertFalse(GodStopControl.matchesPublishedForm("GOD",l,c,r));
-            assertFalse(GodStopControl.matchesPublishedForm("RED7",l,c,r));
-            assertFalse(GodStopControl.matchesPublishedForm("SP",l,c,r));
-            assertFalse(GodStopControl.matchesPublishedForm("LOWER_YELLOW7",l,c,r));
-            assertFalse(GodStopControl.matchesPublishedForm("COMMON_YELLOW7",l,c,r));
-        }
+    void missCatalogueIsExactlyAllSafePhysicalStopCombinations(){
+        int safe=0;
+        for(int l=0;l<GodReelStrip.STOPS;l++)
+            for(int c=0;c<GodReelStrip.STOPS;c++)
+                for(int r=0;r<GodReelStrip.STOPS;r++)
+                    if(GodStopControl.isSafeMiss(l,c,r))safe++;
+
+        assertEquals(safe,GodStopControl.missCandidates().size());
+        assertTrue(safe>4,"MISS must no longer be a four-pattern fixed presentation");
+        assertTrue(GodStopControl.missCandidates().stream()
+                .allMatch(s->GodStopControl.isSafeMiss(s.left(),s.center(),s.right())));
     }
+
     @Test
-    void missNeverFormsAnyStraightOrDiagonalGodRedBlueOrYellowLine(){
-        GodReelStrip.VisibleRow[][] lines={
-                {GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.TOP},
-                {GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.MIDDLE},
-                {GodReelStrip.VisibleRow.BOTTOM,GodReelStrip.VisibleRow.BOTTOM,GodReelStrip.VisibleRow.BOTTOM},
-                {GodReelStrip.VisibleRow.BOTTOM,GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.TOP},
-                {GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.BOTTOM}
-        };
-        for(int lp=0;lp<GodReelStrip.STOPS;lp++){
-            int l=GodStopControl.targetFor("MISS",0,lp);
-            for(int cp=0;cp<GodReelStrip.STOPS;cp++){
-                int m=GodStopControl.targetFor("MISS",1,cp);
-                for(int rp=0;rp<GodReelStrip.STOPS;rp++){
-                    int r=GodStopControl.targetFor("MISS",2,rp);
-                    int[] stops={l,m,r};
-                    for(var line:lines){
-                        var a=GodReelStrip.visibleSymbol(0,stops[0],line[0]);
-                        var b=GodReelStrip.visibleSymbol(1,stops[1],line[1]);
-                        var d=GodReelStrip.visibleSymbol(2,stops[2],line[2]);
-                        if(a==b&&b==d){
-                            assertFalse(
-                                    a==GodReelStrip.Symbol.GOD||
-                                    a==GodReelStrip.Symbol.RED7||
-                                    a==GodReelStrip.Symbol.BLUE7||
-                                    a==GodReelStrip.Symbol.YELLOW7,
-                                    "MISS formed winning-looking line "+a+" for presses "+lp+","+cp+","+rp
-                            );
-                        }
+    void contextualMissControlNeverNeedsMoreThanFourFramesAndAlwaysFinishesSafe(){
+        Set<GodStopControl.MissStop> observed=new LinkedHashSet<>();
+        int[][] secondOrders={{1,2},{2,1}};
+
+        for(int leftPress=0;leftPress<GodReelStrip.STOPS;leftPress++){
+            int left=GodStopControl.targetFor("MISS",0,leftPress,0,0,0,0);
+            assertTrue(GodReelStrip.slip(leftPress,left)<=4);
+
+            for(int[] order:secondOrders){
+                int second=order[0],third=order[1];
+                for(int secondPress=0;secondPress<GodReelStrip.STOPS;secondPress++){
+                    int[] stops={left,0,0};
+                    int secondTarget=GodStopControl.targetFor(
+                            "MISS",second,secondPress,1,stops[0],stops[1],stops[2]);
+                    assertTrue(GodReelStrip.slip(secondPress,secondTarget)<=4);
+                    stops[second]=secondTarget;
+                    int secondMask=1|(1<<second);
+
+                    for(int thirdPress=0;thirdPress<GodReelStrip.STOPS;thirdPress++){
+                        int thirdTarget=GodStopControl.targetFor(
+                                "MISS",third,thirdPress,secondMask,stops[0],stops[1],stops[2]);
+                        assertTrue(GodReelStrip.slip(thirdPress,thirdTarget)<=4);
+                        int[] finalStops=stops.clone();
+                        finalStops[third]=thirdTarget;
+                        assertTrue(GodStopControl.isSafeMiss(finalStops[0],finalStops[1],finalStops[2]),
+                                "unsafe MISS for presses "+leftPress+","+secondPress+","+thirdPress);
+                        observed.add(new GodStopControl.MissStop(finalStops[0],finalStops[1],finalStops[2]));
                     }
+                }
+            }
+        }
+        assertTrue(observed.size()>4,"actual MISS control should expose more than four final windows");
+    }
+
+    @Test
+    void red7FakeCannotMasqueradeAsPremiumOrPayingYellow(){
+        for(int lp=0;lp<GodReelStrip.STOPS;lp++){
+            int l=GodStopControl.targetFor("RED7_FAKE",0,lp);
+            for(int cp=0;cp<GodReelStrip.STOPS;cp++){
+                int c=GodStopControl.targetFor("RED7_FAKE",1,cp);
+                for(int rp=0;rp<GodReelStrip.STOPS;rp++){
+                    int r=GodStopControl.targetFor("RED7_FAKE",2,rp);
+                    assertFalse(GodStopControl.matchesPublishedForm("GOD",l,c,r));
+                    assertFalse(GodStopControl.matchesPublishedForm("RED7",l,c,r));
+                    assertFalse(GodStopControl.matchesPublishedForm("SP",l,c,r));
+                    assertFalse(GodStopControl.matchesPublishedForm("LOWER_YELLOW7",l,c,r));
+                    assertFalse(GodStopControl.matchesPublishedForm("COMMON_YELLOW7",l,c,r));
                 }
             }
         }
     }
 
     @Test
-    void everyRoleHasOnlyItsIntendedWinningLookingStraightOrDiagonalLines(){
-        var expected=new java.util.LinkedHashMap<String,java.util.Set<String>>();
-        expected.put("MISS",java.util.Set.of());
-        expected.put("UPPER_BLUE7",java.util.Set.of("TOP:BLUE7"));
-        expected.put("MIDDLE_BLUE7",java.util.Set.of("MIDDLE:BLUE7"));
-        expected.put("ORDERED_YELLOW7",java.util.Set.of("BOTTOM:YELLOW7"));
-        expected.put("LOWER_YELLOW7",java.util.Set.of("BOTTOM:YELLOW7"));
-        expected.put("RISING_YELLOW7",java.util.Set.of("RISING:YELLOW7"));
-        expected.put("MIDDLE_YELLOW7",java.util.Set.of("MIDDLE:YELLOW7"));
-        expected.put("COMMON_YELLOW7",java.util.Set.of("BOTTOM:YELLOW7"));
-        expected.put("GAIA_BELL",java.util.Set.of());
-        expected.put("RED7_FAKE",java.util.Set.of());
-        expected.put("RED7",java.util.Set.of("MIDDLE:RED7"));
-        expected.put("GOD",java.util.Set.of("MIDDLE:GOD"));
-        expected.put("SP",java.util.Set.of());
+    void everyFixedRoleHasOnlyItsIntendedWinningLookingStraightOrDiagonalLines(){
+        var expected=new LinkedHashMap<String,Set<String>>();
+        expected.put("UPPER_BLUE7",Set.of("TOP:BLUE7"));
+        expected.put("MIDDLE_BLUE7",Set.of("MIDDLE:BLUE7"));
+        expected.put("ORDERED_YELLOW7",Set.of("BOTTOM:YELLOW7"));
+        expected.put("LOWER_YELLOW7",Set.of("BOTTOM:YELLOW7"));
+        expected.put("RISING_YELLOW7",Set.of("RISING:YELLOW7"));
+        expected.put("MIDDLE_YELLOW7",Set.of("MIDDLE:YELLOW7"));
+        expected.put("COMMON_YELLOW7",Set.of("BOTTOM:YELLOW7"));
+        expected.put("GAIA_BELL",Set.of());
+        expected.put("RED7_FAKE",Set.of());
+        expected.put("RED7",Set.of("MIDDLE:RED7"));
+        expected.put("GOD",Set.of("MIDDLE:GOD"));
+        expected.put("SP",Set.of());
 
         GodReelStrip.VisibleRow[][] rows={
                 {GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.TOP},
@@ -172,7 +194,7 @@ class GodStopControlTest {
                     for(int rp=0;rp<GodReelStrip.STOPS;rp++){
                         int r=GodStopControl.targetFor(role,2,rp);
                         int[] stops={l,c,r};
-                        var actual=new java.util.LinkedHashSet<String>();
+                        var actual=new LinkedHashSet<String>();
                         for(int i=0;i<rows.length;i++){
                             var a=GodReelStrip.visibleSymbol(0,stops[0],rows[i][0]);
                             var b=GodReelStrip.visibleSymbol(1,stops[1],rows[i][1]);
@@ -188,5 +210,4 @@ class GodStopControlTest {
             }
         }
     }
-
 }
