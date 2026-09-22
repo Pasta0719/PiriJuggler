@@ -16,6 +16,7 @@
 | bonus_end.ogg | ボーナス終了 |
 | big_bgm.ogg | BIG消化中BGM（ループ） |
 | reg_bgm.ogg | REG消化中BGM（ループ） |
+| god_freeze.ogg | GOD成立ゲームのレバー時フリーズ演出 |
 
 ファイル形式はMinecraftが再生できるOGGです。MP3等の拡張子だけを変えてもOGGにはなりません。音の内容・長さは自由です。
 
@@ -29,3 +30,6 @@
 `big_bgm.ogg` / `reg_bgm.ogg` はPhase06で追加したユーザー指定のBGMです。BIG/REG中にクライアント側でループし、ボーナス終了または画面/session resetで停止します。
 
 準備・導入先・コマンドでのビルドは `../BUILD_JARS.md` を参照してください。
+
+
+`god_freeze.ogg` はJuggler + GOD後続仕様のGOD成立ゲーム専用音源です。未配置なら無音で続行します。
