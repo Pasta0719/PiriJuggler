@@ -51,12 +51,13 @@ public final class DevFundCommand implements CommandExecutor {
         }
         if (args.length >= 1 && args[0].equalsIgnoreCase("fund")) return fund(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("force")) return force(sender,args);
+        if (args.length >= 1 && args[0].equalsIgnoreCase("heaven")) return heaven(sender,args);
         if (args.length == 1 && args[0].equalsIgnoreCase("clear")) {
             if (pendingForce == null) sender.sendMessage("NO_TEST_FORCE_PENDING");
             else restoreForce("TEST_FORCE_CLEARED");
             return true;
         }
-        sender.sendMessage("Usage: /piritest fund [player] | /piritest force <god|big|reg|A|B|C|D|E|F> [player] | /piritest clear");
+        sender.sendMessage("Usage: /piritest fund [player] | /piritest force <god|big|reg|A|B|C|D|E|F> [player] | /piritest heaven <1-32> [player] | /piritest clear");
         return true;
     }
 
@@ -108,6 +109,66 @@ public final class DevFundCommand implements CommandExecutor {
             Bukkit.getScheduler().runTask(helper, () -> {
                 sender.sendMessage(message);
                 if (!sender.equals(target)) target.sendMessage(message);
+            });
+        });
+        return true;
+    }
+
+    private boolean heaven(CommandSender sender,String[] args) {
+        if (args.length < 2 || args.length > 3) {
+            sender.sendMessage("Usage: /piritest heaven <1-32> [player]");
+            return true;
+        }
+        int target;
+        try { target=Integer.parseInt(args[1]); }
+        catch(NumberFormatException error){ sender.sendMessage("TEST_HEAVEN_TARGET 1-32"); return true; }
+        if(target<1||target>32){ sender.sendMessage("TEST_HEAVEN_TARGET 1-32"); return true; }
+
+        Player targetPlayer = args.length == 3 ? Bukkit.getPlayerExact(args[2]) : sender instanceof Player player ? player : null;
+        if(targetPlayer==null){ sender.sendMessage("PLAYER_REQUIRED"); return true; }
+
+        var production=production(sender); if(production==null)return true;
+        Session session=production.machines().snapshot().session(targetPlayer.getUniqueId());
+        if(session==null || session.lifecycle()!=Session.Lifecycle.ACTIVE || session.state()!=Session.GameState.SEATED_READY){
+            sender.sendMessage("TEST_HEAVEN_REQUIRES_SEATED_READY");
+            return true;
+        }
+        Machine machine=production.machines().snapshot().machine(session.machine());
+        if(machine==null || machine.type()!=jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD){
+            sender.sendMessage("TEST_HEAVEN_REQUIRES_JUGGLER_GOD");
+            return true;
+        }
+
+        var runtime=new jp.pirijuggler.paper.game.JugglerGodRuntime(
+                jp.pirijuggler.paper.game.JugglerGodRuntime.Mode.HEAVEN,target,0,0,false,false,
+                "NONE",0,false,"TEST_HEAVEN");
+        String runtimeJson=runtime.toJsonString();
+        String sessionId=session.id().toString();
+        long machineId=session.machine();
+        var dbPath=production.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        Bukkit.getScheduler().runTaskAsynchronously(helper,()->{
+            String result;
+            try{
+                Class.forName("org.sqlite.JDBC");
+                try(var connection=DriverManager.getConnection("jdbc:sqlite:"+dbPath)){
+                    try(var pragma=connection.createStatement()){pragma.execute("PRAGMA busy_timeout=5000");}
+                    connection.setAutoCommit(false);
+                    try(var ps=connection.prepareStatement("UPDATE player_sessions SET machine_state_json=? WHERE session_id=?")){
+                        ps.setString(1,runtimeJson);ps.setString(2,sessionId);
+                        if(ps.executeUpdate()!=1)throw new IllegalStateException("Session row missing");
+                    }
+                    try(var ps=connection.prepareStatement("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?")){
+                        ps.setString(1,runtimeJson);ps.setLong(2,machineId);
+                        if(ps.executeUpdate()!=1)throw new IllegalStateException("Machine row missing");
+                    }
+                    connection.commit();
+                }
+                result="TEST_HEAVEN_SET target="+target+". Close and reopen the machine.";
+            }catch(Exception error){result="TEST_HEAVEN_FAILED "+error;}
+            String message=result;
+            Bukkit.getScheduler().runTask(helper,()->{
+                sender.sendMessage(message);
+                if(!sender.equals(targetPlayer))targetPlayer.sendMessage(message);
             });
         });
         return true;
