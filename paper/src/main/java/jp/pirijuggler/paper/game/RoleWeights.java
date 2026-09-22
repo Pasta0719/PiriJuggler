@@ -71,6 +71,10 @@ public final class RoleWeights {
         long roll=rng.nextLong(total);
         return roll<big?InternalRole.BIG:InternalRole.REG;
     }
+    public long bonusFamilyWeight(int setting,boolean big,int bonusScalePpm) {
+        if(setting<1||setting>6||bonusScalePpm<0||bonusScalePpm>1_000_000)throw new IllegalArgumentException("JUGGLER_GOD weights");
+        return bonusFamilies[setting-1][big?0:1]*bonusScalePpm/1_000_000L;
+    }
     private static long number(Map<String,Object> row,String key){
         Object value=row.get(key);return value instanceof Number n?n.longValue():0L;
     }
