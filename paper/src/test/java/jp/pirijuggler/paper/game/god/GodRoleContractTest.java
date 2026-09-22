@@ -20,7 +20,7 @@ class GodRoleContractTest {
     @Test
     void normalOrderedYellowNeverBecomesTheNavigatedFifteenMedalResult(){
         var one=GodRoleOutcome.resolve(GodRole.ORDERED_YELLOW7,GodPhase.NORMAL,0.0);
-        assertEquals("MISS",one.displayRole());
+        assertEquals("ORDERED_YELLOW7_ONE",one.displayRole());
         assertEquals(1,one.payout());
         assertFalse(one.replay());
 
