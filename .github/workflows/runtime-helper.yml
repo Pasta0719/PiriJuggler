@@ -21,3 +21,6 @@ jobs:
       - name: Build runtime helper
         shell: cmd
         run: build-runtime-test-helper.bat --no-pause
+      - name: Validate GOD Phase 2 runtime configuration
+        shell: cmd
+        run: gradlew.bat -PruntimeAcceptance=true -PruntimeScenario=god02-main -PruntimeEvidencePhase=GOD_PHASE_02 :runtime-test-client:build :runtime-test-paper:build --console=plain
