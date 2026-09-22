@@ -25,6 +25,26 @@ def save(p,v):
             if i==9: raise
             time.sleep(.05)
 cache={}
+def progress(stage, **details):
+    payload={"stage":stage,"at":datetime.datetime.now(datetime.timezone.utc).isoformat(),**details}
+    print("NEXT02_PROGRESS "+json.dumps(payload,ensure_ascii=False),flush=True)
+    try: save(EVIDENCE/"live-progress.json",payload)
+    except Exception: pass
+
+def snapshot():
+    try:
+        s=session() if 'session' in globals() and server_result else None
+        return {
+            "game_state": None if not s else s.get("game_state"),
+            "role": None if not s else s.get("internal_role"),
+            "stopped_mask": None if not s else s.get("stopped_mask"),
+            "sequence": None if not s else s.get("last_client_sequence"),
+            "client_completed": None if not client_result else cli().get("completed"),
+            "client_connected": None if not client_result else cli().get("connected")
+        }
+    except Exception:
+        return {}
+
 def load(p):
     try: cache[p]=json.loads(p.read_text(encoding="utf-8"))
     except (FileNotFoundError,json.JSONDecodeError,PermissionError): pass
@@ -37,18 +57,27 @@ manifest={"startedAt":datetime.datetime.now(datetime.timezone.utc).isoformat(),"
 server=None; client_proc=None; client_result=None; server_result=None; handles=[]; seq=0
 
 def wait(pred,label,timeout=120):
-    end=time.monotonic()+timeout
+    started=time.monotonic(); end=started+timeout; next_heartbeat=started
+    progress("WAIT_START",label=label,timeout=timeout,**snapshot())
     while time.monotonic()<end:
-        if pred(): return
+        if pred():
+            progress("WAIT_OK",label=label,elapsed=round(time.monotonic()-started,1),**snapshot())
+            return
         if server and server.poll() is not None: raise RuntimeError("Paper exited while "+label)
         if client_proc and client_proc.poll() is not None: raise RuntimeError("Fabric exited while "+label)
         if client_result:
             failure=load(client_result).get("failure")
             if failure: raise RuntimeError(failure)
+        now=time.monotonic()
+        if now>=next_heartbeat:
+            progress("WAIT_HEARTBEAT",label=label,elapsed=round(now-started,1),remaining=round(end-now,1),**snapshot())
+            next_heartbeat=now+10
         time.sleep(.2)
+    progress("WAIT_TIMEOUT",label=label,elapsed=round(time.monotonic()-started,1),**snapshot())
     raise TimeoutError(label)
 
 def check(name,ok,evidence=None):
+    progress("ASSERT",name=name,passed=bool(ok),**snapshot())
     manifest["assertions"].append({"name":name,"passed":bool(ok),"evidence":evidence})
     print(("PASS " if ok else "FAIL ")+name,flush=True)
     save(EVIDENCE/"result.json",manifest)
@@ -63,10 +92,13 @@ def msgcount(text): return sum(text in m for m in cli().get("messages",[]))
 def action(kind,**kw):
     global seq
     seq+=1; payload={"id":seq,"kind":kind,**kw}
+    progress("ACTION_SEND",id=seq,kind=kind,args=kw,**snapshot())
     save(client_result.with_name(f"command-{seq}.json"),payload)
     wait(lambda:cli().get("completed",0)>=seq,"client "+kind)
+    progress("ACTION_DONE",id=seq,kind=kind,**snapshot())
     manifest["commands"].append(payload)
 def command(text,expected):
+    progress("COMMAND",text=text,expected=expected,**snapshot())
     before=msgcount(expected);action("command",text=text);wait(lambda:msgcount(expected)>before,text+" -> "+expected)
 def click(x):
     before=len(packets("OPEN_MACHINE"));action("aim",x=x);action("click",x=x);wait(lambda:len(packets("OPEN_MACHINE"))>before,"open machine")
@@ -80,6 +112,7 @@ def settled():
 def wait_state(name): wait(lambda:settled() and session()["game_state"]==name,"state "+name)
 
 try:
+    progress("START",run=RUN)
     plugins=SERVER/"plugins";plugins.mkdir(parents=True,exist_ok=True)
     shutil.copy2(artifacts["paper"],plugins);shutil.copy2(helpers["paper"],plugins)
     (SERVER/"eula.txt").write_text("eula=true\n",encoding="utf-8")
@@ -93,6 +126,7 @@ try:
         f"-Dpiri.runtime.serverResult={server_result}","-jar",str(PAPER),"nogui"],cwd=SERVER,
         stdin=subprocess.PIPE,stdout=sh,stderr=subprocess.STDOUT,text=True,creationflags=FLAGS)
     wait(lambda:"Done (" in log(OUT/"server.log") and state().get("ready"),"Paper ready",300)
+    progress("PAPER_READY",**snapshot())
 
     cdir=EVIDENCE/"work"/"client-next02-main";cdir.mkdir(parents=True,exist_ok=True)
     (cdir/"options.txt").write_text(
@@ -106,6 +140,7 @@ try:
         "-PruntimeScenario=next02-main",f"-PruntimeRun={RUN}","-PruntimeEvidencePhase=NEXT_PHASE_02",
         ":runtime-test-client:runClient","--console=plain"],cwd=ROOT,stdout=ch,stderr=subprocess.STDOUT,creationflags=FLAGS)
     wait(lambda:cli().get("connected") and cli().get("handshake"),"Fabric join",180)
+    progress("FABRIC_JOINED",**snapshot())
 
     action("aim",x=0)
     command("piri machine create JUGGLER_GOD","MACHINE_CREATED 1")
@@ -118,6 +153,7 @@ try:
     action("close");wait(lambda:not session() or session().get("lifecycle")!="ACTIVE","fund refresh close")
     click(0);wait(lambda:settled() and session()["credit"]==50,"fund refresh reopen")
 
+    progress("GOD_ACCEPTANCE_BEGIN",**snapshot())
     command("piritest force god","TEST_FORCE_ARMED GOD")
     tap(32);wait_state("NORMAL_BETTED")
     before=len(packets("SPIN_START"));tap(32)
@@ -154,8 +190,10 @@ try:
         wait_state("SEATED_READY")
 
     # Finish the initial GOD BIG, then verify four guaranteed successor BIGs.
+    progress("GOD_BIG_COMPLETE",index=1,**snapshot())
     finish_bonus()
     for guaranteed_index in range(2,6):
+        progress("GOD_GUARANTEED_BIG_BEGIN",index=guaranteed_index,**snapshot())
         before_stats=dbrows("SELECT total_games,current_games,big_count FROM machine_period_stats WHERE machine_id=1")[0]
         tap(32);wait_state("NORMAL_BETTED")
         tap(32);wait(lambda:session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),f"guaranteed BIG {guaranteed_index} draw")
@@ -178,6 +216,7 @@ try:
         check(f"guaranteed BIG {guaranteed_index} history is 0G",
               bool(hist) and hist[0]["bonus_type"]=="BIG" and hist[0]["games"]==0,hist)
         finish_bonus()
+        progress("GOD_GUARANTEED_BIG_COMPLETE",index=guaranteed_index,**snapshot())
 
     runtime=json.loads(session()["machine_state_json"])
     check("five guaranteed GOD BIGs completed",runtime["godBigCount"]==5,
@@ -188,6 +227,7 @@ try:
               runtime["jgMode"]=="HEAVEN" or runtime["countNextChainGame"] is True),
           runtime)
 
+    progress("HEAVEN_ACCEPTANCE_BEGIN",target=2,**snapshot())
     # Deterministic heaven acceptance: target=2 must suppress a natural bonus on game 1,
     # then force a setting-weighted BIG/REG family on game 2.
     wait_state("SEATED_READY")
@@ -221,6 +261,7 @@ try:
     h2=json.loads(session()["machine_state_json"])
     check("heaven target progress reaches two",h2["heavenProgress"]==2 and h2["bonusOrigin"]=="HEAVEN",h2)
 
+    progress("ACCEPTANCE_COMPLETE",**snapshot())
     manifest["passed"]=True
 except Exception as error:
     manifest["failure"]=str(error);print("NEXT_PHASE02_RUNTIME_FAILURE "+str(error),flush=True)
