@@ -1,6 +1,6 @@
 # NEXT PHASE 01 — Juggler + GOD Design Lock
 
-Status: **IN_PROGRESS — CORE DESIGN LOCKED; ECONOMY VALUES PENDING**
+Status: **IN_PROGRESS — CORE DESIGN LOCKED; PAYOUT TARGETS / HEAVEN DETAILS PENDING**
 
 ## Core concept
 
@@ -45,10 +45,11 @@ GOD starts a sequence of BIG bonuses with 1-game chaining behavior.
 
 Locked structure:
 
-- GOD grants an initial stock of **N BIGs**.
-- After the initial guaranteed stock is exhausted, additional BIGs may continue using a continuation probability of **N%**.
-- Each successful continuation adds another 1G BIG.
-- The exact initial stock count and continuation probability are intentionally **UNLOCKED** until payout fitting.
+- GOD grants an initial stock of **5 BIGs** on every setting.
+- After the 5 guaranteed BIGs are exhausted, additional BIGs use a setting-dependent continuation probability.
+- Each successful continuation adds another 1G BIG and then rolls continuation again.
+- Initial continuation targets are locked as: Setting 1 = **25%**, Setting 2 = **30%**, Setting 3 = **35%**, Setting 4 = **45%**, Setting 5 = **55%**, Setting 6 = **70%**.
+- These are design targets and may only be numerically fine-tuned in NEXT Phase 03 if whole-machine simulation cannot meet the final payout targets without breaking the locked behavior.
 - GOD itself is recorded separately from ordinary BIG/REG history.
 
 After the GOD continuation ends, the machine enters heaven.
@@ -86,9 +87,9 @@ These values must be determined in NEXT Phase 03 against the target payout:
 - normal bonus -> heaven entry probability;
 - heaven bonus -> heaven continuation/re-entry probability;
 - whether BIG and REG differ in heaven transition probability;
-- GOD initial guaranteed BIG stock count;
-- GOD continuation probability after guaranteed stock;
-- any additional GOD-chain weighting required to hit payout targets.
+- final setting-by-setting payout targets;
+- any small numerical fine-tuning of GOD continuation rates required by whole-machine simulation;
+- any additional GOD-chain weighting required to hit payout targets without changing the locked 5-BIG guarantee or the increasing-by-setting continuation structure.
 
 Do not guess these during core implementation.
 
