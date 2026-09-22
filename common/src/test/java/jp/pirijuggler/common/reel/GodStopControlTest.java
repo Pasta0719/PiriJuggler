@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GodStopControlTest {
     private static final String[] LOCKED_FORMS={
-            "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
+            "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","ORDERED_YELLOW7_ONE","LOWER_YELLOW7",
             "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL",
             "RED7","GOD","SP"
     };
@@ -38,7 +38,7 @@ class GodStopControlTest {
     @Test
     void ordinaryFixedFormsStayInsideFourFrameSlip(){
         String[] roles={
-                "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
+                "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","ORDERED_YELLOW7_ONE","LOWER_YELLOW7",
                 "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL"
         };
         for(String role:roles){
@@ -202,6 +202,7 @@ class GodStopControlTest {
         expectedFixed.put("UPPER_BLUE7",2);
         expectedFixed.put("MIDDLE_BLUE7",4);
         expectedFixed.put("ORDERED_YELLOW7",2);
+        expectedFixed.put("ORDERED_YELLOW7_ONE",64);
         expectedFixed.put("LOWER_YELLOW7",2);
         expectedFixed.put("RISING_YELLOW7",2);
         expectedFixed.put("MIDDLE_YELLOW7",8);
@@ -292,6 +293,7 @@ class GodStopControlTest {
         expected.put("UPPER_BLUE7",Set.of("TOP:BLUE7"));
         expected.put("MIDDLE_BLUE7",Set.of("MIDDLE:BLUE7"));
         expected.put("ORDERED_YELLOW7",Set.of("BOTTOM:YELLOW7"));
+        expected.put("ORDERED_YELLOW7_ONE",Set.of());
         expected.put("LOWER_YELLOW7",Set.of("BOTTOM:YELLOW7"));
         expected.put("RISING_YELLOW7",Set.of("RISING:YELLOW7"));
         expected.put("MIDDLE_YELLOW7",Set.of("MIDDLE:YELLOW7"));
