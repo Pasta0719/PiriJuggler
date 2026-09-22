@@ -26,11 +26,11 @@ class GodRoleOutcomeTest {
     void orderedYellowOnlyShowsWinningYellowWhenItActuallyPaysFifteen(){
         var miss=GodRoleOutcome.resolve(GodRole.ORDERED_YELLOW7,GodPhase.NORMAL,0.5);
         assertEquals(1,miss.payout());
-        assertEquals("MISS",miss.displayRole());
+        assertEquals("ORDERED_YELLOW7_ONE",miss.displayRole());
 
         var oneMedal=GodRoleOutcome.resolve(GodRole.ORDERED_YELLOW7,GodPhase.NORMAL,0.0);
         assertEquals(1,oneMedal.payout());
-        assertEquals("MISS",oneMedal.displayRole());
+        assertEquals("ORDERED_YELLOW7_ONE",oneMedal.displayRole());
 
         var zeroMedal=GodRoleOutcome.resolve(GodRole.ORDERED_YELLOW7,GodPhase.NORMAL,0.999999);
         assertEquals(0,zeroMedal.payout());
@@ -53,7 +53,7 @@ class GodRoleOutcomeTest {
                 GodRole.ORDERED_YELLOW7,GodPhase.NORMAL,
                 Math.min(0.999999999999,GodRoleOutcome.NORMAL_ORDERED_ONE_MEDAL_RATE+1.0e-9));
 
-        assertEquals("MISS",below.displayRole());
+        assertEquals("ORDERED_YELLOW7_ONE",below.displayRole());
         assertEquals("MISS",above.displayRole());
         assertEquals(1,below.payout());
         assertEquals(0,above.payout());
