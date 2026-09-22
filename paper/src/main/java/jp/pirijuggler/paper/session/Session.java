@@ -70,6 +70,8 @@ public record Session(Map<String, Object> snapshot) {
         stops.addProperty("right", number("display_right_stop")); json.add("displayStops", stops);
         json.addProperty("stoppedMask", number("stopped_mask"));
         JsonObject ms=machineState();
+        if(ms!=null&&ms.has("godFreeze"))json.addProperty("godFreeze",ms.get("godFreeze").getAsBoolean());
+        if(ms!=null&&ms.has("godBigCount"))json.addProperty("godChainBigCount",ms.get("godBigCount").getAsInt());
         if(ms!=null&&ms.has("phase")){
             json.addProperty("godPhase",ms.get("phase").getAsString());
             copy(ms,json,"ggGamesRemaining","godGgRemaining");
