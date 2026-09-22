@@ -85,3 +85,10 @@ Status: IN_PROGRESS — core code implemented and dedicated runtime acceptance p
 Implemented: JUGGLER_GOD machine family, GOD BAR role/result, GOD freeze presentation contract, five-BIG GOD chain, setting continuation structure, <=32G heaven state, persistence/history, and isolated replaceable successor assets.
 
 Dedicated acceptance command: `run-next-phase02-runtime.bat`.
+
+### NEXT Phase 02 hardening
+
+- Direct-entry GOD-chain BIG counter regression fixed and covered by test.
+- Heaven pre-target natural BIG/REG pre-emption removed; target game is now authoritative.
+- NEXT Phase 02 runtime helper scenario/phase/port/probe wiring added and CI-validated.
+- Runtime runner extended through all five guaranteed BIGs and fixed for production third-stop state clearing.
