@@ -114,7 +114,7 @@ public final class SlotScreen extends Screen {
         String hoverTime=null;
         for(int i=0;i<Math.min(10,history.size());i++){
             JsonObject item=history.get(i).getAsJsonObject();String type=item.get("type").getAsString();int y=521+i*22;
-            int tint="BIG".equals(type)?color("DISPLAY_BIG"):color("DISPLAY_REG");
+            int tint="GOD".equals(type)?color("DISPLAY_GREEN"):"BIG".equals(type)?color("DISPLAY_BIG"):color("DISPLAY_REG");
             text(c,type,44,y,1.22f,false,tint);
             text(c,item.get("games").getAsString()+"G",139,y,1.22f,false,color("DISPLAY_WHITE"));
             if(mx>=34&&mx<278&&my>=y-3&&my<y+19&&item.has("occurredAt"))hoverTime=HISTORY_TIME.format(Instant.ofEpochMilli(item.get("occurredAt").getAsLong()));
