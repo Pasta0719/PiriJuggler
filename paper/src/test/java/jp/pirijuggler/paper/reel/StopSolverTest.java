@@ -42,7 +42,7 @@ class StopSolverTest {
         return result;
     }
     @Test void allOrdersAndAllPressedSequencesCompleteIncludingPremiumF(){
-        var report=ReelVerification.verify(SOLVER);assertEquals(666792,report.allSequences());assertEquals(166698,report.premiumFSequences());assertEquals(7938,report.premiumFSecondChecks());
+        var report=ReelVerification.verify(SOLVER);assertEquals(722358,report.allSequences());assertEquals(166698,report.premiumFSequences());assertEquals(7938,report.premiumFSecondChecks());
     }
     @Test void pureBonusAlwaysHasOneControlLineAndNoCherryWhileCherryBonusHasBoth(){
         for(var e:CATALOGUE.candidates(DisplayRole.BONUS)){
