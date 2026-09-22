@@ -22,6 +22,7 @@ public final class JugglerGodGameEngine implements GameEngine {
     private final RoleWeights weights;
     private final long normalToHeavenPpm;
     private final long heavenToHeavenPpm;
+    private final int[] bonusScalePpm=new int[7];
 
     public JugglerGodGameEngine(NormalGame delegate,RandomStreams random,RoleWeights weights,Map<String,Object> config) {
         this.delegate=Objects.requireNonNull(delegate);
@@ -30,8 +31,15 @@ public final class JugglerGodGameEngine implements GameEngine {
         Map<String,Object> tuning=map(config==null?null:config.get("juggler_god"));
         normalToHeavenPpm=number(tuning.get("normal_to_heaven_ppm"),0);
         heavenToHeavenPpm=number(tuning.get("heaven_to_heaven_ppm"),0);
+        Map<String,Object> settings=map(tuning.get("settings"));
+        for(int setting=1;setting<=6;setting++){
+            Map<String,Object> row=map(settings.get(Integer.toString(setting)));
+            bonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
+        }
         if(normalToHeavenPpm<0||normalToHeavenPpm>1_000_000||heavenToHeavenPpm<0||heavenToHeavenPpm>1_000_000)
             throw new IllegalArgumentException("JUGGLER_GOD heaven tuning");
+        for(int setting=1;setting<=6;setting++)if(bonusScalePpm[setting]<0||bonusScalePpm[setting]>1_000_000)
+            throw new IllegalArgumentException("JUGGLER_GOD bonus scale");
     }
 
     @Override
@@ -60,7 +68,9 @@ public final class JugglerGodGameEngine implements GameEngine {
                 if(progress>=runtime.heavenTarget())
                     forced=weights.drawBonusFamily(machine.setting(),random.gameplay(machine.id()));
                 else
-                    forced=weights.drawNonBonus(machine.setting(),random.gameplay(machine.id()));
+                    forced=weights.drawJugglerGodNonBonus(machine.setting(),random.gameplay(machine.id()),bonusScalePpm[machine.setting()]);
+            }else{
+                forced=weights.drawJugglerGod(machine.setting(),random.gameplay(machine.id()),bonusScalePpm[machine.setting()]);
             }
         }
 
