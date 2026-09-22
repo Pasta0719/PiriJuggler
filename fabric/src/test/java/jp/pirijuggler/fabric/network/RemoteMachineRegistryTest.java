@@ -52,6 +52,19 @@ class RemoteMachineRegistryTest {
         assertEquals("BIG", registry.machine(7).get("bonusMode").getAsString());
     }
 
+    @Test void jugglerGodSnapshotIsAcceptedWithoutChangingJugglerDefault() {
+        RemoteMachineRegistry registry = new RemoteMachineRegistry();
+        JsonObject normal=snapshot(20);
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, normal));
+        assertEquals("JUGGLER",registry.machine(20).get("machineType").getAsString());
+
+        JsonObject successor=snapshot(21);
+        successor.addProperty("machineType","JUGGLER_GOD");
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, successor));
+        assertEquals("JUGGLER_GOD",registry.machine(21).get("machineType").getAsString());
+        assertEquals("JUGGLER",registry.machine(20).get("machineType").getAsString());
+    }
+
     @Test void malformedRemotePacketDropsOnlyReferencedMachine() {
         RemoteMachineRegistry registry = new RemoteMachineRegistry();
         registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, snapshot(1)));
