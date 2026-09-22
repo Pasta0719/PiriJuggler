@@ -56,3 +56,11 @@ This applies to reel symbols, Piri Chance lamp imagery, UI imagery, and independ
 - Added `runtime-test-support/run_next_phase02.py` and `run-next-phase02-runtime.bat`.
 
 Phase 02 must remain IN_PROGRESS until the dedicated NEXT Phase 02 real Paper+Fabric acceptance result is PASS.
+
+## Phase 02 hardening notes
+
+- The persisted heaven target game is exclusive: pre-target heaven spins are conditionally drawn from non-bonus roles only, so a normal BIG/REG cannot pre-empt the selected 1..32 target.
+- GOD remains an independent 1/8192 eligible normal-lever event and may supersede a heaven target window; after the GOD chain ends, heaven is entered again with a fresh target.
+- GOD-chain BIG start accounting is shared for direct-entry and bonus-entry paths so `godBigCount` cannot diverge by reel outcome shape.
+- Dedicated NEXT Phase 02 runtime client configuration is validated in CI (`next02-main`, `NEXT_PHASE_02`, port 25597, Phase02Probe enabled).
+- Runtime runner third-stop waits observe terminal state instead of transient `stopped_mask=7`, because production clears spin state in the same third-stop commit.
