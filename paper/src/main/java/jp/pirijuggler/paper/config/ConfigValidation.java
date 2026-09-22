@@ -53,7 +53,7 @@ public final class ConfigValidation {
 
     public static Result validate(Map<String, Object> values) {
         Check c = new Check(values);
-        c.keys("", Set.of("protocol_version", "economy", "game", "sound", "premium", "prizes", "events", "probabilities"));
+        c.keys("", Set.of("protocol_version", "economy", "game", "sound", "juggler_god", "premium", "prizes", "events", "probabilities"));
         c.equalInteger("protocol_version", Protocol.VERSION);
         c.keys("economy", Set.of("loan_medals", "loan_amount"));
         c.integer("economy.loan_medals", 1, Integer.MAX_VALUE);
@@ -62,6 +62,9 @@ public final class ConfigValidation {
         c.integer("game.disconnect_grace_seconds", 0, Long.MAX_VALUE);
         c.keys("sound", SOUNDS);
         for (String sound : SOUNDS) c.numberRange("sound." + sound, BigDecimal.ZERO, BigDecimal.valueOf(2));
+        c.keys("juggler_god", Set.of("normal_to_heaven_ppm", "heaven_to_heaven_ppm"));
+        c.integer("juggler_god.normal_to_heaven_ppm", 0, 1_000_000);
+        c.integer("juggler_god.heaven_to_heaven_ppm", 0, 1_000_000);
         BigInteger denominator = c.integer("premium.denominator", 1, Long.MAX_VALUE);
         BigInteger chance = c.integer("premium.big_chance_weight", 0, Long.MAX_VALUE);
         if (chance.compareTo(denominator) > 0) c.fail("premium.big_chance_weight", "must not exceed denominator");
