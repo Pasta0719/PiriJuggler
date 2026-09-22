@@ -84,9 +84,7 @@ public final class JugglerGodGameEngine implements GameEngine {
             next=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
                     "GOD_CHAIN",1,false,"GOD_STARTED");
         }else if(legacy.bonusStarted()!=null&&"GOD_CHAIN".equals(next.bonusOrigin())){
-            next=new JugglerGodRuntime(next.mode(),next.heavenTarget(),next.heavenProgress(),
-                    next.guaranteedRemaining(),next.forceChainBig(),next.countNextChainGame(),
-                    next.bonusOrigin(),next.godBigCount()+1,next.godFreeze(),"GOD_BIG_STARTED");
+            next=recordGodChainBonusStart(next);
         }
 
         if(legacy.bonusEnded()){
@@ -102,6 +100,13 @@ public final class JugglerGodGameEngine implements GameEngine {
                 legacy.scheduled().stream().map(e->new GameTransition.Scheduled(e.delayMs(),e.packet())).toList(),
                 next.toJsonString()
         );
+    }
+
+    static JugglerGodRuntime recordGodChainBonusStart(JugglerGodRuntime state){
+        if(!"GOD_CHAIN".equals(state.bonusOrigin()))throw new IllegalArgumentException("Not GOD chain");
+        return new JugglerGodRuntime(state.mode(),state.heavenTarget(),state.heavenProgress(),
+                state.guaranteedRemaining(),state.forceChainBig(),state.countNextChainGame(),
+                state.bonusOrigin(),state.godBigCount()+1,state.godFreeze(),"GOD_BIG_STARTED");
     }
 
     private JugglerGodRuntime afterBonus(Machine machine,JugglerGodRuntime state){
