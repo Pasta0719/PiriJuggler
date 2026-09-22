@@ -118,7 +118,7 @@ class GodGameEngineTest {
         assertEquals(15,common.after().machineState().get("_pendingPayout").getAsInt());
 
         var ordered=engine.plan(session(50),machine("ORDERED_YELLOW7"),PacketType.SPACE_ACTION,1,1,0,0,null);
-        assertEquals("MISS",ordered.after().machineState().get("_pendingDisplayRole").getAsString());
+        assertEquals("ORDERED_YELLOW7_ONE",ordered.after().machineState().get("_pendingDisplayRole").getAsString());
         assertEquals(1,ordered.after().machineState().get("_pendingPayout").getAsInt());
         assertFalse(ordered.after().machineState().has("_pendingStopOrder"));
     }
@@ -201,7 +201,7 @@ class GodGameEngineTest {
                 new Expect("MISS",0,false,"MISS"),
                 new Expect("UPPER_BLUE7",0,true,"UPPER_BLUE7"),
                 new Expect("MIDDLE_BLUE7",0,true,"MIDDLE_BLUE7"),
-                new Expect("ORDERED_YELLOW7",1,false,"MISS"),
+                new Expect("ORDERED_YELLOW7",1,false,"ORDERED_YELLOW7_ONE"),
                 new Expect("LOWER_YELLOW7",3,false,"LOWER_YELLOW7"),
                 new Expect("RISING_YELLOW7",15,false,"RISING_YELLOW7"),
                 new Expect("MIDDLE_YELLOW7",15,false,"MIDDLE_YELLOW7"),
