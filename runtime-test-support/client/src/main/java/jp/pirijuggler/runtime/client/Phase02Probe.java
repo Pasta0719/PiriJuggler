@@ -50,15 +50,15 @@ public final class Phase02Probe {
     }
     public static void tick(MinecraftClient client) {
         if (client.player != null) client.mouse.unlockCursor();
-        if(phaseTap!=null && client.currentScreen instanceof SlotScreen screen){
-            var view=((jp.pirijuggler.runtime.mixin.SlotViewAccessor)(Object)screen).piri$view();double phase=view.phase(phaseTap.get("reel").getAsInt());double desired=phaseTap.get("phase").getAsDouble();
+        if(phaseTap!=null && slotView(client)!=null){
+            var view=slotView(client);double phase=view.phase(phaseTap.get("reel").getAsInt());double desired=phaseTap.get("phase").getAsDouble();
             if(view.canSend(PacketType.STOP_LEFT)&&phase>=desired && phase<desired+.18){
                 int key=phaseTap.get("key").getAsInt();client.keyboard.onKey(client.getWindow().getHandle(),key,0,GLFW.GLFW_PRESS,0);client.keyboard.onKey(client.getWindow().getHandle(),key,0,GLFW.GLFW_RELEASE,0);phaseTap=null;
             }else if(System.nanoTime()-phaseTapAt>30_000_000_000L){failure="Timed key did not reach requested visible phase";phaseTap=null;}
         }
-        if(motionSpin!=null && client.currentScreen instanceof SlotScreen screen){
+        if(motionSpin!=null && slotView(client)!=null){
             double elapsed=(System.nanoTime()-motionAt)/1e9;
-            if(elapsed<=1.5){var view=((jp.pirijuggler.runtime.mixin.SlotViewAccessor)(Object)screen).piri$view();JsonObject sample=new JsonObject();sample.addProperty("elapsed",elapsed);JsonArray phases=new JsonArray();for(int i=0;i<3;i++)phases.add(view.phase(i));sample.add("phases",phases);motionTrace.add(sample);}
+            if(elapsed<=1.5){var view=slotView(client);JsonObject sample=new JsonObject();sample.addProperty("elapsed",elapsed);JsonArray phases=new JsonArray();for(int i=0;i<3;i++)phases.add(view.phase(i));sample.add("phases",phases);motionTrace.add(sample);}
         }
         if (++ticks % 5 != 0) return;
         try {
@@ -135,13 +135,20 @@ public final class Phase02Probe {
             result.addProperty("screen",client.currentScreen==null?"none":client.currentScreen.getClass().getSimpleName());result.addProperty("hudHidden",SlotUi.hidesHud());
             result.addProperty("cursorLocked",client.mouse.isCursorLocked());result.addProperty("hudLeaks",HudAudit.leaks);result.addProperty("hudWorldCalls",HudAudit.worldCalls);
             result.addProperty("width",client.getWindow().getWidth());result.addProperty("height",client.getWindow().getHeight());result.add("publicState",PiriJugglerClient.session().publicState());
-            if(client.currentScreen instanceof SlotScreen screen){var view=((jp.pirijuggler.runtime.mixin.SlotViewAccessor)(Object)screen).piri$view();JsonArray phases=new JsonArray();for(int i=0;i<3;i++)phases.add(view.phase(i));result.add("displayPhases",phases);result.addProperty("stopEnabled",view.canSend(PacketType.STOP_LEFT)||view.canSend(PacketType.STOP_CENTER)||view.canSend(PacketType.STOP_RIGHT));result.addProperty("godNav",view.godNav());result.addProperty("machineType",view.machineType());}
+            var runtimeView=slotView(client);if(runtimeView!=null){JsonArray phases=new JsonArray();for(int i=0;i<3;i++)phases.add(runtimeView.phase(i));result.add("displayPhases",phases);result.addProperty("stopEnabled",runtimeView.canSend(PacketType.STOP_LEFT)||runtimeView.canSend(PacketType.STOP_CENTER)||runtimeView.canSend(PacketType.STOP_RIGHT));result.addProperty("godNav",runtimeView.godNav());result.addProperty("machineType",runtimeView.machineType());}
             JsonObject sounds=new JsonObject();for(String sound:PiriSounds.NAMES){JsonObject s=new JsonObject();s.addProperty("registered",Registries.SOUND_EVENT.containsId(Identifier.of("piri",sound)));s.addProperty("available",PiriSounds.available(sound));sounds.add(sound,s);}result.add("sounds",sounds);
         }
         if (client.player != null) { result.addProperty("position",client.player.getPos().toString()); result.addProperty("yaw",client.player.getYaw()); result.addProperty("pitch",client.player.getPitch()); }
         try { Path output = output(); Files.createDirectories(output.getParent()); Files.writeString(output,result.toString()); }
         catch (java.nio.file.FileSystemException sharingConflict) { LoggerFactory.getLogger("PiriRuntimeAcceptance").debug("Retrying observation write on next tick",sharingConflict); }
         catch (java.io.IOException error) { throw new java.io.UncheckedIOException(error); }
+    }
+    private static SlotViewState slotView(MinecraftClient client) {
+        if(client.currentScreen instanceof SlotScreen screen)
+            return ((jp.pirijuggler.runtime.mixin.SlotViewAccessor)(Object)screen).piri$view();
+        if(client.currentScreen instanceof GodScreen screen)
+            return ((jp.pirijuggler.runtime.mixin.GodViewAccessor)(Object)screen).piri$view();
+        return null;
     }
     private static void aim(MinecraftClient client, int x) { aim(client,x,66,0); }
     private static void aim(MinecraftClient client, int x, int y, int z) {
