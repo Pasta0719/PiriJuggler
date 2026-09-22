@@ -31,6 +31,15 @@ def progress(stage, **details):
     try: save(EVIDENCE/"live-progress.json",payload)
     except Exception: pass
 
+def progress_signature():
+    sig=snapshot()
+    for p in (OUT/"server.log", OUT/"client.log"):
+        try:
+            sig[str(p.name)+"_size"]=p.stat().st_size
+        except Exception:
+            sig[str(p.name)+"_size"]=-1
+    return json.dumps(sig,sort_keys=True,default=str)
+
 def snapshot():
     try:
         s=session() if 'session' in globals() and server_result else None
@@ -57,7 +66,8 @@ manifest={"startedAt":datetime.datetime.now(datetime.timezone.utc).isoformat(),"
 server=None; client_proc=None; client_result=None; server_result=None; handles=[]; seq=0
 
 def wait(pred,label,timeout=120):
-    started=time.monotonic(); end=started+timeout; next_heartbeat=started
+    started=time.monotonic(); end=started+timeout
+    last_sig=progress_signature(); last_progress=started
     progress("WAIT_START",label=label,timeout=timeout,**snapshot())
     while time.monotonic()<end:
         if pred():
@@ -69,13 +79,15 @@ def wait(pred,label,timeout=120):
             failure=load(client_result).get("failure")
             if failure: raise RuntimeError(failure)
         now=time.monotonic()
-        if now>=next_heartbeat:
-            progress("WAIT_HEARTBEAT",label=label,elapsed=round(now-started,1),remaining=round(end-now,1),**snapshot())
-            next_heartbeat=now+10
+        sig=progress_signature()
+        if sig!=last_sig:
+            last_sig=sig; last_progress=now
+        elif now-last_progress>=20:
+            progress("STALL_FAIL",label=label,stalled_for=round(now-last_progress,1),**snapshot())
+            raise RuntimeError("No observable runtime progress for 20s while "+label)
         time.sleep(.2)
     progress("WAIT_TIMEOUT",label=label,elapsed=round(time.monotonic()-started,1),**snapshot())
     raise TimeoutError(label)
-
 def check(name,ok,evidence=None):
     progress("ASSERT",name=name,passed=bool(ok),**snapshot())
     manifest["assertions"].append({"name":name,"passed":bool(ok),"evidence":evidence})
@@ -125,7 +137,7 @@ try:
     server=subprocess.Popen([JAVA,"-Xms512M","-Xmx1536M","-Dfile.encoding=UTF-8","-Dpiri.runtime.phase=next02",
         f"-Dpiri.runtime.serverResult={server_result}","-jar",str(PAPER),"nogui"],cwd=SERVER,
         stdin=subprocess.PIPE,stdout=sh,stderr=subprocess.STDOUT,text=True,creationflags=FLAGS)
-    wait(lambda:"Done (" in log(OUT/"server.log") and state().get("ready"),"Paper ready",300)
+    wait(lambda:"Done (" in log(OUT/"server.log") and state().get("ready"),"Paper ready",180)
     progress("PAPER_READY",**snapshot())
 
     cdir=EVIDENCE/"work"/"client-next02-main";cdir.mkdir(parents=True,exist_ok=True)
@@ -139,7 +151,7 @@ try:
     client_proc=subprocess.Popen(GRADLE_CMD+["-PruntimeAcceptance=true",
         "-PruntimeScenario=next02-main",f"-PruntimeRun={RUN}","-PruntimeEvidencePhase=NEXT_PHASE_02",
         ":runtime-test-client:runClient","--console=plain"],cwd=ROOT,stdout=ch,stderr=subprocess.STDOUT,creationflags=FLAGS)
-    wait(lambda:cli().get("connected") and cli().get("handshake"),"Fabric join",180)
+    wait(lambda:cli().get("connected") and cli().get("handshake"),"Fabric join",90)
     progress("FABRIC_JOINED",**snapshot())
 
     action("aim",x=0)
