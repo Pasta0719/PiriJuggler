@@ -150,11 +150,17 @@ try:
         check(role+" representative/Piri form",form(display,stops),{"stops":stops,"visible":visible(stops)})
         check(role+" Paper/Fabric stop agreement",True,{"paper":stops,"fabric":cli().get("displayPhases")})
         capture(f"{i+1:02d}-{role.lower()}")
-        if i==len(cases)-1:
+        if replay:
             credit=s["credit"];tap(32);wait(lambda:session()["game_state"]=="NORMAL_SPINNING","replay launches free next game")
-            check("replay next game consumes no new bet",session()["credit"]==credit,{"before":credit,"after":session()["credit"]})
-            break
-        command("pirigamereset","TEST_GAME_RESET")
+            check(role+" replay next game consumes no new bet",session()["credit"]==credit,{"before":credit,"after":session()["credit"]})
+            for replay_chain in range(8):
+                wait(lambda:cli().get("stopEnabled"),role+" replay stop enable")
+                for key in (263,264,262):
+                    tap(key); time.sleep(.15)
+                wait(lambda:session()["game_state"]!="NORMAL_SPINNING",role+" replay-chain settle")
+                if session()["game_state"]!="REPLAY_READY": break
+                tap(32);wait(lambda:session()["game_state"]=="NORMAL_SPINNING",role+" chained replay launches")
+            check(role+" replay right fully consumed",session()["game_state"]!="REPLAY_READY",session()["game_state"])
         command("piribalance 0 0","TEST_BALANCE_SET")
         action("close");wait(lambda:not sessions(),"clean session end",60)
 
