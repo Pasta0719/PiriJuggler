@@ -155,7 +155,11 @@ try:
             check(role+" replay next game consumes no new bet",session()["credit"]==credit,{"before":credit,"after":session()["credit"]})
             for replay_chain in range(8):
                 wait(lambda:cli().get("stopEnabled"),role+" replay stop enable")
-                for key in (263,264,262):
+                nav=packets("SPIN_START")[-1].get("godNav","")
+                if nav=="R": replay_order=(262,263,264)
+                elif len(nav.split("-"))==3: replay_order=tuple({"L":263,"C":264,"R":262}[v] for v in nav.split("-"))
+                else: replay_order=(263,264,262)
+                for key in replay_order:
                     tap(key); time.sleep(.15)
                 wait(lambda:session()["game_state"]!="NORMAL_SPINNING",role+" replay-chain settle")
                 if session()["game_state"]!="REPLAY_READY": break
