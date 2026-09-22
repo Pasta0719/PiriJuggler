@@ -18,6 +18,7 @@
 | bonus_end.ogg | piri:bonus_end | BIG終了時のみ再生 |
 | big_bgm.ogg | piri:big_bgm | BIG消化中BGM（ループ） |
 | reg_bgm.ogg | piri:reg_bgm | REG消化中BGM（ループ） |
+| god_freeze.ogg | piri:god_freeze | GOD成立ゲームのレバー時フリーズ演出 |
 
 `big_bgm` / `reg_bgm` はPhase06でユーザー指定により追加したBGM SoundEventです。
 
@@ -30,3 +31,6 @@
 - BIG/REG終了・session reset時にBGMを停止します。
 
 未配置の場合は無音で処理を続行します。build/test/runtimeに実音源は必須ではありません。
+
+
+Juggler + GOD後続仕様では `god_freeze.ogg` をGOD成立ゲーム専用として使用します。未配置でもGOD成立・BAR揃い・進行は変わらず、無音で演出を継続します。
