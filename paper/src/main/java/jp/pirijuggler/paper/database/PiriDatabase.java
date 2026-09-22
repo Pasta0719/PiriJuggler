@@ -59,6 +59,7 @@ public final class PiriDatabase implements AutoCloseable {
                 ensureMachineTypeColumn();
                 ensureMachineRuntimeColumn();
                 ensureMachineStateColumn();
+                ensureJugglerGodHistoryTable();
                 String oldJvm = metadata("current_jvm_start_ms");
                 if (Long.toString(jvmStart).equals(oldJvm)) {
                     period = Objects.requireNonNull(metadata("current_business_period_id"));
@@ -271,6 +272,9 @@ public final class PiriDatabase implements AutoCloseable {
     private void ensureMachineStateColumn() throws SQLException {
         boolean present=rows("PRAGMA table_info(player_sessions)").stream().anyMatch(row->"machine_state_json".equals(row.get("name")));
         if(!present) sql("ALTER TABLE player_sessions ADD COLUMN machine_state_json TEXT");
+    }
+    private void ensureJugglerGodHistoryTable() throws SQLException {
+        sql("CREATE TABLE IF NOT EXISTS juggler_god_history(id INTEGER PRIMARY KEY AUTOINCREMENT,machine_id INTEGER NOT NULL,business_period_id TEXT NOT NULL,event_type TEXT NOT NULL CHECK(event_type='GOD'),games INTEGER NOT NULL,occurred_at INTEGER NOT NULL,FOREIGN KEY(machine_id) REFERENCES machines(machine_id),FOREIGN KEY(business_period_id) REFERENCES business_periods(business_period_id))");
     }
 
     public void setMachineRuntimeJson(int id, String runtimeJson, long now) throws SQLException {
