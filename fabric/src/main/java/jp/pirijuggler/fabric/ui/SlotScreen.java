@@ -72,6 +72,12 @@ public final class SlotScreen extends Screen {
         var lamp=SlotLayout.LAMP;String name="lamp/piri_chance_"+(view.lampOn()?"on":"off")+".png";
         if(view.lampOn())for(int[] offset:new int[][]{{-4,0},{4,0},{0,4}})texture(c,name,lamp.x()+offset[0],lamp.y()+offset[1],lamp.w(),lamp.h(),512,256,.18f);
         texture(c,name,lamp.x(),lamp.y(),lamp.w(),lamp.h(),512,256,1);
+        if("JUGGLER_GOD".equals(view.machineType())){
+            int stockOn=view.stockLampOn()?color("DISPLAY_GREEN"):color("BUTTON_METAL_DARK");
+            rounded(c,1390,835,150,58,14,stockOn);
+            rounded(c,1396,841,138,46,10,color("DISPLAY_BG"));
+            text(c,"STOCK",1465,853,1.8f,true,view.stockLampOn()?color("DISPLAY_GREEN"):color("TEXT_SHADOW"));
+        }
         panel(c,SlotLayout.STATUS,color("DISPLAY_BG"));
         String[] labels={"CREDIT","BET","PAY","MEDALS"},fields={"credit","bet","pay","heldMedals"};
         for(int n=0;n<4;n++){int x=690+n*198;text(c,labels[n],x,725,2,false);text(c,view.value(fields[n]),x,758,3,false);}
