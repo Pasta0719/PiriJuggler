@@ -1,5 +1,9 @@
 name: NEXT Phase 02 real runtime
 
+concurrency:
+  group: next-phase02-real-runtime
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
   push:
