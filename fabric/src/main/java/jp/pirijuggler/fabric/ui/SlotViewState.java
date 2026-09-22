@@ -123,5 +123,6 @@ public final class SlotViewState {
     public String godNav(){return godNav;}
     public boolean godFreeze(){return godFreeze;}
     public boolean godRevealed(int reel){return reel>=0&&reel<3&&godRevealed[reel];}
+    public boolean stockLampOn(){return state!=null&&state.has("stockLampOn")&&state.get("stockLampOn").getAsBoolean();}
     public String value(String name){return state!=null&&state.has(name)?state.get(name).getAsString():"—";}
 }
