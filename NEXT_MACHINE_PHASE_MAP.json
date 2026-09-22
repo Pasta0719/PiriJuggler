@@ -10,13 +10,13 @@
       "number": 1,
       "file": "next-machine-phases/NEXT_PHASE_01_DESIGN_LOCK.md",
       "title": "Juggler + GOD Design Lock",
-      "status": "IN_PROGRESS"
+      "status": "COMPLETE"
     },
     {
       "number": 2,
       "file": "next-machine-phases/NEXT_PHASE_02_CORE_GAMEPLAY.md",
       "title": "Core Gameplay / Reel / State Implementation",
-      "status": "BLOCKED_BY_PHASE_01"
+      "status": "NOT_STARTED"
     },
     {
       "number": 3,
