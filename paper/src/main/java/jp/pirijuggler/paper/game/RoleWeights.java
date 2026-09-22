@@ -18,7 +18,7 @@ public final class RoleWeights {
         var settings=StartupProfile.map(StartupProfile.map(config.get("probabilities")).get("settings"));
         for(int setting=1;setting<=6;setting++) {
             var row=StartupProfile.map(settings.get(Integer.toString(setting)));long sum=0;
-            if(row.size()!=12)throw new IllegalArgumentException("Expected 12 role weights");
+            for(var role:ORDER)if(!row.containsKey(role.name().toLowerCase(Locale.ROOT)))throw new IllegalArgumentException("Missing role weight "+role);
             for(int i=0;i<ORDER.length;i++) {
                 long value=((Number)row.get(ORDER[i].name().toLowerCase(Locale.ROOT))).longValue();
                 if(value<0||value>DENOMINATOR)throw new IllegalArgumentException("Invalid role weight");
