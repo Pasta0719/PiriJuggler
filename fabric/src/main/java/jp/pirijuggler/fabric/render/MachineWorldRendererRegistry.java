@@ -10,6 +10,6 @@ public final class MachineWorldRendererRegistry {
     private MachineWorldRendererRegistry() {}
 
     public static boolean hasRenderer(String machineType) {
-        return "JUGGLER".equals(machineType);
+        return "JUGGLER".equals(machineType)||"JUGGLER_GOD".equals(machineType);
     }
 }
