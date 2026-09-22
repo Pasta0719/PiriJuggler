@@ -87,6 +87,24 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals("BIG",GameRules.bonus(InternalRole.GOD));
     }
 
+    @Test void firstGodBigIsStoredAsZeroGameBigHistory() throws Exception {
+        Rig rig=rig(JugglerGodRuntime.initial(),1);
+        Session before=rig.session();
+        var values=new LinkedHashMap<>(before.snapshot());
+        values.put("last_client_sequence",before.sequence()+1);
+        values.put("game_state","BIG_READY");
+        values.put("bonus_type","BIG");
+        values.put("last_activity",before.number("last_activity")+1);
+        values.put("machine_state_json",new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
+                "GOD_CHAIN",1,false,"GOD_STARTED").toJsonString());
+        Session after=new Session(values);
+        var tx=new GameTransition(UUID.randomUUID(),before,after,0,15,1,true,false,"BIG",false,0,
+                List.of(),List.of(),List.of(),after.text("machine_state_json"));
+        store.commit(tx);
+        assertEquals(1,scalar("SELECT count(*) FROM juggler_god_history WHERE machine_id=?",before.machine()));
+        assertEquals(1,scalar("SELECT count(*) FROM bonus_history WHERE machine_id=? AND bonus_type='BIG' AND games=0",before.machine()));
+    }
+
     @Test void runtimeRoundTripPreservesHiddenSuccessorState() {
         var state=new JugglerGodRuntime(JugglerGodRuntime.Mode.HEAVEN,32,17,4,true,true,"GOD_CHAIN",9,true,"TEST");
         assertEquals(state,JugglerGodRuntime.fromJson(state.toJsonString()));
