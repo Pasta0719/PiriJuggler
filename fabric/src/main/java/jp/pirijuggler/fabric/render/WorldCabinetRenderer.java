@@ -3,6 +3,7 @@ package jp.pirijuggler.fabric.render;
 import jp.pirijuggler.fabric.PiriJugglerClient;
 import jp.pirijuggler.fabric.network.RemoteMachineViewState;
 import jp.pirijuggler.fabric.ui.UiConstants;
+import jp.pirijuggler.fabric.ui.JugglerGodAssets;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
@@ -95,12 +96,15 @@ public final class WorldCabinetRenderer {
                 double sw=wide?230:130;
                 double sh=symbol.equals("bar")?150:130;
                 double sy=430+(row-fraction)*130-(sh-130)/2.0;
-                symbol(consumers,basis,camera,symbol,x+(270-sw)/2.0,sy,sw,sh,300,690);
+                symbol(consumers,basis,camera,state.machineType(),symbol,x+(270-sw)/2.0,sy,sw,sh,300,690);
             }
         }
 
         // Exact SlotScreen lamp placement: (350,390,300,170).
-        rect(consumers,state.lampVisible(now)?LAMP_ON:LAMP_OFF,basis,camera,350,390,300,170,.0025,0xffffffff,0,0,1,1);
+        Identifier lamp=state.lampVisible(now)
+                ?JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_on.png")
+                :JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_off.png");
+        rect(consumers,lamp,basis,camera,350,390,300,170,.0025,0xffffffff,0,0,1,1);
 
         // Exact status panel: (670,710,900,95), but only public remote fields.
         rect(consumers,WHITE,basis,camera,670,710,900,95,.0012,UiConstants.color("DISPLAY_BG"),0,0,1,1);
@@ -142,12 +146,12 @@ public final class WorldCabinetRenderer {
         rect(c,WHITE,b,cam,x+inset,y+inset,w-inset*2,h-inset*2,depth,color,0,0,1,1);
     }
 
-    private static void symbol(VertexConsumerProvider c,CabinetPlacement.Basis b,Vec3d cam,String symbol,
+    private static void symbol(VertexConsumerProvider c,CabinetPlacement.Basis b,Vec3d cam,String machineType,String symbol,
                                double x,double y,double w,double h,double clipTop,double clipBottom){
         double y0=Math.max(y,clipTop), y1=Math.min(y+h,clipBottom);
         if(y1<=y0)return;
         float v0=(float)((y0-y)/h),v1=(float)((y1-y)/h);
-        rect(c,Identifier.of("piri","textures/symbols/"+symbol+".png"),b,cam,x,y0,w,y1-y0,.0025,0xffffffff,0,v0,1,v1);
+        rect(c,JugglerGodAssets.texture(machineType,"symbols/"+symbol+".png"),b,cam,x,y0,w,y1-y0,.0025,0xffffffff,0,v0,1,v1);
     }
 
     private static void rect(VertexConsumerProvider c,Identifier tex,CabinetPlacement.Basis b,Vec3d cam,
