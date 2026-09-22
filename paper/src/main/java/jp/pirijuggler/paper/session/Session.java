@@ -72,6 +72,8 @@ public record Session(Map<String, Object> snapshot) {
         JsonObject ms=machineState();
         if(ms!=null&&ms.has("godFreeze"))json.addProperty("godFreeze",ms.get("godFreeze").getAsBoolean());
         if(ms!=null&&ms.has("godBigCount"))json.addProperty("godChainBigCount",ms.get("godBigCount").getAsInt());
+        if(ms!=null&&ms.has("additionalBigStock")&&ms.has("additionalRegStock"))
+            json.addProperty("stockLampOn",ms.get("additionalBigStock").getAsInt()>0||ms.get("additionalRegStock").getAsInt()>0);
         if(ms!=null&&ms.has("phase")){
             json.addProperty("godPhase",ms.get("phase").getAsString());
             copy(ms,json,"ggGamesRemaining","godGgRemaining");
