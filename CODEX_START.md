@@ -1,7 +1,19 @@
 # CODEX_START.md — v4
 
-`SPEC.md`が製品仕様の正本。Phase12–14のRemote Machine Visual / Hall Audioについては `docs/REMOTE_MACHINE_VISUAL_SPEC.md` を追加の仕様正本として必ず併読する。Phase05完了後のユーザー承認hotfixについては `docs/POST_PHASE05_HOTFIX.md` を必ず併読し、同文書が明示的に変更した範囲ではhotfix内容を最新仕様として扱う。次回SPEC整合更新時に正本へ統合する。
+`SPEC.md`が既存PiriJuggler製品仕様の正本。Phase12–14のRemote Machine Visual / Hall Audioについては `docs/REMOTE_MACHINE_VISUAL_SPEC.md` を追加の仕様正本として必ず併読する。Phase05完了後のユーザー承認hotfixについては `docs/POST_PHASE05_HOTFIX.md` を必ず併読し、同文書が明示的に変更した範囲ではhotfix内容を最新仕様として扱う。次回SPEC整合更新時に正本へ統合する。
 `AUDIT_REPORT.md`はv3からの修正理由であり、仕様値の正はSPEC.mdと上記承認hotfix。
+
+## GOD後続方式の特別ルール — 2026-09-23
+
+Piri GOD の専用Phaseフローは **RETIRED_BY_USER**。
+
+- `god-phases/GOD_PHASE_MAP.json` の Phase 02–06 を通常runの候補にしない。
+- GOD Phase 02 の runtime FAIL / PENDING / INCOMPLETE を、他のPhaseや後続方式のBLOCKERにしない。
+- GOD Phase 02 runtime runnerを修正してCOMPLETEにする作業を自動再開しない。
+- GOD固有仕様を後続方式へ自動で引き継がない。
+- GODのコード・資料は削除せず、再利用候補としてのみ保持する。
+- ユーザーが「GODの代わり」「GOD以降」「別の形」「次の台」等の後続開発を依頼した場合は、`NEXT_MACHINE_PHASE_MAP.json` と `next-machine-phases/README.md` を入口にする。
+- 後続方式の仕様が未固定なら NEXT MACHINE Phase 01 だけを扱い、ゲーム仕様を勝手に補完しない。
 
 ## 開始時の引き継ぎ確認
 
