@@ -12,6 +12,7 @@ public final class RoleWeights {
         InternalRole.PIERO,InternalRole.BIG,InternalRole.REG,InternalRole.CHERRY_BIG,InternalRole.CHERRY_REG,
         InternalRole.PIERO_BIG,InternalRole.PIERO_REG,InternalRole.MISS};
     private final int[][] cumulative=new int[6][12];
+    private final long[][] bonusFamilies=new long[6][2];
     private final Map<String,Object> sourceConfig;
     public RoleWeights(Map<String,Object> config) {
         sourceConfig=config;
@@ -25,10 +26,22 @@ public final class RoleWeights {
                 sum=Math.addExact(sum,value);cumulative[setting-1][i]=Math.toIntExact(sum);
             }
             if(sum!=DENOMINATOR)throw new IllegalArgumentException("Role weights must total 1e9");
+            bonusFamilies[setting-1][0]=number(row,"big")+number(row,"cherry_big")+number(row,"piero_big");
+            bonusFamilies[setting-1][1]=number(row,"reg")+number(row,"cherry_reg")+number(row,"piero_reg");
+            if(bonusFamilies[setting-1][0]+bonusFamilies[setting-1][1]<=0)throw new IllegalArgumentException("Missing bonus-family weights");
         }
     }
     Map<String,Object> sourceConfig(){return sourceConfig;}
     public InternalRole draw(int setting,RandomGenerator rng) { return at(setting,rng.nextInt(DENOMINATOR)); }
+    public InternalRole drawBonusFamily(int setting,RandomGenerator rng) {
+        if(setting<1||setting>6)throw new IllegalArgumentException("Setting");
+        long big=bonusFamilies[setting-1][0],reg=bonusFamilies[setting-1][1],total=big+reg;
+        long roll=rng.nextLong(total);
+        return roll<big?InternalRole.BIG:InternalRole.REG;
+    }
+    private static long number(Map<String,Object> row,String key){
+        Object value=row.get(key);return value instanceof Number n?n.longValue():0L;
+    }
     public InternalRole at(int setting,int value) {
         if(setting<1||setting>6||value<0||value>=DENOMINATOR)throw new IllegalArgumentException("Draw bounds");
         int[] ends=cumulative[setting-1];for(int i=0;i<ends.length;i++)if(value<ends[i])return ORDER[i];
