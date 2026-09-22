@@ -48,6 +48,7 @@ public final class GameStore {
                 boolean godStart=machineState!=null&&machineState.has("lastEvent")&&"GOD_STARTED".equals(machineState.get("lastEvent").getAsString());
                 if(godStart){
                     db.sql("INSERT INTO juggler_god_history(machine_id,business_period_id,event_type,games,occurred_at) VALUES(?,?,'GOD',?,?)",before.machine(),period,current,after.number("last_activity"));
+                    db.sql("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,'BIG',0,?)",before.machine(),period,after.number("last_activity"));
                 }else{
                     db.sql("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,?,?,?)",before.machine(),period,action.bonusStarted(),current,after.number("last_activity"));
                 }
