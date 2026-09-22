@@ -104,6 +104,27 @@ class GodGameEngineTest {
         assertEquals(4,right.after().number("stopped_mask"));
     }
 
+    @Test
+    void gaiaBellAllowsEitherRemainingOrderAfterRightFirst(){
+        for(PacketType second:new PacketType[]{PacketType.STOP_LEFT,PacketType.STOP_CENTER}){
+            GodGameEngine engine=new GodGameEngine(RandomStreams.production());
+            Machine machine=machine("GAIA_BELL");
+            var lever=engine.plan(session(50),machine,PacketType.SPACE_ACTION,1,1,0,0,null);
+            var right=engine.plan(lever.after(),machine,PacketType.STOP_RIGHT,2,2,0,0,0);
+            var middle=engine.plan(right.after(),machine,second,3,3,0,0,0);
+            assertEquals(second==PacketType.STOP_LEFT?5:6,middle.after().number("stopped_mask"));
+            PacketType third=second==PacketType.STOP_LEFT?PacketType.STOP_CENTER:PacketType.STOP_LEFT;
+            var done=engine.plan(middle.after(),machine,third,4,4,0,0,0);
+            assertTrue(done.finished());
+            assertEquals(1,done.payout());
+            assertTrue(jp.pirijuggler.common.reel.GodStopControl.matchesPublishedForm(
+                    "GAIA_BELL",
+                    (int)done.after().number("display_left_stop"),
+                    (int)done.after().number("display_center_stop"),
+                    (int)done.after().number("display_right_stop")));
+        }
+    }
+
 
     @Test
     void pendingDisplayRoleAndPayoutComeFromSameResolvedOutcome(){
