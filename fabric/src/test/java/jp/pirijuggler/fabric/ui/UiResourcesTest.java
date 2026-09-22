@@ -32,7 +32,7 @@ class UiResourcesTest {
         }
         for(int reel=0;reel<3;reel++)for(int i=0;i<21;i++)assertEquals(lock.getAsJsonObject("reelArrays").getAsJsonArray(new String[]{"LEFT_REEL","CENTER_REEL","RIGHT_REEL"}[reel]).get(i).getAsString().toLowerCase(Locale.ROOT),UiConstants.symbol(reel,i));
         var registry=JsonParser.parseString(Files.readString(ROOT.resolve("fabric/src/main/resources/assets/piri/sounds.json"))).getAsJsonObject();
-        var ids=Set.of("notice","notice_strong","tenpai","bet","lever","stop","payout","error","bonus_start","bonus_end","big_bgm","reg_bgm");assertEquals(ids,registry.keySet());
+        var ids=Set.of("notice","notice_strong","tenpai","bet","lever","stop","payout","error","bonus_start","bonus_end","big_bgm","reg_bgm","god_freeze");assertEquals(ids,registry.keySet());
         for(String id:ids){
             JsonElement sound=registry.getAsJsonObject(id).getAsJsonArray("sounds").get(0);
             if(id.equals("big_bgm")||id.equals("reg_bgm")){
