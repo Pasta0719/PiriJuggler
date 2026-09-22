@@ -1,6 +1,6 @@
 # Piri GOD master specification
 
-Status: **LOCKED — GOD Phase 01**
+Status: **LOCKED — GOD Phase 01; Phase-02 role/reel audit reopened 2026-09-22**
 Authority: canonical GOD specification document.
 Implementation must not be changed to "make this document true" until the relevant item is explicitly LOCKED.
 
@@ -84,7 +84,7 @@ For every internal role the locked spec must define all of:
 8. public display event
 9. source/classification
 
-The semantic role contract is complete for Phase 02. Exact hidden real-machine press-index control remains unavailable, but the accepted PIRI_SPECIFIC deterministic stop-control policy resolves that gap without claiming authenticity.
+The semantic role contract is complete except for one reopened Phase-02 presentation item: normal/no-nav ORDERED_YELLOW7 with a 1-medal settlement. Exact hidden real-machine press-index control remains unavailable and is handled only as explicitly labelled PIRI_SPECIFIC policy. See `docs/GOD_PHASE_02_SOURCE_AUDIT_2026-09-22.md`.
 
 ### Locked semantic outcome knowledge
 
@@ -94,11 +94,11 @@ The semantic role contract is complete for Phase 02. Exact hidden real-machine p
 | MIDDLE_BLUE7 | replay / 0 | middle blue-7 line | left-first | REFERENCE_BACKED |
 | RED7_FAKE | replay / 0 | current-machine source example: middle RED7 / RED7 / miss; source explicitly says the form changes when aiming near DEKA-MILLION. Piri uses that representative form when physically reachable, otherwise a RED7-visible safe replay fallback that cannot equal RED7 straight, SP, GOD, a blue replay line, or a paying yellow result | left-first | REFERENCE_BACKED semantics+representative form+variability / PIRI_SPECIFIC exact control |
 | LOWER_YELLOW7 | 3 medals | lower-row yellow B; center reel uses the yellow directly below RED7, published example center-middle RED7 | left-first | REFERENCE_BACKED |
-| ORDERED_YELLOW7 | 15 medals when correctly navigated in AT; normal-play miss-side settlement uses the locked 0/1-medal calibration path | lower-yellow A / navigated yellow result | state navigation; normal play hides ordinary winning order | REFERENCE_BACKED role concept / PIRI_SPECIFIC normal miss-side calibration |
+| ORDERED_YELLOW7 | 15 medals when correctly navigated in AT; normal/no-nav branch may resolve to 0 or 1 medal under provisional Piri calibration | navigated 15-medal branch: lower-yellow A. Normal 0-medal branch: miss/こぼし family. **Normal 1-medal visible mapping is unresolved**: source confirms multiple 1-medal roles and that some arise from ordered 15-medal yellow, but not the exact hidden mapping | state navigation; normal play left-first | REFERENCE_BACKED role concept + existence of 1-medal outcomes / PIRI_SPECIFIC calibration / UNKNOWN exact mapping |
 | RISING_YELLOW7 | 15 medals | rising/right-up yellow line | left-first | REFERENCE_BACKED |
 | MIDDLE_YELLOW7 | 15 medals | middle yellow line | left-first | REFERENCE_BACKED |
 | COMMON_YELLOW7 | 15 medals | lower-row yellow A; published example center-middle BLUE7 | left-first unless state nav applies | REFERENCE_BACKED |
-| GAIA_BELL | 1 medal | yellow small-V | right-first navigation | REFERENCE_BACKED |
+| GAIA_BELL | 1 medal | yellow small-V | RIGHT first is REFERENCE_BACKED; public source does not establish a fixed second/third order | REFERENCE_BACKED first stop / UNKNOWN remaining exact order |
 | RED7 | 15 medals | RED7 straight | left-first | REFERENCE_BACKED visible form/benefit; Piri may exceed ordinary 4-frame slip to guarantee form |
 | GOD | 15 medals | GOD straight | left-first | LOCKED_PIRI odds / REFERENCE_BACKED visible form; Piri may exceed ordinary 4-frame slip |
 | SP | 15 medals | RED7 / RED7 / GOD | left-first | REFERENCE_BACKED visible form/behavior; Piri may exceed ordinary 4-frame slip |
