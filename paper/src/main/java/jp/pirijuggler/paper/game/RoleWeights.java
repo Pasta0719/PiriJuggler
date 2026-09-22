@@ -34,6 +34,13 @@ public final class RoleWeights {
     }
     Map<String,Object> sourceConfig(){return sourceConfig;}
     public InternalRole draw(int setting,RandomGenerator rng) { return at(setting,rng.nextInt(DENOMINATOR)); }
+    public InternalRole drawNonBonus(int setting,RandomGenerator rng) {
+        for(int attempts=0;attempts<1024;attempts++){
+            InternalRole role=draw(setting,rng);
+            if(GameRules.bonus(role)==null && role!=InternalRole.GOD)return role;
+        }
+        throw new IllegalStateException("Unable to draw non-bonus role");
+    }
     public InternalRole drawBonusFamily(int setting,RandomGenerator rng) {
         if(setting<1||setting>6)throw new IllegalArgumentException("Setting");
         long big=bonusFamilies[setting-1][0],reg=bonusFamilies[setting-1][1],total=big+reg;
