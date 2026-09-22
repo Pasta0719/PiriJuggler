@@ -49,7 +49,7 @@ public final class StopSolver {
         boolean secondPremiumStop=premiumF&&Integer.bitCount(mask)==1;
         boolean finalStop=Integer.bitCount(mask|reel.bit())==3;
         for(var candidate:unique.values()){
-            if(!allowBarConfirmation&&candidate.winningBarConfirmationLines()!=0)continue;
+            if(!allowBarConfirmation&&role!=DisplayRole.GOD_BAR&&candidate.winningBarConfirmationLines()!=0)continue;
             if(bonusAwardGame&&finalStop&&incompatibleAwardCompletion(candidate,alternateRole))continue;
             if(secondPremiumStop&&StopCatalogue.sevenTenpaiLines(candidate.stops(),mask|reel.bit())!=0)continue;
             if(premiumF&&mask==0&&candidate.valid(role)&&!premiumFirstStopFeasible(role,reel,candidate.stops().stop(reel)))continue;
