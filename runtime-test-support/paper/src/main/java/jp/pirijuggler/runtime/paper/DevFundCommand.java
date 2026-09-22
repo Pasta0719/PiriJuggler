@@ -37,6 +37,7 @@ public final class DevFundCommand implements CommandExecutor {
 
     private record ForceOverride(UUID player, long baseSequence, InternalRole role, PremiumPolicy.Type premium,
                                  NormalGame game, RoleWeights originalWeights, PremiumPolicy originalPremium,
+                                 JugglerGodGameEngine godEngine, RoleWeights originalGodWeights,
                                  long startedAtMs, CommandSender sender, Player target, BukkitTask watcher) {}
 
     public DevFundCommand(JavaPlugin helper) {
@@ -231,12 +232,21 @@ public final class DevFundCommand implements CommandExecutor {
             Field premiumField=NormalGame.class.getDeclaredField("premium");premiumField.setAccessible(true);
             RoleWeights originalWeights=(RoleWeights)weightsField.get(game);
             PremiumPolicy originalPremium=(PremiumPolicy)premiumField.get(game);
-            weightsField.set(game,forcedRole(role));
+            RoleWeights forcedWeights=forcedRole(role);
+            weightsField.set(game,forcedWeights);
             premiumField.set(game,forcedPremium(premium));
+
+            JugglerGodGameEngine godEngine=jugglerGodEngine(production,session);
+            RoleWeights originalGodWeights=null;
+            if(godEngine!=null){
+                Field godWeightsField=JugglerGodGameEngine.class.getDeclaredField("weights");godWeightsField.setAccessible(true);
+                originalGodWeights=(RoleWeights)godWeightsField.get(godEngine);
+                godWeightsField.set(godEngine,forcedWeights);
+            }
 
             InternalRole expectedRole=role;PremiumPolicy.Type expectedPremium=premium;
             BukkitTask watcher=Bukkit.getScheduler().runTaskTimer(helper,()->watchForce(expectedRole,expectedPremium),1L,1L);
-            pendingForce=new ForceOverride(target.getUniqueId(),session.sequence(),role,premium,game,originalWeights,originalPremium,System.currentTimeMillis(),sender,target,watcher);
+            pendingForce=new ForceOverride(target.getUniqueId(),session.sequence(),role,premium,game,originalWeights,originalPremium,godEngine,originalGodWeights,System.currentTimeMillis(),sender,target,watcher);
             String name=premium==null?role.name():"PREMIUM_"+premium.name()+" ("+role.name()+")";
             sender.sendMessage("TEST_FORCE_ARMED "+name+". Play the next normal game on this machine.");
             if(!sender.equals(target))target.sendMessage("TEST_FORCE_ARMED "+name+". Play the next normal game on this machine.");
@@ -266,6 +276,10 @@ public final class DevFundCommand implements CommandExecutor {
         try {
             Field weightsField=NormalGame.class.getDeclaredField("weights");weightsField.setAccessible(true);weightsField.set(force.game(),force.originalWeights());
             Field premiumField=NormalGame.class.getDeclaredField("premium");premiumField.setAccessible(true);premiumField.set(force.game(),force.originalPremium());
+            if(force.godEngine()!=null){
+                Field godWeightsField=JugglerGodGameEngine.class.getDeclaredField("weights");godWeightsField.setAccessible(true);
+                godWeightsField.set(force.godEngine(),force.originalGodWeights());
+            }
         } catch (ReflectiveOperationException error) {
             message += " RESTORE_FAILED="+error;
         }
@@ -280,6 +294,16 @@ public final class DevFundCommand implements CommandExecutor {
             return null;
         }
         return production;
+    }
+
+    private static JugglerGodGameEngine jugglerGodEngine(PiriJugglerPlugin production,Session session) throws ReflectiveOperationException {
+        Object machines=production.machines();
+        Field field=machines.getClass().getDeclaredField("games");field.setAccessible(true);
+        GameEngines registry=(GameEngines)field.get(machines);
+        Machine machine=production.machines().snapshot().machine(session.machine());
+        if(machine==null)throw new IllegalStateException("Machine missing");
+        GameEngine engine=registry.require(machine.type());
+        return engine instanceof JugglerGodGameEngine god?god:null;
     }
 
     private static NormalGame normalGame(PiriJugglerPlugin production,Session session) throws ReflectiveOperationException {
