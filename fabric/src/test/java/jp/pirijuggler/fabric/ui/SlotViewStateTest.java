@@ -33,6 +33,19 @@ class SlotViewStateTest {
         var b=JsonParser.parseString("{\"sessionId\":\""+ID+"\",\"machineId\":1,\"spinId\":\""+SPIN+"\",\"animation\":\"NORMAL\",\"startPhase\":{\"left\":8,\"center\":3,\"right\":12}}").getAsJsonObject();
         b.add("stopHints",hints());return Envelope.current(PacketType.SPIN_START,b);
     }
+    @Test void godUsesAuthoritativeTwentyStopServerIndices(){
+        var time=new AtomicLong();
+        var view=new SlotViewState(time::get);
+        view.receive(packet(PacketType.OPEN_MACHINE,"{\"sessionId\":\""+ID+"\",\"machineId\":1,\"machineType\":\"GOD\"}"));
+        var b=start().payload();
+        b.addProperty("machineType","GOD");
+        b.getAsJsonObject("startPhase").addProperty("left",19.5);
+        view.receive(Envelope.current(PacketType.SPIN_START,b));
+        view.receive(packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\"LEFT\",\"pressedIndex\":19,\"stopIndex\":17,\"slip\":2,\"durationMs\":80}"));
+        time.set(1_000_000_000L);
+        assertEquals(17.0,view.phase(0),1e-9);
+    }
+
     @Test void motionBoundariesAreContinuousAndRespectReceptionTime(){
         assertEquals(0,SlotViewState.distance("NORMAL",.150));assertEquals(-3.675,SlotViewState.distance("NORMAL",.5),1e-9);assertEquals(-14.175,SlotViewState.distance("NORMAL",1),1e-9);
         assertEquals(6,SlotViewState.distance("REVERSE_500MS",.5),1e-9);assertEquals(2.85,SlotViewState.distance("REVERSE_500MS",.8),1e-9);assertEquals(-21,SlotViewState.distance("RESUME_NORMAL",1));
