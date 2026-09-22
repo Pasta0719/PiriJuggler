@@ -4,6 +4,11 @@ import jp.pirijuggler.paper.PiriJugglerPlugin;
 import jp.pirijuggler.paper.game.NormalGame;
 import jp.pirijuggler.paper.game.PremiumPolicy;
 import jp.pirijuggler.paper.game.RoleWeights;
+import jp.pirijuggler.paper.game.GameEngines;
+import jp.pirijuggler.paper.game.GameEngine;
+import jp.pirijuggler.paper.game.JugglerGameEngine;
+import jp.pirijuggler.paper.game.JugglerGodGameEngine;
+import jp.pirijuggler.paper.machine.Machine;
 import jp.pirijuggler.paper.reel.InternalRole;
 import jp.pirijuggler.paper.session.Session;
 import org.bukkit.Bukkit;
@@ -51,7 +56,7 @@ public final class DevFundCommand implements CommandExecutor {
             else restoreForce("TEST_FORCE_CLEARED");
             return true;
         }
-        sender.sendMessage("Usage: /piritest fund [player] | /piritest force <big|reg|A|B|C|D|E|F> [player] | /piritest clear");
+        sender.sendMessage("Usage: /piritest fund [player] | /piritest force <god|big|reg|A|B|C|D|E|F> [player] | /piritest clear");
         return true;
     }
 
@@ -110,7 +115,7 @@ public final class DevFundCommand implements CommandExecutor {
 
     private boolean force(CommandSender sender,String[] args) {
         if (args.length < 2 || args.length > 3) {
-            sender.sendMessage("Usage: /piritest force <big|reg|A|B|C|D|E|F> [player]");
+            sender.sendMessage("Usage: /piritest force <god|big|reg|A|B|C|D|E|F> [player]");
             return true;
         }
         if (pendingForce != null) {
@@ -141,6 +146,7 @@ public final class DevFundCommand implements CommandExecutor {
         InternalRole role;
         PremiumPolicy.Type premium=null;
         switch(requested) {
+            case "GOD" -> role=InternalRole.GOD;
             case "BIG" -> role=InternalRole.BIG;
             case "REG" -> role=InternalRole.REG;
             case "A","C","D","E","F" -> {role=InternalRole.BIG;premium=PremiumPolicy.Type.valueOf(requested);}
@@ -152,7 +158,14 @@ public final class DevFundCommand implements CommandExecutor {
         }
 
         try {
-            NormalGame game=normalGame(production);
+            if(role==InternalRole.GOD){
+                Machine machine=production.machines().snapshot().machine(session.machine());
+                if(machine==null||machine.type()!=jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD){
+                    sender.sendMessage("TEST_FORCE_GOD_REQUIRES_JUGGLER_GOD");
+                    return true;
+                }
+            }
+            NormalGame game=normalGame(production,session);
             Field weightsField=NormalGame.class.getDeclaredField("weights");weightsField.setAccessible(true);
             Field premiumField=NormalGame.class.getDeclaredField("premium");premiumField.setAccessible(true);
             RoleWeights originalWeights=(RoleWeights)weightsField.get(game);
@@ -208,8 +221,22 @@ public final class DevFundCommand implements CommandExecutor {
         return production;
     }
 
-    private static NormalGame normalGame(PiriJugglerPlugin production) throws ReflectiveOperationException {
-        Object machines=production.machines();Field field=machines.getClass().getDeclaredField("games");field.setAccessible(true);return (NormalGame)field.get(machines);
+    private static NormalGame normalGame(PiriJugglerPlugin production,Session session) throws ReflectiveOperationException {
+        Object machines=production.machines();
+        Field field=machines.getClass().getDeclaredField("games");field.setAccessible(true);
+        GameEngines registry=(GameEngines)field.get(machines);
+        Machine machine=production.machines().snapshot().machine(session.machine());
+        if(machine==null)throw new IllegalStateException("Machine missing");
+        GameEngine engine=registry.require(machine.type());
+        if(engine instanceof JugglerGameEngine){
+            Field delegate=JugglerGameEngine.class.getDeclaredField("delegate");delegate.setAccessible(true);
+            return (NormalGame)delegate.get(engine);
+        }
+        if(engine instanceof JugglerGodGameEngine){
+            Field delegate=JugglerGodGameEngine.class.getDeclaredField("delegate");delegate.setAccessible(true);
+            return (NormalGame)delegate.get(engine);
+        }
+        throw new IllegalStateException("Machine has no NormalGame delegate: "+machine.type());
     }
 
     private static RoleWeights forcedRole(InternalRole role) {
