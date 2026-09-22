@@ -37,8 +37,8 @@ public final class RuntimeObserver extends JavaPlugin {
         if ("phase04".equals(System.getProperty("piri.runtime.phase"))) {
             new Phase02Observer(this); new Phase04Harness(this); getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase04 " + getServer().getVersion()); return;
         }
-        if ("phase02".equals(System.getProperty("piri.runtime.phase")) || "phase03".equals(System.getProperty("piri.runtime.phase")) || "god02".equals(System.getProperty("piri.runtime.phase"))) {
-            new Phase02Observer(this); getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase02/GOD02 " + getServer().getVersion()); return;
+        if ("phase02".equals(System.getProperty("piri.runtime.phase")) || "phase03".equals(System.getProperty("piri.runtime.phase")) || "god02".equals(System.getProperty("piri.runtime.phase")) || "next02".equals(System.getProperty("piri.runtime.phase"))) {
+            new Phase02Observer(this); getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase02/GOD02/NEXT02 " + getServer().getVersion()); return;
         }
         getServer().getMessenger().registerIncomingPluginChannel(this, Protocol.CHANNEL, (channel, player, bytes) -> {
             var envelope = EnvelopeCodec.decode(bytes);
