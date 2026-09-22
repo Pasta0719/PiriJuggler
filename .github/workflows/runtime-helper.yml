@@ -27,3 +27,7 @@ jobs:
       - name: Validate GOD Phase 2 runner syntax
         shell: cmd
         run: py -m py_compile runtime-test-support\run_god_phase02.py
+
+      - name: Validate NEXT Phase 2 runner syntax
+        shell: cmd
+        run: py -m py_compile runtime-test-support\\run_next_phase02.py
