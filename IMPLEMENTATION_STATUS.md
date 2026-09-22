@@ -74,6 +74,6 @@ Piri GOD専用開発フローは **RETIRED_BY_USER**。
 
 後続方式のPhase正本は `NEXT_MACHINE_PHASE_MAP.json` と `next-machine-phases/README.md`。
 
-Current successor phase: NEXT Phase 01 — NOT_STARTED
-Next successor work: 新方式のConcept / Game Loop / Presentation Lock
-Successor implementation is blocked only by its own Phase 01 design lock, not by GOD Phase 02.
+Current successor phase: NEXT Phase 01 — IN_PROGRESS
+Next successor work: Juggler + GOD design lock completion
+Successor implementation is blocked only by its own Phase 01 design lock, not by GOD Phase 02. Core Juggler + GOD design is now locked; economy-dependent values and a small set of presentation/history details remain pending.
