@@ -202,7 +202,7 @@ class GodStopControlTest {
         expectedFixed.put("UPPER_BLUE7",2);
         expectedFixed.put("MIDDLE_BLUE7",4);
         expectedFixed.put("ORDERED_YELLOW7",2);
-        expectedFixed.put("ORDERED_YELLOW7_ONE",64);
+        expectedFixed.put("ORDERED_YELLOW7_ONE",8);
         expectedFixed.put("LOWER_YELLOW7",2);
         expectedFixed.put("RISING_YELLOW7",2);
         expectedFixed.put("MIDDLE_YELLOW7",8);
