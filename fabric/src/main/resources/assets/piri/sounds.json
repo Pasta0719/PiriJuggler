@@ -1,14 +1,73 @@
 {
-  "bet": {"sounds": ["piri:bet"]},
-  "bonus_end": {"sounds": ["piri:bonus_end"]},
-  "bonus_start": {"sounds": ["piri:bonus_start"]},
-  "error": {"sounds": ["piri:error"]},
-  "lever": {"sounds": ["piri:lever"]},
-  "notice": {"sounds": ["piri:notice"]},
-  "notice_strong": {"sounds": ["piri:notice_strong"]},
-  "payout": {"sounds": ["piri:payout"]},
-  "stop": {"sounds": ["piri:stop"]},
-  "tenpai": {"sounds": ["piri:tenpai"]},
-  "big_bgm": {"sounds": [{"name":"piri:big_bgm","stream":true}]},
-  "reg_bgm": {"sounds": [{"name":"piri:reg_bgm","stream":true}]}
+  "bet": {
+    "sounds": [
+      "piri:bet"
+    ]
+  },
+  "bonus_end": {
+    "sounds": [
+      "piri:bonus_end"
+    ]
+  },
+  "bonus_start": {
+    "sounds": [
+      "piri:bonus_start"
+    ]
+  },
+  "error": {
+    "sounds": [
+      "piri:error"
+    ]
+  },
+  "lever": {
+    "sounds": [
+      "piri:lever"
+    ]
+  },
+  "notice": {
+    "sounds": [
+      "piri:notice"
+    ]
+  },
+  "notice_strong": {
+    "sounds": [
+      "piri:notice_strong"
+    ]
+  },
+  "payout": {
+    "sounds": [
+      "piri:payout"
+    ]
+  },
+  "stop": {
+    "sounds": [
+      "piri:stop"
+    ]
+  },
+  "tenpai": {
+    "sounds": [
+      "piri:tenpai"
+    ]
+  },
+  "big_bgm": {
+    "sounds": [
+      {
+        "name": "piri:big_bgm",
+        "stream": true
+      }
+    ]
+  },
+  "reg_bgm": {
+    "sounds": [
+      {
+        "name": "piri:reg_bgm",
+        "stream": true
+      }
+    ]
+  },
+  "god_freeze": {
+    "sounds": [
+      "piri:god_freeze"
+    ]
+  }
 }
