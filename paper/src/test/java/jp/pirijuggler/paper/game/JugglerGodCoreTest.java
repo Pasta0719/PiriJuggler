@@ -75,6 +75,11 @@ class JugglerGodCoreTest extends GameFixture {
         JugglerGodRuntime state=JugglerGodRuntime.fromJson(lever.machineRuntimeJson());
         assertEquals(1,state.heavenProgress());
         assertEquals(JugglerGodRuntime.Mode.HEAVEN,state.mode());
+        store.commit(lever);
+        JugglerGodRuntime persisted=JugglerGodRuntime.fromJson(db.state().machine(rig.machine().id()).runtimeJson());
+        assertEquals(2,persisted.heavenTarget());
+        assertEquals(1,persisted.heavenProgress());
+        assertEquals(JugglerGodRuntime.Mode.HEAVEN,persisted.mode());
     }
 
     @Test void heavenTargetGameForcesSettingBasedBigOrRegFamily() throws Exception {
