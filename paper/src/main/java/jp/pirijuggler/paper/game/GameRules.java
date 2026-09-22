@@ -20,10 +20,10 @@ public final class GameRules {
     public record Bet(Balance balance,boolean accepted) {}
     public static int payout(InternalRole role) {
         return switch(role){case GRAPE->8;case CHERRY,CHERRY_BIG,CHERRY_REG->2;
-            case BELL,PIERO,PIERO_BIG,PIERO_REG->14;default->0;};
+            case GOD->15;case BELL,PIERO,PIERO_BIG,PIERO_REG->14;default->0;};
     }
     public static String bonus(InternalRole role) {
-        return switch(role){case BIG,CHERRY_BIG,PIERO_BIG->"BIG";case REG,CHERRY_REG,PIERO_REG->"REG";default->null;};
+        return switch(role){case GOD,BIG,CHERRY_BIG,PIERO_BIG->"BIG";case REG,CHERRY_REG,PIERO_REG->"REG";default->null;};
     }
     public static int bonusGross(String type) {return switch(type){case "BIG"->FixedGameRules.BIG_PAYOUT;case "REG"->FixedGameRules.REG_PAYOUT;default->throw new IllegalArgumentException("Bonus type");};}
     public static int bonusGames(String type) {return bonusGross(type)/14;}
