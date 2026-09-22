@@ -62,9 +62,15 @@ public final class ConfigValidation {
         c.integer("game.disconnect_grace_seconds", 0, Long.MAX_VALUE);
         c.keys("sound", SOUNDS);
         for (String sound : SOUNDS) c.numberRange("sound." + sound, BigDecimal.ZERO, BigDecimal.valueOf(2));
-        c.keys("juggler_god", Set.of("normal_to_heaven_ppm", "heaven_to_heaven_ppm"));
+        c.keys("juggler_god", Set.of("normal_to_heaven_ppm", "heaven_to_heaven_ppm", "settings"));
         c.integer("juggler_god.normal_to_heaven_ppm", 0, 1_000_000);
         c.integer("juggler_god.heaven_to_heaven_ppm", 0, 1_000_000);
+        c.keys("juggler_god.settings", Set.of("1","2","3","4","5","6"));
+        for(int setting=1;setting<=6;setting++){
+            String base="juggler_god.settings."+setting;
+            c.keys(base, Set.of("bonus_scale_ppm"));
+            c.integer(base+".bonus_scale_ppm", 0, 1_000_000);
+        }
         BigInteger denominator = c.integer("premium.denominator", 1, Long.MAX_VALUE);
         BigInteger chance = c.integer("premium.big_chance_weight", 0, Long.MAX_VALUE);
         if (chance.compareTo(denominator) > 0) c.fail("premium.big_chance_weight", "must not exceed denominator");
