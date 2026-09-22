@@ -24,12 +24,19 @@ public final class DataLampSnapshot {
 
         JsonArray history=new JsonArray();
         var chainGames=new ArrayList<Long>();
-        String historySql="SELECT type,games,occurred_at FROM ("+
-                "SELECT bonus_type AS type,games,occurred_at,id*2 AS ord FROM bonus_history WHERE machine_id=? AND business_period_id=? UNION ALL "+
-                "SELECT event_type AS type,games,occurred_at,id*2+1 AS ord FROM juggler_god_history WHERE machine_id=? AND business_period_id=?"+
-                ") ORDER BY occurred_at DESC,ord DESC LIMIT 10";
+        boolean hasGodHistory;
+        try(PreparedStatement ps=connection.prepareStatement("SELECT 1 FROM sqlite_master WHERE type='table' AND name='juggler_god_history'")){
+            try(ResultSet rs=ps.executeQuery()){hasGodHistory=rs.next();}
+        }
+        String historySql=hasGodHistory
+                ?"SELECT type,games,occurred_at FROM ("+
+                    "SELECT bonus_type AS type,games,occurred_at,id*2 AS ord FROM bonus_history WHERE machine_id=? AND business_period_id=? UNION ALL "+
+                    "SELECT event_type AS type,games,occurred_at,id*2+1 AS ord FROM juggler_god_history WHERE machine_id=? AND business_period_id=?"+
+                    ") ORDER BY occurred_at DESC,ord DESC LIMIT 10"
+                :"SELECT bonus_type AS type,games,occurred_at FROM bonus_history WHERE machine_id=? AND business_period_id=? ORDER BY id DESC LIMIT 10";
         try(PreparedStatement ps=connection.prepareStatement(historySql)){
-            ps.setInt(1,machineId);ps.setString(2,businessPeriodId);ps.setInt(3,machineId);ps.setString(4,businessPeriodId);
+            ps.setInt(1,machineId);ps.setString(2,businessPeriodId);
+            if(hasGodHistory){ps.setInt(3,machineId);ps.setString(4,businessPeriodId);}
             try(ResultSet rs=ps.executeQuery()){
                 while(rs.next()){
                     JsonObject item=new JsonObject();item.addProperty("type",rs.getString(1));item.addProperty("games",rs.getLong(2));item.addProperty("occurredAt",rs.getLong(3));history.add(item);
