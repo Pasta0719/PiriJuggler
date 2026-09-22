@@ -69,7 +69,10 @@ public final class MachineService implements Listener, CommandExecutor {
         this.config = config;
         random=RandomStreams.production();weights=new RoleWeights(config);
         var jugglerGame=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin),config);
-        games=new GameEngines().register(MachineType.JUGGLER,new JugglerGameEngine(jugglerGame)).register(MachineType.GOD,new jp.pirijuggler.paper.game.god.GodGameEngine(random));
+        var jugglerGodGame=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin),config,false);
+        games=new GameEngines().register(MachineType.JUGGLER,new JugglerGameEngine(jugglerGame))
+                .register(MachineType.JUGGLER_GOD,new JugglerGodGameEngine(jugglerGodGame,random,weights,config))
+                .register(MachineType.GOD,new jp.pirijuggler.paper.game.god.GodGameEngine(random));
         remote=new RemoteMachineSync(plugin,()->state,plugin::canUseSlot,(saved,nowNanos)->engine(saved.machine()).capture(saved,nowNanos));
         var gameConfig=jp.pirijuggler.paper.database.StartupProfile.map(config.get("game"));
         graceMs = ((Number) gameConfig.get("disconnect_grace_seconds")).longValue() * 1000;
@@ -148,7 +151,7 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length >= 2 && args[0].equalsIgnoreCase("event")) {
                 commandEvent(sender,args); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
