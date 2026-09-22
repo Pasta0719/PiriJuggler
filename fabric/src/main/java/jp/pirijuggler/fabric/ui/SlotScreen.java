@@ -45,7 +45,17 @@ public final class SlotScreen extends Screen {
         data(c,v.logicalX(mouseX),v.logicalY(mouseY));
         c.fill(670,300,1570,690,color("REEL_SEPARATOR"));
         for(int reel=0;reel<3;reel++){
-            int x=670+315*reel;c.fill(x,300,x+270,690,color("REEL_BG"));
+            int x=670+315*reel;
+            if(view.godFreeze()){
+                c.fill(x,300,x+270,690,0xff000000);
+                if(view.godRevealed(reel)){
+                    c.fill(x+8,405,x+262,585,0xff2a2a2a);
+                    c.fill(x+16,413,x+254,577,0xff5a5a5a);
+                    texture(c,"symbols/bar.png",x+20,420,230,150,320,256,1);
+                }
+                continue;
+            }
+            c.fill(x,300,x+270,690,color("REEL_BG"));
             var clip=v.clip(new SlotLayout.Rect(x,300,270,390));c.enableScissor(clip.x(),clip.y(),clip.x()+clip.w(),clip.y()+clip.h());
             double phase=view.phase(reel);int middle=(int)Math.floor(phase);double fraction=phase-middle;
             for(int row=-2;row<=2;row++){
