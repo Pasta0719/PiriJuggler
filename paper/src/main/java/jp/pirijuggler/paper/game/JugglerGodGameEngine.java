@@ -216,9 +216,11 @@ public final class JugglerGodGameEngine implements GameEngine {
         Session after=withRuntime(rawAfter,next);
         int normalSpins=suppressNormalSpinCount?0:legacy.normalSpins();
 
+        final boolean dropBonusStart=suppressBonusStart;
+        final boolean dropBonusEnd=suppressBonusEnd;
         var scheduled=legacy.scheduled().stream()
-                .filter(e->!(suppressBonusStart&&e.packet().packetType()==PacketType.BONUS_START))
-                .filter(e->!(suppressBonusEnd&&e.packet().packetType()==PacketType.BONUS_END))
+                .filter(e->!(dropBonusStart&&e.packet().packetType()==PacketType.BONUS_START))
+                .filter(e->!(dropBonusEnd&&e.packet().packetType()==PacketType.BONUS_END))
                 .map(e->new GameTransition.Scheduled(e.delayMs(),e.packet())).toList();
 
         return new GameTransition(
