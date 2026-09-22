@@ -1,6 +1,6 @@
 # NEXT PHASE 01 — Juggler + GOD Design Lock
 
-Status: **IN_PROGRESS — CORE DESIGN LOCKED; PAYOUT TARGETS / HEAVEN DETAILS PENDING**
+Status: **COMPLETE — DESIGN LOCKED; ECONOMY TUNING DEFERRED TO NEXT PHASE 03**
 
 ## Core concept
 
@@ -13,9 +13,11 @@ This is not a recreation of the retired Piri GOD implementation. The existing Pi
 - BIG and REG remain the normal bonus types.
 - Normal reel behavior remains almost the same as current PiriJuggler.
 - After a normal BIG or REG ends, the machine may enter a hidden heaven state.
-- When heaven is active, another BIG or REG is guaranteed/selected to occur within 32 games according to the final locked draw model.
+- When heaven is active, another BIG or REG is **guaranteed to occur within 32 games**.
+- On heaven entry, the server selects and persists one target hit game in the range **1..32**. The initial implementation uses a uniform draw across 1..32; NEXT Phase 03 may alter only this within-window distribution if needed for feel, but may not remove the <=32G guarantee.
+- The bonus type at the target game is drawn from the setting's normal BIG/REG balance unless a later locked economy table explicitly separates heaven BIG/REG weights.
 - After a bonus won from heaven, the following 32-game period has a higher chance of remaining/returning to heaven than the 32-game period after a bonus won from normal.
-- Exact heaven transition/continuation probabilities are not locked yet and must be fitted against machine payout.
+- Exact normal->heaven and heaven->heaven probabilities are intentionally left for NEXT Phase 03 payout fitting.
 
 ## GOD trigger
 
@@ -56,11 +58,13 @@ After the GOD continuation ends, the machine enters heaven.
 
 ## Game-count / history semantics
 
-- GOD itself is written to history as **GOD**.
-- During the guaranteed GOD stock portion, game count does **not** advance between chained BIGs.
-- The 1G BIG chain therefore remains grouped under the GOD event rather than appearing as ordinary independent game-count progression.
-- When the guaranteed GOD stock has ended, exact history/count behavior for continuation-probability BIGs must preserve the same GOD-chain grouping unless later explicitly changed.
-- After the full GOD chain ends, normal game counting resumes from the resulting heaven state.
+- GOD itself is written to history as **GOD** at the BAR-BAR-BAR result.
+- GOD-chain bonuses are **BIG only**. REG substitution is not allowed.
+- The first **5 guaranteed BIGs** belong to the guaranteed GOD stock section and do **not** advance the displayed/history game count between them; their history distance is recorded as **0G** under the active GOD chain.
+- After the five guaranteed BIGs are exhausted, every continuation-success BIG is a true **1G BIG**: one game is advanced and that BIG is recorded as **1G** while remaining linked to the same GOD chain.
+- The continuation roll is performed after each continuation BIG until failure.
+- After the full GOD chain ends, the chain closes and normal game counting resumes from the resulting heaven state.
+- Data-lamp/history presentation must distinguish the parent **GOD** event from ordinary BIG/REG hits and must not miscount guaranteed-stock BIGs as ordinary normal games.
 
 ## Reuse from current PiriJuggler
 
@@ -86,27 +90,32 @@ These values must be determined in NEXT Phase 03 against the target payout:
 
 - normal bonus -> heaven entry probability;
 - heaven bonus -> heaven continuation/re-entry probability;
-- whether BIG and REG differ in heaven transition probability;
+- final normal/heaven BIG/REG weights if the common setting balance cannot meet the targets;
 - any small numerical fine-tuning of GOD continuation rates required by whole-machine simulation;
 - any additional GOD-chain weighting required to hit payout targets without changing the locked 5-BIG guarantee or the increasing-by-setting continuation structure.
 
-Do not guess these during core implementation.
+NEXT Phase 02 must expose these as explicit authoritative configuration/tuning values rather than burying them in presentation code.
 
-## Remaining design items before Phase 01 COMPLETE
+## Locked GOD presentation/audio asset contract
 
-The core game design above is locked.
+The implementation must register a dedicated replaceable sound for the GOD freeze:
 
-Still to lock before Phase 01 can be COMPLETE:
+- file: `god_freeze.ogg`
+- SoundEvent ID: `piri:god_freeze`
+- use: played at GOD-confirmed lever-on together with the blackout/freeze transition
+- missing file behavior: silent fallback; gameplay continues and GOD remains authoritative
 
-- exact definition of how a bonus is selected/fired inside the 32-game heaven window;
-- whether heaven guarantees a hit inside 32G or instead applies a special high-probability draw table that can theoretically miss;
-- exact history UI representation for GOD-chain BIGs;
-- whether GOD-chain BIGs can contain REG substitution (currently assumed **NO**, BIG only);
-- exact freeze/audio asset IDs and replaceable asset filenames.
+Existing normal `lever.ogg` remains the ordinary lever sound. The GOD-confirmed lever event uses the dedicated GOD freeze sound path so the user can replace it without changing code.
 
-Until those points are explicitly fixed, do not begin NEXT Phase 02 production implementation.
+No extra automatic voice/music asset is required for Phase 02. Later presentation work may add optional GOD-chain BGM without changing gameplay semantics.
 
-When Phase 01 becomes COMPLETE, stop. Do not begin NEXT Phase 02 automatically.
+## Phase 01 completion
+
+All gameplay-critical successor design items are now classified.
+
+The only intentionally tunable items are the explicit economy values assigned to NEXT Phase 03. They are not design blockers.
+
+Status may be set to COMPLETE. Stop after Phase 01; do not begin NEXT Phase 02 automatically.
 
 
 ## Locked payout targets
