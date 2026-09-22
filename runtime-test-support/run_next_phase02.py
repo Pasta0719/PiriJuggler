@@ -136,6 +136,49 @@ try:
     stats=dbrows("SELECT total_games,current_games,big_count FROM machine_period_stats WHERE machine_id=1")[0]
     check("GOD trigger counts one normal game before guaranteed zero-G stock",stats["total_games"]==1 and stats["big_count"]==1,stats)
 
+    def finish_bonus():
+        # BIG is 20 payout rounds of 14 medals under production rules.
+        for _ in range(20):
+            wait(lambda:session()["game_state"]=="BIG_READY","BIG ready")
+            tap(32);wait_state("BIG_BETTED")
+            tap(32);wait(lambda:session()["game_state"]=="BIG_SPINNING" and cli().get("stopEnabled"),"BIG lever")
+            for key,mask in [(263,1),(264,3),(262,7)]:
+                tap(key);wait(lambda:session()["stopped_mask"]==mask,"BIG stop")
+        wait_state("SEATED_READY")
+
+    # Finish the initial GOD BIG, then verify four guaranteed successor BIGs.
+    finish_bonus()
+    for guaranteed_index in range(2,6):
+        before_stats=dbrows("SELECT total_games,current_games,big_count FROM machine_period_stats WHERE machine_id=1")[0]
+        tap(32);wait_state("NORMAL_BETTED")
+        tap(32);wait(lambda:session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),f"guaranteed BIG {guaranteed_index} draw")
+        for key,mask in [(263,1),(264,3),(262,7)]:
+            tap(key);wait(lambda:session()["stopped_mask"]==mask,"guaranteed BIG trigger stop")
+        # Either direct entry or normal pending+entry must end at BIG_READY without game count advancing.
+        if session()["game_state"]=="BONUS_PENDING_BIG":
+            tap(32);wait_state("BONUS_ENTRY_BETTED_BIG")
+            tap(32);wait(lambda:session()["game_state"]=="BONUS_ENTRY_SPINNING_BIG" and cli().get("stopEnabled"),"bonus entry lever")
+            for key,mask in [(263,1),(264,3),(262,7)]:
+                tap(key);wait(lambda:session()["stopped_mask"]==mask,"bonus entry stop")
+        wait_state("BIG_READY")
+        mid_stats=dbrows("SELECT total_games,current_games,big_count FROM machine_period_stats WHERE machine_id=1")[0]
+        check(f"guaranteed BIG {guaranteed_index} is zero-game",
+              mid_stats["total_games"]==before_stats["total_games"] and mid_stats["current_games"]==0,
+              {"before":before_stats,"after":mid_stats})
+        hist=dbrows("SELECT bonus_type,games FROM bonus_history WHERE machine_id=1 ORDER BY id DESC LIMIT 1")
+        check(f"guaranteed BIG {guaranteed_index} history is 0G",
+              bool(hist) and hist[0]["bonus_type"]=="BIG" and hist[0]["games"]==0,hist)
+        finish_bonus()
+
+    runtime=json.loads(session()["machine_state_json"])
+    check("five guaranteed GOD BIGs completed",runtime["godBigCount"]==5,
+          {"runtime":runtime,"stats":dbrows("SELECT total_games,current_games,big_count FROM machine_period_stats WHERE machine_id=1")[0]})
+    # After the fifth BIG, state is either one-game continuation or guaranteed heaven.
+    check("post-guarantee state is continuation or heaven",
+          runtime["jgMode"] in ("GOD_CHAIN","HEAVEN") and (
+              runtime["jgMode"]=="HEAVEN" or runtime["countNextChainGame"] is True),
+          runtime)
+
     manifest["passed"]=True
 except Exception as error:
     manifest["failure"]=str(error);print("NEXT_PHASE02_RUNTIME_FAILURE "+str(error),flush=True)
