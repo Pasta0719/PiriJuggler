@@ -152,3 +152,22 @@ Initial dedicated audio namespace/IDs:
 - `piri:god_freeze` remains dedicated to GOD freeze and never aliases ordinary lever behavior semantically.
 
 The current appearance may therefore be identical to JUGGLER while remaining independently replaceable later.
+
+
+## User-approved gameplay amendment — visible bonus-in-bonus stock
+
+Approved after the original Phase 01 lock and before final Phase 03 payout fitting.
+
+- During JUGGLER_GOD bonus games, BIG / REG / GOD are also eligible to be drawn as additional bonus-in-bonus hits.
+- A newly drawn bonus is visibly confirmed: Piri Chance may light and the corresponding bonus symbol alignment is shown rather than silently adding an invisible stock.
+- Additional bonus stock is preserved; confirming an added bonus must not discard the unfinished payout remainder of the currently active bonus.
+- A dedicated STOCK indicator exposes only a boolean state:
+  - off when there is no **bonus-in-bonus additional stock**;
+  - on when one or more such additional stocks exist;
+  - exact stock count is never displayed.
+- The initial five BIGs granted by the parent GOD do **not** light the STOCK indicator.
+- BIGs produced by the parent GOD's ordinary post-guarantee continuation do **not** light the STOCK indicator.
+- GOD in GOD is considered an additional bonus-in-bonus acquisition and therefore may light the STOCK indicator.
+- GOD in GOD does not restart or replace the outer GOD chain and does not add another redundant end-of-chain heaven grant.
+- GOD in GOD grants **seven additional BIG stocks** to the existing GOD chain.
+- The outer GOD chain's existing continuation process and final heaven transition remain intact.
