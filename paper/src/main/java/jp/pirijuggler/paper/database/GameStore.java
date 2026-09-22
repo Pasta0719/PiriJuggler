@@ -44,7 +44,13 @@ public final class GameStore {
             long big=((Number)stats.get("big_count")).longValue(),reg=((Number)stats.get("reg_count")).longValue();
             if(action.bonusStarted()!=null){
                 if(action.bonusStarted().equals("BIG"))big=Math.addExact(big,1);else if(action.bonusStarted().equals("REG"))reg=Math.addExact(reg,1);else throw new IllegalArgumentException("Unknown bonus type");
-                db.sql("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,?,?,?)",before.machine(),period,action.bonusStarted(),current,after.number("last_activity"));
+                var machineState=after.machineState();
+                boolean godStart=machineState!=null&&machineState.has("lastEvent")&&"GOD_STARTED".equals(machineState.get("lastEvent").getAsString());
+                if(godStart){
+                    db.sql("INSERT INTO juggler_god_history(machine_id,business_period_id,event_type,games,occurred_at) VALUES(?,?,'GOD',?,?)",before.machine(),period,current,after.number("last_activity"));
+                }else{
+                    db.sql("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,?,?,?)",before.machine(),period,action.bonusStarted(),current,after.number("last_activity"));
+                }
             }
             if(action.bonusEnded())current=0;
             db.sql("UPDATE machine_period_stats SET total_games=?,big_count=?,reg_count=?,current_games=?,today_difference=?,today_max_difference=?,last_bonus_type=COALESCE(?,last_bonus_type),last_bonus_at=CASE WHEN ? IS NULL THEN last_bonus_at ELSE ? END WHERE machine_id=? AND business_period_id=?",
