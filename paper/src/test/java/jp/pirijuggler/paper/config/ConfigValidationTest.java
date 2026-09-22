@@ -64,6 +64,14 @@ class ConfigValidationTest {
     @ParameterizedTest @ValueSource(strings = {"", "[]", "null", "x: [", "!!java.lang.Runtime {}", "x: &loop [*loop]"})
     void malformedYamlCannotBecomeValidConfiguration(String yaml) { assertFalse(load(yaml).valid()); }
 
+    @Test void successorHeavenTuningIsExplicitAndRangeChecked() throws Exception {
+        assertTrue(load(defaults().replace("normal_to_heaven_ppm: 0","normal_to_heaven_ppm: 1000000")
+                .replace("heaven_to_heaven_ppm: 0","heaven_to_heaven_ppm: 1000000")).valid());
+        assertFalse(load(defaults().replace("normal_to_heaven_ppm: 0","normal_to_heaven_ppm: -1")).valid());
+        assertFalse(load(defaults().replace("heaven_to_heaven_ppm: 0","heaven_to_heaven_ppm: 1000001")).valid());
+        assertFalse(load(defaults().replace("  normal_to_heaven_ppm: 0\n","")).valid());
+    }
+
     @Test void duplicateKeysAreRejectedAndValidEditsAreAccepted() throws Exception {
         assertFalse(load(defaults() + "protocol_version: 1\n").valid());
         assertTrue(load(defaults().replace("big_chance_weight: 50000", "big_chance_weight: 0")).valid());
