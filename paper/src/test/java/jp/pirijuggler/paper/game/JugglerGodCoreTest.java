@@ -29,7 +29,7 @@ class JugglerGodCoreTest extends GameFixture {
         return new Rig(s,db.state().machine(id),engine);
     }
 
-    private GameTransition plan(Rig rig,Session s,PacketType type,long nano) {
+    private GameTransition plan(Rig rig,Session s,PacketType type,long nano) throws Exception {
         return rig.engine().plan(s,db.state().machine(rig.machine().id()),type,s.sequence()+1,NOW+s.sequence()+1,nano,0,null);
     }
 
