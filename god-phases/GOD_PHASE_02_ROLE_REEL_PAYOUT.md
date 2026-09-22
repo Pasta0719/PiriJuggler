@@ -22,7 +22,7 @@ See `docs/GOD_PHASE_02_SOURCE_AUDIT_2026-09-22.md`.
 
 A complete hidden real-machine press-index control table is not public. Where that table is unavailable, the explicitly labelled Piri control policy below is the final Phase-02 implementation rule rather than a placeholder waiting for another guess.
 
-## Frozen role matrix
+## Audited role matrix
 
 | Role | Wager result | Frozen visible result | Input/order | Slip/control |
 |---|---|---|---|---|
@@ -68,4 +68,4 @@ Phase 02 remains incomplete until:
 4. recovery settles to the same resolved result family,
 5. forced-role runtime evidence is collected for every row.
 
-Runtime evidence may reveal an implementation bug; it does **not** automatically reopen the frozen specification.
+Runtime evidence may reveal an implementation bug; it does **not** convert UNKNOWN reference behavior into an authentic specification.
