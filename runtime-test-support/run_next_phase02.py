@@ -131,9 +131,8 @@ try:
     hist=dbrows("SELECT event_type,games FROM juggler_god_history WHERE machine_id=1 ORDER BY id DESC")
     check("GOD parent history is separate",len(hist)==1 and hist[0]["event_type"]=="GOD",hist)
 
-    # Validate the first guaranteed successor BIG is armed with zero game-count semantics.
-    # Completing the full BIG is intentionally left to the ordinary production BIG loop;
-    # unit/integration tests cover the stock decrement and post-guarantee 1G accounting.
+    # The GOD-trigger BIG is the first of five guaranteed BIGs. The runner below
+    # completes it and then drives all four successor BIGs through the real production loop.
     stats=dbrows("SELECT total_games,current_games,big_count FROM machine_period_stats WHERE machine_id=1")[0]
     check("GOD trigger counts one normal game before guaranteed zero-G stock",stats["total_games"]==1 and stats["big_count"]==1,stats)
 
