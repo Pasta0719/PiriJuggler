@@ -131,6 +131,24 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals(2,after.guaranteedRemaining());
     }
 
+    @Test void godChainFailureAlwaysEntersFreshHeaven() throws Exception {
+        var runtime=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,0,false,false,
+                "GOD_CHAIN",5,false,"GOD_BIG_STARTED");
+        Rig rig=rig(runtime,1);
+        var method=JugglerGodGameEngine.class.getDeclaredMethod("afterBonus",Machine.class,JugglerGodRuntime.class);
+        method.setAccessible(true);
+        boolean sawHeaven=false;
+        for(int i=0;i<64;i++){
+            var after=(JugglerGodRuntime)method.invoke(rig.engine(),rig.machine(),runtime);
+            if(after.mode()==JugglerGodRuntime.Mode.HEAVEN){
+                assertTrue(after.heavenTarget()>=1&&after.heavenTarget()<=32);
+                assertEquals(0,after.heavenProgress());
+                sawHeaven=true;break;
+            }
+        }
+        assertTrue(sawHeaven);
+    }
+
     @Test void runtimeRoundTripPreservesHiddenSuccessorState() {
         var state=new JugglerGodRuntime(JugglerGodRuntime.Mode.HEAVEN,32,17,4,true,true,"GOD_CHAIN",9,true,"TEST");
         assertEquals(state,JugglerGodRuntime.fromJson(state.toJsonString()));
