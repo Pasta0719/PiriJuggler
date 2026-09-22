@@ -1,6 +1,6 @@
 # GOD PHASE 02 — Role / Reel / Payout Implementation
 
-Status: **IN_PROGRESS — SPEC FROZEN**
+Status: **IN_PROGRESS — SOURCE AUDIT REOPENED**
 
 Implement only the locked role contract from `docs/GOD_MASTER_SPEC.md` and `docs/GOD_ROLE_CONTRACT_V1.md`.
 
@@ -14,13 +14,11 @@ Implement only the locked role contract from `docs/GOD_MASTER_SPEC.md` and `docs
 
 No gameplay-state or economy redesign in this phase.
 
-## Phase-02 freeze rule
+## Phase-02 audit state
 
-The role/reel/payout contract below is frozen before further runtime acceptance.
-Do not change a row merely because current code or a runtime screenshot differs.
-A row may be reopened only by:
-1. a direct user design change, or
-2. new current-machine source evidence that contradicts the locked row.
+The previous freeze was reopened on 2026-09-22 after a source audit found one real unresolved Phase-02 item: normal/no-nav ORDERED_YELLOW7 can produce a 1-medal role in current-machine source material, while current code credits 1 medal using a generic MISS visual family. That mapping must be explicitly resolved before this phase is frozen again.
+
+See `docs/GOD_PHASE_02_SOURCE_AUDIT_2026-09-22.md`.
 
 A complete hidden real-machine press-index control table is not public. Where that table is unavailable, the explicitly labelled Piri control policy below is the final Phase-02 implementation rule rather than a placeholder waiting for another guess.
 
@@ -31,13 +29,13 @@ A complete hidden real-machine press-index control table is not public. Where th
 | MISS | 0, no replay | variable safe miss window; no GOD/RED7/BLUE7/YELLOW7 straight or diagonal and no locked special/paying role form | LEFT first, then C/R free | ordinary 0..4; persisted per-spin presentation selector may vary among safe candidates |
 | UPPER_BLUE7 | replay | BLUE7 upper-row straight | LEFT first | ordinary 0..4 |
 | MIDDLE_BLUE7 | replay | BLUE7 middle-row straight | LEFT first | ordinary 0..4 |
-| ORDERED_YELLOW7 — normal/no nav | 0 or 1 medal under the locked calibration | miss-side/1-medal-safe result; never display the navigated 15-medal lower-yellow acquisition | LEFT first | ordinary 0..4; exact 0/1 calibration remains the already-designated Phase-04 economy parameter, not a stop-form redesign item |
+| ORDERED_YELLOW7 — normal/no nav | 0 or 1 medal under provisional calibration | **UNRESOLVED:** 0-medal branch may use safe miss/こぼし; 1-medal branch must use a source-published 1-medal visible family rather than arbitrary MISS. Exact hidden mapping is unpublished | LEFT first | ordinary Piri control; exact 0/1 split remains Phase-04 calibration; visible mapping blocks refreeze |
 | ORDERED_YELLOW7 — AT/nav | 15 medals | lower-row yellow A acquisition form | exact displayed order | ordinary 0..4; wrong instructed input rejected without consuming/redrawing role |
 | LOWER_YELLOW7 | 3 medals | lower-row yellow B; source example has center-middle RED7 | LEFT first | ordinary 0..4 |
 | RISING_YELLOW7 | 15 medals | rising/right-up YELLOW7 straight | LEFT first | ordinary 0..4 |
 | MIDDLE_YELLOW7 | 15 medals | YELLOW7 middle-row straight | LEFT first | ordinary 0..4 |
 | COMMON_YELLOW7 | 15 medals | lower-row yellow A; source example has center-middle BLUE7 | LEFT first unless state nav explicitly applies | ordinary 0..4 |
-| GAIA_BELL | 1 medal | YELLOW7 small-V | RIGHT-first navigation | ordinary 0..4; wrong instructed input rejected |
+| GAIA_BELL | 1 medal | YELLOW7 small-V | RIGHT first is source-confirmed; second/third order is not published | Piri currently enforces RIGHT first, then permits either remaining reel; ordinary 0..4 |
 | RED7_FAKE | replay | current-machine representative example is middle RED7 / RED7 / miss; source explicitly says the stop form changes when aiming near DEKA-MILLION. Prefer the representative form when reachable; otherwise use a RED7-visible safe replay fallback that cannot equal RED7 straight, SP, GOD, a BLUE7 replay line, or a paying yellow result | LEFT first | ordinary 0..4; persisted per-spin presentation selector may vary among legal fake-RED forms |
 | RED7 | 15 medals | RED7 straight | LEFT first | premium visible-form exception: deterministic >4 slip allowed only when needed |
 | GOD | 15 medals | GOD straight | LEFT first | premium visible-form exception: deterministic >4 slip allowed only when needed |
@@ -64,9 +62,10 @@ For fixed semantic forms, the selector is irrelevant.
 ## Exit gate
 
 Phase 02 remains incomplete until:
-1. unit/exhaustive tests pass for every frozen row,
-2. Paper/Fabric final visible symbols agree,
-3. recovery settles to the same frozen result family,
-4. forced-role runtime evidence is collected for every row.
+1. normal ORDERED_YELLOW7 1-medal visual mapping is explicitly resolved and implemented,
+2. unit/exhaustive tests pass for every resolved row,
+3. Paper/Fabric final visible symbols agree,
+4. recovery settles to the same resolved result family,
+5. forced-role runtime evidence is collected for every row.
 
 Runtime evidence may reveal an implementation bug; it does **not** automatically reopen the frozen specification.
