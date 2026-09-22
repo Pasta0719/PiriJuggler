@@ -12,7 +12,7 @@ class BarConfirmationTest extends GameFixture {
             int reach=StopCatalogue.reachLines(e.stops());assertEquals(reach,e.winningReachLines());
             if(reach!=0){
                 raw++;for(var line:Payline.values())if((reach&(1<<line.ordinal()))!=0)perLine[line.ordinal()]++;
-                for(var role:DisplayRole.values())if(role!=DisplayRole.BONUS&&role!=DisplayRole.BONUS_CHERRY&&role!=DisplayRole.PREMIUM_B)assertFalse(e.valid(role),e.stops()+" "+role);
+                for(var role:DisplayRole.values())if(role!=DisplayRole.BONUS&&role!=DisplayRole.BONUS_CHERRY&&role!=DisplayRole.PREMIUM_B&&role!=DisplayRole.GOD_BAR)assertFalse(e.valid(role),e.stops()+" "+role);
                 if(e.valid(DisplayRole.BONUS))pure++;
                 if(e.valid(DisplayRole.BONUS_CHERRY))cherry++;
                 if(e.valid(DisplayRole.PREMIUM_B))premiumB++;
@@ -20,6 +20,9 @@ class BarConfirmationTest extends GameFixture {
         }
         assertEquals(160,raw);assertEquals(115,pure);assertEquals(10,cherry);assertTrue(premiumB>0);for(int count:perLine)assertTrue(count>0);
         assertEquals(5126,SOLVER.catalogue().candidates(DisplayRole.MISS).size());assertEquals(1287,SOLVER.catalogue().candidates(DisplayRole.CHERRY).size());assertEquals(447,SOLVER.catalogue().candidates(DisplayRole.BONUS).size());assertEquals(24,SOLVER.catalogue().candidates(DisplayRole.BONUS_CHERRY).size());assertEquals(782,SOLVER.catalogue().candidates(DisplayRole.PREMIUM_B).size());
+        assertEquals(1,SOLVER.catalogue().candidates(DisplayRole.GOD_BAR).size());
+        var god=SOLVER.catalogue().candidates(DisplayRole.GOD_BAR).getFirst();
+        assertEquals(1<<Payline.L1_CENTER.ordinal(),god.winningBarConfirmationLines());
         assertFalse(StopCatalogue.isReachPattern(Symbol.SEVEN,Symbol.SEVEN,Symbol.SEVEN));assertFalse(StopCatalogue.isReachPattern(Symbol.SEVEN,Symbol.SEVEN,Symbol.BAR));
         assertTrue(StopCatalogue.isReachPattern(Symbol.BAR,Symbol.BAR,Symbol.BAR));assertTrue(StopCatalogue.isReachPattern(Symbol.PIERO,Symbol.BAR,Symbol.PIERO));
     }
