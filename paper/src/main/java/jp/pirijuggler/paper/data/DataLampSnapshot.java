@@ -24,15 +24,21 @@ public final class DataLampSnapshot {
 
         JsonArray history=new JsonArray();
         var chainGames=new ArrayList<Long>();
-        try(PreparedStatement ps=connection.prepareStatement("SELECT bonus_type,games,occurred_at FROM bonus_history WHERE machine_id=? AND business_period_id=? ORDER BY id DESC")){
-            ps.setInt(1,machineId);ps.setString(2,businessPeriodId);
+        String historySql="SELECT type,games,occurred_at FROM ("+
+                "SELECT bonus_type AS type,games,occurred_at,id*2 AS ord FROM bonus_history WHERE machine_id=? AND business_period_id=? UNION ALL "+
+                "SELECT event_type AS type,games,occurred_at,id*2+1 AS ord FROM juggler_god_history WHERE machine_id=? AND business_period_id=?"+
+                ") ORDER BY occurred_at DESC,ord DESC LIMIT 10";
+        try(PreparedStatement ps=connection.prepareStatement(historySql)){
+            ps.setInt(1,machineId);ps.setString(2,businessPeriodId);ps.setInt(3,machineId);ps.setString(4,businessPeriodId);
             try(ResultSet rs=ps.executeQuery()){
-                int shown=0;
                 while(rs.next()){
-                    String type=rs.getString(1);long games=rs.getLong(2),occurredAt=rs.getLong(3);chainGames.add(games);
-                    if(shown<10){JsonObject item=new JsonObject();item.addProperty("type",type);item.addProperty("games",games);item.addProperty("occurredAt",occurredAt);history.add(item);shown++;}
+                    JsonObject item=new JsonObject();item.addProperty("type",rs.getString(1));item.addProperty("games",rs.getLong(2));item.addProperty("occurredAt",rs.getLong(3));history.add(item);
                 }
             }
+        }
+        try(PreparedStatement ps=connection.prepareStatement("SELECT games FROM bonus_history WHERE machine_id=? AND business_period_id=? ORDER BY id DESC")){
+            ps.setInt(1,machineId);ps.setString(2,businessPeriodId);
+            try(ResultSet rs=ps.executeQuery()){while(rs.next())chainGames.add(rs.getLong(1));}
         }
 
         List<Lttb.Point> raw=new ArrayList<>();
