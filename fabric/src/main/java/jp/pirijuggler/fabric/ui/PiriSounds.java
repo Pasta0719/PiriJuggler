@@ -12,7 +12,14 @@ import java.util.*;
 
 /** Accepts user-supplied OGG resources. No synthesis, encoding or replacement audio. */
 public final class PiriSounds {
-    public static final List<String> NAMES=List.of("notice","notice_strong","tenpai","bet","lever","stop","payout","error","bonus_start","bonus_end","big_bgm","reg_bgm","god_freeze");
+    private static final List<String> BASE=List.of("notice","notice_strong","tenpai","bet","lever","stop","payout","error","bonus_start","bonus_end","big_bgm","reg_bgm");
+    public static final List<String> NAMES;
+    static {
+        var names=new ArrayList<String>(BASE);
+        for(String base:BASE)names.add("juggler_god_"+base);
+        names.add("god_freeze");
+        NAMES=List.copyOf(names);
+    }
     private static final Map<String,SoundEvent> EVENTS=new HashMap<>();
     private static final PriorityQueue<Pending> QUEUE=new PriorityQueue<>(Comparator.comparingLong(Pending::at));
     private static SoundInstance loop;private static String loopName;
@@ -24,9 +31,16 @@ public final class PiriSounds {
     public static void queue(String name,int count,long spacingNanos){if(!EVENTS.containsKey(name))throw new IllegalArgumentException(name);long now=System.nanoTime();for(int i=0;i<count;i++)QUEUE.add(new Pending(name,now+spacingNanos*i));}
     public static void tick(){long now=System.nanoTime();while(!QUEUE.isEmpty()&&QUEUE.peek().at<=now)play(QUEUE.remove().name);}
     public static boolean available(String name){return NAMES.contains(name)&&MinecraftClient.getInstance().getResourceManager().getResource(Identifier.of("piri","sounds/"+name+".ogg")).isPresent();}
+    public static String forMachine(String machineType,String base){
+        if("JUGGLER_GOD".equals(machineType)){
+            String dedicated="juggler_god_"+base;
+            if(available(dedicated))return dedicated;
+        }
+        return base;
+    }
     public static void play(String name){if(available(name))MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(EVENTS.get(name),1));}
     public static void startLoop(String name){
-        if(!name.equals("big_bgm")&&!name.equals("reg_bgm"))throw new IllegalArgumentException(name);if(name.equals(loopName)&&loop!=null)return;stopLoop();
+        if(!name.equals("big_bgm")&&!name.equals("reg_bgm")&&!name.equals("juggler_god_big_bgm")&&!name.equals("juggler_god_reg_bgm"))throw new IllegalArgumentException(name);if(name.equals(loopName)&&loop!=null)return;stopLoop();
         if(!available(name))return;loopName=name;loop=new LoopSound(EVENTS.get(name));MinecraftClient.getInstance().getSoundManager().play(loop);
     }
     public static void stopLoop(){if(loop!=null)MinecraftClient.getInstance().getSoundManager().stop(loop);loop=null;loopName=null;}
