@@ -35,7 +35,7 @@ public final class SlotUi {
         if(view==null)return;
         switch(packet.packetType()) {
             case NOTICE -> {if(view.matchesSpin(b))switch(b.get("sound").getAsString()){case "NOTICE"->PiriSounds.queue("notice",1,0);case "NOTICE_STRONG"->PiriSounds.queue("notice_strong",1,0);case "NOTICE_X5"->PiriSounds.queue("notice",5,100_000_000);default->{}}}
-            case SPIN_START -> {if(view.matches(b)&&!"RESUME_NORMAL".equals(b.get("animation").getAsString()))PiriSounds.queue("lever",1,0);}
+            case SPIN_START -> {if(view.matches(b)&&!"RESUME_NORMAL".equals(b.get("animation").getAsString()))PiriSounds.queue(b.has("godFreeze")&&b.get("godFreeze").getAsBoolean()?"god_freeze":"lever",1,0);}
             case TENPAI_SOUND -> {if(view.matchesSpin(b))PiriSounds.queue("tenpai",1,0);}
             case PAYOUT -> PiriSounds.queue("payout",1,0);
             case BONUS_START -> {
