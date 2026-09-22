@@ -169,13 +169,13 @@ try:
     command("piritest force god","TEST_FORCE_ARMED GOD")
     tap(32);wait_state("NORMAL_BETTED")
     before=len(packets("SPIN_START"));tap(32)
-    wait(lambda:len(packets("SPIN_START"))>before and session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),"forced GOD lever")
+    wait(lambda:len(packets("SPIN_START"))>before and settled() and settled() and session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),"forced GOD lever")
     spin=packets("SPIN_START")[-1]
     check("GOD lever uses dedicated freeze contract",spin.get("godFreeze") is True,spin)
     check("GOD draw remains server authoritative",session()["internal_role"]=="GOD" and (cli().get("publicState") or {}).get("gameState")=="NORMAL_SPINNING")
 
     for key,mask in [(263,1),(264,3)]:
-        tap(key);wait(lambda:session()["stopped_mask"]==mask,"GOD stop")
+        tap(key);wait(lambda:settled() and session()["stopped_mask"]==mask,"GOD stop")
     tap(262);wait_state("BIG_READY")
     s=session()
     check("GOD BAR awards 15 and starts BIG",s["pay_display"]==15 and s["bonus_type"]=="BIG",s)
@@ -194,9 +194,9 @@ try:
         for _ in range(20):
             wait(lambda:session()["game_state"]=="BIG_READY","BIG ready")
             tap(32);wait_state("BIG_BETTED")
-            tap(32);wait(lambda:session()["game_state"]=="BIG_SPINNING" and cli().get("stopEnabled"),"BIG lever")
+            tap(32);wait(lambda:settled() and session()["game_state"]=="BIG_SPINNING" and cli().get("stopEnabled"),"BIG lever")
             for key,mask in [(263,1),(264,3)]:
-                tap(key);wait(lambda:session()["stopped_mask"]==mask,"BIG stop")
+                tap(key);wait(lambda:settled() and session()["stopped_mask"]==mask,"BIG stop")
             tap(262)
             wait(lambda:session()["game_state"] in ("BIG_READY","SEATED_READY"),"BIG settle")
         wait_state("SEATED_READY")
@@ -208,16 +208,16 @@ try:
         progress("GOD_GUARANTEED_BIG_BEGIN",index=guaranteed_index,**snapshot())
         before_stats=dbrows("SELECT total_games,current_games,big_count FROM machine_period_stats WHERE machine_id=1")[0]
         tap(32);wait_state("NORMAL_BETTED")
-        tap(32);wait(lambda:session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),f"guaranteed BIG {guaranteed_index} draw")
+        tap(32);wait(lambda:settled() and session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),f"guaranteed BIG {guaranteed_index} draw")
         for key,mask in [(263,1),(264,3)]:
-            tap(key);wait(lambda:session()["stopped_mask"]==mask,"guaranteed BIG trigger stop")
+            tap(key);wait(lambda:settled() and session()["stopped_mask"]==mask,"guaranteed BIG trigger stop")
         tap(262);wait(lambda:session()["game_state"]!="NORMAL_SPINNING","guaranteed BIG trigger settle")
         # Either direct entry or normal pending+entry must end at BIG_READY without game count advancing.
         if session()["game_state"]=="BONUS_PENDING_BIG":
             tap(32);wait_state("BONUS_ENTRY_BETTED_BIG")
-            tap(32);wait(lambda:session()["game_state"]=="BONUS_ENTRY_SPINNING_BIG" and cli().get("stopEnabled"),"bonus entry lever")
+            tap(32);wait(lambda:settled() and session()["game_state"]=="BONUS_ENTRY_SPINNING_BIG" and cli().get("stopEnabled"),"bonus entry lever")
             for key,mask in [(263,1),(264,3)]:
-                tap(key);wait(lambda:session()["stopped_mask"]==mask,"bonus entry stop")
+                tap(key);wait(lambda:settled() and session()["stopped_mask"]==mask,"bonus entry stop")
             tap(262)
         wait_state("BIG_READY")
         mid_stats=dbrows("SELECT total_games,current_games,big_count FROM machine_period_stats WHERE machine_id=1")[0]
@@ -250,13 +250,13 @@ try:
     check("test heaven target persisted",h0["jgMode"]=="HEAVEN" and h0["heavenTarget"]==2 and h0["heavenProgress"]==0,h0)
 
     tap(32);wait_state("NORMAL_BETTED")
-    tap(32);wait(lambda:session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),"heaven game 1 lever")
+    tap(32);wait(lambda:settled() and session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),"heaven game 1 lever")
     first_role=session()["internal_role"]
     check("heaven game 1 cannot pre-empt target with bonus",
           first_role not in ("BIG","REG","CHERRY_BIG","CHERRY_REG","PIERO_BIG","PIERO_REG","GOD"),
           {"role":first_role,"runtime":json.loads(session()["machine_state_json"])})
     for key,mask in [(263,1),(264,3)]:
-        tap(key);wait(lambda:session()["stopped_mask"]==mask,"heaven game 1 stop")
+        tap(key);wait(lambda:settled() and session()["stopped_mask"]==mask,"heaven game 1 stop")
     tap(262);wait(lambda:session()["game_state"] in ("SEATED_READY","REPLAY_READY"),"heaven game 1 settle")
     h1=json.loads(session()["machine_state_json"])
     check("heaven game 1 advances progress only",h1["jgMode"]=="HEAVEN" and h1["heavenProgress"]==1,h1)
@@ -265,7 +265,7 @@ try:
         pass
     else:
         tap(32);wait_state("NORMAL_BETTED")
-    tap(32);wait(lambda:session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),"heaven target lever")
+    tap(32);wait(lambda:settled() and session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),"heaven target lever")
     target_role=session()["internal_role"]
     check("heaven target forces BIG or REG family",
           target_role in ("BIG","REG","CHERRY_BIG","CHERRY_REG","PIERO_BIG","PIERO_REG"),
