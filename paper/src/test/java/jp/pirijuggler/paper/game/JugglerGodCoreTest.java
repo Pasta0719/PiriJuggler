@@ -105,28 +105,13 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals(1,scalar("SELECT count(*) FROM bonus_history WHERE machine_id=? AND bonus_type='BIG' AND games=0",before.machine()));
     }
 
-    @Test void directEntryGodChainBigIncrementsCounter() throws Exception {
-        var runtime=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,2,false,false,"GOD_CHAIN",2,false,"BONUS_DRAWN");
-        Rig rig=rig(runtime,1);
-        Session before=rig.session();
-        var values=new LinkedHashMap<>(before.snapshot());
-        values.put("last_client_sequence",before.sequence()+1);
-        values.put("game_state","BIG_READY");
-        values.put("bonus_type","BIG");
-        values.put("last_activity",before.number("last_activity")+1);
-        values.put("machine_state_json",runtime.toJsonString());
-        Session after=new Session(values);
-        var legacy=new NormalGame.Transition(UUID.randomUUID(),before,after,0,0,0,true,false,"BIG",false,0,
-                List.of(),List.of(),List.of());
-        var transition=new GameTransition(legacy.transaction(),before,after,0,0,0,true,false,"BIG",false,0,
-                List.of(),List.of(),List.of(),runtime.toJsonString());
-        // The production engine path increments godBigCount whenever a GOD_CHAIN BIG actually starts,
-        // including direct-entry BIGs from NORMAL_SPINNING.
-        var engine=rig.engine();
-        var method=JugglerGodGameEngine.class.getDeclaredMethod("afterBonus",Machine.class,JugglerGodRuntime.class);
-        method.setAccessible(true);
-        assertEquals(2,JugglerGodRuntime.fromJson(transition.machineRuntimeJson()).godBigCount());
-        assertNotNull(engine);
+    @Test void directEntryGodChainBigIncrementsCounter() {
+        var before=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,2,false,false,
+                "GOD_CHAIN",2,false,"BONUS_DRAWN");
+        var after=JugglerGodGameEngine.recordGodChainBonusStart(before);
+        assertEquals(3,after.godBigCount());
+        assertEquals("GOD_BIG_STARTED",after.lastEvent());
+        assertEquals(2,after.guaranteedRemaining());
     }
 
     @Test void runtimeRoundTripPreservesHiddenSuccessorState() {
