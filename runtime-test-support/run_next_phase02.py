@@ -189,7 +189,13 @@ except Exception as error:
 finally:
     if client_proc and client_proc.poll() is None:
         try: action("exit");client_proc.wait(timeout=60)
-        except Exception: subprocess.run(["taskkill","/PID",str(client_proc.pid),"/T","/F"],capture_output=True)
+        except Exception:
+            if os.name=="nt":
+                subprocess.run(["taskkill","/PID",str(client_proc.pid),"/T","/F"],capture_output=True)
+            else:
+                client_proc.terminate()
+                try: client_proc.wait(timeout=15)
+                except Exception: client_proc.kill()
     if server and server.poll() is None:
         try: server.stdin.write("stop\n");server.stdin.flush();server.wait(timeout=60)
         except Exception: server.terminate()
