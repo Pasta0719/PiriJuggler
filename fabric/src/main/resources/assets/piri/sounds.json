@@ -69,5 +69,71 @@
     "sounds": [
       "piri:god_freeze"
     ]
+  },
+  "juggler_god_notice": {
+    "sounds": [
+      "piri:juggler_god_notice"
+    ]
+  },
+  "juggler_god_notice_strong": {
+    "sounds": [
+      "piri:juggler_god_notice_strong"
+    ]
+  },
+  "juggler_god_tenpai": {
+    "sounds": [
+      "piri:juggler_god_tenpai"
+    ]
+  },
+  "juggler_god_bet": {
+    "sounds": [
+      "piri:juggler_god_bet"
+    ]
+  },
+  "juggler_god_lever": {
+    "sounds": [
+      "piri:juggler_god_lever"
+    ]
+  },
+  "juggler_god_stop": {
+    "sounds": [
+      "piri:juggler_god_stop"
+    ]
+  },
+  "juggler_god_payout": {
+    "sounds": [
+      "piri:juggler_god_payout"
+    ]
+  },
+  "juggler_god_error": {
+    "sounds": [
+      "piri:juggler_god_error"
+    ]
+  },
+  "juggler_god_bonus_start": {
+    "sounds": [
+      "piri:juggler_god_bonus_start"
+    ]
+  },
+  "juggler_god_bonus_end": {
+    "sounds": [
+      "piri:juggler_god_bonus_end"
+    ]
+  },
+  "juggler_god_big_bgm": {
+    "sounds": [
+      {
+        "name": "piri:juggler_god_big_bgm",
+        "stream": true
+      }
+    ]
+  },
+  "juggler_god_reg_bgm": {
+    "sounds": [
+      {
+        "name": "piri:juggler_god_reg_bgm",
+        "stream": true
+      }
+    ]
   }
 }
