@@ -120,9 +120,9 @@ try:
     check("GOD lever uses dedicated freeze contract",spin.get("godFreeze") is True,spin)
     check("GOD draw remains server authoritative",session()["internal_role"]=="GOD" and (cli().get("publicState") or {}).get("gameState")=="NORMAL_SPINNING")
 
-    for key,mask in [(263,1),(264,3),(262,7)]:
+    for key,mask in [(263,1),(264,3)]:
         tap(key);wait(lambda:session()["stopped_mask"]==mask,"GOD stop")
-    wait_state("BIG_READY")
+    tap(262);wait_state("BIG_READY")
     s=session()
     check("GOD BAR awards 15 and starts BIG",s["pay_display"]==15 and s["bonus_type"]=="BIG",s)
     runtime=json.loads(s["machine_state_json"])
@@ -142,8 +142,10 @@ try:
             wait(lambda:session()["game_state"]=="BIG_READY","BIG ready")
             tap(32);wait_state("BIG_BETTED")
             tap(32);wait(lambda:session()["game_state"]=="BIG_SPINNING" and cli().get("stopEnabled"),"BIG lever")
-            for key,mask in [(263,1),(264,3),(262,7)]:
+            for key,mask in [(263,1),(264,3)]:
                 tap(key);wait(lambda:session()["stopped_mask"]==mask,"BIG stop")
+            tap(262)
+            wait(lambda:session()["game_state"] in ("BIG_READY","SEATED_READY"),"BIG settle")
         wait_state("SEATED_READY")
 
     # Finish the initial GOD BIG, then verify four guaranteed successor BIGs.
@@ -152,14 +154,16 @@ try:
         before_stats=dbrows("SELECT total_games,current_games,big_count FROM machine_period_stats WHERE machine_id=1")[0]
         tap(32);wait_state("NORMAL_BETTED")
         tap(32);wait(lambda:session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),f"guaranteed BIG {guaranteed_index} draw")
-        for key,mask in [(263,1),(264,3),(262,7)]:
+        for key,mask in [(263,1),(264,3)]:
             tap(key);wait(lambda:session()["stopped_mask"]==mask,"guaranteed BIG trigger stop")
+        tap(262);wait(lambda:session()["game_state"]!="NORMAL_SPINNING","guaranteed BIG trigger settle")
         # Either direct entry or normal pending+entry must end at BIG_READY without game count advancing.
         if session()["game_state"]=="BONUS_PENDING_BIG":
             tap(32);wait_state("BONUS_ENTRY_BETTED_BIG")
             tap(32);wait(lambda:session()["game_state"]=="BONUS_ENTRY_SPINNING_BIG" and cli().get("stopEnabled"),"bonus entry lever")
-            for key,mask in [(263,1),(264,3),(262,7)]:
+            for key,mask in [(263,1),(264,3)]:
                 tap(key);wait(lambda:session()["stopped_mask"]==mask,"bonus entry stop")
+            tap(262)
         wait_state("BIG_READY")
         mid_stats=dbrows("SELECT total_games,current_games,big_count FROM machine_period_stats WHERE machine_id=1")[0]
         check(f"guaranteed BIG {guaranteed_index} is zero-game",
