@@ -32,7 +32,8 @@ class PiriDatabaseTest {
         assertEquals("4", scalar("SELECT value FROM metadata WHERE key='schema_version'"));
         assertEquals("wal", scalar("PRAGMA journal_mode")); assertEquals(1, scalar("PRAGMA foreign_keys"));
         assertEquals(2, scalar("PRAGMA synchronous")); assertEquals(5000, scalar("PRAGMA busy_timeout"));
-        assertEquals(13, ((Number) scalar("SELECT count(*) FROM sqlite_master WHERE type='table' AND name<>'sqlite_sequence'")).intValue());
+        assertEquals(14, ((Number) scalar("SELECT count(*) FROM sqlite_master WHERE type='table' AND name<>'sqlite_sequence'")).intValue());
+        assertEquals(1, scalar("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='juggler_god_history'"));
         String spec = Files.readString(Path.of(System.getProperty("piri.specRoot"), "SPEC.md"));
         String schema = Files.readString(Path.of(System.getProperty("piri.specRoot"), "paper/src/main/resources/schema-v4.sql"));
         for (String statement : schema.replace("\r", "").split(";")) if (!statement.isBlank()) assertTrue(spec.replace("\r", "").contains(statement.strip()), statement);
