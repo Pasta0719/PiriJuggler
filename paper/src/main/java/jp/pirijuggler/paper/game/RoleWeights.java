@@ -12,6 +12,7 @@ public final class RoleWeights {
         InternalRole.PIERO,InternalRole.BIG,InternalRole.REG,InternalRole.CHERRY_BIG,InternalRole.CHERRY_REG,
         InternalRole.PIERO_BIG,InternalRole.PIERO_REG,InternalRole.GOD,InternalRole.MISS};
     private final int[][] cumulative=new int[6][ORDER.length];
+    private final int[][] rawWeights=new int[6][ORDER.length];
     private final long[][] bonusFamilies=new long[6][2];
     private final Map<String,Object> sourceConfig;
     public RoleWeights(Map<String,Object> config) {
@@ -24,7 +25,7 @@ public final class RoleWeights {
                 Object raw=row.get(ORDER[i].name().toLowerCase(Locale.ROOT));
                 long value=raw instanceof Number n?n.longValue():0L;
                 if(value<0||value>DENOMINATOR)throw new IllegalArgumentException("Invalid role weight");
-                sum=Math.addExact(sum,value);cumulative[setting-1][i]=Math.toIntExact(sum);
+                sum=Math.addExact(sum,value);rawWeights[setting-1][i]=Math.toIntExact(value);cumulative[setting-1][i]=Math.toIntExact(sum);
             }
             if(sum!=DENOMINATOR)throw new IllegalArgumentException("Role weights must total 1e9");
             bonusFamilies[setting-1][0]=number(row,"big")+number(row,"cherry_big")+number(row,"piero_big");
@@ -40,6 +41,28 @@ public final class RoleWeights {
             if(GameRules.bonus(role)==null && role!=InternalRole.GOD)return role;
         }
         throw new IllegalStateException("Unable to draw non-bonus role");
+    }
+    public InternalRole drawJugglerGod(int setting,RandomGenerator rng,int bonusScalePpm) {
+        if(setting<1||setting>6||bonusScalePpm<0||bonusScalePpm>1_000_000)throw new IllegalArgumentException("JUGGLER_GOD weights");
+        int roll=rng.nextInt(DENOMINATOR);long cursor=0,removed=0;
+        int[] row=rawWeights[setting-1];
+        for(int i=0;i<ORDER.length;i++){
+            InternalRole role=ORDER[i];long weight=row[i];
+            if(GameRules.bonus(role)!=null&&role!=InternalRole.GOD){
+                long scaled=weight*bonusScalePpm/1_000_000L;
+                removed+=weight-scaled;weight=scaled;
+            } else if(role==InternalRole.MISS) weight+=removed;
+            cursor+=weight;
+            if(roll<cursor)return role;
+        }
+        throw new IllegalStateException("Uncovered JUGGLER_GOD draw interval");
+    }
+    public InternalRole drawJugglerGodNonBonus(int setting,RandomGenerator rng,int bonusScalePpm) {
+        for(int attempts=0;attempts<1024;attempts++){
+            InternalRole role=drawJugglerGod(setting,rng,bonusScalePpm);
+            if(GameRules.bonus(role)==null&&role!=InternalRole.GOD)return role;
+        }
+        throw new IllegalStateException("Unable to draw JUGGLER_GOD non-bonus role");
     }
     public InternalRole drawBonusFamily(int setting,RandomGenerator rng) {
         if(setting<1||setting>6)throw new IllegalArgumentException("Setting");
