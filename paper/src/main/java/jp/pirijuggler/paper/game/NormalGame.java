@@ -20,20 +20,26 @@ public final class NormalGame {
     private record Motion(UUID spin,double left,double center,double right,ReelMotion.Profile profile,long started) {
         double[] starts(){return new double[]{left,center,right};}
     }
-    private final RoleWeights weights;private final RandomStreams random;private final StopSolver solver;private final MainThread main;private final PremiumPolicy premium;
+    private final RoleWeights weights;private final RandomStreams random;private final StopSolver solver;private final MainThread main;private final PremiumPolicy premium;private final boolean legacyBarPremium;
     private final Map<UUID,Motion> motions=new HashMap<>();
 
     public NormalGame(RoleWeights weights,RandomStreams random,StopSolver solver,MainThread main) {
-        this(weights,random,solver,main,null);
+        this(weights,random,solver,main,null,true);
     }
     public NormalGame(RoleWeights weights,RandomStreams random,StopSolver solver,MainThread main,Map<String,Object> config) {
-        this.weights=weights;this.random=random;this.solver=solver;this.main=main;this.premium=config==null?null:new PremiumPolicy(config);
+        this(weights,random,solver,main,config,true);
+    }
+    public NormalGame(RoleWeights weights,RandomStreams random,StopSolver solver,MainThread main,Map<String,Object> config,boolean legacyBarPremium) {
+        this.weights=weights;this.random=random;this.solver=solver;this.main=main;this.premium=config==null?null:new PremiumPolicy(config);this.legacyBarPremium=legacyBarPremium;
     }
 
     public Transition plan(Session before,PacketType action,long sequence,int setting,long now,long receivedNanos,int ping) {
         return plan(before,action,sequence,setting,now,receivedNanos,ping,null);
     }
     public Transition plan(Session before,PacketType action,long sequence,int setting,long now,long receivedNanos,int ping,Integer clientPressedIndex) {
+        return plan(before,action,sequence,setting,now,receivedNanos,ping,clientPressedIndex,null);
+    }
+    public Transition plan(Session before,PacketType action,long sequence,int setting,long now,long receivedNanos,int ping,Integer clientPressedIndex,InternalRole forcedNormalRole) {
         main.requireMainThread();
         if(before.lifecycle()!=Session.Lifecycle.ACTIVE)throw new DomainException("SESSION_MISMATCH");
         if(sequence<=before.sequence())throw new DomainException("SEQUENCE_OLD");
@@ -47,8 +53,8 @@ public final class NormalGame {
             if(result.accepted()) {bet=3;values.put("game_state","NORMAL_BETTED");values.put("current_bet",3);values.put("pay_display",0);packets.add(accepted(action,sequence));}
             else packets.add(ErrorPackets.rejected(sequence,ErrorCode.NOT_ENOUGH_CREDIT));
         } else if(action==PacketType.SPACE_ACTION&&(state==Session.GameState.NORMAL_BETTED||state==Session.GameState.REPLAY_READY)) {
-            InternalRole role=weights.draw(setting,random.gameplay(before.machine()));
-            PremiumPolicy.Type p=drawPremium(role,before.machine());
+            InternalRole role=forcedNormalRole==null?weights.draw(setting,random.gameplay(before.machine())):forcedNormalRole;
+            PremiumPolicy.Type p=role==InternalRole.GOD?null:drawPremium(role,before.machine());
             ReelMotion.Profile profile=p==PremiumPolicy.Type.A?ReelMotion.Profile.REVERSE_500MS:ReelMotion.Profile.NORMAL;
             beginSpin(values,before,role.name(),profile,stateForNormalSpin(),GameRules.bonus(role));
             values.put("premium_type",p==null?null:p.name());
@@ -95,7 +101,13 @@ public final class NormalGame {
                             boolean naturalFallback=fallbackRole!=null&&evaluation.valid(fallbackRole);
                             boolean naturalAwardShape=directRole!=null;
                             if(!evaluation.valid(baseRole)&&!directEntry&&!naturalFallback&&!naturalAwardShape)throw new IllegalStateException("Unexpected final reel shape");
-                            if(directEntry){
+                            if(role==InternalRole.GOD){
+                                payout=GameRules.payout(role);putBalance(values,balance(before).payout(payout));values.put("pay_display",payout);bonusStarted="BIG";
+                                values.put("game_state","BIG_READY");values.put("current_bet",0);values.put("bonus_payout_count",0);values.put("lamp_on",1);values.put("notice_state","GOD");
+                                clearSpin(values);
+                                if(payout>0)scheduled.add(new Scheduled(delay,Envelope.current(PacketType.PAYOUT,new JsonObject())));
+                                JsonObject b=new JsonObject();b.addProperty("bonusType","BIG");scheduled.add(new Scheduled(delay,Envelope.current(PacketType.BONUS_START,b)));
+                            }else if(directEntry){
                                 if(bonus==null)throw new IllegalStateException("Direct entry requires a bonus role");
                                 payout=0;values.put("pay_display",0);bonusStarted=bonus;
                                 values.put("game_state",bonus+"_READY");values.put("current_bet",0);values.put("bonus_payout_count",0);values.put("lamp_on",1);values.put("notice_state","ON");
@@ -168,6 +180,7 @@ public final class NormalGame {
         if(premium==null)return null;return premium.draw(role,random.gameplay(machine)).orElse(null);
     }
     private void configureNoticeAtLever(Map<String,Object> values,List<Envelope> afterStart,List<Scheduled> scheduled,InternalRole role,PremiumPolicy.Type p){
+        if(role==InternalRole.GOD){values.put("notice_state","GOD_FREEZE");values.put("lamp_on",0);return;}
         if(GameRules.bonus(role)==null){values.put("notice_state","NONE");values.put("lamp_on",0);return;}
         if(p==null){
             boolean first=random.gameplay(((Number)values.get("machine_id")).intValue()).nextLong(1_000_000)<250_000;
@@ -220,7 +233,7 @@ public final class NormalGame {
     private ReelRound round(Session s,Motion m) {
         DisplayRole role;DisplayRole alternateRole=null;boolean premiumF=false;boolean premiumEffect=false;String mode;
         switch(s.state()){
-            case NORMAL_SPINNING -> {InternalRole internal=InternalRole.valueOf(s.text("internal_role"));PremiumPolicy.Type p=premiumType(s);role=internal.display(p==PremiumPolicy.Type.B);premiumF=p==PremiumPolicy.Type.F;premiumEffect=p!=null;alternateRole=directEntryRole(internal,p);mode="NORMAL";}
+            case NORMAL_SPINNING -> {InternalRole internal=InternalRole.valueOf(s.text("internal_role"));PremiumPolicy.Type p=premiumType(s);role=internal.display(p==PremiumPolicy.Type.B);premiumF=p==PremiumPolicy.Type.F;premiumEffect=internal==InternalRole.GOD||legacyBarPremium&&p!=null;alternateRole=directEntryRole(internal,p);mode="NORMAL";}
             case BONUS_ENTRY_SPINNING_BIG -> {role=DisplayRole.BIG_ENTRY;mode="BONUS_ENTRY";}
             case BONUS_ENTRY_SPINNING_REG -> {role=DisplayRole.REG_ENTRY;mode="BONUS_ENTRY";}
             case BIG_SPINNING -> {role=DisplayRole.valueOf(s.text("internal_role"));mode="BIG";}
