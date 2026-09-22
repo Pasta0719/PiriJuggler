@@ -25,14 +25,14 @@ class NormalGameTest extends GameFixture {
     @Test void everyInternalRoleHasOneCorrectPayoutAndNormalTransition() throws Exception {
         for(var role:InternalRole.values()) {
             NormalGame game=game(role);Session s=seat(2,99);s=spin(game,s,0);
-            int normalPayout=switch(role){case GRAPE->8;case CHERRY,CHERRY_BIG,CHERRY_REG->2;case BELL,PIERO,PIERO_BIG,PIERO_REG->14;default->0;};
+            int normalPayout=switch(role){case GOD->15;case GRAPE->8;case CHERRY,CHERRY_BIG,CHERRY_REG->2;case BELL,PIERO,PIERO_BIG,PIERO_REG->14;default->0;};
             String bonus=GameRules.bonus(role);
             var finalStops=new StopTriplet((int)s.number("display_left_stop"),(int)s.number("display_center_stop"),(int)s.number("display_right_stop"));
             DisplayRole directRole=role.directEntryDisplay();
             boolean directEntry=bonus!=null&&directRole!=null&&SOLVER.catalogue().evaluation(finalStops).valid(directRole);
             int expectedPayout=directEntry?0:normalPayout;
             assertEquals(98+expectedPayout,s.number("credit")+s.number("held_medals"));assertEquals(expectedPayout,s.number("pay_display"));
-            String expectedState=directEntry?bonus+"_READY":bonus!=null?"BONUS_PENDING_"+bonus:role==InternalRole.REPLAY?"REPLAY_READY":"SEATED_READY";
+            String expectedState=role==InternalRole.GOD?"BIG_READY":directEntry?bonus+"_READY":bonus!=null?"BONUS_PENDING_"+bonus:role==InternalRole.REPLAY?"REPLAY_READY":"SEATED_READY";
             assertEquals(expectedState,s.state().name());
             assertEquals(role==InternalRole.REPLAY?3:0,s.number("current_bet"));assertNull(s.text("internal_role"));assertEquals(7,s.number("stopped_mask"));
             assertEquals(1,scalar("SELECT total_games FROM machine_period_stats WHERE machine_id=?",s.machine()));assertEquals(expectedPayout-3,scalar("SELECT today_difference FROM machine_period_stats WHERE machine_id=?",s.machine()));
