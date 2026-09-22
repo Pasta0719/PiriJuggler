@@ -13,7 +13,7 @@ class StopSolverTest {
         var expected=Map.ofEntries(
                 Map.entry(DisplayRole.GRAPE,750),Map.entry(DisplayRole.BELL,50),Map.entry(DisplayRole.PIERO,20),Map.entry(DisplayRole.PIERO_BONUS,20),Map.entry(DisplayRole.REPLAY,525),
                 Map.entry(DisplayRole.CHERRY,1287),Map.entry(DisplayRole.MISS,5126),Map.entry(DisplayRole.BONUS,447),Map.entry(DisplayRole.BONUS_CHERRY,24),
-                Map.entry(DisplayRole.BIG_ENTRY,10),Map.entry(DisplayRole.REG_ENTRY,10),Map.entry(DisplayRole.PREMIUM_B,782),Map.entry(DisplayRole.GOD_BAR,1));
+                Map.entry(DisplayRole.BIG_ENTRY,10),Map.entry(DisplayRole.REG_ENTRY,10),Map.entry(DisplayRole.PREMIUM_B,782),Map.entry(DisplayRole.GOD_BAR,4));
         assertEquals(expected,CATALOGUE.counts());
         var lock=JsonParser.parseString(Files.readString(Path.of(System.getProperty("piri.specRoot"),"docs/spec-lock.json"))).getAsJsonObject();
         for(var role:DisplayRole.values()){assertTrue(CATALOGUE.candidates(role).size()>=role.minimum());for(var candidate:CATALOGUE.candidates(role))assertTrue(oracle(candidate.stops()).contains(role),candidate.stops()+" "+role);}
@@ -38,7 +38,7 @@ class StopSolverTest {
         if(noCherry&&reach==0&&wins.size()==1&&wins.values().iterator().next()==1){DisplayRole win=wins.keySet().iterator().next();result.add(win);if(win==DisplayRole.PIERO)result.add(DisplayRole.PIERO_BONUS);}
         if(wins.isEmpty()&&reach==0&&!bonusPair&&!middle&&(top^bottom))result.add(DisplayRole.CHERRY);
         if(wins.isEmpty()&&reach<=1&&middle&&!top&&!bottom)result.add(DisplayRole.PREMIUM_B);
-        if(centerBar==1&&wins.isEmpty()&&noCherry)result.add(DisplayRole.GOD_BAR);
+        if(centerBar==1&&wins.isEmpty())result.add(DisplayRole.GOD_BAR);
         return result;
     }
     @Test void allOrdersAndAllPressedSequencesCompleteIncludingPremiumF(){
