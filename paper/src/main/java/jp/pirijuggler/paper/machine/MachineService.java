@@ -130,6 +130,23 @@ public final class MachineService implements Listener, CommandExecutor {
                     finally {simulating=false;}
                 });return true;
             }
+            if (args.length==3 && (args[0].equalsIgnoreCase("godsimulator") || args[0].equalsIgnoreCase("godsim"))) {
+                int setting=Integer.parseInt(args[1]);long count=Long.parseLong(args[2]);
+                if(setting<1||setting>6||count<1||count>100_000_000L)throw new DomainException("INVALID_STATE");
+                if(simulating)throw new DomainException("BUSY");
+                var tuning=jp.pirijuggler.paper.database.StartupProfile.map(config.get("juggler_god"));
+                long normalPpm=((Number)tuning.getOrDefault("normal_to_heaven_ppm",0)).longValue();
+                long heavenPpm=((Number)tuning.getOrDefault("heaven_to_heaven_ppm",0)).longValue();
+                simulating=true;var rng=random.runtimeSimulation();
+                tell(sender,"GOD_SIMULATOR_STARTED setting="+setting+" games="+count+" normalToHeavenPpm="+normalPpm+" heavenToHeavenPpm="+heavenPpm);
+                plugin.executors().simulator(
+                        ()->JugglerGodSimulator.run(weights,setting,count,normalPpm,heavenPpm,rng),
+                        (result,error)->{
+                            try {if(!stopped){if(error!=null)failure(sender,error);else tell(sender,"PIRI_GOD_SIMULATOR "+new Gson().toJson(result));}}
+                            finally {simulating=false;}
+                        });
+                return true;
+            }
             if (args.length==3 && args[0].equalsIgnoreCase("godtest")) {
                 commandGodTest(sender,Integer.parseInt(args[1]),args[2]); return true;
             }
