@@ -18,7 +18,7 @@ public final class StopCatalogue {
     public record Evaluation(StopTriplet stops,int winningGrapeLines,int winningBellLines,int winningPieroLines,int winningReplayLines,
                              boolean leftTopCherry,boolean leftMiddleCherry,boolean leftBottomCherry,int winningBigLines,int winningRegLines,
                              int winningBarConfirmationLines,int winningReachLines) {
-        public int lineMask(DisplayRole role){return switch(role){case GRAPE->winningGrapeLines;case BELL->winningBellLines;case PIERO,PIERO_BONUS->winningPieroLines;case REPLAY->winningReplayLines;case BIG_ENTRY->winningBigLines;case REG_ENTRY->winningRegLines;case BONUS,BONUS_CHERRY->winningReachLines|bonusMissLines(stops);default->0;};}
+        public int lineMask(DisplayRole role){return switch(role){case GRAPE->winningGrapeLines;case BELL->winningBellLines;case PIERO,PIERO_BONUS->winningPieroLines;case REPLAY->winningReplayLines;case BIG_ENTRY->winningBigLines;case REG_ENTRY->winningRegLines;case GOD_BAR->winningBarConfirmationLines;case BONUS,BONUS_CHERRY->winningReachLines|bonusMissLines(stops);default->0;};}
         public int baseLines(){return Integer.bitCount(winningGrapeLines)+Integer.bitCount(winningBellLines)+Integer.bitCount(winningPieroLines)+Integer.bitCount(winningReplayLines)+Integer.bitCount(winningBigLines)+Integer.bitCount(winningRegLines);}
         public int totalLines(){return baseLines()+Integer.bitCount(winningReachLines);}
         public boolean anyCherry(){return leftTopCherry||leftMiddleCherry||leftBottomCherry;}
@@ -29,8 +29,9 @@ public final class StopCatalogue {
             case BONUS_CHERRY->baseLines()==0&&Integer.bitCount(lineMask(role))==1&&!leftMiddleCherry&&(leftTopCherry^leftBottomCherry);
             case CHERRY->baseLines()==0&&winningReachLines==0&&!hasBonusSymbolPair()&&!leftMiddleCherry&&(leftTopCherry^leftBottomCherry);
             case PREMIUM_B->baseLines()==0&&Integer.bitCount(winningReachLines)<=1&&leftMiddleCherry&&!leftTopCherry&&!leftBottomCherry;
+            case GOD_BAR->winningBarConfirmationLines==(1<<Payline.L1_CENTER.ordinal())&&baseLines()==0&&!anyCherry();
             default->winningReachLines==0&&!anyCherry()&&baseLines()==1&&Integer.bitCount(lineMask(role))==1;};}
-        public int targetRank(DisplayRole role){if(!valid(role))throw new IllegalArgumentException("Not a strict candidate");return switch(role){case MISS->5;case BONUS,BONUS_CHERRY->Integer.numberOfTrailingZeros(lineMask(role));case CHERRY->leftTopCherry?1:2;case PREMIUM_B->0;default->Integer.numberOfTrailingZeros(lineMask(role));};}
+        public int targetRank(DisplayRole role){if(!valid(role))throw new IllegalArgumentException("Not a strict candidate");return switch(role){case MISS->5;case BONUS,BONUS_CHERRY->Integer.numberOfTrailingZeros(lineMask(role));case CHERRY->leftTopCherry?1:2;case PREMIUM_B,GOD_BAR->0;default->Integer.numberOfTrailingZeros(lineMask(role));};}
     }
     private final List<Evaluation> evaluations;
     private final Map<DisplayRole,List<Evaluation>> candidates;
