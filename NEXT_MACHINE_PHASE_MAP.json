@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "scope": "Successor machine replacing retired Piri GOD target",
+  "entrypoint": "next-machine-phases/README.md",
+  "one_phase_per_run": true,
+  "inherits_god_spec": false,
+  "reuse_god_assets_only_when_explicit": true,
+  "phases": [
+    {
+      "number": 1,
+      "file": "next-machine-phases/NEXT_PHASE_01_DESIGN_LOCK.md",
+      "title": "Successor Concept / Game Loop / Presentation Lock",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 2,
+      "file": "next-machine-phases/NEXT_PHASE_02_CORE_GAMEPLAY.md",
+      "title": "Core Gameplay / Reel / State Implementation",
+      "status": "BLOCKED_BY_PHASE_01"
+    },
+    {
+      "number": 3,
+      "file": "next-machine-phases/NEXT_PHASE_03_ECONOMY_SIMULATION.md",
+      "title": "Economy / Probability / Long-run Simulation",
+      "status": "BLOCKED_BY_PHASE_02"
+    },
+    {
+      "number": 4,
+      "file": "next-machine-phases/NEXT_PHASE_04_PRESENTATION.md",
+      "title": "Presentation / LCD / Audio / Replaceable Assets",
+      "status": "BLOCKED_BY_PHASE_03"
+    },
+    {
+      "number": 5,
+      "file": "next-machine-phases/NEXT_PHASE_05_RUNTIME_FINAL.md",
+      "title": "Recovery / Runtime Acceptance / Final Audit",
+      "status": "BLOCKED_BY_PHASE_04"
+    }
+  ]
+}
