@@ -115,15 +115,13 @@ try:
     client_proc=subprocess.Popen(["cmd.exe","/d","/c",str(ROOT/"gradlew.bat"),"-PruntimeAcceptance=true","-PruntimeScenario=god02-main",f"-PruntimeRun={RUN}","-PruntimeEvidencePhase=GOD_PHASE_02",":runtime-test-client:runClient","--console=plain"],cwd=ROOT,stdout=ch,stderr=subprocess.STDOUT,creationflags=FLAGS)
     wait(lambda:cli().get("connected") and cli().get("handshake"),"Fabric join",600)
 
-    for i,(role,_,_,_) in enumerate(cases):
-        x=i
-        action("aim",x=x);command("piri machine create GOD",f"MACHINE_CREATED {i+1}")
-        if role=="ORDERED_YELLOW7_AT": command(f"piri godtest {i+1} gg","GOD_TEST_READY")
-        force="ORDERED_YELLOW7" if role=="ORDERED_YELLOW7_AT" else role
-        command(f"piri godrole {i+1} {force}","GOD_ROLE_READY")
+    action("aim",x=0);command("piri machine create GOD","MACHINE_CREATED 1")
 
     for i,(role,payout,replay,display) in enumerate(cases):
-        mid=i+1; x=i
+        mid=1; x=0
+        command("piri godtest 1 "+("gg" if role=="ORDERED_YELLOW7_AT" else "normal"),"GOD_TEST_READY")
+        force="ORDERED_YELLOW7" if role=="ORDERED_YELLOW7_AT" else role
+        command(f"piri godrole 1 {force}","GOD_ROLE_READY")
         click(x);wait(lambda:session() and session()["machine_id"]==mid,"seat "+role)
         check(role+" opens as GOD",cli().get("machineType")=="GOD",cli().get("machineType"))
         command("piribalance 50 0","TEST_BALANCE_SET")
