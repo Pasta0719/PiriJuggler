@@ -41,7 +41,7 @@ public final class Phase02Probe {
             throw new IllegalStateException("piri.runtime.clientResult is required for automated Phase02-05 probes");
         return Path.of(configured);
     }
-    public static boolean enabled() { String scenario=System.getProperty("piri.runtime.scenario", ""); return scenario.startsWith("phase02") || scenario.startsWith("phase03") || scenario.startsWith("phase04") || scenario.startsWith("phase05") || scenario.startsWith("phase12"); }
+    public static boolean enabled() { String scenario=System.getProperty("piri.runtime.scenario", ""); return scenario.startsWith("phase02") || scenario.startsWith("phase03") || scenario.startsWith("phase04") || scenario.startsWith("phase05") || scenario.startsWith("phase12") || scenario.startsWith("god02"); }
     public static void initialize() { ClientReceiveMessageEvents.GAME.register((message, overlay) -> messages.add(message.getString())); }
     public static void received(Envelope packet, boolean compatible) {
         allowed = compatible; JsonObject entry = new JsonObject(); entry.addProperty("type",packet.packetType().name()); entry.add("payload",packet.payload());
@@ -111,7 +111,11 @@ public final class Phase02Probe {
                             mouse.piri$button(window.getHandle(),command.get("button").getAsInt(),GLFW.GLFW_PRESS,0);mouse.piri$button(window.getHandle(),command.get("button").getAsInt(),GLFW.GLFW_RELEASE,0);
                         }
                         case "resize" -> client.getWindow().setWindowedSize(command.get("width").getAsInt(),command.get("height").getAsInt());
-                        case "capture" -> ScreenshotRecorder.saveScreenshot(client.runDirectory,((System.getProperty("piri.runtime.scenario", "").startsWith("phase04") || System.getProperty("piri.runtime.scenario", "").startsWith("phase05"))?(System.getProperty("piri.runtime.scenario", "").startsWith("phase05")?"phase05-":"phase04-"):"phase03-")+command.get("label").getAsString()+".png",client.getFramebuffer(),message -> {});
+                        case "capture" -> {
+                            String scenario=System.getProperty("piri.runtime.scenario", "");
+                            String prefix=scenario.startsWith("god02")?"god02-":scenario.startsWith("phase05")?"phase05-":scenario.startsWith("phase04")?"phase04-":"phase03-";
+                            ScreenshotRecorder.saveScreenshot(client.runDirectory,prefix+command.get("label").getAsString()+".png",client.getFramebuffer(),message -> {});
+                        }
                         case "reload" -> client.reloadResources();
                         case "screenshot" -> ScreenshotRecorder.saveScreenshot(client.runDirectory,"phase02-" + System.getProperty("piri.runtime.scenario") + ".png",client.getFramebuffer(),message -> {});
                         case "exit" -> client.scheduleStop();
@@ -127,11 +131,11 @@ public final class Phase02Probe {
         result.addProperty("productionSession",PiriJugglerClient.session().sessionId() == null ? null : PiriJugglerClient.session().sessionId().toString());
         if(System.getProperty("piri.runtime.scenario", "").startsWith("phase12"))
             result.addProperty("remoteCacheSize",PiriJugglerClient.remoteMachines().snapshot().size());
-        if(System.getProperty("piri.runtime.scenario", "").startsWith("phase03") || (System.getProperty("piri.runtime.scenario", "").startsWith("phase04") || System.getProperty("piri.runtime.scenario", "").startsWith("phase05"))) {
+        if(System.getProperty("piri.runtime.scenario", "").startsWith("phase03") || System.getProperty("piri.runtime.scenario", "").startsWith("phase04") || System.getProperty("piri.runtime.scenario", "").startsWith("phase05") || System.getProperty("piri.runtime.scenario", "").startsWith("god02")) {
             result.addProperty("screen",client.currentScreen==null?"none":client.currentScreen.getClass().getSimpleName());result.addProperty("hudHidden",SlotUi.hidesHud());
             result.addProperty("cursorLocked",client.mouse.isCursorLocked());result.addProperty("hudLeaks",HudAudit.leaks);result.addProperty("hudWorldCalls",HudAudit.worldCalls);
             result.addProperty("width",client.getWindow().getWidth());result.addProperty("height",client.getWindow().getHeight());result.add("publicState",PiriJugglerClient.session().publicState());
-            if(client.currentScreen instanceof SlotScreen screen){var view=((jp.pirijuggler.runtime.mixin.SlotViewAccessor)(Object)screen).piri$view();JsonArray phases=new JsonArray();for(int i=0;i<3;i++)phases.add(view.phase(i));result.add("displayPhases",phases);result.addProperty("stopEnabled",view.canSend(PacketType.STOP_LEFT));}
+            if(client.currentScreen instanceof SlotScreen screen){var view=((jp.pirijuggler.runtime.mixin.SlotViewAccessor)(Object)screen).piri$view();JsonArray phases=new JsonArray();for(int i=0;i<3;i++)phases.add(view.phase(i));result.add("displayPhases",phases);result.addProperty("stopEnabled",view.canSend(PacketType.STOP_LEFT)||view.canSend(PacketType.STOP_CENTER)||view.canSend(PacketType.STOP_RIGHT));result.addProperty("godNav",view.godNav());result.addProperty("machineType",view.machineType());}
             JsonObject sounds=new JsonObject();for(String sound:PiriSounds.NAMES){JsonObject s=new JsonObject();s.addProperty("registered",Registries.SOUND_EVENT.containsId(Identifier.of("piri",sound)));s.addProperty("available",PiriSounds.available(sound));sounds.add(sound,s);}result.add("sounds",sounds);
         }
         if (client.player != null) { result.addProperty("position",client.player.getPos().toString()); result.addProperty("yaw",client.player.getYaw()); result.addProperty("pitch",client.player.getPitch()); }

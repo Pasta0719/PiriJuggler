@@ -28,14 +28,17 @@ public final class RuntimeObserver extends JavaPlugin {
         var securityCommand=getCommand("pirisecurity");
         if(securityCommand==null)throw new IllegalStateException("pirisecurity command missing");
         securityCommand.setExecutor(new SecurityNegativeCommand(this));
+        var resetCommand=getCommand("pirigamereset");
+        if(resetCommand==null)throw new IllegalStateException("pirigamereset command missing");
+        resetCommand.setExecutor(new TestResetCommand(this));
 
         if ("phase12".equals(System.getProperty("piri.runtime.phase"))) {new Phase02Observer(this);getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase12");return;}
         if ("phase05".equals(System.getProperty("piri.runtime.phase"))) {new Phase02Observer(this);new Phase05Fixture(this);getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase05");return;}
         if ("phase04".equals(System.getProperty("piri.runtime.phase"))) {
             new Phase02Observer(this); new Phase04Harness(this); getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase04 " + getServer().getVersion()); return;
         }
-        if ("phase02".equals(System.getProperty("piri.runtime.phase")) || "phase03".equals(System.getProperty("piri.runtime.phase"))) {
-            new Phase02Observer(this); getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase02 " + getServer().getVersion()); return;
+        if ("phase02".equals(System.getProperty("piri.runtime.phase")) || "phase03".equals(System.getProperty("piri.runtime.phase")) || "god02".equals(System.getProperty("piri.runtime.phase"))) {
+            new Phase02Observer(this); getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase02/GOD02 " + getServer().getVersion()); return;
         }
         getServer().getMessenger().registerIncomingPluginChannel(this, Protocol.CHANNEL, (channel, player, bytes) -> {
             var envelope = EnvelopeCodec.decode(bytes);

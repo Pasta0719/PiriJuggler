@@ -24,6 +24,10 @@ commands:
     description: Phase11 duplicate/stale sequence and fake-session negative runtime test
     usage: /pirisecurity
     permission: piri.runtime
+  pirigamereset:
+    description: Runtime-test-only session game snapshot reset
+    usage: /pirigamereset [player]
+    permission: piri.runtime
 permissions:
   piri.runtime:
     default: op
