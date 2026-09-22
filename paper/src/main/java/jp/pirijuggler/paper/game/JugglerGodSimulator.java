@@ -22,10 +22,11 @@ public final class JugglerGodSimulator {
 
     private enum Mode { NORMAL, HEAVEN }
 
-    public static Result run(RoleWeights weights,int setting,long games,long normalToHeavenPpm,long heavenToHeavenPpm,RandomGenerator random) {
+    public static Result run(RoleWeights weights,int setting,long games,long normalToHeavenPpm,long heavenToHeavenPpm,int bonusScalePpm,RandomGenerator random) {
         if(setting<1||setting>6||games<1||games>100_000_000L)throw new IllegalArgumentException("Simulator bounds");
-        if(normalToHeavenPpm<0||normalToHeavenPpm>1_000_000||heavenToHeavenPpm<0||heavenToHeavenPpm>1_000_000)
-            throw new IllegalArgumentException("Heaven ppm");
+        if(normalToHeavenPpm<0||normalToHeavenPpm>1_000_000||heavenToHeavenPpm<0||heavenToHeavenPpm>1_000_000
+                ||bonusScalePpm<0||bonusScalePpm>1_000_000)
+            throw new IllegalArgumentException("Phase 03 tuning");
 
         long lever=0,paid=0,replay=0,grape=0,cherry=0,bell=0,piero=0;
         long normalBig=0,normalReg=0,heavenBig=0,heavenReg=0,god=0,godBig=0,godContinuationBig=0;
@@ -65,8 +66,8 @@ public final class JugglerGodSimulator {
                 heavenProgress++;
                 role=heavenProgress>=heavenTarget
                         ?weights.drawBonusFamily(setting,random)
-                        :weights.drawNonBonus(setting,random);
-            }else role=weights.draw(setting,random);
+                        :weights.drawJugglerGodNonBonus(setting,random,bonusScalePpm);
+            }else role=weights.drawJugglerGod(setting,random,bonusScalePpm);
 
             switch(role){
                 case REPLAY -> { replay++; free=true; }
