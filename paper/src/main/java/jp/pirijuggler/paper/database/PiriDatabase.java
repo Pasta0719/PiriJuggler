@@ -6,6 +6,7 @@ import jp.pirijuggler.paper.machine.DomainException;
 import jp.pirijuggler.paper.machine.Machine;
 import jp.pirijuggler.paper.machine.MachineType;
 import jp.pirijuggler.paper.game.god.GodMachineRuntime;
+import jp.pirijuggler.paper.game.JugglerGodRuntime;
 import jp.pirijuggler.paper.reel.StopCatalogue;
 import jp.pirijuggler.paper.reel.StopSolver;
 import jp.pirijuggler.paper.session.Session;
@@ -137,9 +138,11 @@ public final class PiriDatabase implements AutoCloseable {
             if (existing != null && existing.machine() != id) throw new DomainException("RECOVERY_REQUIRED");
             if (!rows("SELECT session_id FROM player_sessions WHERE machine_id=? AND lifecycle IN ('ACTIVE','SUSPENDED_GRACE') AND player_uuid<>?", id, player.toString()).isEmpty())
                 throw new DomainException("MACHINE_OCCUPIED");
-            String machineState=machine.type()==MachineType.GOD
-                    ? GodMachineRuntime.fromJson(machine.runtimeJson()).gameplay().toJsonString()
-                    : null;
+            String machineState=switch(machine.type()){
+                case GOD -> GodMachineRuntime.fromJson(machine.runtimeJson()).gameplay().toJsonString();
+                case JUGGLER_GOD -> JugglerGodRuntime.fromJson(machine.runtimeJson()).toJsonString();
+                default -> null;
+            };
             if (existing == null) {
                 sql("INSERT INTO player_sessions(session_id,player_uuid,machine_id,source_business_period_id,game_state,lifecycle,credit,held_medals,display_left_stop,display_center_stop,display_right_stop,machine_state_json,last_activity) VALUES(?,?,?,?,'SEATED_READY','ACTIVE',0,0,?,?,?,?,?)",
                         UUID.randomUUID().toString(), player.toString(), id, period, machine.left(), machine.center(), machine.right(), machineState, now);
