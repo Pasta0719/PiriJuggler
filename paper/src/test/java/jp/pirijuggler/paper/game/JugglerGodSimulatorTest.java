@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class JugglerGodSimulatorTest {
-    @Test void fixedSeedWholeMachineSimulationIsDeterministicAndEconomicallyClosed() {
+    @Test void fixedSeedWholeMachineSimulationIsDeterministicAndEconomicallyClosed() throws Exception {
         var weights=new RoleWeights(GameFixture.defaults());
         var a=JugglerGodSimulator.run(weights,4,250_000,120_000,650_000,new SplittableRandom(0x4A5547474C455247L));
         var b=JugglerGodSimulator.run(weights,4,250_000,120_000,650_000,new SplittableRandom(0x4A5547474C455247L));
@@ -19,7 +19,7 @@ class JugglerGodSimulatorTest {
         assertTrue(a.heavenContinues()<=a.heavenEntries());
     }
 
-    @Test void boundsRejectInvalidPhase03Inputs() {
+    @Test void boundsRejectInvalidPhase03Inputs() throws Exception {
         var weights=new RoleWeights(GameFixture.defaults());
         assertThrows(IllegalArgumentException.class,()->JugglerGodSimulator.run(weights,0,1,0,0,new SplittableRandom(1)));
         assertThrows(IllegalArgumentException.class,()->JugglerGodSimulator.run(weights,7,1,0,0,new SplittableRandom(1)));
