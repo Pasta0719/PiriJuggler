@@ -10,6 +10,7 @@ SERVER=EVIDENCE/"work"/("server-"+RUN)
 JAVA=shutil.which("java")
 PAPER=ROOT/"runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar"
 FLAGS=subprocess.CREATE_NO_WINDOW if os.name=="nt" else 0
+GRADLE_CMD=["cmd.exe","/d","/c",str(ROOT/"gradlew.bat")] if os.name=="nt" else [str(ROOT/"gradlew")]
 OUT.mkdir(parents=True,exist_ok=True)
 artifacts={side:ROOT/side/f"build/libs/piri-juggler-{side}-1.0.0.jar" for side in ("common","paper","fabric")}
 helpers={side:ROOT/f"runtime-test-support/{module}/build/libs/piri-runtime-test-{side}-1.0.0.jar" for side,module in (("paper","paper"),("client","client"))}
@@ -96,7 +97,7 @@ try:
     cdir=EVIDENCE/"work"/"client-next02-main";cdir.mkdir(parents=True,exist_ok=True)
     client_result=OUT/"client-result.json"
     ch=(OUT/"client.log").open("w",encoding="utf-8");handles.append(ch)
-    client_proc=subprocess.Popen(["cmd.exe","/d","/c",str(ROOT/"gradlew.bat"),"-PruntimeAcceptance=true",
+    client_proc=subprocess.Popen(GRADLE_CMD+["-PruntimeAcceptance=true",
         "-PruntimeScenario=next02-main",f"-PruntimeRun={RUN}","-PruntimeEvidencePhase=NEXT_PHASE_02",
         ":runtime-test-client:runClient","--console=plain"],cwd=ROOT,stdout=ch,stderr=subprocess.STDOUT,creationflags=FLAGS)
     wait(lambda:cli().get("connected") and cli().get("handshake"),"Fabric join",600)
