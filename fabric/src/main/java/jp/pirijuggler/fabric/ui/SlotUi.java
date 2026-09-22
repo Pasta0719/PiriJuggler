@@ -18,7 +18,7 @@ public final class SlotUi {
         if(packet.packetType()==PacketType.OPEN_MACHINE){
             reset();outbound=sender;view=new SlotViewState(System::nanoTime);input=new SlotInput(session,envelope->{
                 int pressed=view.localInput(envelope.packetType());
-                if(pressed>=0){envelope.payload().addProperty("pressedIndex",pressed);PiriSounds.queue("stop",1,0);}
+                if(pressed>=0){envelope.payload().addProperty("pressedIndex",pressed);PiriSounds.queue(sound("stop"),1,0);}
                 if(envelope.packetType()==PacketType.SPACE_ACTION){String state=view.value("gameState");String sound="GOD".equals(view.machineType())?(state.contains("SPINNING")?"stop":"lever"):(state.contains("BETTED")||state.equals("REPLAY_READY")?"lever":state.contains("SPINNING")?"stop":"bet");ACCEPT_SOUNDS.put(envelope.payload().get("clientSequence").getAsLong(),sound);if(ACCEPT_SOUNDS.size()>128)ACCEPT_SOUNDS.remove(ACCEPT_SOUNDS.keySet().iterator().next());}
                 if(envelope.packetType()==PacketType.CLOSE_REQUEST)queuedLever=null;
                 if(envelope.packetType()==PacketType.SPACE_ACTION&&view.shouldQueueLever()){
@@ -29,29 +29,29 @@ public final class SlotUi {
             },System::nanoTime,action->view.canSend(action)
                     &&!(action==PacketType.SPACE_ACTION&&queuedLever!=null)
                     &&(view.nextGameRemainingNanos()==0||action==PacketType.SPACE_ACTION||action==PacketType.CLOSE_REQUEST));view.receive(packet);
-            String state=view.value("gameState");if(state.startsWith("BIG_"))PiriSounds.startLoop("big_bgm");else if(state.startsWith("REG_"))PiriSounds.startLoop("reg_bgm");
+            String state=view.value("gameState");if(state.startsWith("BIG_"))PiriSounds.startLoop(sound("big_bgm"));else if(state.startsWith("REG_"))PiriSounds.startLoop(sound("reg_bgm"));
             client.setScreen(MachineScreenFactory.create(view.machineType(),view,input));return;
         }
         if(view==null)return;
         switch(packet.packetType()) {
-            case NOTICE -> {if(view.matchesSpin(b))switch(b.get("sound").getAsString()){case "NOTICE"->PiriSounds.queue("notice",1,0);case "NOTICE_STRONG"->PiriSounds.queue("notice_strong",1,0);case "NOTICE_X5"->PiriSounds.queue("notice",5,100_000_000);default->{}}}
-            case SPIN_START -> {if(view.matches(b)&&!"RESUME_NORMAL".equals(b.get("animation").getAsString()))PiriSounds.queue(b.has("godFreeze")&&b.get("godFreeze").getAsBoolean()?"god_freeze":"lever",1,0);}
-            case TENPAI_SOUND -> {if(view.matchesSpin(b))PiriSounds.queue("tenpai",1,0);}
-            case PAYOUT -> PiriSounds.queue("payout",1,0);
+            case NOTICE -> {if(view.matchesSpin(b))switch(b.get("sound").getAsString()){case "NOTICE"->PiriSounds.queue(sound("notice"),1,0);case "NOTICE_STRONG"->PiriSounds.queue(sound("notice_strong"),1,0);case "NOTICE_X5"->PiriSounds.queue(sound("notice"),5,100_000_000);default->{}}}
+            case SPIN_START -> {if(view.matches(b)&&!"RESUME_NORMAL".equals(b.get("animation").getAsString()))PiriSounds.queue(b.has("godFreeze")&&b.get("godFreeze").getAsBoolean()?"god_freeze":sound("lever"),1,0);}
+            case TENPAI_SOUND -> {if(view.matchesSpin(b))PiriSounds.queue(sound("tenpai"),1,0);}
+            case PAYOUT -> PiriSounds.queue(sound("payout"),1,0);
             case BONUS_START -> {
                 if(b.has("bonusType")){
                     String type=b.get("bonusType").getAsString();
-                    if("BIG".equals(type)){PiriSounds.queue("bonus_start",1,0);pendingBigBgmAt=System.nanoTime()+BIG_BGM_START_DELAY_NANOS;}
-                    else if("REG".equals(type)){pendingBigBgmAt=-1L;PiriSounds.startLoop("reg_bgm");}
+                    if("BIG".equals(type)){PiriSounds.queue(sound("bonus_start"),1,0);pendingBigBgmAt=System.nanoTime()+BIG_BGM_START_DELAY_NANOS;}
+                    else if("REG".equals(type)){pendingBigBgmAt=-1L;PiriSounds.startLoop(sound("reg_bgm"));}
                 }
             }
             case BONUS_END -> {
                 pendingBigBgmAt=-1L;PiriSounds.stopLoop();
-                if(b.has("bonusType")&&"BIG".equals(b.get("bonusType").getAsString()))PiriSounds.queue("bonus_end",1,0);
+                if(b.has("bonusType")&&"BIG".equals(b.get("bonusType").getAsString()))PiriSounds.queue(sound("bonus_end"),1,0);
             }
             case PUBLIC_STATE -> {if(view.matches(b)&&"SEATED_READY".equals(b.get("gameState").getAsString())){pendingBigBgmAt=-1L;PiriSounds.stopLoop();}}
-            case ACTION_ACCEPTED -> {String sound=ACCEPT_SOUNDS.remove(b.get("clientSequence").getAsLong());if("bet".equals(sound))PiriSounds.queue(sound,1,0);}
-            case ACTION_REJECTED,ERROR -> {ACCEPT_SOUNDS.clear();queuedLever=null;PiriSounds.queue("error",1,0);}
+            case ACTION_ACCEPTED -> {String sound=ACCEPT_SOUNDS.remove(b.get("clientSequence").getAsLong());if("bet".equals(sound))PiriSounds.queue(sound("bet"),1,0);}
+            case ACTION_REJECTED,ERROR -> {ACCEPT_SOUNDS.clear();queuedLever=null;PiriSounds.queue(sound("error"),1,0);}
             default -> {}
         }
         view.receive(packet);
@@ -59,9 +59,10 @@ public final class SlotUi {
     }
     public static void tick(){
         if(queuedLever!=null&&view!=null&&view.queuedLeverReady()&&outbound!=null){Envelope lever=queuedLever;queuedLever=null;outbound.accept(lever);}
-        if(pendingBigBgmAt>=0&&System.nanoTime()>=pendingBigBgmAt){pendingBigBgmAt=-1L;PiriSounds.startLoop("big_bgm");}
+        if(pendingBigBgmAt>=0&&System.nanoTime()>=pendingBigBgmAt){pendingBigBgmAt=-1L;PiriSounds.startLoop(sound("big_bgm"));}
         PiriSounds.tick();if(input!=null&&input.closeExpired()&&hidesHud())MinecraftClient.getInstance().setScreen(null);
     }
+    private static String sound(String base){return PiriSounds.forMachine(view==null?null:view.machineType(),base);}
     public static void reset(){view=null;input=null;queuedLever=null;outbound=null;ACCEPT_SOUNDS.clear();pendingBigBgmAt=-1L;PiriSounds.reset();}
     private SlotUi(){}
 }
