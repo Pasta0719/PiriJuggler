@@ -20,6 +20,11 @@ sound:
   bonus_start_volume: 0.90
   bonus_end_volume: 0.90
 
+juggler_god:
+  # Phase 03 tuning values. Kept explicit here so gameplay never hides economy constants.
+  normal_to_heaven_ppm: 0
+  heaven_to_heaven_ppm: 0
+
 premium:
   big_chance_weight: 50000
   denominator: 1000000
