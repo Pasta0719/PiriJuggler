@@ -75,5 +75,13 @@ Piri GOD専用開発フローは **RETIRED_BY_USER**。
 後続方式のPhase正本は `NEXT_MACHINE_PHASE_MAP.json` と `next-machine-phases/README.md`。
 
 Current successor phase: NEXT Phase 01 — COMPLETE
-Next successor work: NEXT Phase 02 — Core Gameplay / Reel / State Implementation
+Next successor work: NEXT Phase 02 — run dedicated real Paper+Fabric acceptance; core implementation is present
 Successor Phase 01 design lock is COMPLETE. NEXT Phase 02 is unblocked. Economy fitting values remain intentionally deferred to NEXT Phase 03; they are not a Phase 02 blocker.
+
+## NEXT Phase 02 core implementation
+
+Status: IN_PROGRESS — core code implemented and dedicated runtime acceptance pending.
+
+Implemented: JUGGLER_GOD machine family, GOD BAR role/result, GOD freeze presentation contract, five-BIG GOD chain, setting continuation structure, <=32G heaven state, persistence/history, and isolated replaceable successor assets.
+
+Dedicated acceptance command: `run-next-phase02-runtime.bat`.
