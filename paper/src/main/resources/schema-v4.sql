@@ -66,18 +66,6 @@ CREATE TABLE bonus_history (
 );
 
 
-CREATE TABLE juggler_god_history (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  machine_id INTEGER NOT NULL,
-  business_period_id TEXT NOT NULL,
-  event_type TEXT NOT NULL CHECK(event_type='GOD'),
-  games INTEGER NOT NULL,
-  occurred_at INTEGER NOT NULL,
-  FOREIGN KEY(machine_id) REFERENCES machines(machine_id),
-  FOREIGN KEY(business_period_id) REFERENCES business_periods(business_period_id)
-);
-
-
 CREATE TABLE graph_points (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   machine_id INTEGER NOT NULL,
