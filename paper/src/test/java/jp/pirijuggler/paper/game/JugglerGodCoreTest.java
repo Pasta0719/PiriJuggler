@@ -149,6 +149,32 @@ class JugglerGodCoreTest extends GameFixture {
         assertTrue(sawHeaven);
     }
 
+
+    @Test void stockLampIsBooleanOnlyAndRuntimeRoundTripKeepsHiddenCounts() {
+        var state=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,2,false,false,
+                "GOD_CHAIN",3,false,"BONUS_STOCK_CONFIRMED",
+                7,2,"NONE","NONE",0,false,false);
+        assertTrue(state.stockLampOn());
+        var roundTrip=JugglerGodRuntime.fromJson(state.toJsonString());
+        assertEquals(7,roundTrip.additionalBigStock());
+        assertEquals(2,roundTrip.additionalRegStock());
+        assertTrue(roundTrip.stockLampOn());
+        assertFalse(JugglerGodRuntime.initial().stockLampOn());
+    }
+
+    @Test void interruptPreservesExistingStockAndReleaseContext() {
+        var state=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,0,false,false,
+                "GOD_CHAIN",5,false,"STOCK_RELEASE_BIG",
+                3,1,"NONE","NONE",0,false,true);
+        var interrupted=state.interrupt("REG","BIG",126,false,"BONUS_STOCK_DRAWN");
+        assertEquals(3,interrupted.additionalBigStock());
+        assertEquals(1,interrupted.additionalRegStock());
+        assertEquals("REG",interrupted.pendingBonusHit());
+        assertEquals("BIG",interrupted.suspendedBonusType());
+        assertEquals(126,interrupted.suspendedBonusPayoutCount());
+        assertTrue(interrupted.releasingStock());
+    }
+
     @Test void runtimeRoundTripPreservesHiddenSuccessorState() {
         var state=new JugglerGodRuntime(JugglerGodRuntime.Mode.HEAVEN,32,17,4,true,true,"GOD_CHAIN",9,true,"TEST");
         assertEquals(state,JugglerGodRuntime.fromJson(state.toJsonString()));
