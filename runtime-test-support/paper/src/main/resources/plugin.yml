@@ -6,7 +6,7 @@ depend: [PiriJuggler]
 commands:
   piritest:
     description: Piri Juggler runtime acceptance helper
-    usage: /piritest fund [player] | /piritest force <god|big|reg|A|B|C|D|E|F> [player] | /piritest clear
+    usage: /piritest fund [player] | /piritest force <god|big|reg|A|B|C|D|E|F> [player] | /piritest heaven <1-32> [player] | /piritest clear
     permission: piri.runtime
   piribalance:
     description: Set an exact Phase07 runtime session balance
