@@ -53,7 +53,7 @@ public final class GodRoleOutcome {
             case ORDERED_YELLOW7 -> {
                 if(navigated)yield new Outcome("COMMON_YELLOW7",15,false);
                 boolean oneMedal=unit<NORMAL_ORDERED_ONE_MEDAL_RATE;
-                yield new Outcome("MISS",oneMedal?1:0,false);
+                yield new Outcome(oneMedal?"ORDERED_YELLOW7_ONE":"MISS",oneMedal?1:0,false);
             }
         };
     }
