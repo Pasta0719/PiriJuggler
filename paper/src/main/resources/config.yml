@@ -21,16 +21,16 @@ sound:
   bonus_end_volume: 0.90
 
 juggler_god:
-  # Phase 03 theory-first tuning. Heaven behavior is common across settings; RTP is fitted by successor-only normal bonus scaling.
-  normal_to_heaven_ppm: 100000
-  heaven_to_heaven_ppm: 400000
+  # Phase 03 tuning values. Concrete values remain unset until explicitly approved.
+  normal_to_heaven_ppm: 0
+  heaven_to_heaven_ppm: 0
   settings:
-    '1': {bonus_scale_ppm: 715815}
-    '2': {bonus_scale_ppm: 718150}
-    '3': {bonus_scale_ppm: 740236}
-    '4': {bonus_scale_ppm: 764387}
-    '5': {bonus_scale_ppm: 799597}
-    '6': {bonus_scale_ppm: 792048}
+    '1': {bonus_scale_ppm: 1000000}
+    '2': {bonus_scale_ppm: 1000000}
+    '3': {bonus_scale_ppm: 1000000}
+    '4': {bonus_scale_ppm: 1000000}
+    '5': {bonus_scale_ppm: 1000000}
+    '6': {bonus_scale_ppm: 1000000}
 
 premium:
   big_chance_weight: 50000
