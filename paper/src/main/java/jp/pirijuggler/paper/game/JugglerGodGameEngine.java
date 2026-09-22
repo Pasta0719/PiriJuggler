@@ -83,8 +83,7 @@ public final class JugglerGodGameEngine implements GameEngine {
                 &&"GOD".equals(before.text("internal_role"))){
             next=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
                     "GOD_CHAIN",1,false,"GOD_STARTED");
-        }else if(legacy.bonusStarted()!=null&&"GOD_CHAIN".equals(next.bonusOrigin())
-                &&before.state()!=Session.GameState.NORMAL_SPINNING){
+        }else if(legacy.bonusStarted()!=null&&"GOD_CHAIN".equals(next.bonusOrigin())){
             next=new JugglerGodRuntime(next.mode(),next.heavenTarget(),next.heavenProgress(),
                     next.guaranteedRemaining(),next.forceChainBig(),next.countNextChainGame(),
                     next.bonusOrigin(),next.godBigCount()+1,next.godFreeze(),"GOD_BIG_STARTED");
