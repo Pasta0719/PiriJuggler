@@ -38,10 +38,13 @@ jobs:
             sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
           fi
           chmod +x gradlew
-      - name: Build only runtime-required jars
+      - name: Build production runtime jars
         run: |
           ./gradlew --parallel --build-cache \
-            :common:jar :paper:jar :fabric:remapJar \
+            :common:jar :paper:jar :fabric:remapJar --console=plain
+      - name: Build runtime helper jars
+        run: |
+          ./gradlew --parallel --build-cache \
             -PruntimeAcceptance=true -PruntimeScenario=next02-main -PruntimeEvidencePhase=NEXT_PHASE_02 \
             :runtime-test-paper:jar :runtime-test-client:remapJar --console=plain
       - name: Cache verified Paper 1.21 build 130
