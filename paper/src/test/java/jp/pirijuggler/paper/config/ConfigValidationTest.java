@@ -69,7 +69,7 @@ class ConfigValidationTest {
                 .replace("heaven_to_heaven_ppm: 0","heaven_to_heaven_ppm: 1000000")).valid());
         assertFalse(load(defaults().replace("normal_to_heaven_ppm: 0","normal_to_heaven_ppm: -1")).valid());
         assertFalse(load(defaults().replace("heaven_to_heaven_ppm: 0","heaven_to_heaven_ppm: 1000001")).valid());
-        assertFalse(load(defaults().replace("  normal_to_heaven_ppm: 0\n","")).valid());
+        assertFalse(load(defaults().replace("  normal_to_heaven_ppm: 0","")).valid());
     }
 
     @Test void duplicateKeysAreRejectedAndValidEditsAreAccepted() throws Exception {
