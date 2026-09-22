@@ -183,7 +183,7 @@ public final class SlotScreen extends Screen {
         for(int i=0;i<value.length();i++)for(int s=0;s<7;s++)if(SevenSegment.active(value.charAt(i),s)){int[] r=SevenSegment.RECTANGLES[s];c.fill(i*48+r[0],r[1],i*48+r[0]+r[2],r[1]+r[3],active);}c.getMatrices().pop();
     }
     private void texture(DrawContext c,String path,double x,double y,int w,int h,int tw,int th,float alpha){
-        Identifier id=Identifier.of("piri","textures/"+path);client.getTextureManager().bindTexture(id);client.getTextureManager().getTexture(id).setFilter(true,false);
+        Identifier id=JugglerGodAssets.texture(view.machineType(),path);client.getTextureManager().bindTexture(id);client.getTextureManager().getTexture(id).setFilter(true,false);
         c.getMatrices().push();c.getMatrices().translate(x,y,0);c.getMatrices().scale(w/(float)tw,h/(float)th,1);c.setShaderColor(1,1,1,alpha);c.drawTexture(id,0,0,0,0,tw,th,tw,th);c.setShaderColor(1,1,1,1);c.getMatrices().pop();
     }
     private static void line(DrawContext c,float x1,float y1,float x2,float y2,float width,int tint){
