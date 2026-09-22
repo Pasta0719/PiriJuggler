@@ -123,7 +123,8 @@ try:
         force="ORDERED_YELLOW7" if role=="ORDERED_YELLOW7_AT" else role
         command(f"piri godrole 1 {force}","GOD_ROLE_READY")
         click(x);wait(lambda:session() and session()["machine_id"]==mid,"seat "+role)
-        check(role+" opens as GOD",cli().get("machineType")=="GOD",cli().get("machineType"))
+        wait(lambda:cli().get("screen")=="SlotScreen" and cli().get("machineType")=="GOD",role+" GOD client view",30)
+        check(role+" opens as GOD",cli().get("machineType")=="GOD",{"screen":cli().get("screen"),"machineType":cli().get("machineType")})
         command("piribalance 50 0","TEST_BALANCE_SET")
         action("close");wait(lambda:not session() or session()["lifecycle"]!="ACTIVE","balance refresh close")
         click(x);wait(lambda:session() and session()["machine_id"]==mid and session()["credit"]==50,"balance refresh reopen")

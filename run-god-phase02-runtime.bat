@@ -12,10 +12,7 @@ if errorlevel 1 goto :fail
 
 echo [3/4] Running GOD Phase 02 real-client acceptance...
 py runtime-test-support\run_god_phase02.py
-if errorlevel 1 (
-  python runtime-test-support\run_god_phase02.py
-  if errorlevel 1 goto :fail
-)
+if errorlevel 1 goto :fail
 
 echo [4/4] GOD Phase 02 runtime PASS
 echo Evidence: runtime-evidence\GOD_PHASE_02\result.json
