@@ -183,6 +183,39 @@ try:
               runtime["jgMode"]=="HEAVEN" or runtime["countNextChainGame"] is True),
           runtime)
 
+    # Deterministic heaven acceptance: target=2 must suppress a natural bonus on game 1,
+    # then force a setting-weighted BIG/REG family on game 2.
+    wait_state("SEATED_READY")
+    command("piritest heaven 2","TEST_HEAVEN_SET target=2")
+    action("close");wait(lambda:not session() or session().get("lifecycle")!="ACTIVE","heaven refresh close")
+    click(0);wait_state("SEATED_READY")
+    h0=json.loads(session()["machine_state_json"])
+    check("test heaven target persisted",h0["jgMode"]=="HEAVEN" and h0["heavenTarget"]==2 and h0["heavenProgress"]==0,h0)
+
+    tap(32);wait_state("NORMAL_BETTED")
+    tap(32);wait(lambda:session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),"heaven game 1 lever")
+    first_role=session()["internal_role"]
+    check("heaven game 1 cannot pre-empt target with bonus",
+          first_role not in ("BIG","REG","CHERRY_BIG","CHERRY_REG","PIERO_BIG","PIERO_REG","GOD"),
+          {"role":first_role,"runtime":json.loads(session()["machine_state_json"])})
+    for key,mask in [(263,1),(264,3)]:
+        tap(key);wait(lambda:session()["stopped_mask"]==mask,"heaven game 1 stop")
+    tap(262);wait(lambda:session()["game_state"] in ("SEATED_READY","REPLAY_READY"),"heaven game 1 settle")
+    h1=json.loads(session()["machine_state_json"])
+    check("heaven game 1 advances progress only",h1["jgMode"]=="HEAVEN" and h1["heavenProgress"]==1,h1)
+
+    if session()["game_state"]=="REPLAY_READY":
+        pass
+    else:
+        tap(32);wait_state("NORMAL_BETTED")
+    tap(32);wait(lambda:session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),"heaven target lever")
+    target_role=session()["internal_role"]
+    check("heaven target forces BIG or REG family",
+          target_role in ("BIG","REG","CHERRY_BIG","CHERRY_REG","PIERO_BIG","PIERO_REG"),
+          {"role":target_role,"runtime":json.loads(session()["machine_state_json"])})
+    h2=json.loads(session()["machine_state_json"])
+    check("heaven target progress reaches two",h2["heavenProgress"]==2 and h2["bonusOrigin"]=="HEAVEN",h2)
+
     manifest["passed"]=True
 except Exception as error:
     manifest["failure"]=str(error);print("NEXT_PHASE02_RUNTIME_FAILURE "+str(error),flush=True)
