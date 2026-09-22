@@ -16,13 +16,13 @@
       "number": 2,
       "file": "next-machine-phases/NEXT_PHASE_02_CORE_GAMEPLAY.md",
       "title": "Core Gameplay / Reel / State Implementation",
-      "status": "IN_PROGRESS"
+      "status": "COMPLETE"
     },
     {
       "number": 3,
       "file": "next-machine-phases/NEXT_PHASE_03_ECONOMY_SIMULATION.md",
       "title": "Economy / Probability / Long-run Simulation",
-      "status": "BLOCKED_BY_PHASE_02"
+      "status": "IN_PROGRESS"
     },
     {
       "number": 4,
