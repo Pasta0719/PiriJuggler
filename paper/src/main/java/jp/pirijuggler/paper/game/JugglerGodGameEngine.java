@@ -59,6 +59,8 @@ public final class JugglerGodGameEngine implements GameEngine {
                         runtime.bonusOrigin(),runtime.godBigCount(),runtime.godFreeze(),runtime.lastEvent());
                 if(progress>=runtime.heavenTarget())
                     forced=weights.drawBonusFamily(machine.setting(),random.gameplay(machine.id()));
+                else
+                    forced=weights.drawNonBonus(machine.setting(),random.gameplay(machine.id()));
             }
         }
 
