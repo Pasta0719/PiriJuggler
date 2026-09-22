@@ -12,7 +12,7 @@ import java.util.*;
 
 /** Accepts user-supplied OGG resources. No synthesis, encoding or replacement audio. */
 public final class PiriSounds {
-    public static final List<String> NAMES=List.of("notice","notice_strong","tenpai","bet","lever","stop","payout","error","bonus_start","bonus_end","big_bgm","reg_bgm");
+    public static final List<String> NAMES=List.of("notice","notice_strong","tenpai","bet","lever","stop","payout","error","bonus_start","bonus_end","big_bgm","reg_bgm","god_freeze");
     private static final Map<String,SoundEvent> EVENTS=new HashMap<>();
     private static final PriorityQueue<Pending> QUEUE=new PriorityQueue<>(Comparator.comparingLong(Pending::at));
     private static SoundInstance loop;private static String loopName;
