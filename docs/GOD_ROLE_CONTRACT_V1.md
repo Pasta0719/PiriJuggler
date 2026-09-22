@@ -1,6 +1,6 @@
 # Piri GOD role contract v1
 
-Status: **LOCKED — GOD Phase 01; Phase-02 presentation audit reopened 2026-09-22**
+Status: **LOCKED — GOD Phase 01; Phase-02 audited presentation correction applied**
 
 This document defines semantic role outcomes. It deliberately does **not** invent a complete press-index control table where public sources publish only representative stop forms.
 
@@ -22,7 +22,7 @@ Primary sources:
 | MISS | 1/5.2 | 0 medal, no replay | any physical three-reel stop window that matches none of the locked winning/replay/premium formations and forms no straight/diagonal GOD/RED7/BLUE7/YELLOW7 line; selection remains within the ordinary 0..4-frame slip policy | left-first unless a state-specific nav exists | ordinary miss | REFERENCE_BACKED odds / PIRI_SPECIFIC presentation-control classification |
 | UPPER_BLUE7 | 1/7.9 | replay | blue7 line on upper row | left-first | replay | REFERENCE_BACKED |
 | MIDDLE_BLUE7 | 1/109.2 | replay | blue7 line on middle row | left-first | replay | REFERENCE_BACKED |
-| ORDERED_YELLOW7 | 1/1.7 | AT/navigation state: 15 medals when the shown order is completed; normal/no-nav branch uses provisional 0/1-medal calibration | 15-medal branch: lower yellow-7 A. 0-medal branch: miss/こぼし family. **1-medal branch mapping is unresolved**: 必勝本 confirms multiple 1-medal roles and that some occur from ordered 15-medal yellow, but the exact hidden mapping is unpublished | obey displayed nav when present; normal no-nav play is left-first | high-frequency ordered yellow with state/order-dependent realized payout | REFERENCE_BACKED role concept + 1-medal possibility / PIRI_SPECIFIC calibration / UNKNOWN exact 1-medal mapping |
+| ORDERED_YELLOW7 | 1/1.7 | AT/navigation state: 15 medals when the shown order is completed; normal/no-nav branch uses provisional 0/1-medal calibration | 15-medal branch: lower yellow-7 A. 0-medal branch: miss/こぼし family. 1-medal branch: dedicated `ORDERED_YELLOW7_ONE` marker with LEFT BOTTOM=BLUE7 / CENTER MIDDLE=YELLOW7 / RIGHT TOP=BLUE7. This exact marker is PIRI_SPECIFIC because the hidden reference mapping is unpublished | obey displayed nav when present; normal no-nav play is left-first | high-frequency ordered yellow with state/order-dependent realized payout | REFERENCE_BACKED role concept + 1-medal possibility / PIRI_SPECIFIC calibration+marker / UNKNOWN exact reference mapping |
 | LOWER_YELLOW7 | 1/18.4 | 3 medals | **lower-row yellow line with the center reel using the yellow symbol immediately below RED7; equivalently the published example has center RED7 on the middle row** | left-first | 3-medal lower-yellow B | REFERENCE_BACKED |
 | RISING_YELLOW7 | 1/186.2 | 15 medals | rising/right-up yellow line | left-first | rare yellow | REFERENCE_BACKED |
 | MIDDLE_YELLOW7 | 1/963.8 | 15 medals | middle-row yellow line | left-first | rare yellow | REFERENCE_BACKED |
@@ -151,7 +151,7 @@ This applies to **wrong instructed input** only: a wrong button press is rejecte
 
 - Normal/AT role-frequency policy accepted: unless a state-specific role-frequency difference is explicitly source-backed, the same role occurrence probabilities are used across normal play and GG/AT states. GG net increase is produced by AT navigation and payout realization (especially ordered yellow-7 acquisition), not by inventing higher rare-role frequencies. State-dependent differences belong in post-role benefits/effects, not in unsupported role-rate distortion.
 
-- Ordered-yellow concealment policy accepted for normal play: an internally selected ordered-yellow role does not expose its winning navigation during ordinary normal play. The player is handled as a left-first normal-play input, and the visible stop/payout outcome must be produced from the source-backed left-first behavior. During GG/AT, the winning order is shown by navigation so the 15-medal acquisition path can be realized. Exact normal-play left-first stop/payout mapping remains a separate source-lock item and must not be invented.
+- Ordered-yellow concealment policy accepted for normal play: an internally selected ordered-yellow role does not expose its winning navigation during ordinary normal play. The player is handled as a left-first normal-play input. During GG/AT, the winning order is shown by navigation so the 15-medal acquisition path can be realized. For the normal 1-medal branch, Piri uses the explicitly labelled `ORDERED_YELLOW7_ONE` marker above; this is not an authenticity claim about the hidden Kiseki mapping.
 
 - Gaia-yellow normal-play navigation accepted: GAIA_BELL / Gaia-yellow occurs at the published setting-common rate 1/37.6 and, when it occurs in normal play, its right-first navigation is shown. Ordinary ordered 15-medal yellow remains non-navigated in normal play unless another source-backed exception applies. Gaia-yellow handling is source-backed, not Piri-specific.
 

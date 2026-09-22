@@ -1,6 +1,6 @@
 # GOD Phase 02 source audit — 2026-09-22
 
-Status: **AUDIT COMPLETE — IMPLEMENTATION CORRECTIONS REQUIRED**
+Status: **AUDIT COMPLETE — IDENTIFIED CORRECTION APPLIED; RUNTIME EVIDENCE PENDING**
 
 Purpose: re-audit the Phase-02 role / reel / payout contract from current-machine public sources, independent of current code. Existing code is not evidence.
 
@@ -30,7 +30,7 @@ Important source limitation shared by 1geki / NanaPress / 必勝本:
 | MISS | 1/5.2 reference | 0, no replay | ordinary miss exists; no complete miss-stop catalogue is published | no nav: LEFT first; normal play can continue sequential/hassami after LEFT | exact miss catalogue, exact slip/control, number of stop forms | **PIRI_DECISION**: safe-miss catalogue. 339 visible forms is a Piri implementation count, not a real-machine count |
 | UPPER_BLUE7 / normal replay | 1/7.9 | replay | upper-row BLUE7 straight is a published example | no nav: LEFT first | exact press-index control; complete alternative forms | fixed semantic upper-line form is acceptable as **PIRI_DECISION based on reference example** |
 | MIDDLE_BLUE7 | 1/109.2 | replay | middle-row BLUE7 straight is a published example | no nav: LEFT first | exact press-index control; complete alternative forms | fixed semantic middle-line form is acceptable as **PIRI_DECISION based on reference example** |
-| ORDERED_YELLOW7 | 1/1.7 | 15 medals when acquired; 必勝本 confirms some ordered-15-yellow outcomes can instead produce a 1-medal role | lower-yellow A is the published 15-medal acquisition example; 必勝本 also publishes multiple 1-medal role examples | nav present: obey nav. no-nav normal play: LEFT first | exact winning-order distribution; exact wrong-order 0/1 mapping; which 1-medal form maps to each wrong order | **IMPLEMENTATION_MISMATCH**: current normal-path 1-medal settlement displays an arbitrary MISS-family result. A 1-medal payout must not be visually presented as an arbitrary 0-medal miss. Exact mapping remains UNKNOWN_REFERENCE and needs an explicit Piri decision before finalization |
+| ORDERED_YELLOW7 | 1/1.7 | 15 medals when acquired; 必勝本 confirms some ordered-15-yellow outcomes can instead produce a 1-medal role | lower-yellow A is the published 15-medal acquisition example; 必勝本 also publishes multiple 1-medal role examples | nav present: obey nav. no-nav normal play: LEFT first | exact winning-order distribution; exact wrong-order 0/1 mapping; which authentic 1-medal form maps to each hidden condition | **CORRECTED**: normal-path 1-medal settlement now uses dedicated `ORDERED_YELLOW7_ONE` instead of arbitrary MISS. Its exact marker is explicitly **PIRI_DECISION / PIRI_SPECIFIC**, not a claim about Kiseki's hidden mapping |
 | LOWER_YELLOW7 / lower B | 1/18.4 | 3 medals | lower-row YELLOW7; center-reel yellow is the one below RED7; NanaPress example has center-middle RED7 | no nav: LEFT first | exact press-index control; all alternate forms | semantic form is REFERENCE_CONFIRMED; exact control is PIRI_DECISION |
 | RISING_YELLOW7 | 1/186.2 | 15 medals | rising/right-up YELLOW7 straight example | no nav: LEFT first | exact press-index control; all alternate forms | semantic form is REFERENCE_CONFIRMED; exact control is PIRI_DECISION |
 | MIDDLE_YELLOW7 | 1/963.8 | 15 medals | middle YELLOW7 straight example | no nav: LEFT first | exact press-index control; all alternate forms | semantic form is REFERENCE_CONFIRMED; exact control is PIRI_DECISION |
@@ -86,31 +86,28 @@ Therefore all of the following are Piri implementation policy, not authentic ref
 
 These are permitted only if clearly labelled PIRI_DECISION.
 
-## Confirmed implementation problem
+## Corrected implementation problem
 
 ### ORDERED_YELLOW7 normal/no-nav
 
-Current behavior:
+The audited mismatch was:
 - internal ORDERED_YELLOW7
 - normal/no-nav
-- provisional 0 or 1 medal
-- visible role forced to MISS
+- 1-medal settlement
+- generic MISS-family presentation
 
-Problem:
-- current-machine 必勝本 explicitly states that multiple 1-medal roles exist and that some occur from ordered 15-medal yellow.
-- therefore a game that actually credits 1 medal should not be represented by an arbitrary generic 0-medal MISS visual family.
+That mismatch is now corrected:
+- 0-medal branch -> safe miss/こぼし family
+- 1-medal branch -> dedicated `ORDERED_YELLOW7_ONE`
+- dedicated marker -> LEFT BOTTOM=BLUE7 / CENTER MIDDLE=YELLOW7 / RIGHT TOP=BLUE7
+- payout remains 1 medal and the marker is excluded from the safe-MISS universe
 
-What remains unknown:
-- exact wrong-order mapping
-- exact ratio of 0-medal miss/こぼし vs 1-medal role
-- exact 1-medal form selected by each hidden ordered-yellow condition
+Classification:
+- existence of 1-medal outcomes from ordered yellow: **REFERENCE_CONFIRMED**
+- exact hidden Kiseki mapping: **UNKNOWN_REFERENCE**
+- `ORDERED_YELLOW7_ONE` exact marker: **PIRI_DECISION / PIRI_SPECIFIC**
 
-Required resolution:
-- do not guess the real mapping.
-- before Phase 02 can be frozen again, choose an explicit labelled Piri mapping for normal ORDERED_YELLOW7:
-  - 0-medal branch -> safe miss/こぼし family
-  - 1-medal branch -> one of the source-published 1-medal visible families
-- keep the exact branch probability as Phase-04 calibration unless a source publishes it.
+The exact 0/1 branch probability remains Phase-04 calibration unless a source publishes it.
 
 ## Items that are NOT implementation bugs after this audit
 
@@ -123,10 +120,10 @@ Required resolution:
 
 ## Phase-02 audit verdict
 
-Phase 02 must **not** be called fully frozen yet.
+Phase 02 must **not** be called complete yet because forced-role real-client runtime evidence is still pending.
 
-Blocking item:
-1. normal ORDERED_YELLOW7 1-medal visual mapping is unresolved / incorrectly represented in current code.
+The source-audit implementation blocker is resolved:
+1. normal ORDERED_YELLOW7 1-medal visual mapping now has an explicit PIRI_SPECIFIC dedicated form and automated coverage.
 
 Non-blocking UNKNOWN_REFERENCE items that may remain Piri-specific:
 - exact miss control
@@ -135,4 +132,4 @@ Non-blocking UNKNOWN_REFERENCE items that may remain Piri-specific:
 - exact Gaia second/third order
 - exact press-index control for all representative forms
 
-Once the ordered-yellow normal visual mapping is explicitly chosen and implemented/tested, Phase 02 can be frozen again without pretending the remaining hidden control details are reference-authentic.
+Automated gates for the corrected mapping, recovery, Gaia remaining-order behavior, and server-authoritative Fabric stop indices now pass on the current baseline. Phase 02 still requires forced-role real-client runtime evidence before completion; the remaining hidden reference-control details must continue to be labelled UNKNOWN/PIRI_SPECIFIC.

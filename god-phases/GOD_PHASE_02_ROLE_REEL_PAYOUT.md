@@ -1,6 +1,6 @@
 # GOD PHASE 02 — Role / Reel / Payout Implementation
 
-Status: **IN_PROGRESS — SOURCE AUDIT REOPENED**
+Status: **IN_PROGRESS — AUTOMATED GATES PASS; RUNTIME EVIDENCE PENDING**
 
 Implement only the locked role contract from `docs/GOD_MASTER_SPEC.md` and `docs/GOD_ROLE_CONTRACT_V1.md`.
 
@@ -16,7 +16,7 @@ No gameplay-state or economy redesign in this phase.
 
 ## Phase-02 audit state
 
-The previous freeze was reopened on 2026-09-22 after a source audit found one real unresolved Phase-02 item: normal/no-nav ORDERED_YELLOW7 can produce a 1-medal role in current-machine source material, while current code credits 1 medal using a generic MISS visual family. That mapping must be explicitly resolved before this phase is frozen again.
+The previous freeze was reopened on 2026-09-22 after a source audit found one real Phase-02 mismatch: normal/no-nav ORDERED_YELLOW7 could credit 1 medal while displaying a generic MISS visual family. That mismatch is now resolved with a dedicated `ORDERED_YELLOW7_ONE` presentation. The mapping is explicitly **PIRI_SPECIFIC** and is not claimed as exact Kiseki hidden control.
 
 See `docs/GOD_PHASE_02_SOURCE_AUDIT_2026-09-22.md`.
 
@@ -29,7 +29,7 @@ A complete hidden real-machine press-index control table is not public. Where th
 | MISS | 0, no replay | variable safe miss window; no GOD/RED7/BLUE7/YELLOW7 straight or diagonal and no locked special/paying role form | LEFT first, then C/R free | ordinary 0..4; persisted per-spin presentation selector may vary among safe candidates |
 | UPPER_BLUE7 | replay | BLUE7 upper-row straight | LEFT first | ordinary 0..4 |
 | MIDDLE_BLUE7 | replay | BLUE7 middle-row straight | LEFT first | ordinary 0..4 |
-| ORDERED_YELLOW7 — normal/no nav | 0 or 1 medal under provisional calibration | **UNRESOLVED:** 0-medal branch may use safe miss/こぼし; 1-medal branch must use a source-published 1-medal visible family rather than arbitrary MISS. Exact hidden mapping is unpublished | LEFT first | ordinary Piri control; exact 0/1 split remains Phase-04 calibration; visible mapping blocks refreeze |
+| ORDERED_YELLOW7 — normal/no nav | 0 or 1 medal under provisional calibration | 0-medal branch uses safe miss/こぼし; 1-medal branch uses dedicated `ORDERED_YELLOW7_ONE` marker: LEFT BOTTOM=BLUE7 / CENTER MIDDLE=YELLOW7 / RIGHT TOP=BLUE7. This exact marker is **PIRI_SPECIFIC** and not claimed as authentic Kiseki control | LEFT first | ordinary 0..4 Piri control; exact 0/1 split remains Phase-04 calibration |
 | ORDERED_YELLOW7 — AT/nav | 15 medals | lower-row yellow A acquisition form | exact displayed order | ordinary 0..4; wrong instructed input rejected without consuming/redrawing role |
 | LOWER_YELLOW7 | 3 medals | lower-row yellow B; source example has center-middle RED7 | LEFT first | ordinary 0..4 |
 | RISING_YELLOW7 | 15 medals | rising/right-up YELLOW7 straight | LEFT first | ordinary 0..4 |
@@ -62,10 +62,10 @@ For fixed semantic forms, the selector is irrelevant.
 ## Exit gate
 
 Phase 02 remains incomplete until:
-1. normal ORDERED_YELLOW7 1-medal visual mapping is explicitly resolved and implemented,
-2. unit/exhaustive tests pass for every resolved row,
-3. Paper/Fabric final visible symbols agree,
-4. recovery settles to the same resolved result family,
-5. forced-role runtime evidence is collected for every row.
+1. normal ORDERED_YELLOW7 1-medal visual mapping is explicitly resolved and implemented — **DONE (`ORDERED_YELLOW7_ONE`, PIRI_SPECIFIC)**,
+2. unit/exhaustive tests pass for every resolved row — **DONE on current CI baseline**,
+3. Paper/Fabric final visible symbols agree — **automated server-authoritative stop-index coverage added; final real-client evidence still required**,
+4. recovery settles to the same resolved result family — **DONE for dedicated one-medal form and covered by recovery tests**,
+5. forced-role runtime evidence is collected for every row — **PENDING**.
 
 Runtime evidence may reveal an implementation bug; it does **not** convert UNKNOWN reference behavior into an authentic specification.
