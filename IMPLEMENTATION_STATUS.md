@@ -59,3 +59,21 @@ Next planned phase: Phase13 implementation/runtime acceptance
 Phase13 start condition: satisfied and explicitly started
 
 Phase12 production implementation and real Paper+Fabric runtime acceptance are PASS. Phase13 world rendering and Phase14 hall audio remain NOT_STARTED.
+
+
+## GOD / successor machine branch — 2026-09-23
+
+Piri GOD専用開発フローは **RETIRED_BY_USER**。
+
+- GOD Phase 01: COMPLETE_RETAINED_REFERENCE
+- GOD Phase 02: ABANDONED_INCOMPLETE
+- GOD Phase 03–06: CANCELLED_NOT_TO_RUN
+- GOD Phase 02 runtime acceptanceは後続開発のBLOCKERではない。
+- GOD runtime runnerを修正してGODを完成させる作業は自動再開しない。
+- GODのコード・資料は削除せず、後続方式で明示的に選ばれたものだけ再利用する。
+
+後続方式のPhase正本は `NEXT_MACHINE_PHASE_MAP.json` と `next-machine-phases/README.md`。
+
+Current successor phase: NEXT Phase 01 — NOT_STARTED
+Next successor work: 新方式のConcept / Game Loop / Presentation Lock
+Successor implementation is blocked only by its own Phase 01 design lock, not by GOD Phase 02.
