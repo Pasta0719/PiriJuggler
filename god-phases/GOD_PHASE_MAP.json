@@ -1,44 +1,48 @@
 {
-  "version": 1,
+  "version": 2,
   "scope": "Piri GOD only",
   "canonical_spec": "docs/GOD_MASTER_SPEC.md",
+  "workflow_status": "RETIRED_BY_USER",
+  "retired_on": "2026-09-23",
+  "retirement_reason": "GOD is no longer the active implementation target. Preserve completed/research assets, but do not continue GOD runtime acceptance or use GOD completion as a prerequisite for successor work.",
   "one_phase_per_run": true,
+  "successor_phase_map": "NEXT_MACHINE_PHASE_MAP.json",
   "phases": [
     {
       "number": 1,
       "file": "god-phases/GOD_PHASE_01_SPEC_LOCK.md",
       "title": "Specification Consolidation / Lock",
-      "status": "COMPLETE"
+      "status": "COMPLETE_RETAINED_REFERENCE"
     },
     {
       "number": 2,
       "file": "god-phases/GOD_PHASE_02_ROLE_REEL_PAYOUT.md",
       "title": "Role / Reel / Payout Implementation",
-      "status": "IN_PROGRESS"
+      "status": "ABANDONED_INCOMPLETE"
     },
     {
       "number": 3,
       "file": "god-phases/GOD_PHASE_03_GAMEPLAY_STATE_MACHINE.md",
       "title": "Gameplay State Machine / Benefits",
-      "status": "BLOCKED_BY_PHASE_02"
+      "status": "CANCELLED_NOT_TO_RUN"
     },
     {
       "number": 4,
       "file": "god-phases/GOD_PHASE_04_ECONOMY_SIMULATION.md",
       "title": "Economy Fitting / Long-run Simulation",
-      "status": "BLOCKED_BY_PHASE_03"
+      "status": "CANCELLED_NOT_TO_RUN"
     },
     {
       "number": 5,
       "file": "god-phases/GOD_PHASE_05_CLIENT_PRESENTATION.md",
       "title": "Client Presentation / Replaceable Assets",
-      "status": "BLOCKED_BY_PHASE_04"
+      "status": "CANCELLED_NOT_TO_RUN"
     },
     {
       "number": 6,
       "file": "god-phases/GOD_PHASE_06_RECOVERY_RUNTIME.md",
       "title": "Recovery / Runtime Acceptance / Final Audit",
-      "status": "BLOCKED_BY_PHASE_05"
+      "status": "CANCELLED_NOT_TO_RUN"
     }
   ]
 }
