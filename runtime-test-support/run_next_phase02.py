@@ -95,12 +95,17 @@ try:
     wait(lambda:"Done (" in log(OUT/"server.log") and state().get("ready"),"Paper ready",300)
 
     cdir=EVIDENCE/"work"/"client-next02-main";cdir.mkdir(parents=True,exist_ok=True)
+    (cdir/"options.txt").write_text(
+        "version:3953\nlang:en_us\nrenderDistance:2\nsimulationDistance:5\nmaxFps:30\n"
+        "pauseOnLostFocus:false\nsoundCategory_master:0.0\nskipMultiplayerWarning:true\n"
+        "onboardAccessibility:false\n",
+        encoding="utf-8")
     client_result=OUT/"client-result.json"
     ch=(OUT/"client.log").open("w",encoding="utf-8");handles.append(ch)
     client_proc=subprocess.Popen(GRADLE_CMD+["-PruntimeAcceptance=true",
         "-PruntimeScenario=next02-main",f"-PruntimeRun={RUN}","-PruntimeEvidencePhase=NEXT_PHASE_02",
         ":runtime-test-client:runClient","--console=plain"],cwd=ROOT,stdout=ch,stderr=subprocess.STDOUT,creationflags=FLAGS)
-    wait(lambda:cli().get("connected") and cli().get("handshake"),"Fabric join",600)
+    wait(lambda:cli().get("connected") and cli().get("handshake"),"Fabric join",180)
 
     action("aim",x=0)
     command("piri machine create JUGGLER_GOD","MACHINE_CREATED 1")
