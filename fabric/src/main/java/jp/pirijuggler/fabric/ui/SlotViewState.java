@@ -17,20 +17,20 @@ public final class SlotViewState {
     private record Stop(double from,double target,long at,long duration) {}
     private record Press(int pressedIndex,int stopIndex,long at) {}
     private UUID session,spin;private int machine;private String machineType="JUGGLER";private long spinAt,noticeAt,nextGameAt;private String animation="NORMAL";private int stopEnableAfterMs;
-    private boolean spinning,notice,blink;private JsonObject state,dataLamp,stopHints=new JsonObject();private String error="",godNav="";
+    private boolean spinning,notice,blink,godFreeze;private final boolean[] godRevealed=new boolean[3];private JsonObject state,dataLamp,stopHints=new JsonObject();private String error="",godNav="";
     public SlotViewState(LongSupplier nanos){time=nanos;}
     public void receive(Envelope envelope) {
         JsonObject b=envelope.payload();long now=time.getAsLong();
         switch(envelope.packetType()) {
-            case OPEN_MACHINE -> {session=UUID.fromString(b.get("sessionId").getAsString());machine=b.get("machineId").getAsInt();machineType=b.has("machineType")?b.get("machineType").getAsString():"JUGGLER";spin=null;state=null;dataLamp=null;stopHints=new JsonObject();error="";godNav="";spinning=false;notice=false;blink=false;nextGameAt=0;Arrays.fill(stops,null);Arrays.fill(presses,null);Arrays.fill(rest,0);}
+            case OPEN_MACHINE -> {session=UUID.fromString(b.get("sessionId").getAsString());machine=b.get("machineId").getAsInt();machineType=b.has("machineType")?b.get("machineType").getAsString():"JUGGLER";spin=null;state=null;dataLamp=null;stopHints=new JsonObject();error="";godNav="";spinning=false;notice=false;blink=false;godFreeze=false;Arrays.fill(godRevealed,false);nextGameAt=0;Arrays.fill(stops,null);Arrays.fill(presses,null);Arrays.fill(rest,0);}
             case PUBLIC_STATE -> {if(matches(b)) {
                 state=b.deepCopy();if(b.has("machineType"))machineType=b.get("machineType").getAsString();notice=b.get("lampOn").getAsBoolean();error="";
                 var display=b.getAsJsonObject("displayStops");
                 for(int i=0;i<3;i++){rest[i]=display.get(new String[]{"left","center","right"}[i]).getAsDouble();if(spin==null)starts[i]=rest[i];}
-                if(!b.get("gameState").getAsString().contains("SPINNING")){spinning=false;stopHints=new JsonObject();godNav="";Arrays.fill(presses,null);}
+                if(!b.get("gameState").getAsString().contains("SPINNING")){spinning=false;godFreeze=false;Arrays.fill(godRevealed,false);stopHints=new JsonObject();godNav="";Arrays.fill(presses,null);}
             }}
             case SPIN_START -> {if(matches(b)) {
-                spin=UUID.fromString(b.get("spinId").getAsString());animation=b.get("animation").getAsString();spinAt=now;spinning=true;error="";
+                spin=UUID.fromString(b.get("spinId").getAsString());animation=b.get("animation").getAsString();spinAt=now;spinning=true;godFreeze=b.has("godFreeze")&&b.get("godFreeze").getAsBoolean();Arrays.fill(godRevealed,false);error="";
                 stopEnableAfterMs=b.has("stopEnableAfterMs")?b.get("stopEnableAfterMs").getAsInt():ReelMotion.Profile.valueOf(animation).clientDelayMs();
                 stopHints=b.has("stopHints")?b.getAsJsonObject("stopHints").deepCopy():new JsonObject();
                 godNav=b.has("godNav")?b.get("godNav").getAsString():"";
@@ -47,6 +47,7 @@ public final class SlotViewState {
                     double endpoint=stopEndpoint(from,target);int visualMs=visualDurationMs(from,endpoint,requested);
                     stops[reel]=new Stop(from,endpoint,now,visualMs*1_000_000L);rest[reel]=target;
                 }
+                if(godFreeze)godRevealed[reel]=true;
                 if(b.has("nextStopHints"))stopHints=b.getAsJsonObject("nextStopHints").deepCopy();
                 if(allStopped())nextGameAt=spinAt+MIN_GAME_INTERVAL_NANOS;
             }}
@@ -120,5 +121,7 @@ public final class SlotViewState {
     public int machineId(){return machine;}
     public String machineType(){return machineType;}
     public String godNav(){return godNav;}
+    public boolean godFreeze(){return godFreeze;}
+    public boolean godRevealed(int reel){return reel>=0&&reel<3&&godRevealed[reel];}
     public String value(String name){return state!=null&&state.has(name)?state.get(name).getAsString():"—";}
 }
