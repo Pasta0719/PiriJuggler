@@ -9,6 +9,7 @@ package jp.pirijuggler.paper.machine;
  */
 public enum MachineType {
     JUGGLER,
+    JUGGLER_GOD,
     OKIDOKI,
     GOD,
     DISC
