@@ -130,3 +130,25 @@ Whole-machine target payout including normal BIG/REG, heaven behavior, GOD, GOD 
 - Setting 6: **115.0%**
 
 These are the final target payout values for tuning. NEXT Phase 03 must fit normal BIG/REG probabilities and heaven transition/continuation behavior to these targets while preserving the locked GOD probability, 5-BIG guarantee, and setting-dependent continuation structure unless a later explicit user-approved specification change overrides them.
+
+
+## Dedicated replaceable JUGGLER_GOD asset namespace
+
+JUGGLER_GOD must not bind its long-term presentation directly to the ordinary JUGGLER asset IDs.
+
+For every reused visual/audio asset needed by JUGGLER_GOD:
+- define a JUGGLER_GOD-specific logical resource ID/path;
+- initially render/play the same current JUGGLER asset as a fallback so no new artwork is required now;
+- allow a resource pack or later committed asset at the dedicated JUGGLER_GOD path to override that fallback without modifying gameplay code or the ordinary JUGGLER assets;
+- ordinary JUGGLER continues using its original resource IDs.
+
+Initial dedicated visual namespace:
+- `piri:textures/juggler_god/symbols/*`
+- `piri:textures/juggler_god/lamp/*`
+- `piri:textures/juggler_god/ui/*`
+
+Initial dedicated audio namespace/IDs:
+- normal reused sounds may have JUGGLER_GOD-specific aliases where presentation needs independent replacement;
+- `piri:god_freeze` remains dedicated to GOD freeze and never aliases ordinary lever behavior semantically.
+
+The current appearance may therefore be identical to JUGGLER while remaining independently replaceable later.
