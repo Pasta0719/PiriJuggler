@@ -14,7 +14,9 @@ public record JugglerGodRuntime(
         String bonusOrigin,
         int godBigCount,
         boolean godFreeze,
-        String lastEvent
+        String lastEvent,
+        int additionalBigStock,
+        int additionalRegStock
 ) {
     public enum Mode { NORMAL, HEAVEN, GOD_CHAIN }
 
@@ -24,13 +26,23 @@ public record JugglerGodRuntime(
         if (heavenProgress < 0 || heavenProgress > 32) throw new IllegalArgumentException("heavenProgress");
         if (guaranteedRemaining < 0) throw new IllegalArgumentException("guaranteedRemaining");
         if (godBigCount < 0) throw new IllegalArgumentException("godBigCount");
+        if (additionalBigStock < 0 || additionalRegStock < 0) throw new IllegalArgumentException("additionalStock");
         if (bonusOrigin == null) bonusOrigin = "NONE";
         if (lastEvent == null) lastEvent = "NONE";
     }
 
-    public static JugglerGodRuntime initial() {
-        return new JugglerGodRuntime(Mode.NORMAL,0,0,0,false,false,"NONE",0,false,"NONE");
+    public JugglerGodRuntime(Mode mode,int heavenTarget,int heavenProgress,int guaranteedRemaining,
+                             boolean forceChainBig,boolean countNextChainGame,String bonusOrigin,
+                             int godBigCount,boolean godFreeze,String lastEvent) {
+        this(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
+                bonusOrigin,godBigCount,godFreeze,lastEvent,0,0);
     }
+
+    public static JugglerGodRuntime initial() {
+        return new JugglerGodRuntime(Mode.NORMAL,0,0,0,false,false,"NONE",0,false,"NONE",0,0);
+    }
+
+    public boolean stockLampOn(){return additionalBigStock>0||additionalRegStock>0;}
 
     public static JugglerGodRuntime fromJson(String raw) {
         if (raw == null || raw.isBlank()) return initial();
@@ -47,7 +59,9 @@ public record JugglerGodRuntime(
                     text(j,"bonusOrigin","NONE"),
                     value(j,"godBigCount",0),
                     bool(j,"godFreeze",false),
-                    text(j,"lastEvent","NONE")
+                    text(j,"lastEvent","NONE"),
+                    value(j,"additionalBigStock",0),
+                    value(j,"additionalRegStock",0)
             );
         } catch (RuntimeException invalid) {
             return initial();
@@ -66,6 +80,8 @@ public record JugglerGodRuntime(
         j.addProperty("godBigCount",godBigCount);
         j.addProperty("godFreeze",godFreeze);
         j.addProperty("lastEvent",lastEvent);
+        j.addProperty("additionalBigStock",additionalBigStock);
+        j.addProperty("additionalRegStock",additionalRegStock);
         return j;
     }
 
