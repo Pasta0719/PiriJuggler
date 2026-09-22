@@ -92,6 +92,39 @@ class RecoveryStoreTest {
         assertEquals(GodPhase.GG,GodMachineRuntime.fromJson(stored).gameplay().phase());
     }
 
+    @Test void godOrderedYellowOneMedalRecoveryKeepsDedicatedVisibleForm() throws Exception {
+        int machine=db.create(new Machine.Location(UUID.randomUUID(),"world",3,64,0,"NORTH"),MachineType.GOD,NOW);
+        UUID player=UUID.randomUUID();
+        db.seat(player,machine,NOW);
+
+        GodMachineRuntime pending=GodMachineRuntime.initial();
+        JsonObject wrapper=GodSessionState.initial().toJson();
+        wrapper.add("_pendingRuntime",pending.toJson());
+        wrapper.addProperty("_pendingPayout",1);
+        wrapper.addProperty("_pendingReplay",false);
+        wrapper.addProperty("_pendingRole","ORDERED_YELLOW7");
+        wrapper.addProperty("_pendingDisplayRole","ORDERED_YELLOW7_ONE");
+
+        db.sql("UPDATE player_sessions SET game_state='NORMAL_SPINNING',credit=47,held_medals=0,internal_role='ORDERED_YELLOW7',machine_state_json=?,stopped_mask=0,phase_left=7.0,phase_center=11.0,phase_right=3.0,last_client_sequence=12 WHERE player_uuid=?",
+                wrapper.toString(),player.toString());
+        Session stale=db.state().session(player);
+        RecoveryStore recovery=new RecoveryStore(db,config,new StopSolver(new StopCatalogue()),123L);
+
+        db.transaction(()->{recovery.settle(stale,NOW+1);return null;});
+        Session settled=db.state().session(player);
+        assertEquals(Session.GameState.SEATED_READY,settled.state());
+        assertEquals(48,settled.number("credit"));
+        assertTrue(jp.pirijuggler.common.reel.GodStopControl.matchesPublishedForm(
+                "ORDERED_YELLOW7_ONE",
+                (int)settled.number("display_left_stop"),
+                (int)settled.number("display_center_stop"),
+                (int)settled.number("display_right_stop")));
+        assertFalse(jp.pirijuggler.common.reel.GodStopControl.isSafeMiss(
+                (int)settled.number("display_left_stop"),
+                (int)settled.number("display_center_stop"),
+                (int)settled.number("display_right_stop")));
+    }
+
     @Test void godReplayRecoveryPreservesFreeGameValue() throws Exception {
         int machine=db.create(new Machine.Location(UUID.randomUUID(),"world",2,64,0,"NORTH"),MachineType.GOD,NOW);
         UUID player=UUID.randomUUID();
