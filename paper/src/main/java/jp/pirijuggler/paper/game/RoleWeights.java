@@ -29,7 +29,7 @@ public final class RoleWeights {
             if(sum!=DENOMINATOR)throw new IllegalArgumentException("Role weights must total 1e9");
             bonusFamilies[setting-1][0]=number(row,"big")+number(row,"cherry_big")+number(row,"piero_big");
             bonusFamilies[setting-1][1]=number(row,"reg")+number(row,"cherry_reg")+number(row,"piero_reg");
-            if(bonusFamilies[setting-1][0]+bonusFamilies[setting-1][1]<=0)throw new IllegalArgumentException("Missing bonus-family weights");
+
         }
     }
     Map<String,Object> sourceConfig(){return sourceConfig;}
@@ -37,6 +37,7 @@ public final class RoleWeights {
     public InternalRole drawBonusFamily(int setting,RandomGenerator rng) {
         if(setting<1||setting>6)throw new IllegalArgumentException("Setting");
         long big=bonusFamilies[setting-1][0],reg=bonusFamilies[setting-1][1],total=big+reg;
+        if(total<=0)throw new IllegalStateException("No bonus-family weights for setting "+setting);
         long roll=rng.nextLong(total);
         return roll<big?InternalRole.BIG:InternalRole.REG;
     }
