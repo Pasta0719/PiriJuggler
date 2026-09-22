@@ -65,6 +65,18 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals(1,scalar("SELECT total_games FROM machine_period_stats WHERE machine_id=?",s.machine()));
     }
 
+    @Test void heavenBeforeTargetCannotNaturallyStartBonus() throws Exception {
+        var runtime=new JugglerGodRuntime(JugglerGodRuntime.Mode.HEAVEN,2,0,0,false,false,"NONE",0,false,"GOD_END_HEAVEN");
+        Rig rig=rig(runtime,3);
+        Session s=action(rig,rig.session(),PacketType.SPACE_ACTION,0);
+        GameTransition lever=plan(rig,s,PacketType.SPACE_ACTION,1_000_000_000L);
+        InternalRole role=InternalRole.valueOf(lever.after().text("internal_role"));
+        assertNull(GameRules.bonus(role));
+        JugglerGodRuntime state=JugglerGodRuntime.fromJson(lever.machineRuntimeJson());
+        assertEquals(1,state.heavenProgress());
+        assertEquals(JugglerGodRuntime.Mode.HEAVEN,state.mode());
+    }
+
     @Test void heavenTargetGameForcesSettingBasedBigOrRegFamily() throws Exception {
         var runtime=new JugglerGodRuntime(JugglerGodRuntime.Mode.HEAVEN,1,0,0,false,false,"NONE",0,false,"GOD_END_HEAVEN");
         Rig rig=rig(runtime,3);
