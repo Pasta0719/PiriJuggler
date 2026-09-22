@@ -38,7 +38,7 @@ public final class GodStopControl {
             {GodReelStrip.VisibleRow.TOP,GodReelStrip.VisibleRow.MIDDLE,GodReelStrip.VisibleRow.BOTTOM}
     };
     private static final String[] NON_MISS_FORMS={
-            "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","LOWER_YELLOW7",
+            "UPPER_BLUE7","MIDDLE_BLUE7","ORDERED_YELLOW7","ORDERED_YELLOW7_ONE","LOWER_YELLOW7",
             "RISING_YELLOW7","MIDDLE_YELLOW7","COMMON_YELLOW7","GAIA_BELL",
             "RED7_FAKE","RED7","GOD","SP"
     };
@@ -68,6 +68,11 @@ public final class GodStopControl {
                     req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
                     req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.MIDDLE),
                     "published middle-line replay"));
+            case "ORDERED_YELLOW7_ONE" -> Optional.of(new Rule(
+                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.BOTTOM),
+                    req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.MIDDLE),
+                    req(GodReelStrip.Symbol.BLUE7,GodReelStrip.VisibleRow.TOP),
+                    "Piri-specific one-medal marker for normal ordered-yellow settlement; not claimed as exact Kiseki control"));
             case "LOWER_YELLOW7" -> Optional.of(new Rule(
                     req(GodReelStrip.Symbol.YELLOW7,GodReelStrip.VisibleRow.BOTTOM),
                     req(GodReelStrip.Symbol.RED7,GodReelStrip.VisibleRow.MIDDLE),
