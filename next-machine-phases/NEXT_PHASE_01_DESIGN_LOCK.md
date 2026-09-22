@@ -87,7 +87,6 @@ These values must be determined in NEXT Phase 03 against the target payout:
 - normal bonus -> heaven entry probability;
 - heaven bonus -> heaven continuation/re-entry probability;
 - whether BIG and REG differ in heaven transition probability;
-- final setting-by-setting payout targets;
 - any small numerical fine-tuning of GOD continuation rates required by whole-machine simulation;
 - any additional GOD-chain weighting required to hit payout targets without changing the locked 5-BIG guarantee or the increasing-by-setting continuation structure.
 
@@ -108,3 +107,17 @@ Still to lock before Phase 01 can be COMPLETE:
 Until those points are explicitly fixed, do not begin NEXT Phase 02 production implementation.
 
 When Phase 01 becomes COMPLETE, stop. Do not begin NEXT Phase 02 automatically.
+
+
+## Locked payout targets
+
+Whole-machine target payout including normal BIG/REG, heaven behavior, GOD, GOD continuation, and all ordinary-role economics:
+
+- Setting 1: **97.5%**
+- Setting 2: **99.0%**
+- Setting 3: **101.5%**
+- Setting 4: **105.0%**
+- Setting 5: **109.5%**
+- Setting 6: **115.0%**
+
+These are the final target payout values for tuning. NEXT Phase 03 must fit normal BIG/REG probabilities and heaven transition/continuation behavior to these targets while preserving the locked GOD probability, 5-BIG guarantee, and setting-dependent continuation structure unless a later explicit user-approved specification change overrides them.
