@@ -1,6 +1,6 @@
 # NEXT PHASE 02 — Core Gameplay / Reel / State Implementation
 
-Status: **IN_PROGRESS — CORE IMPLEMENTATION COMPLETE; REAL PAPER+FABRIC ACCEPTANCE PENDING**
+Status: **COMPLETE — REAL PAPER+FABRIC ACCEPTANCE PASS**
 
 Implement only the locked gameplay contract from NEXT Phase 01.
 
@@ -55,7 +55,7 @@ This applies to reel symbols, Piri Chance lamp imagery, UI imagery, and independ
 - Added runtime-test helper support for `/piritest force god` on JUGGLER_GOD only.
 - Added `runtime-test-support/run_next_phase02.py` and `run-next-phase02-runtime.bat`.
 
-Phase 02 must remain IN_PROGRESS until the dedicated NEXT Phase 02 real Paper+Fabric acceptance result is PASS.
+Dedicated NEXT Phase 02 real Paper+Fabric acceptance passed in GitHub Actions run `35788369912` on commit `f602ea82d4af319ee4858b110aec361a7e5aabca`.
 
 ## Phase 02 hardening notes
 
