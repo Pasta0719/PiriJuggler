@@ -114,7 +114,11 @@ def command(text,expected):
     before=msgcount(expected);action("command",text=text);wait(lambda:msgcount(expected)>before,text+" -> "+expected)
 def click(x):
     before=len(packets("OPEN_MACHINE"));action("aim",x=x);action("click",x=x);wait(lambda:len(packets("OPEN_MACHINE"))>before,"open machine")
-def tap(key): action("tap",key=key)
+def tap(key):
+    # Runtime acceptance must use distinct physical key edges. A same-tick
+    # press+release can be coalesced by Minecraft's keyboard/screen path.
+    action("key",key=key,action=1)
+    action("key",key=key,action=0)
 def dbrows(sql):
     with sqlite3.connect(f"file:{SERVER/'plugins/PiriJuggler/piri.db'}?mode=ro",uri=True) as db:
         db.row_factory=sqlite3.Row;return [dict(r) for r in db.execute(sql)]
