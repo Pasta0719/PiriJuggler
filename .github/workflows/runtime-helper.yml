@@ -24,3 +24,6 @@ jobs:
       - name: Validate GOD Phase 2 runtime configuration
         shell: cmd
         run: gradlew.bat -PruntimeAcceptance=true -PruntimeScenario=god02-main -PruntimeEvidencePhase=GOD_PHASE_02 :runtime-test-client:build :runtime-test-paper:build --console=plain
+      - name: Validate GOD Phase 2 runner syntax
+        shell: cmd
+        run: py -m py_compile runtime-test-support\run_god_phase02.py
