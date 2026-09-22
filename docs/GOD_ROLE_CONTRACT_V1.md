@@ -1,6 +1,6 @@
 # Piri GOD role contract v1
 
-Status: **LOCKED — GOD Phase 01**
+Status: **LOCKED — GOD Phase 01; Phase-02 presentation audit reopened 2026-09-22**
 
 This document defines semantic role outcomes. It deliberately does **not** invent a complete press-index control table where public sources publish only representative stop forms.
 
@@ -22,12 +22,12 @@ Primary sources:
 | MISS | 1/5.2 | 0 medal, no replay | any physical three-reel stop window that matches none of the locked winning/replay/premium formations and forms no straight/diagonal GOD/RED7/BLUE7/YELLOW7 line; selection remains within the ordinary 0..4-frame slip policy | left-first unless a state-specific nav exists | ordinary miss | REFERENCE_BACKED odds / PIRI_SPECIFIC presentation-control classification |
 | UPPER_BLUE7 | 1/7.9 | replay | blue7 line on upper row | left-first | replay | REFERENCE_BACKED |
 | MIDDLE_BLUE7 | 1/109.2 | replay | blue7 line on middle row | left-first | replay | REFERENCE_BACKED |
-| ORDERED_YELLOW7 | 1/1.7 | AT/navigation state: 15 medals when the shown order is completed; ordinary normal play: winning order is concealed and the accepted left-first miss-side 0/1-medal calibration applies | lower yellow-7 A / navigated yellow result when acquired; normal-play miss-side form must not masquerade as a 15-medal acquisition | obey displayed push order when navigation exists; ordinary normal play accepts the locked left-first path; wrong instructed input is rejected by Piri | high-frequency ordered yellow whose realized payout is state/navigation dependent | REFERENCE_BACKED role concept / PIRI_SPECIFIC normal miss-side calibration and input-safety policy |
+| ORDERED_YELLOW7 | 1/1.7 | AT/navigation state: 15 medals when the shown order is completed; normal/no-nav branch uses provisional 0/1-medal calibration | 15-medal branch: lower yellow-7 A. 0-medal branch: miss/こぼし family. **1-medal branch mapping is unresolved**: 必勝本 confirms multiple 1-medal roles and that some occur from ordered 15-medal yellow, but the exact hidden mapping is unpublished | obey displayed nav when present; normal no-nav play is left-first | high-frequency ordered yellow with state/order-dependent realized payout | REFERENCE_BACKED role concept + 1-medal possibility / PIRI_SPECIFIC calibration / UNKNOWN exact 1-medal mapping |
 | LOWER_YELLOW7 | 1/18.4 | 3 medals | **lower-row yellow line with the center reel using the yellow symbol immediately below RED7; equivalently the published example has center RED7 on the middle row** | left-first | 3-medal lower-yellow B | REFERENCE_BACKED |
 | RISING_YELLOW7 | 1/186.2 | 15 medals | rising/right-up yellow line | left-first | rare yellow | REFERENCE_BACKED |
 | MIDDLE_YELLOW7 | 1/963.8 | 15 medals | middle-row yellow line | left-first | rare yellow | REFERENCE_BACKED |
 | COMMON_YELLOW7 | 1/1524.1 | 15 medals | **lower-row yellow line with the center reel using the blue7-adjacent A pattern; published example has center BLUE7 on the middle row** | left-first unless state nav applies | common 15-medal lower-yellow A | REFERENCE_BACKED |
-| GAIA_BELL | 1/37.6 | 1 medal | yellow small-V | **right-first navigation is shown for this role** | Gaia-history role | REFERENCE_BACKED |
+| GAIA_BELL | 1/37.6 | 1 medal | yellow small-V | **RIGHT first is source-confirmed; exact second/third order is not published** | Gaia-history role | REFERENCE_BACKED first stop / UNKNOWN remaining exact order |
 | RED7_FAKE | 1/936.2 | replay | source example is a middle-row RED7/RED7/ハズレテンパイ外れ; public material also states the stop form changes when aiming near the DEKA-MILLION area. Piri therefore uses a variable fake-RED family: prefer the representative middle RED7/RED7 + right miss form when reachable within ordinary control; otherwise use a safe RED7-visible replay form that cannot equal RED7 straight, SP, GOD, a blue replay line, or any paying yellow formation | left-first | replay / fake-RED replay | REFERENCE_BACKED odds+replay identity+representative form+form variability; PIRI_SPECIFIC exact press-index selection/fallback |
 | RED7 | 1/6900 | 15 medals | RED7 straight | left-first; representative form only unless exact control is sourced | enters SGG | LOCKED_PIRI odds; REFERENCE_BACKED form/benefit |
 | GOD | reference 1/16384, Piri 1/8192 | 15 medals | GOD straight | left-first; representative form only unless exact control is sourced | PGG/GOD stage + locked Piri benefit | LOCKED_PIRI odds; REFERENCE_BACKED form/baseline benefit |
