@@ -1,6 +1,6 @@
 # NEXT PHASE 02 — Core Gameplay / Reel / State Implementation
 
-Status: **IN_PROGRESS**
+Status: **IN_PROGRESS — CORE IMPLEMENTATION COMPLETE; REAL PAPER+FABRIC ACCEPTANCE PENDING**
 
 Implement only the locked gameplay contract from NEXT Phase 01.
 
@@ -30,3 +30,29 @@ Implementation rule:
 - do not duplicate gameplay constants or reel symbol semantics merely for presentation isolation.
 
 This applies to reel symbols, Piri Chance lamp imagery, UI imagery, and independently replaceable sound aliases used by the successor machine.
+
+## Implemented core
+
+- Added independent machine type `JUGGLER_GOD`; ordinary `JUGGLER` remains on its existing engine.
+- Added authoritative GOD role with 15-medal payout and center-line BAR-BAR-BAR result.
+- Removed legacy premium-BAR dependency from JUGGLER_GOD while preserving ordinary JUGGLER behavior.
+- Added GOD lever freeze contract, blackout, per-reel middle-BAR reveal, silent Piri Chance on final BAR confirmation, and dedicated `piri:god_freeze` audio slot.
+- Added persistent successor runtime state for NORMAL / HEAVEN / GOD_CHAIN.
+- GOD initializes five BIGs total: first BIG plus four remaining guaranteed stocks.
+- Guaranteed GOD-stock follow-up BIG draws do not advance normal-game count.
+- Post-guarantee continuation BIG draws advance exactly one game.
+- Added setting-dependent continuation rates: 25/30/35/45/55/70%.
+- GOD-chain termination enters guaranteed <=32G heaven.
+- Heaven stores a server-side target game 1..32 and forces a setting-weighted BIG/REG family at that target.
+- Added dedicated GOD parent-history storage/display without conflating it with ordinary BIG/REG history.
+- Added dedicated `textures/juggler_god/...` presentation namespace with ordinary JUGGLER fallback for currently reused assets.
+- The same isolated asset fallback is used in the slot screen and world cabinet renderer.
+
+## Verification
+
+- Existing production build/test suite returned PASS after successor integration and regression fixes.
+- Added `JugglerGodCoreTest` for guaranteed-stock zero-G accounting, post-guarantee 1G accounting, heaven target forcing, GOD BAR contract, and runtime-state persistence.
+- Added runtime-test helper support for `/piritest force god` on JUGGLER_GOD only.
+- Added `runtime-test-support/run_next_phase02.py` and `run-next-phase02-runtime.bat`.
+
+Phase 02 must remain IN_PROGRESS until the dedicated NEXT Phase 02 real Paper+Fabric acceptance result is PASS.
