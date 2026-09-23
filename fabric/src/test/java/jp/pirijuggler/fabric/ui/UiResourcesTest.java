@@ -36,6 +36,14 @@ class UiResourcesTest {
         var ids=new LinkedHashSet<String>(base);
         for(String id:base)ids.add("juggler_god_"+id);
         ids.add("god_freeze");
+        ids.addAll(List.of(
+                "juggler_god_god_freeze",
+                "juggler_god_god_stop_1",
+                "juggler_god_god_stop_2",
+                "juggler_god_god_stop_3",
+                "juggler_god_god_bonus_start",
+                "juggler_god_god_big_bgm"
+        ));
         assertEquals(ids,registry.keySet());
         for(String id:ids){
             JsonElement sound=registry.getAsJsonObject(id).getAsJsonArray("sounds").get(0);
@@ -60,7 +68,10 @@ class UiResourcesTest {
         assertTrue(sounds.contains("\"juggler_god_\"+base"));
         assertTrue(sounds.contains("if(available(dedicated))return dedicated"));
         String ui=Files.readString(ROOT.resolve("fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotUi.java"));
-        assertTrue(ui.contains("?\"god_freeze\":sound(\"lever\")"));
+        assertTrue(ui.contains("juggler_god_god_freeze"));
+        assertTrue(ui.contains("juggler_god_god_stop_"));
+        assertTrue(ui.contains("juggler_god_god_bonus_start"));
+        assertTrue(ui.contains("juggler_god_god_big_bgm"));
     }
     @Test void sevenSegmentGeometryAndInactiveAlphaContract(){assertEquals(7,SevenSegment.RECTANGLES.length);assertArrayEquals(new int[]{8,32,24,8},SevenSegment.RECTANGLES[6]);for(int n=0;n<10;n++)for(int s=0;s<7;s++)assertEquals(SevenSegment.DIGITS[n].indexOf('A'+s)>=0,SevenSegment.active((char)('0'+n),s));assertTrue(SevenSegment.active('-',6));}
 }
