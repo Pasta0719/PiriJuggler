@@ -62,8 +62,9 @@ public final class ConfigValidation {
         c.integer("game.disconnect_grace_seconds", 0, Long.MAX_VALUE);
         c.keys("sound", SOUNDS);
         for (String sound : SOUNDS) c.numberRange("sound." + sound, BigDecimal.ZERO, BigDecimal.valueOf(2));
-        c.keys("juggler_god", Set.of("normal_to_heaven_ppm", "heaven_to_heaven_ppm", "settings"));
-        c.integer("juggler_god.normal_to_heaven_ppm", 0, 1_000_000);
+        c.keys("juggler_god", Set.of("normal_big_to_heaven_ppm", "normal_reg_to_heaven_ppm", "heaven_to_heaven_ppm", "settings"));
+        c.integer("juggler_god.normal_big_to_heaven_ppm", 0, 1_000_000);
+        c.integer("juggler_god.normal_reg_to_heaven_ppm", 0, 1_000_000);
         c.integer("juggler_god.heaven_to_heaven_ppm", 0, 1_000_000);
         c.keys("juggler_god.settings", Set.of("1","2","3","4","5","6"));
         for(int setting=1;setting<=6;setting++){
