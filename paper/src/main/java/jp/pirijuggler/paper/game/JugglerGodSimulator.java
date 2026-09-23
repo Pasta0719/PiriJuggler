@@ -42,15 +42,20 @@ public final class JugglerGodSimulator {
 
     /** Compatibility entry point for the untuned Phase 02/03 boundary. */
     public static Result run(RoleWeights weights,int setting,long games,long normalBigToHeavenPpm,long normalRegToHeavenPpm,long heavenToHeavenPpm,RandomGenerator random) {
-        return run(weights,setting,games,normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm,1_000_000,random);
+        return run(weights,setting,games,normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm,1_000_000,1_000_000,random);
     }
 
     public static Result run(RoleWeights weights,int setting,long games,long normalBigToHeavenPpm,long normalRegToHeavenPpm,long heavenToHeavenPpm,int bonusScalePpm,RandomGenerator random) {
+        return run(weights,setting,games,normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm,bonusScalePpm,1_000_000,random);
+    }
+
+    public static Result run(RoleWeights weights,int setting,long games,long normalBigToHeavenPpm,long normalRegToHeavenPpm,long heavenToHeavenPpm,int bonusScalePpm,int smallRoleScalePpm,RandomGenerator random) {
         if(setting<1||setting>6||games<1||games>100_000_000L)throw new IllegalArgumentException("Simulator bounds");
         if(normalBigToHeavenPpm<0||normalBigToHeavenPpm>1_000_000
                 ||normalRegToHeavenPpm<0||normalRegToHeavenPpm>1_000_000
                 ||heavenToHeavenPpm<0||heavenToHeavenPpm>1_000_000
-                ||bonusScalePpm<0||bonusScalePpm>1_000_000)
+                ||bonusScalePpm<0||bonusScalePpm>1_000_000
+                ||smallRoleScalePpm<0||smallRoleScalePpm>1_000_000)
             throw new IllegalArgumentException("Phase 03 tuning");
 
         long lever=0,paid=0,replay=0,grape=0,cherry=0,bell=0,piero=0;
@@ -72,7 +77,7 @@ public final class JugglerGodSimulator {
             if(random.nextInt(GOD_DENOMINATOR)==0){
                 god++;
                 payout+=GameRules.payout(InternalRole.GOD);
-                BonusResolution g=resolveGodChain(weights,setting,bonusScalePpm,random);
+                BonusResolution g=resolveGodChain(weights,setting,bonusScalePpm,smallRoleScalePpm,random);
                 bet+=g.bet;payout+=g.payout;godBig+=g.godBig;godReg+=g.godReg;
                 godContinuationBig+=g.godContinuationBig;bonusInBonusBig+=g.addedBig;bonusInBonusReg+=g.addedReg;godInGod+=g.godInGod;
                 mode=Mode.HEAVEN;heavenTarget=random.nextInt(32)+1;heavenProgress=0;heavenEntries++;
@@ -84,8 +89,8 @@ public final class JugglerGodSimulator {
                 heavenProgress++;
                 role=heavenProgress>=heavenTarget
                         ?weights.drawBonusFamily(setting,random)
-                        :weights.drawJugglerGodNonBonus(setting,random,bonusScalePpm);
-            }else role=weights.drawJugglerGod(setting,random,bonusScalePpm);
+                        :weights.drawJugglerGodNonBonus(setting,random,bonusScalePpm,smallRoleScalePpm);
+            }else role=weights.drawJugglerGod(setting,random,bonusScalePpm,smallRoleScalePpm);
 
             switch(role){
                 case REPLAY -> { replay++; free=true; }
@@ -105,7 +110,7 @@ public final class JugglerGodSimulator {
             if(originHeaven){if(big)heavenBig++;else heavenReg++;}
             else {if(big)normalBig++;else normalReg++;}
 
-            BonusResolution br=resolveOrdinaryBonus(bonusType,weights,setting,bonusScalePpm,random);
+            BonusResolution br=resolveOrdinaryBonus(bonusType,weights,setting,bonusScalePpm,smallRoleScalePpm,random);
             bet+=br.bet;payout+=br.payout;
             bonusInBonusBig+=br.addedBig;bonusInBonusReg+=br.addedReg;
             god+=br.god;godDuringBonus+=br.god;godBig+=br.godBig;godReg+=br.godReg;
@@ -134,7 +139,7 @@ public final class JugglerGodSimulator {
     }
 
     private static BonusResolution resolveOrdinaryBonus(
-            String initial,RoleWeights weights,int setting,int bonusScalePpm,RandomGenerator random
+            String initial,RoleWeights weights,int setting,int bonusScalePpm,int smallRoleScalePpm,RandomGenerator random
     ){
         ArrayDeque<String> queue=new ArrayDeque<>();queue.add(initial);
         long bet=0,payout=0,addedBig=0,addedReg=0,god=0,godBig=0,godReg=0,godContinuation=0,godInGod=0;
@@ -146,12 +151,12 @@ public final class JugglerGodSimulator {
             for(int i=0;i<rounds;i++){
                 if(random.nextInt(GOD_DENOMINATOR)==0){
                     god++;payout+=GameRules.payout(InternalRole.GOD);forceHeaven=true;
-                    BonusResolution g=resolveGodChain(weights,setting,bonusScalePpm,random);
+                    BonusResolution g=resolveGodChain(weights,setting,bonusScalePpm,smallRoleScalePpm,random);
                     bet+=g.bet;payout+=g.payout;addedBig+=g.addedBig;addedReg+=g.addedReg;
                     godBig+=g.godBig;godReg+=g.godReg;godContinuation+=g.godContinuationBig;godInGod+=g.godInGod;
                     continue;
                 }
-                InternalRole hit=weights.drawJugglerGod(setting,random,bonusScalePpm);
+                InternalRole hit=weights.drawJugglerGod(setting,random,bonusScalePpm,smallRoleScalePpm);
                 String stock=GameRules.bonus(hit);
                 if(stock!=null){
                     queue.addLast(stock);
@@ -163,7 +168,7 @@ public final class JugglerGodSimulator {
     }
 
     private static BonusResolution resolveGodChain(
-            RoleWeights weights,int setting,int bonusScalePpm,RandomGenerator random
+            RoleWeights weights,int setting,int bonusScalePpm,int smallRoleScalePpm,RandomGenerator random
     ){
         ArrayDeque<String> queue=new ArrayDeque<>();
         for(int i=0;i<5;i++)queue.addLast("BIG");
@@ -183,7 +188,7 @@ public final class JugglerGodSimulator {
                     for(int n=0;n<GOD_IN_GOD_BIG_STOCK;n++){queue.addLast("BIG");addedBig++;}
                     continue;
                 }
-                InternalRole hit=weights.drawJugglerGod(setting,random,bonusScalePpm);
+                InternalRole hit=weights.drawJugglerGod(setting,random,bonusScalePpm,smallRoleScalePpm);
                 String stock=GameRules.bonus(hit);
                 if(stock!=null){
                     queue.addLast(stock);
