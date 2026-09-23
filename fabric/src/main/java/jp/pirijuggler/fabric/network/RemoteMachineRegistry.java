@@ -65,6 +65,10 @@ public final class RemoteMachineRegistry {
                     current.addProperty("spinId", body.get("spinId").getAsString());
                     current.addProperty("animation", body.get("animation").getAsString());
                     current.add("startPhase", phase.deepCopy());
+                    if(body.has("godFreeze")){
+                        requireBoolean(body,"godFreeze");
+                        current.addProperty("godFreeze",body.get("godFreeze").getAsBoolean());
+                    }else current.addProperty("godFreeze",false);
                     int stoppedMask = body.has("stoppedMask") && body.get("stoppedMask").isJsonPrimitive()
                             && body.getAsJsonPrimitive("stoppedMask").isNumber()
                             ? body.get("stoppedMask").getAsInt() : 0;
@@ -197,6 +201,7 @@ public final class RemoteMachineRegistry {
             throw new IllegalArgumentException("machineType");
         requireBoolean(body, "enabled"); requireBoolean(body, "occupied");
         requireString(body, "gameState");
+        if(body.has("godFreeze"))requireBoolean(body,"godFreeze");
         JsonObject stops = requireObject(body, "displayStops");
         validateStop(stops, "left"); validateStop(stops, "center"); validateStop(stops, "right");
         requireNumber(body, "stoppedMask");
