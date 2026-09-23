@@ -24,14 +24,19 @@ public final class RemoteMachineRegistry {
     );
     private final Map<Integer, JsonObject> machines = new HashMap<>();
     private final Map<Integer, RemoteMachineViewState> views = new HashMap<>();
-    private final LongSupplier time;
+    private final LongSupplier time,wallTimeMs;
 
     public RemoteMachineRegistry() {
-        this(System::nanoTime);
+        this(System::nanoTime,System::currentTimeMillis);
     }
 
     RemoteMachineRegistry(LongSupplier time) {
+        this(time,System::currentTimeMillis);
+    }
+
+    RemoteMachineRegistry(LongSupplier time,LongSupplier wallTimeMs) {
         this.time = Objects.requireNonNull(time);
+        this.wallTimeMs = Objects.requireNonNull(wallTimeMs);
     }
 
     public static boolean isRemote(PacketType type) {
@@ -51,7 +56,7 @@ public final class RemoteMachineRegistry {
             switch (envelope.packetType()) {
                 case REMOTE_MACHINE_SNAPSHOT -> {
                     applySnapshot(machineId, body);
-                    views.put(machineId, RemoteMachineViewState.fromSnapshot(machineId, body, time.getAsLong()));
+                    views.put(machineId, RemoteMachineViewState.fromSnapshot(machineId, body, time.getAsLong(), wallTimeMs.getAsLong()));
                 }
                 case REMOTE_MACHINE_SPIN -> {
                     mutate(machineId, current -> {
@@ -202,6 +207,10 @@ public final class RemoteMachineRegistry {
         requireBoolean(body, "enabled"); requireBoolean(body, "occupied");
         requireString(body, "gameState");
         if(body.has("godFreeze"))requireBoolean(body,"godFreeze");
+        if(body.has("godPresentationStartMs")){
+            requireNumber(body,"godPresentationStartMs");
+            if(body.get("godPresentationStartMs").getAsLong()<0)throw new IllegalArgumentException("godPresentationStartMs");
+        }
         JsonObject stops = requireObject(body, "displayStops");
         validateStop(stops, "left"); validateStop(stops, "center"); validateStop(stops, "right");
         requireNumber(body, "stoppedMask");
