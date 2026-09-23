@@ -48,6 +48,19 @@ public record JugglerGodRuntime(
                 bonusOrigin,godBigCount,godFreeze,lastEvent,0,0,"NONE","NONE",0,false,false,"NONE");
     }
 
+    /** Backward-compatible constructor for existing runtime/test call sites. */
+    public JugglerGodRuntime(Mode mode,int heavenTarget,int heavenProgress,int guaranteedRemaining,
+                             boolean forceChainBig,boolean countNextChainGame,String bonusOrigin,
+                             int godBigCount,boolean godFreeze,String lastEvent,
+                             int additionalBigStock,int additionalRegStock,String pendingBonusHit,
+                             String suspendedBonusType,int suspendedBonusPayoutCount,
+                             boolean suspendedBonusEnded,boolean releasingStock) {
+        this(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
+                bonusOrigin,godBigCount,godFreeze,lastEvent,additionalBigStock,additionalRegStock,
+                pendingBonusHit,suspendedBonusType,suspendedBonusPayoutCount,suspendedBonusEnded,
+                releasingStock,"NONE");
+    }
+
     public static JugglerGodRuntime initial() {
         return new JugglerGodRuntime(Mode.NORMAL,0,0,0,false,false,"NONE",0,false,"NONE",
                 0,0,"NONE","NONE",0,false,false,"NONE");
