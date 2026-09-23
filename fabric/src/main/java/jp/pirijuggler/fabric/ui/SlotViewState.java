@@ -39,8 +39,14 @@ public final class SlotViewState {
                     if(godPresentationStartEpochMs!=presentationEpoch){
                         godPresentationStartEpochMs=presentationEpoch;
                         for(int i=0;i<3;i++)godPresentationStart[i]=display.get(new String[]{"left","center","right"}[i]).getAsDouble();
-                        long elapsedMs=Math.max(0L,wallTimeMs.getAsLong()-presentationEpoch);
-                        godPresentationAt=now-elapsedMs*1_000_000L;
+                        if(godFreeze){
+                            long visualEnd=now;
+                            for(long revealAt:godRevealAt)if(revealAt!=Long.MIN_VALUE)visualEnd=Math.max(visualEnd,revealAt);
+                            godPresentationAt=visualEnd;
+                        }else{
+                            long elapsedMs=Math.max(0L,wallTimeMs.getAsLong()-presentationEpoch);
+                            godPresentationAt=now-elapsedMs*1_000_000L;
+                        }
                     }
                 }else{
                     godPresentationStartEpochMs=0L;godPresentationAt=Long.MIN_VALUE;
@@ -193,6 +199,7 @@ public final class SlotViewState {
     public boolean godPresentationActive(){return godPresentationAt!=Long.MIN_VALUE;}
     public boolean godPresentationLocked(){return godPresentationAt!=Long.MIN_VALUE&&time.getAsLong()-godPresentationAt<GOD_PRESENTATION_LOCK_NANOS;}
     public long godPresentationElapsedMillis(){return godPresentationAt==Long.MIN_VALUE?-1L:Math.max(0L,(time.getAsLong()-godPresentationAt)/1_000_000L);}
+    public long godPresentationStartRemainingNanos(){return godPresentationAt==Long.MIN_VALUE?0L:Math.max(0L,godPresentationAt-time.getAsLong());}
     public long godFreezeElapsedMillis(){return !godFreeze||godFreezeAt==Long.MIN_VALUE?-1L:Math.max(0L,(time.getAsLong()-godFreezeAt)/1_000_000L);}
     public boolean godFreezeInputLocked(){return godFreeze&&time.getAsLong()-spinAt<GOD_FREEZE_INPUT_LOCK_NANOS;}
     public boolean godRevealed(int reel){return reel>=0&&reel<3&&godRevealed[reel]&&godRevealAt[reel]!=Long.MIN_VALUE&&time.getAsLong()>=godRevealAt[reel];}
