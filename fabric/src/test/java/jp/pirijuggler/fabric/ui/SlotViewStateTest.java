@@ -109,8 +109,8 @@ class SlotViewStateTest {
         view.receive(Envelope.current(PacketType.SPIN_START,b));
         assertTrue(view.godFreeze());
         assertTrue(view.godFreezeInputLocked());
-        time.set(899_000_000L);assertFalse(view.canSend(PacketType.STOP_LEFT));
-        time.set(900_000_000L);assertTrue(view.canSend(PacketType.STOP_LEFT));assertFalse(view.godFreezeInputLocked());
+        time.set(1_199_000_000L);assertFalse(view.canSend(PacketType.STOP_LEFT));
+        time.set(1_200_000_000L);assertTrue(view.canSend(PacketType.STOP_LEFT));assertFalse(view.godFreezeInputLocked());
 
         for(String reel:new String[]{"LEFT","CENTER","RIGHT"})
             view.receive(packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\""+reel+"\",\"stopIndex\":0,\"durationMs\":0}"));
