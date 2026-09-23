@@ -109,7 +109,11 @@ public final class SlotViewState {
     public double phase(int reel){
         long now=time.getAsLong();Stop stop=stops[reel];
         if(stop!=null){double p=stop.duration==0?1:Math.min(1,Math.max(0,(now-stop.at)/(double)stop.duration));return p>=1?rest[reel]:machineWrap(stop.from+(stop.target-stop.from)*p);}
-        return spinning?machineWrap(starts[reel]+machineDistance((now-spinAt)/1e9)):machineWrap(rest[reel]);
+        if(!spinning)return machineWrap(rest[reel]);
+        long elapsed=now-spinAt;
+        if(godFreeze&&elapsed<GOD_FREEZE_INPUT_LOCK_NANOS)return machineWrap(starts[reel]);
+        double motionSeconds=(godFreeze?elapsed-GOD_FREEZE_INPUT_LOCK_NANOS:elapsed)/1e9;
+        return machineWrap(starts[reel]+machineDistance(Math.max(0,motionSeconds)));
     }
     public boolean lampOn(){long elapsed=time.getAsLong()-noticeAt;return notice&&(!blink||elapsed>=1_000_000_000L||elapsed/100_000_000L%2==0);}
     public boolean canSend(PacketType action){
