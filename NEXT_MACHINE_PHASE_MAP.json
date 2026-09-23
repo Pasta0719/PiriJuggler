@@ -28,13 +28,13 @@
       "number": 4,
       "file": "next-machine-phases/NEXT_PHASE_04_PRESENTATION.md",
       "title": "Presentation / LCD / Audio / Replaceable Assets",
-      "status": "IN_PROGRESS"
+      "status": "COMPLETE"
     },
     {
       "number": 5,
       "file": "next-machine-phases/NEXT_PHASE_05_RUNTIME_FINAL.md",
       "title": "Recovery / Runtime Acceptance / Final Audit",
-      "status": "BLOCKED_BY_PHASE_04"
+      "status": "IN_PROGRESS"
     }
   ]
 }
