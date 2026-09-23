@@ -2,6 +2,8 @@ package jp.pirijuggler.paper.game;
 
 import com.google.gson.JsonObject;
 import jp.pirijuggler.common.protocol.Envelope;
+import jp.pirijuggler.common.protocol.ErrorCode;
+import jp.pirijuggler.common.protocol.ErrorPackets;
 import jp.pirijuggler.common.protocol.PacketType;
 import jp.pirijuggler.paper.machine.Machine;
 import jp.pirijuggler.paper.reel.InternalRole;
@@ -16,6 +18,10 @@ import java.util.*;
 public final class JugglerGodGameEngine implements GameEngine {
     private static final int GOD_DENOMINATOR=8192;
     private static final int GOD_IN_GOD_BIG_STOCK=7;
+    private static final long GOD_PRESENTATION_LOCK_MS=15_000L;
+    private static final int GOD_PRESENTATION_SEVEN_STOP=3;
+    private static final Set<PacketType> GOD_PRESENTATION_INPUTS=Set.of(
+            PacketType.SPACE_ACTION,PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT);
     private static final int[] CONTINUATION_PERCENT={0,25,30,35,45,55,70};
 
     private final NormalGame delegate;
@@ -56,6 +62,24 @@ public final class JugglerGodGameEngine implements GameEngine {
         JugglerGodRuntime runtime=load(before,machine);
         JugglerGodRuntime prepared=runtime;
         InternalRole forced=null;
+
+        long presentationStart=runtime.godPresentationStartMs();
+        if(presentationStart>0&&now<presentationStart+GOD_PRESENTATION_LOCK_MS
+                &&GOD_PRESENTATION_INPUTS.contains(action))
+            return rejectDuringGodPresentation(before,runtime,sequence,now);
+
+        Session delegateBefore=before;
+        if(presentationStart>0&&now>=presentationStart+GOD_PRESENTATION_LOCK_MS
+                &&before.state()==Session.GameState.BIG_READY&&action==PacketType.SPACE_ACTION){
+            delegateBefore=rewrite(before,Map.of(
+                    "display_left_stop",GOD_PRESENTATION_SEVEN_STOP,
+                    "display_center_stop",GOD_PRESENTATION_SEVEN_STOP,
+                    "display_right_stop",GOD_PRESENTATION_SEVEN_STOP,
+                    "phase_left",(double)GOD_PRESENTATION_SEVEN_STOP,
+                    "phase_center",(double)GOD_PRESENTATION_SEVEN_STOP,
+                    "phase_right",(double)GOD_PRESENTATION_SEVEN_STOP));
+            prepared=runtime.clearPresentation("GOD_PRESENTATION_DONE");
+        }
         boolean suppressNormalSpinCount=false;
 
         boolean normalLever=action==PacketType.SPACE_ACTION
@@ -113,7 +137,7 @@ public final class JugglerGodGameEngine implements GameEngine {
             }
         }
 
-        NormalGame.Transition legacy=delegate.plan(before,action,sequence,machine.setting(),now,receivedNanos,ping,clientPressedIndex,forced);
+        NormalGame.Transition legacy=delegate.plan(delegateBefore,action,sequence,machine.setting(),now,receivedNanos,ping,clientPressedIndex,forced);
         JugglerGodRuntime next=prepared;
         Session rawAfter=legacy.after();
         boolean suppressBonusStart=false;
@@ -204,7 +228,8 @@ public final class JugglerGodGameEngine implements GameEngine {
         }else if(legacy.finished()&&before.state()==Session.GameState.NORMAL_SPINNING
                 &&"GOD".equals(before.text("internal_role"))){
             next=runtime.core(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
-                    "GOD_CHAIN",1,false,"GOD_STARTED");
+                    "GOD_CHAIN",1,false,"GOD_STARTED")
+                    .startPresentation(Math.addExact(now,legacy.publicDelayMs()),"GOD_STARTED");
         }else if(legacy.bonusStarted()!=null&&"GOD_CHAIN".equals(next.bonusOrigin())&&!next.releasingStock()){
             next=recordGodChainBonusStart(next);
         }
@@ -248,6 +273,15 @@ public final class JugglerGodGameEngine implements GameEngine {
                 legacy.finished(),legacy.lever(),bonusStarted,bonusEnded,
                 legacy.publicDelayMs(),legacy.packets(),legacy.afterStart(),scheduled,next.toJsonString()
         );
+    }
+
+    private static GameTransition rejectDuringGodPresentation(Session before,JugglerGodRuntime runtime,long sequence,long now){
+        var values=new LinkedHashMap<>(before.snapshot());
+        values.put("last_client_sequence",sequence);
+        values.put("last_activity",now);
+        Session after=new Session(values);
+        return new GameTransition(UUID.randomUUID(),before,after,0,0,0,false,false,null,false,0,
+                List.of(ErrorPackets.rejected(sequence,ErrorCode.INVALID_STATE)),List.of(),List.of(),runtime.toJsonString());
     }
 
     private String drawBonusOverlay(Machine machine){
