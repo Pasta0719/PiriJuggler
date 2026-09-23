@@ -135,5 +135,38 @@
         "stream": true
       }
     ]
+  },
+  "juggler_god_god_freeze": {
+    "sounds": [
+      "piri:juggler_god_god_freeze"
+    ]
+  },
+  "juggler_god_god_stop_1": {
+    "sounds": [
+      "piri:juggler_god_god_stop_1"
+    ]
+  },
+  "juggler_god_god_stop_2": {
+    "sounds": [
+      "piri:juggler_god_god_stop_2"
+    ]
+  },
+  "juggler_god_god_stop_3": {
+    "sounds": [
+      "piri:juggler_god_god_stop_3"
+    ]
+  },
+  "juggler_god_god_bonus_start": {
+    "sounds": [
+      "piri:juggler_god_god_bonus_start"
+    ]
+  },
+  "juggler_god_god_big_bgm": {
+    "sounds": [
+      {
+        "name": "piri:juggler_god_god_big_bgm",
+        "stream": true
+      }
+    ]
   }
 }
