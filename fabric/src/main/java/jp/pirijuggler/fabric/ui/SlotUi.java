@@ -113,7 +113,7 @@ public final class SlotUi {
                         }else if(state.startsWith("REG_"))PiriSounds.startLoop(sound("reg_bgm"));
                     }
                     if("SEATED_READY".equals(state)){
-                        pendingBigBgmAt=-1L;pendingBigBgmName=null;godBigAudioPending=false;godBigAudioActive=false;PiriSounds.stopLoop();
+                        pendingBigBgmAt=-1L;pendingBigBgmName=null;godBigAudioPending=false;PiriSounds.stopLoop();
                     }
                 }
             }
