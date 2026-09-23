@@ -161,6 +161,11 @@
       "piri:juggler_god_god_bonus_start"
     ]
   },
+  "juggler_god_god_bonus_end": {
+    "sounds": [
+      "piri:juggler_god_god_bonus_end"
+    ]
+  },
   "juggler_god_god_big_bgm": {
     "sounds": [
       {
