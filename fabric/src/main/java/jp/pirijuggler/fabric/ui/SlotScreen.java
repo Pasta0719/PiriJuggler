@@ -83,16 +83,9 @@ public final class SlotScreen extends Screen {
         for(var control:SlotLayout.CONTROLS)drawControl(c,control,v.logicalX(mouseX),v.logicalY(mouseY));
         String message=input.closing()?"離席処理中…":errorText();if(!message.isEmpty())text(c,message,1040,990,2,true);
         if(view.godFreeze()){
-            int alpha;
-            if(godMs<35) alpha=0;
-            else if(godMs<90) alpha=(int)((godMs-35)*205/55);
-            else if(godMs<150) alpha=205+(int)((godMs-90)*50/60);
-            else if(godMs<720) alpha=255;
-            else if(godMs<920) alpha=255-(int)((godMs-720)*95/200);
-            else if(godMs<1120) alpha=160-(int)((godMs-920)*105/200);
-            else if(godMs<1200) alpha=55-(int)((godMs-1120)*55/80);
-            else alpha=0;
-            if(alpha>0)c.fill(0,0,1920,1080,(alpha<<24));
+            // GOD blackout is a hard cut, not a fade. The display drops out in one step,
+            // stays completely black, then returns in one step.
+            if(godMs>=35&&godMs<900)c.fill(0,0,1920,1080,0xff000000);
         }
         c.getMatrices().pop();
     }
