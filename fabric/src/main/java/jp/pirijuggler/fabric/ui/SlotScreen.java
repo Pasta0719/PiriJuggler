@@ -37,7 +37,13 @@ public final class SlotScreen extends Screen {
     @Override public void renderBackground(DrawContext context,int mouseX,int mouseY,float delta){}
     @Override public void render(DrawContext c,int mouseX,int mouseY,float delta){
         c.fill(0,0,width,height,color("SCREEN_OUTSIDE"));var v=SlotLayout.Viewport.fit(width,height);
+        long godMs=view.godFreezeElapsedMillis();
         c.getMatrices().push();c.getMatrices().translate(v.x(),v.y(),0);c.getMatrices().scale((float)v.scale(),(float)v.scale(),1);
+        if(godMs>=70&&godMs<320){
+            int step=(int)((godMs-70)/35)%6;
+            float[] sx={-5,5,-3,3,-2,2},sy={2,-2,1,-1,0,0};
+            c.getMatrices().translate(sx[step],sy[step],0);
+        }
         panel(c,SlotLayout.CABINET,color("CABINET_BG"));
         panel(c,SlotLayout.DATA,color("DISPLAY_BG"));
         panel(c,SlotLayout.DATA_LEFT,color("DISPLAY_BG"));
@@ -46,15 +52,6 @@ public final class SlotScreen extends Screen {
         c.fill(670,300,1570,690,color("REEL_SEPARATOR"));
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;
-            if(view.godFreeze()){
-                c.fill(x,300,x+270,690,0xff000000);
-                if(view.godRevealed(reel)){
-                    c.fill(x+8,405,x+262,585,0xff2a2a2a);
-                    c.fill(x+16,413,x+254,577,0xff5a5a5a);
-                    texture(c,"symbols/bar.png",x+20,420,230,150,320,256,1);
-                }
-                continue;
-            }
             c.fill(x,300,x+270,690,color("REEL_BG"));
             var clip=v.clip(new SlotLayout.Rect(x,300,270,390));c.enableScissor(clip.x(),clip.y(),clip.x()+clip.w(),clip.y()+clip.h());
             double phase=view.phase(reel);int middle=(int)Math.floor(phase);double fraction=phase-middle;
@@ -68,6 +65,20 @@ public final class SlotScreen extends Screen {
                 texture(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,textureWidth,textureHeight,1);
             }
             c.disableScissor();
+            if(view.godFreeze()){
+                if(godMs<620){
+                    int shade=godMs<110?0x00000000:godMs<190?0xd9000000:godMs<290?0xff000000:godMs<430?0xe8000000:0xbf000000;
+                    if(shade!=0)c.fill(x,300,x+270,690,shade);
+                }else if(!view.godRevealed(reel)){
+                    c.fill(x,300,x+270,690,0x66000000);
+                }else{
+                    long age=view.godRevealAgeMillis(reel);
+                    if(age>=0&&age<70)c.fill(x,300,x+270,690,0xb0ffffff);
+                    else if(age<170)c.fill(x,300,x+270,690,0x40ffffff);
+                    c.fill(x+4,490,x+266,494,0xe0ffffff);
+                    c.fill(x+4,586,x+266,590,0xe0ffffff);
+                }
+            }
         }
         var lamp=SlotLayout.LAMP;String name="lamp/piri_chance_"+(view.lampOn()?"on":"off")+".png";
         if(view.lampOn())for(int[] offset:new int[][]{{-4,0},{4,0},{0,4}})texture(c,name,lamp.x()+offset[0],lamp.y()+offset[1],lamp.w(),lamp.h(),512,256,.18f);
@@ -85,6 +96,22 @@ public final class SlotScreen extends Screen {
         if(state.startsWith("BIG_")||state.startsWith("REG_"))text(c,"COUNT "+view.value("bonusCount"),1090,816,2,true);
         for(var control:SlotLayout.CONTROLS)drawControl(c,control,v.logicalX(mouseX),v.logicalY(mouseY));
         String message=input.closing()?"離席処理中…":errorText();if(!message.isEmpty())text(c,message,1040,990,2,true);
+        if(view.godFreeze()){
+            if(godMs>=70&&godMs<120)c.fill(286,201,1634,1044,0x70ffffff);
+            else if(godMs>=120&&godMs<230)c.fill(286,201,1634,1044,0xf0000000);
+            else if(godMs>=230&&godMs<320&&((godMs/35)&1)==0)c.fill(286,201,1634,1044,0x90ffffff);
+            else if(godMs>=320&&godMs<620)c.fill(286,201,1634,1044,0x78000000);
+            else if(godMs>=620&&godMs<900)c.fill(286,201,1634,1044,0x28000000);
+        }
+        if(view.godImpactActive()){
+            long impact=view.godImpactAgeMillis();
+            if(impact<90)c.fill(286,201,1634,1044,0xe8ffffff);
+            else if(impact<240)c.fill(286,201,1634,1044,0x66000000);
+            else if(impact<520){
+                int alpha=(int)Math.max(0,150-(impact-240)*150/280);
+                c.fill(286,201,1634,1044,(alpha<<24)|0x00ffffff);
+            }
+        }
         c.getMatrices().pop();
     }
     private String errorText(){if(view.error().isEmpty())return "";try{return ErrorMessages.japanese(ErrorCode.valueOf(view.error()));}catch(IllegalArgumentException e){return view.error();}}
@@ -176,8 +203,9 @@ public final class SlotScreen extends Screen {
             text(c,"LEVER",r.x()+r.w()/2,r.y()+r.h()-25,2,true);
         }else if(control.name().equals("LEFT")||control.name().equals("CENTER")||control.name().equals("RIGHT")){
             float x=r.x()+(r.w()-88)/2f,y=r.y()+(r.h()-88)/2f;
-            rounded(c,x,y,88,88,44,hover?UiConstants.brighter(color("BUTTON_METAL")):color("BUTTON_METAL"));
-            rounded(c,x+6,y+6,76,76,38,fill);text(c,control.name(),r.x()+r.w()/2,r.y()+r.h()+12,2,true);
+            boolean freezeLocked=view.godFreezeInputLocked();
+            rounded(c,x,y,88,88,44,freezeLocked?color("BUTTON_METAL_DARK"):hover?UiConstants.brighter(color("BUTTON_METAL")):color("BUTTON_METAL"));
+            rounded(c,x+6,y+6,76,76,38,freezeLocked?color("BUTTON_METAL_DARK"):fill);text(c,control.name(),r.x()+r.w()/2,r.y()+r.h()+12,2,true);
         }else{
             rounded(c,r.x(),r.y(),r.w(),r.h(),18,color("BUTTON_METAL_DARK"));rounded(c,r.x()+4,r.y()+4,r.w()-8,r.h()-8,14,fill);
             text(c,control.name(),r.x()+r.w()/2,r.y()+r.h()/2-9,control.name().equals("CASH OUT")?1.5f:2,true);
