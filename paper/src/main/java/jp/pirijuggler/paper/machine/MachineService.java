@@ -13,6 +13,7 @@ import jp.pirijuggler.paper.economy.MedalToken;
 import jp.pirijuggler.paper.economy.VaultBridge;
 import jp.pirijuggler.paper.game.*;
 import jp.pirijuggler.paper.game.god.*;
+import jp.pirijuggler.paper.reel.InternalRole;
 import jp.pirijuggler.paper.session.AdminSessions;
 import jp.pirijuggler.paper.session.Session;
 import jp.pirijuggler.paper.threading.PaperMainThread;
@@ -158,6 +159,9 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length==3 && args[0].equalsIgnoreCase("godrole")) {
                 commandGodRole(sender,Integer.parseInt(args[1]),args[2]); return true;
             }
+            if (args.length==3 && (args[0].equalsIgnoreCase("jugglergodrole") || args[0].equalsIgnoreCase("jgrole"))) {
+                commandJugglerGodRole(sender,Integer.parseInt(args[1]),args[2]); return true;
+            }
             if (args.length >= 2 && args[0].equalsIgnoreCase("key") && args[1].equalsIgnoreCase("give") && args.length <= 3) {
                 Player target = args.length == 3 ? Bukkit.getPlayerExact(args[2]) : sender instanceof Player player ? player : null;
                 if (target == null) throw new DomainException("PLAYER_REQUIRED");
@@ -173,7 +177,7 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length >= 2 && args[0].equalsIgnoreCase("event")) {
                 commandEvent(sender,args); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri jgrole <id> <MISS|REPLAY|GRAPE|CHERRY|BELL|PIERO|BIG|REG|CHERRY_BIG|CHERRY_REG|PIERO_BIG|PIERO_REG|GOD|clear>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
@@ -248,6 +252,28 @@ public final class MachineService implements Listener, CommandExecutor {
                 tell(player,"RECOVER_CASHOUT amount="+plan.amount()+" delivered="+finalDelivered+" pending="+(plan.amount()-finalDelivered));
             });
         });
+    }
+
+    private void commandJugglerGodRole(CommandSender sender,int id,String rawRole) {
+        Machine machine=state.machine(id);
+        if(machine==null||machine.type()!=MachineType.JUGGLER_GOD)throw new DomainException("INVALID_STATE");
+        if(busy(id))throw new DomainException("MACHINE_OCCUPIED");
+
+        final String roleName;
+        if(rawRole.equalsIgnoreCase("clear")) roleName="NONE";
+        else {
+            try { roleName=InternalRole.valueOf(rawRole.toUpperCase(Locale.ROOT)).name(); }
+            catch(IllegalArgumentException invalid){ throw new DomainException("INVALID_STATE"); }
+        }
+
+        JugglerGodRuntime current=JugglerGodRuntime.fromJson(machine.runtimeJson());
+        JugglerGodRuntime next=current.forceRole(roleName);
+        long now=System.currentTimeMillis();
+        submit(sender,null,id,()->{database.setMachineRuntimeJson(id,next.toJsonString(),now);return id;},
+                done->{tell(sender,"NONE".equals(roleName)
+                        ?"JUGGLER_GOD_ROLE_CLEARED id="+done
+                        :"JUGGLER_GOD_ROLE_READY id="+done+" role="+roleName+" nextSpinOnly=true");
+                    remote.machineChanged(done);});
     }
 
     private void commandGodRole(CommandSender sender,int id,String rawRole) {
