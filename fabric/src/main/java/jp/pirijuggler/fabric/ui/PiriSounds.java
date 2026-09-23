@@ -18,6 +18,14 @@ public final class PiriSounds {
         var names=new ArrayList<String>(BASE);
         for(String base:BASE)names.add("juggler_god_"+base);
         names.add("god_freeze");
+        names.addAll(List.of(
+                "juggler_god_god_freeze",
+                "juggler_god_god_stop_1",
+                "juggler_god_god_stop_2",
+                "juggler_god_god_stop_3",
+                "juggler_god_god_bonus_start",
+                "juggler_god_god_big_bgm"
+        ));
         NAMES=List.copyOf(names);
     }
     private static final Map<String,SoundEvent> EVENTS=new HashMap<>();
@@ -40,7 +48,7 @@ public final class PiriSounds {
     }
     public static void play(String name){if(available(name))MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(EVENTS.get(name),1));}
     public static void startLoop(String name){
-        if(!name.equals("big_bgm")&&!name.equals("reg_bgm")&&!name.equals("juggler_god_big_bgm")&&!name.equals("juggler_god_reg_bgm"))throw new IllegalArgumentException(name);if(name.equals(loopName)&&loop!=null)return;stopLoop();
+        if(!name.equals("big_bgm")&&!name.equals("reg_bgm")&&!name.equals("juggler_god_big_bgm")&&!name.equals("juggler_god_reg_bgm")&&!name.equals("juggler_god_god_big_bgm"))throw new IllegalArgumentException(name);if(name.equals(loopName)&&loop!=null)return;stopLoop();
         if(!available(name))return;loopName=name;loop=new LoopSound(EVENTS.get(name));MinecraftClient.getInstance().getSoundManager().play(loop);
     }
     public static void stopLoop(){if(loop!=null)MinecraftClient.getInstance().getSoundManager().stop(loop);loop=null;loopName=null;}
