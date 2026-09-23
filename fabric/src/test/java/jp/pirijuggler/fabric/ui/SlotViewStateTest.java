@@ -120,4 +120,26 @@ class SlotViewStateTest {
     }
 
 
+    @Test void completedGodResultStaysBlackWithAllBarsUntilNextSpin(){
+        var time=new AtomicLong();
+        var view=new SlotViewState(time::get);
+        view.receive(packet(PacketType.OPEN_MACHINE,"{\"sessionId\":\""+ID+"\",\"machineId\":1,\"machineType\":\"JUGGLER_GOD\"}"));
+        var b=start().payload();b.addProperty("godFreeze",true);
+        view.receive(Envelope.current(PacketType.SPIN_START,b));
+
+        for(String reel:new String[]{"LEFT","CENTER","RIGHT"})
+            view.receive(packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\""+reel+"\",\"stopIndex\":0,\"durationMs\":0}"));
+
+        view.receive(packet(PacketType.PUBLIC_STATE,
+                "{\"sessionId\":\""+ID+"\",\"machineId\":1,\"gameState\":\"BIG_READY\",\"credit\":47,\"bet\":0,\"pay\":15,\"heldMedals\":0,\"bonusCount\":0,\"lampOn\":true,\"displayStops\":{\"left\":0,\"center\":0,\"right\":0},\"stoppedMask\":0}"));
+        assertTrue(view.godFreeze(),"GOD reel window must not recover after the third stop");
+        assertTrue(view.godRevealed(0));assertTrue(view.godRevealed(1));assertTrue(view.godRevealed(2));
+        assertTrue(view.lampOn(),"Piri Chance must be lit for the confirmed GOD result");
+
+        var next=start().payload();next.addProperty("spinId","00000000-0000-0000-0000-000000000003");
+        view.receive(Envelope.current(PacketType.SPIN_START,next));
+        assertFalse(view.godFreeze(),"the following BIG spin owns the next presentation");
+        assertFalse(view.godRevealed(0));assertFalse(view.godRevealed(1));assertFalse(view.godRevealed(2));
+    }
+
 }
