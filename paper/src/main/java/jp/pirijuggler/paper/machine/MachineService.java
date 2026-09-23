@@ -135,10 +135,11 @@ public final class MachineService implements Listener, CommandExecutor {
                 if(setting<1||setting>6||count<1||count>100_000_000L)throw new DomainException("INVALID_STATE");
                 if(simulating)throw new DomainException("BUSY");
                 var tuning=jp.pirijuggler.paper.database.StartupProfile.map(config.get("juggler_god"));
-                long normalPpm=((Number)tuning.getOrDefault("normal_to_heaven_ppm",0)).longValue();
+                long normalBigPpm=((Number)tuning.getOrDefault("normal_big_to_heaven_ppm",0)).longValue();
+                long normalRegPpm=((Number)tuning.getOrDefault("normal_reg_to_heaven_ppm",0)).longValue();
                 long heavenPpm=((Number)tuning.getOrDefault("heaven_to_heaven_ppm",0)).longValue();
                 simulating=true;var rng=random.runtimeSimulation();
-                tell(sender,"GOD_SIMULATOR_STARTED setting="+setting+" games="+count+" normalToHeavenPpm="+normalPpm+" heavenToHeavenPpm="+heavenPpm);
+                tell(sender,"GOD_SIMULATOR_STARTED setting="+setting+" games="+count+" normalBigToHeavenPpm="+normalBigPpm+" normalRegToHeavenPpm="+normalRegPpm+" heavenToHeavenPpm="+heavenPpm);
                 plugin.executors().simulator(
                         ()->JugglerGodSimulator.run(weights,setting,count,normalPpm,heavenPpm,rng),
                         (result,error)->{
