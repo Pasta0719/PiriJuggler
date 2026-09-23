@@ -94,9 +94,9 @@ public final class JugglerGodGameEngine implements GameEngine {
                 if(progress>=runtime.heavenTarget())
                     forced=weights.drawBonusFamily(machine.setting(),random.gameplay(machine.id()));
                 else
-                    forced=weights.drawJugglerGodNonBonus(machine.setting(),random.gameplay(machine.id()),bonusScalePpm[machine.setting()]);
+                    forced=weights.drawJugglerGodNonBonus(machine.setting(),random.gameplay(machine.id()),bonusScalePpm[machine.setting()],smallRoleScalePpm[machine.setting()]);
             }else{
-                forced=weights.drawJugglerGod(machine.setting(),random.gameplay(machine.id()),bonusScalePpm[machine.setting()]);
+                forced=weights.drawJugglerGod(machine.setting(),random.gameplay(machine.id()),bonusScalePpm[machine.setting()],smallRoleScalePpm[machine.setting()]);
             }
         }
 
@@ -240,7 +240,7 @@ public final class JugglerGodGameEngine implements GameEngine {
     private String drawBonusOverlay(Machine machine){
         var rng=random.gameplay(machine.id());
         if(rng.nextInt(GOD_DENOMINATOR)==0)return "GOD";
-        InternalRole role=weights.drawJugglerGod(machine.setting(),rng,bonusScalePpm[machine.setting()]);
+        InternalRole role=weights.drawJugglerGod(machine.setting(),rng,bonusScalePpm[machine.setting()],smallRoleScalePpm[machine.setting()]);
         String bonus=GameRules.bonus(role);
         return bonus==null?"NONE":bonus;
     }
