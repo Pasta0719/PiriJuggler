@@ -81,11 +81,14 @@ public final class WorldCabinetRenderer {
         quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.015,CabinetPlacement.HEIGHT-.015,.0006,UiConstants.color("CABINET_BG"),0,0,1,1);
 
         // SlotScreen reel separator: (670,300)-(1570,690), mapped inside CABINET.
-        rect(consumers,WHITE,basis,camera,670,300,900,390,.0010,UiConstants.color("REEL_SEPARATOR"),0,0,1,1);
+        boolean godBlackout=state.godFreeze();
+        rect(consumers,WHITE,basis,camera,670,300,900,390,.0010,
+                godBlackout?0xff111111:UiConstants.color("REEL_SEPARATOR"),0,0,1,1);
 
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;
-            rect(consumers,WHITE,basis,camera,x,300,270,390,.0015,UiConstants.color("REEL_BG"),0,0,1,1);
+            rect(consumers,WHITE,basis,camera,x,300,270,390,.0015,
+                    godBlackout?0xff141414:UiConstants.color("REEL_BG"),0,0,1,1);
 
             double phase=state.phase(reel,now);
             int middle=(int)Math.floor(phase);
@@ -96,7 +99,12 @@ public final class WorldCabinetRenderer {
                 double sw=wide?230:130;
                 double sh=symbol.equals("bar")?150:130;
                 double sy=430+(row-fraction)*130-(sh-130)/2.0;
-                symbol(consumers,basis,camera,state.machineType(),symbol,x+(270-sw)/2.0,sy,sw,sh,300,690);
+                symbolTint(consumers,basis,camera,state.machineType(),symbol,x+(270-sw)/2.0,sy,sw,sh,300,690,
+                        godBlackout?0xff202020:0xffffffff);
+            }
+
+            if(godBlackout&&state.godRevealed(reel,now)){
+                symbolTint(consumers,basis,camera,state.machineType(),"bar",x+20,420,230,150,300,690,0xffffffff);
             }
         }
 
@@ -148,10 +156,15 @@ public final class WorldCabinetRenderer {
 
     private static void symbol(VertexConsumerProvider c,CabinetPlacement.Basis b,Vec3d cam,String machineType,String symbol,
                                double x,double y,double w,double h,double clipTop,double clipBottom){
+        symbolTint(c,b,cam,machineType,symbol,x,y,w,h,clipTop,clipBottom,0xffffffff);
+    }
+
+    private static void symbolTint(VertexConsumerProvider c,CabinetPlacement.Basis b,Vec3d cam,String machineType,String symbol,
+                                   double x,double y,double w,double h,double clipTop,double clipBottom,int tint){
         double y0=Math.max(y,clipTop), y1=Math.min(y+h,clipBottom);
         if(y1<=y0)return;
         float v0=(float)((y0-y)/h),v1=(float)((y1-y)/h);
-        rect(c,JugglerGodAssets.texture(machineType,"symbols/"+symbol+".png"),b,cam,x,y0,w,y1-y0,.0025,0xffffffff,0,v0,1,v1);
+        rect(c,JugglerGodAssets.texture(machineType,"symbols/"+symbol+".png"),b,cam,x,y0,w,y1-y0,.0025,tint,0,v0,1,v1);
     }
 
     private static void rect(VertexConsumerProvider c,Identifier tex,CabinetPlacement.Basis b,Vec3d cam,
