@@ -261,9 +261,13 @@ try:
         progress("GOD_GUARANTEED_BIG_COMPLETE",index=guaranteed_index,**snapshot())
 
     runtime=json.loads(session()["machine_state_json"])
-    check("five guaranteed GOD BIGs completed",runtime["godBigCount"]==5,
+    # Bonus-in-bonus stock can be released after a GOD-chain BIG. Those visible
+    # stock BIGs are intentionally counted by godBigCount as GOD-origin BIGs,
+    # so the acceptance condition is at least the five guaranteed GOD BIGs.
+    check("five guaranteed GOD BIGs completed",runtime["godBigCount"]>=5,
           {"runtime":runtime,"stats":dbrows("SELECT total_games,current_games,big_count FROM machine_period_stats WHERE machine_id=1")[0]})
-    # After the fifth BIG, state is either one-game continuation or guaranteed heaven.
+    # After the guaranteed chain has been consumed, state is either a one-game
+    # continuation or heaven. Extra visible stock may make godBigCount > 5.
     check("post-guarantee state is continuation or heaven",
           runtime["jgMode"] in ("GOD_CHAIN","HEAVEN") and (
               runtime["jgMode"]=="HEAVEN" or runtime["countNextChainGame"] is True),
