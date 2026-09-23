@@ -121,12 +121,11 @@ public final class SlotScreen extends Screen {
         for(int reel=0;reel<3;reel++)if(view.godRevealed(reel)){
             int x=670+315*reel;
             long age=view.godRevealAgeMillis(reel);
-            if(age>=0&&age<90){
-                int a=(int)(180*(1.0-age/90.0));
-                c.fill(x+3,401,x+267,589,(Math.max(0,a)<<24)|0x00ffffff);
+            if(age>=0&&age<120){
+                float glow=(float)Math.max(0,.24*(1.0-age/120.0));
+                texture(c,"symbols/bar.png",x+14,414,242,162,320,256,glow);
+                texture(c,"symbols/bar.png",x+18,418,234,154,320,256,glow);
             }
-            c.fill(x+7,405,x+263,585,0xff070707);
-            c.fill(x+11,409,x+259,581,0xff181818);
             texture(c,"symbols/bar.png",x+20,420,230,150,320,256,1);
         }
     }
