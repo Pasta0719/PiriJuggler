@@ -31,7 +31,16 @@ tasks.processResources {
         )
     }
     val userAudio = rootProject.file("user-audio")
-    val names = listOf("notice", "notice_strong", "tenpai", "bet", "lever", "stop", "payout", "error", "bonus_start", "bonus_end", "big_bgm", "reg_bgm")
+    val names = listOf(
+        "notice", "notice_strong", "tenpai", "bet", "lever", "stop", "payout", "error",
+        "bonus_start", "bonus_end", "big_bgm", "reg_bgm", "god_freeze",
+        "juggler_god_notice", "juggler_god_notice_strong", "juggler_god_tenpai",
+        "juggler_god_bet", "juggler_god_lever", "juggler_god_stop", "juggler_god_payout",
+        "juggler_god_error", "juggler_god_bonus_start", "juggler_god_bonus_end",
+        "juggler_god_big_bgm", "juggler_god_reg_bgm",
+        "juggler_god_god_freeze", "juggler_god_god_stop_1", "juggler_god_god_stop_2",
+        "juggler_god_god_stop_3", "juggler_god_god_bonus_start", "juggler_god_god_big_bgm"
+    )
     from(userAudio) {
         include(names.map { "$it.ogg" })
         into("assets/piri/sounds")
