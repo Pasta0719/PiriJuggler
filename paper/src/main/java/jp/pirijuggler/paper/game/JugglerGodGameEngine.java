@@ -25,6 +25,7 @@ public final class JugglerGodGameEngine implements GameEngine {
     private final long normalRegToHeavenPpm;
     private final long heavenToHeavenPpm;
     private final int[] bonusScalePpm=new int[7];
+    private final int[] smallRoleScalePpm=new int[7];
 
     public JugglerGodGameEngine(NormalGame delegate,RandomStreams random,RoleWeights weights,Map<String,Object> config) {
         this.delegate=Objects.requireNonNull(delegate);
@@ -38,13 +39,15 @@ public final class JugglerGodGameEngine implements GameEngine {
         for(int setting=1;setting<=6;setting++){
             Map<String,Object> row=map(settings.get(Integer.toString(setting)));
             bonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
+            smallRoleScalePpm[setting]=(int)number(row.get("small_role_scale_ppm"),1_000_000);
         }
         if(normalBigToHeavenPpm<0||normalBigToHeavenPpm>1_000_000
                 ||normalRegToHeavenPpm<0||normalRegToHeavenPpm>1_000_000
                 ||heavenToHeavenPpm<0||heavenToHeavenPpm>1_000_000)
             throw new IllegalArgumentException("JUGGLER_GOD heaven tuning");
-        for(int setting=1;setting<=6;setting++)if(bonusScalePpm[setting]<0||bonusScalePpm[setting]>1_000_000)
-            throw new IllegalArgumentException("JUGGLER_GOD bonus scale");
+        for(int setting=1;setting<=6;setting++)if(bonusScalePpm[setting]<0||bonusScalePpm[setting]>1_000_000
+                ||smallRoleScalePpm[setting]<0||smallRoleScalePpm[setting]>1_000_000)
+            throw new IllegalArgumentException("JUGGLER_GOD role scale");
     }
 
     @Override
