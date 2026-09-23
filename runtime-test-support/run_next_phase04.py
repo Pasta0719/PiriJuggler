@@ -52,6 +52,12 @@ try:
  ordinary=asset_probe('JUGGLER','gui/reel_strip.png')
  check('ordinary JUGGLER keeps ordinary asset routing',
        ordinary.get('resolved')=='piri:textures/gui/reel_strip.png',ordinary)
+ override=asset_probe('JUGGLER_GOD','gui/runtime_probe.txt')
+ check('successor-specific asset overrides ordinary namespace in real client',
+       override.get('resolved')=='piri:textures/juggler_god/gui/runtime_probe.txt' and override.get('available') is True,override)
+ ordinary_fixture=asset_probe('JUGGLER','gui/runtime_probe.txt')
+ check('successor fixture does not rebind ordinary JUGGLER',
+       ordinary_fixture.get('resolved')=='piri:textures/gui/runtime_probe.txt' and ordinary_fixture.get('available') is False,ordinary_fixture)
  action('aim',x=0); command('piri machine create JUGGLER_GOD','MACHINE_CREATED 1'); click(); wait(lambda:settled() and session()['game_state']=='SEATED_READY','seat'); check('production SlotScreen opens successor',cli().get('screen')=='SlotScreen' and cli().get('machineType')=='JUGGLER_GOD',{'screen':cli().get('screen'),'machineType':cli().get('machineType')}); capture('open')
  command('piritest fund','TEST_FUNDED'); action('close'); wait(lambda:not session() or session().get('lifecycle')!='ACTIVE','close'); click(); wait(lambda:settled() and session()['credit']==50,'reopen'); command('piritest force god','TEST_FORCE_ARMED GOD'); tap(32); wait(lambda:session()['game_state']=='NORMAL_BETTED','bet'); tap(32); wait(lambda:settled() and session()['game_state']=='NORMAL_SPINNING' and cli().get('stopEnabled'),'GOD lever'); check('authoritative GOD blackout state reaches client',cli().get('godFreeze') is True and cli().get('godRevealed')==[False,False,False],{'godFreeze':cli().get('godFreeze'),'godRevealed':cli().get('godRevealed')}); capture('god-blackout')
  tap(263); wait(lambda:cli().get('godRevealed',[False]*3)[0] is True,'left reveal'); check('first stop reveals only first GOD reel',cli().get('godRevealed')==[True,False,False],cli().get('godRevealed')); capture('god-left-reveal'); tap(264); wait(lambda:cli().get('godRevealed',[False]*3)[:2]==[True,True],'center reveal'); capture('god-two-reveal'); tap(262); wait(lambda:settled() and session()['game_state']=='BIG_READY','GOD settle'); capture('god-big-ready')
