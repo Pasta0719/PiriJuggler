@@ -39,7 +39,8 @@ def click():
 def capture(label): action('capture',label=label); time.sleep(1)
 def asset_probe(machine_type,ordinary_path):
  before=len(cli().get('actions',[])); action('asset_probe',machineType=machine_type,ordinaryPath=ordinary_path)
- acts=cli().get('actions',[]); return acts[-1] if len(acts)>before else {}
+ acts=cli().get('actions',[]); matches=[a for a in acts[before:] if a.get('machineType')==machine_type and a.get('ordinaryPath')==ordinary_path]
+ return matches[-1] if matches else {}
 try:
  plugins=SERVER/'plugins'; plugins.mkdir(parents=True,exist_ok=True); shutil.copy2(prod['paper'],plugins); shutil.copy2(helper,plugins); (SERVER/'eula.txt').write_text('eula=true\n'); (SERVER/'server.properties').write_text('server-ip=127.0.0.1\nserver-port=25598\nonline-mode=false\nenforce-secure-profile=false\nspawn-protection=0\nview-distance=2\nsimulation-distance=2\ngenerate-structures=false\n')
  sr=OUT/'server-result.json'; sh=(OUT/'server.log').open('w',encoding='utf-8'); handles.append(sh); server=subprocess.Popen([JAVA,'-Xms512M','-Xmx1536M','-Dfile.encoding=UTF-8','-Dpiri.runtime.phase=next02',f'-Dpiri.runtime.serverResult={sr}','-jar',str(PAPER),'nogui'],cwd=SERVER,stdin=subprocess.PIPE,stdout=sh,stderr=subprocess.STDOUT,text=True,creationflags=FLAGS); wait(lambda:'Done (' in log(OUT/'server.log') and state().get('ready'),'Paper',180)
