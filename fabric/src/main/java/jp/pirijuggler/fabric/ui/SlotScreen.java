@@ -82,13 +82,61 @@ public final class SlotScreen extends Screen {
         if(state.startsWith("BIG_")||state.startsWith("REG_"))text(c,"COUNT "+view.value("bonusCount"),1090,816,2,true);
         for(var control:SlotLayout.CONTROLS)drawControl(c,control,v.logicalX(mouseX),v.logicalY(mouseY));
         String message=input.closing()?"離席処理中…":errorText();if(!message.isEmpty())text(c,message,1040,990,2,true);
-        if(view.godFreeze()){
-            // GOD blackout is a hard cut, not a fade. The display drops out in one step,
-            // stays completely black, then returns in one step.
-            if(godMs>=35&&godMs<900)c.fill(0,0,1920,1080,0xff000000);
-        }
+        if(view.godFreeze())drawGodBlackout(c,godMs);
         c.getMatrices().pop();
     }
+    private static void drawGodBlackout(DrawContext c,long ms){
+        if(ms<35)return;
+
+        // The GOD blackout is an event, not a black rectangle or a fade:
+        // the picture tears into horizontal bands, collapses toward the centre,
+        // leaves a short bright scan-line, then the signal is completely gone.
+        if(ms<70){
+            int p=(int)(ms-35);
+            for(int y=0;y<1080;y+=54){
+                int band=Math.min(1920,p*(32+(y/54%4)*7));
+                if(((y/54)&1)==0)c.fill(0,y,band,Math.min(1080,y+30),0xff000000);
+                else c.fill(1920-band,y,1920,Math.min(1080,y+30),0xff000000);
+            }
+            return;
+        }
+
+        if(ms<120){
+            float p=(ms-70)/50.0f;
+            p=p*p;
+            int closed=Math.min(540,(int)(540*p));
+            c.fill(0,0,1920,closed,0xff000000);
+            c.fill(0,1080-closed,1920,1080,0xff000000);
+
+            int centreTop=closed,centreBottom=1080-closed;
+            for(int y=centreTop;y<centreBottom;y+=34){
+                if(((y/34)&1)==0)c.fill(0,y,1920,Math.min(centreBottom,y+5),0x9a000000);
+            }
+            return;
+        }
+
+        if(ms<165){
+            c.fill(0,0,1920,1080,0xff000000);
+            float p=(ms-120)/45.0f;
+            int half=(int)(960*(1.0f-p));
+            int thickness=Math.max(2,(int)(10*(1.0f-p)));
+            c.fill(960-half,540-thickness,960+half,540+thickness,0xffffffff);
+            return;
+        }
+
+        if(ms<900){
+            c.fill(0,0,1920,1080,0xff000000);
+            return;
+        }
+
+        // A very short signal-kick before the picture is handed back to the normal renderer.
+        if(ms<940){
+            c.fill(0,0,1920,1080,0xff000000);
+            int half=(int)(960*((ms-900)/40.0f));
+            c.fill(960-half,538,960+half,542,0xd8ffffff);
+        }
+    }
+
     private String errorText(){if(view.error().isEmpty())return "";try{return ErrorMessages.japanese(ErrorCode.valueOf(view.error()));}catch(IllegalArgumentException e){return view.error();}}
     private void data(DrawContext c,double mx,double my){
         JsonObject data=view.dataLamp();
