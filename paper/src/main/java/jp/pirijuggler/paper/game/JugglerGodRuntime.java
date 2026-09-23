@@ -22,7 +22,8 @@ public record JugglerGodRuntime(
         int suspendedBonusPayoutCount,
         boolean suspendedBonusEnded,
         boolean releasingStock,
-        String forcedRole
+        String forcedRole,
+        long godPresentationStartMs
 ) {
     public enum Mode { NORMAL, HEAVEN, GOD_CHAIN }
 
@@ -34,6 +35,7 @@ public record JugglerGodRuntime(
         if (godBigCount < 0) throw new IllegalArgumentException("godBigCount");
         if (additionalBigStock < 0 || additionalRegStock < 0) throw new IllegalArgumentException("additionalStock");
         if (suspendedBonusPayoutCount < 0) throw new IllegalArgumentException("suspendedBonusPayoutCount");
+        if (godPresentationStartMs < 0) throw new IllegalArgumentException("godPresentationStartMs");
         if (bonusOrigin == null) bonusOrigin = "NONE";
         if (lastEvent == null) lastEvent = "NONE";
         if (pendingBonusHit == null) pendingBonusHit = "NONE";
@@ -45,7 +47,7 @@ public record JugglerGodRuntime(
                              boolean forceChainBig,boolean countNextChainGame,String bonusOrigin,
                              int godBigCount,boolean godFreeze,String lastEvent) {
         this(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
-                bonusOrigin,godBigCount,godFreeze,lastEvent,0,0,"NONE","NONE",0,false,false,"NONE");
+                bonusOrigin,godBigCount,godFreeze,lastEvent,0,0,"NONE","NONE",0,false,false,"NONE",0);
     }
 
     /** Backward-compatible constructor for existing runtime/test call sites. */
@@ -58,12 +60,12 @@ public record JugglerGodRuntime(
         this(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,godFreeze,lastEvent,additionalBigStock,additionalRegStock,
                 pendingBonusHit,suspendedBonusType,suspendedBonusPayoutCount,suspendedBonusEnded,
-                releasingStock,"NONE");
+                releasingStock,"NONE",0);
     }
 
     public static JugglerGodRuntime initial() {
         return new JugglerGodRuntime(Mode.NORMAL,0,0,0,false,false,"NONE",0,false,"NONE",
-                0,0,"NONE","NONE",0,false,false,"NONE");
+                0,0,"NONE","NONE",0,false,false,"NONE",0);
     }
 
     public boolean stockLampOn(){return additionalBigStock>0||additionalRegStock>0;}
@@ -74,13 +76,13 @@ public record JugglerGodRuntime(
         return new JugglerGodRuntime(nextMode,nextHeavenTarget,nextHeavenProgress,nextGuaranteedRemaining,
                 nextForceChainBig,nextCountNextChainGame,nextBonusOrigin,nextGodBigCount,nextGodFreeze,nextLastEvent,
                 additionalBigStock,additionalRegStock,pendingBonusHit,suspendedBonusType,
-                suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,forcedRole);
+                suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,forcedRole,godPresentationStartMs);
     }
 
     public JugglerGodRuntime stock(int big,int reg,String event) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,godFreeze,event,big,reg,pendingBonusHit,suspendedBonusType,
-                suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,forcedRole);
+                suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,forcedRole,godPresentationStartMs);
     }
 
     public JugglerGodRuntime interrupt(String hit,String currentType,int payoutCount,boolean ended,String event) {
@@ -129,17 +131,28 @@ public record JugglerGodRuntime(
                     value(j,"suspendedBonusPayoutCount",0),
                     bool(j,"suspendedBonusEnded",false),
                     bool(j,"releasingStock",false),
-                    text(j,"forcedRole","NONE")
+                    text(j,"forcedRole","NONE"),
+                    longValue(j,"godPresentationStartMs",0)
             );
         } catch (RuntimeException invalid) {
             return initial();
         }
     }
 
+    public JugglerGodRuntime startPresentation(long startMs,String event) {
+        return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
+                bonusOrigin,godBigCount,godFreeze,event,additionalBigStock,additionalRegStock,pendingBonusHit,
+                suspendedBonusType,suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,forcedRole,startMs);
+    }
+
+    public JugglerGodRuntime clearPresentation(String event) {
+        return startPresentation(0,event);
+    }
+
     public JugglerGodRuntime forceRole(String role) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,godFreeze,lastEvent,additionalBigStock,additionalRegStock,pendingBonusHit,
-                suspendedBonusType,suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,role==null?"NONE":role);
+                suspendedBonusType,suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,role==null?"NONE":role,godPresentationStartMs);
     }
 
     public JsonObject toJson() {
@@ -162,12 +175,14 @@ public record JugglerGodRuntime(
         j.addProperty("suspendedBonusEnded",suspendedBonusEnded);
         j.addProperty("releasingStock",releasingStock);
         j.addProperty("forcedRole",forcedRole);
+        j.addProperty("godPresentationStartMs",godPresentationStartMs);
         return j;
     }
 
     public String toJsonString(){return toJson().toString();}
 
     private static int value(JsonObject j,String key,int fallback){return j.has(key)?j.get(key).getAsInt():fallback;}
+    private static long longValue(JsonObject j,String key,long fallback){return j.has(key)?j.get(key).getAsLong():fallback;}
     private static boolean bool(JsonObject j,String key,boolean fallback){return j.has(key)?j.get(key).getAsBoolean():fallback;}
     private static String text(JsonObject j,String key,String fallback){return j.has(key)?j.get(key).getAsString():fallback;}
 }
