@@ -24,6 +24,7 @@ public final class PiriSounds {
                 "juggler_god_god_stop_2",
                 "juggler_god_god_stop_3",
                 "juggler_god_god_bonus_start",
+                "juggler_god_god_bonus_end",
                 "juggler_god_god_big_bgm"
         ));
         NAMES=List.copyOf(names);
