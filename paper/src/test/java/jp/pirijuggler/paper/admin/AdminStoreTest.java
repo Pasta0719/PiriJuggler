@@ -2,7 +2,9 @@ package jp.pirijuggler.paper.admin;
 
 import jp.pirijuggler.paper.config.ConfigValidation;
 import jp.pirijuggler.paper.database.PiriDatabase;
+import jp.pirijuggler.paper.game.JugglerGodRuntime;
 import jp.pirijuggler.paper.machine.Machine;
+import jp.pirijuggler.paper.machine.MachineType;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -57,6 +59,26 @@ class AdminStoreTest {
         assertEquals(0,scalar("SELECT count(*) FROM juggler_god_history WHERE machine_id=? AND business_period_id=?",id,state.period()));
         assertEquals(1,scalar("SELECT count(*) FROM graph_points WHERE machine_id=? AND business_period_id=?",id,state.period()));
         assertEquals(0,scalar("SELECT game FROM graph_points WHERE machine_id=? AND business_period_id=?",id,state.period()));
+    }
+
+    @Test void dailyResetClearsAllJugglerGodRuntimeBenefits() throws Exception {
+        var location=new Machine.Location(UUID.randomUUID(),"world",9,64,0,"NORTH");
+        int id=db.create(location,MachineType.JUGGLER_GOD,NOW);
+        var boosted=new JugglerGodRuntime(
+                JugglerGodRuntime.Mode.GOD_CHAIN,7,12,4,true,true,"GOD_CHAIN",1,true,"GOD_STARTED",
+                3,2,"BIG","BIG",100,false,true,"GOD",1234L);
+        db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",boosted.toJsonString(),id);
+
+        store.resetDaily(db.state(),id,NOW+10);
+
+        var reset=JugglerGodRuntime.fromJson(db.state().machine(id).runtimeJson());
+        assertEquals(JugglerGodRuntime.initial(),reset);
+        assertEquals(JugglerGodRuntime.Mode.NORMAL,reset.mode());
+        assertEquals(0,reset.guaranteedRemaining());
+        assertEquals(0,reset.additionalBigStock());
+        assertEquals(0,reset.additionalRegStock());
+        assertEquals("NONE",reset.forcedRole());
+        assertEquals(0,reset.godPresentationStartMs());
     }
 
     @Test void resetAllIsOneTransactionAndNextProfileCanBeSetAndCleared() throws Exception {
