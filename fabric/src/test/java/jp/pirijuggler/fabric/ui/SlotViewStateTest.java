@@ -164,4 +164,43 @@ class SlotViewStateTest {
         assertTrue(view.godFreezeElapsedMillis()>=165);
     }
 
+    @Test void godPostHitReverseStopsOnCenterSevensAtTwelvePointSevenAndUnlocksAtFifteen(){
+        var nanos=new AtomicLong();
+        var millis=new AtomicLong(100_000L);
+        var view=new SlotViewState(nanos::get,millis::get);
+        view.receive(packet(PacketType.OPEN_MACHINE,"{\"sessionId\":\""+ID+"\",\"machineId\":1,\"machineType\":\"JUGGLER_GOD\"}"));
+        view.receive(packet(PacketType.PUBLIC_STATE,
+                "{\"sessionId\":\""+ID+"\",\"machineId\":1,\"gameState\":\"BIG_READY\",\"credit\":47,\"bet\":0,\"pay\":15,\"heldMedals\":0,\"bonusCount\":0,\"lampOn\":true,\"godFreeze\":false,\"godPresentationStartMs\":100000,\"displayStops\":{\"left\":9,\"center\":11,\"right\":4},\"stoppedMask\":7}"));
+
+        assertTrue(view.godPresentationActive());
+        assertTrue(view.godPresentationLocked());
+        assertEquals(9,view.phase(0),1e-9);
+        assertEquals(11,view.phase(1),1e-9);
+        assertEquals(4,view.phase(2),1e-9);
+        assertFalse(view.canSend(PacketType.SPACE_ACTION));
+
+        nanos.set(6_350_000_000L);
+        assertNotEquals(9,view.phase(0),1e-6);
+        assertNotEquals(11,view.phase(1),1e-6);
+        assertNotEquals(4,view.phase(2),1e-6);
+
+        nanos.set(12_700_000_000L);
+        assertEquals(3,view.phase(0),1e-9);
+        assertEquals(3,view.phase(1),1e-9);
+        assertEquals(3,view.phase(2),1e-9);
+        assertTrue(view.godPresentationLocked(),"777 must hold while controls remain locked");
+
+        nanos.set(14_999_999_999L);
+        assertFalse(view.canSend(PacketType.SPACE_ACTION));
+        nanos.set(15_000_000_000L);
+        assertTrue(view.canSend(PacketType.SPACE_ACTION));
+
+        view.receive(packet(PacketType.PUBLIC_STATE,
+                "{\"sessionId\":\""+ID+"\",\"machineId\":1,\"gameState\":\"BIG_BETTED\",\"credit\":45,\"bet\":2,\"pay\":0,\"heldMedals\":0,\"bonusCount\":0,\"lampOn\":true,\"godFreeze\":false,\"godPresentationStartMs\":0,\"displayStops\":{\"left\":3,\"center\":3,\"right\":3},\"stoppedMask\":7}"));
+        assertFalse(view.godPresentationActive());
+        assertEquals(3,view.phase(0),1e-9);
+        assertEquals(3,view.phase(1),1e-9);
+        assertEquals(3,view.phase(2),1e-9);
+    }
+
 }
