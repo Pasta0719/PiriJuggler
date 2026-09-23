@@ -78,7 +78,8 @@ public final class WorldCabinetRenderer {
 
         // Exact SlotScreen cabinet palette: gold edge + burgundy face.
         quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH,CabinetPlacement.HEIGHT,0,UiConstants.color("CABINET_EDGE"),0,0,1,1);
-        quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.015,CabinetPlacement.HEIGHT-.015,.0006,UiConstants.color("CABINET_BG"),0,0,1,1);
+        int cabinetBg="JUGGLER_GOD".equals(state.machineType())?UiConstants.color("JUGGLER_GOD_CABINET_BG"):UiConstants.color("CABINET_BG");
+        quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.015,CabinetPlacement.HEIGHT-.015,.0006,cabinetBg,0,0,1,1);
 
         // SlotScreen reel separator: (670,300)-(1570,690), mapped inside CABINET.
         boolean godBlackout=state.godFreeze();

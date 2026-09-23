@@ -40,7 +40,8 @@ public final class SlotScreen extends Screen {
         long godMs=view.godFreezeElapsedMillis();
         c.getMatrices().push();c.getMatrices().translate(v.x(),v.y(),0);c.getMatrices().scale((float)v.scale(),(float)v.scale(),1);
 
-        panel(c,SlotLayout.CABINET,color("CABINET_BG"));
+        int cabinetBg="JUGGLER_GOD".equals(view.machineType())?color("JUGGLER_GOD_CABINET_BG"):color("CABINET_BG");
+        panel(c,SlotLayout.CABINET,cabinetBg);
         panel(c,SlotLayout.DATA,color("DISPLAY_BG"));
         panel(c,SlotLayout.DATA_LEFT,color("DISPLAY_BG"));
         panel(c,SlotLayout.DATA_RIGHT,color("DISPLAY_BG"));
