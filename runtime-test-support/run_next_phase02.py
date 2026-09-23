@@ -193,6 +193,20 @@ try:
     stats=dbrows("SELECT total_games,current_games,big_count FROM machine_period_stats WHERE machine_id=1")[0]
     check("GOD trigger counts one normal game before guaranteed zero-G stock",stats["total_games"]==1 and stats["big_count"]==1,stats)
 
+    # GOD BAR completion now starts the 15-second post-hit ceremony. The first
+    # BIG bet must be impossible during that lock, then become available after it.
+    presentation_start=runtime.get("godPresentationStartMs",0)
+    check("GOD presentation starts 15-second input lock",presentation_start>0,runtime)
+    tap(32)
+    time.sleep(.5)
+    locked=session()
+    check("GOD presentation blocks immediate BIG bet",
+          locked["game_state"]=="BIG_READY" and locked["pay_display"]==15,
+          {"session":locked,"runtime":json.loads(locked["machine_state_json"])})
+    wait(lambda:time.time()*1000>=presentation_start+17_000,
+         "GOD presentation 15-second lock elapsed",25)
+    tap(32);wait_state("BIG_BETTED")
+
     def stop_spin(prefix,spinning_state):
         for key,mask in [(263,1),(264,3)]:
             tap(key);wait(lambda:settled() and session()["stopped_mask"]==mask,prefix+" stop")
