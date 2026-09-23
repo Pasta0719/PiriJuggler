@@ -43,23 +43,35 @@ public final class RoleWeights {
         throw new IllegalStateException("Unable to draw non-bonus role");
     }
     public InternalRole drawJugglerGod(int setting,RandomGenerator rng,int bonusScalePpm) {
-        if(setting<1||setting>6||bonusScalePpm<0||bonusScalePpm>1_000_000)throw new IllegalArgumentException("JUGGLER_GOD weights");
+        return drawJugglerGod(setting,rng,bonusScalePpm,1_000_000);
+    }
+    public InternalRole drawJugglerGod(int setting,RandomGenerator rng,int bonusScalePpm,int smallRoleScalePpm) {
+        if(setting<1||setting>6||bonusScalePpm<0||bonusScalePpm>1_000_000
+                ||smallRoleScalePpm<0||smallRoleScalePpm>1_000_000)
+            throw new IllegalArgumentException("JUGGLER_GOD weights");
         int roll=rng.nextInt(DENOMINATOR);long cursor=0,removed=0;
         int[] row=rawWeights[setting-1];
         for(int i=0;i<ORDER.length;i++){
             InternalRole role=ORDER[i];long weight=row[i];
-            if(GameRules.bonus(role)!=null&&role!=InternalRole.GOD){
-                long scaled=weight*bonusScalePpm/1_000_000L;
+            int scale=GameRules.bonus(role)!=null&&role!=InternalRole.GOD?bonusScalePpm:
+                    switch(role){case GRAPE,BELL,CHERRY,PIERO->smallRoleScalePpm;default->1_000_000;};
+            if(role==InternalRole.MISS){
+                weight+=removed;
+            }else if(scale!=1_000_000){
+                long scaled=weight*scale/1_000_000L;
                 removed+=weight-scaled;weight=scaled;
-            } else if(role==InternalRole.MISS) weight+=removed;
+            }
             cursor+=weight;
             if(roll<cursor)return role;
         }
         throw new IllegalStateException("Uncovered JUGGLER_GOD draw interval");
     }
     public InternalRole drawJugglerGodNonBonus(int setting,RandomGenerator rng,int bonusScalePpm) {
+        return drawJugglerGodNonBonus(setting,rng,bonusScalePpm,1_000_000);
+    }
+    public InternalRole drawJugglerGodNonBonus(int setting,RandomGenerator rng,int bonusScalePpm,int smallRoleScalePpm) {
         for(int attempts=0;attempts<1024;attempts++){
-            InternalRole role=drawJugglerGod(setting,rng,bonusScalePpm);
+            InternalRole role=drawJugglerGod(setting,rng,bonusScalePpm,smallRoleScalePpm);
             if(GameRules.bonus(role)==null&&role!=InternalRole.GOD)return role;
         }
         throw new IllegalStateException("Unable to draw JUGGLER_GOD non-bonus role");
