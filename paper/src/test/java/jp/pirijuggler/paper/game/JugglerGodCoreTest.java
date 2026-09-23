@@ -179,4 +179,33 @@ class JugglerGodCoreTest extends GameFixture {
         var state=new JugglerGodRuntime(JugglerGodRuntime.Mode.HEAVEN,32,17,4,true,true,"GOD_CHAIN",9,true,"TEST");
         assertEquals(state,JugglerGodRuntime.fromJson(state.toJsonString()));
     }
+    @Test void godPresentationRejectsInputForFifteenSecondsThenNormalizesReelsToCenterSevens() throws Exception {
+        var runtime=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
+                "GOD_CHAIN",1,false,"GOD_STARTED").startPresentation(NOW,"GOD_STARTED");
+        Rig rig=rig(runtime,1);
+        var values=new LinkedHashMap<>(rig.session().snapshot());
+        values.put("game_state","BIG_READY");
+        values.put("bonus_type","BIG");
+        values.put("lamp_on",1);
+        values.put("display_left_stop",9);
+        values.put("display_center_stop",11);
+        values.put("display_right_stop",4);
+        values.put("machine_state_json",runtime.toJsonString());
+        Session before=new Session(values);
+
+        GameTransition locked=rig.engine().plan(before,rig.machine(),PacketType.SPACE_ACTION,
+                before.sequence()+1,NOW+14_999,0,0,null);
+        assertEquals(Session.GameState.BIG_READY,locked.after().state());
+        assertEquals(PacketType.ACTION_REJECTED,locked.packets().getFirst().packetType());
+        assertEquals(NOW,JugglerGodRuntime.fromJson(locked.machineRuntimeJson()).godPresentationStartMs());
+
+        GameTransition unlocked=rig.engine().plan(before,rig.machine(),PacketType.SPACE_ACTION,
+                before.sequence()+1,NOW+15_000,0,0,null);
+        assertEquals(Session.GameState.BIG_BETTED,unlocked.after().state());
+        assertEquals(3,unlocked.after().number("display_left_stop"));
+        assertEquals(3,unlocked.after().number("display_center_stop"));
+        assertEquals(3,unlocked.after().number("display_right_stop"));
+        assertEquals(0,JugglerGodRuntime.fromJson(unlocked.machineRuntimeJson()).godPresentationStartMs());
+    }
+
 }
