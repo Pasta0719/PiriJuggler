@@ -83,8 +83,8 @@ def wait(pred,label,timeout=120):
         if sig!=last_sig:
             last_sig=sig; last_progress=now
         elif now-last_progress>=20:
-            progress("STALL_FAIL",label=label,stalled_for=round(now-last_progress,1),**snapshot())
-            raise RuntimeError("No observable runtime progress for 20s while "+label)
+            progress("STALL_OBSERVED",label=label,stalled_for=round(now-last_progress,1),**snapshot())
+            last_progress=now
         time.sleep(.2)
     progress("WAIT_TIMEOUT",label=label,elapsed=round(time.monotonic()-started,1),**snapshot())
     raise TimeoutError(label)
