@@ -46,12 +46,12 @@ try:
  cdir=E/'work'/'client-next04-main'; cdir.mkdir(parents=True,exist_ok=True); (cdir/'options.txt').write_text('version:3953\nlang:en_us\nrenderDistance:2\nmaxFps:30\npauseOnLostFocus:false\nsoundCategory_master:0.0\nskipMultiplayerWarning:true\nonboardAccessibility:false\n')
  cr=OUT/'client-result.json'; ch=(OUT/'client.log').open('w',encoding='utf-8'); handles.append(ch); client=subprocess.Popen(GRADLE+['-PruntimeAcceptance=true','-PruntimeScenario=next04-main',f'-PruntimeRun={RUN}','-PruntimeEvidencePhase=NEXT_PHASE_04',':runtime-test-client:runClient','--console=plain'],cwd=ROOT,stdout=ch,stderr=subprocess.STDOUT,creationflags=FLAGS); wait(lambda:cli().get('connected') and cli().get('handshake'),'Fabric',90)
  # Real-client resource-manager proof with successor-specific fixture absent.
- fallback=asset_probe('JUGGLER_GOD','gui/reel_strip.png')
+ fallback=asset_probe('JUGGLER_GOD','symbols/bar.png')
  check('successor asset falls back to ordinary JUGGLER when override is absent',
-       fallback.get('resolved')=='piri:textures/gui/reel_strip.png' and fallback.get('available') is True,fallback)
- ordinary=asset_probe('JUGGLER','gui/reel_strip.png')
+       fallback.get('resolved')=='piri:textures/symbols/bar.png' and fallback.get('available') is True,fallback)
+ ordinary=asset_probe('JUGGLER','symbols/bar.png')
  check('ordinary JUGGLER keeps ordinary asset routing',
-       ordinary.get('resolved')=='piri:textures/gui/reel_strip.png',ordinary)
+       ordinary.get('resolved')=='piri:textures/symbols/bar.png',ordinary)
  override=asset_probe('JUGGLER_GOD','gui/runtime_probe.txt')
  check('successor-specific asset overrides ordinary namespace in real client',
        override.get('resolved')=='piri:textures/juggler_god/gui/runtime_probe.txt' and override.get('available') is True,override)
