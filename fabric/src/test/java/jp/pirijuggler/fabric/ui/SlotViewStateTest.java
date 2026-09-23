@@ -119,4 +119,16 @@ class SlotViewStateTest {
         time.addAndGet(900_000_000L);assertFalse(view.godImpactActive());
     }
 
+    @Test void jugglerGodFreezeActuallyLocksReelMotionBeforeRelease(){
+        var time=new AtomicLong();
+        var view=new SlotViewState(time::get);
+        view.receive(packet(PacketType.OPEN_MACHINE,"{\"sessionId\":\""+ID+"\",\"machineId\":1,\"machineType\":\"JUGGLER_GOD\"}"));
+        var b=start().payload();b.addProperty("godFreeze",true);
+        b.getAsJsonObject("startPhase").addProperty("left",8.25);
+        view.receive(Envelope.current(PacketType.SPIN_START,b));
+        time.set(600_000_000L);assertEquals(8.25,view.phase(0),1e-9,"freeze must hold the actual reel, not merely cover it");
+        time.set(1_199_000_000L);assertEquals(8.25,view.phase(0),1e-9);
+        time.set(1_400_000_000L);assertNotEquals(8.25,view.phase(0),"reel may move only after freeze release");
+    }
+
 }
