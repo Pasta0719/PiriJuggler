@@ -48,20 +48,13 @@ public final class SlotScreen extends Screen {
         c.fill(670,300,1570,690,color("REEL_SEPARATOR"));
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;
-            c.fill(x,300,x+270,690,color("REEL_BG"));
             var clip=v.clip(new SlotLayout.Rect(x,300,270,390));c.enableScissor(clip.x(),clip.y(),clip.x()+clip.w(),clip.y()+clip.h());
-            double phase=view.phase(reel);int middle=(int)Math.floor(phase);double fraction=phase-middle;
-            for(int row=-2;row<=2;row++){
-                String symbol=UiConstants.symbol(reel,middle+row);
-                boolean wide=symbol.equals("seven")||symbol.equals("bar");
-                int textureWidth=wide?320:256,textureHeight=256;
-                int symbolWidth=wide?230:130;
-                int symbolHeight=symbol.equals("bar")?150:130;
-                double symbolY=430+(row-fraction)*130-(symbolHeight-130)/2.0;
-                texture(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,textureWidth,textureHeight,1);
+            if(view.godFreeze()&&godMs>=35)drawGodReelWindow(c,reel,x,godMs);
+            else{
+                c.fill(x,300,x+270,690,color("REEL_BG"));
+                drawReelSymbols(c,reel,x);
             }
             c.disableScissor();
-
         }
         var lamp=SlotLayout.LAMP;String name="lamp/piri_chance_"+(view.lampOn()?"on":"off")+".png";
         if(view.lampOn())for(int[] offset:new int[][]{{-4,0},{4,0},{0,4}})texture(c,name,lamp.x()+offset[0],lamp.y()+offset[1],lamp.w(),lamp.h(),512,256,.18f);
@@ -79,47 +72,49 @@ public final class SlotScreen extends Screen {
         if(state.startsWith("BIG_")||state.startsWith("REG_"))text(c,"COUNT "+view.value("bonusCount"),1090,816,2,true);
         for(var control:SlotLayout.CONTROLS)drawControl(c,control,v.logicalX(mouseX),v.logicalY(mouseY));
         String message=input.closing()?"離席処理中…":errorText();if(!message.isEmpty())text(c,message,1040,990,2,true);
-        if(view.godFreeze())drawGodBlackout(c,godMs);
         c.getMatrices().pop();
     }
-    private void drawGodBlackout(DrawContext c,long ms){
-        if(ms<35)return;
-
-        final int left=670,top=300,right=1570,bottom=690;
-        final int w=right-left,h=bottom-top,cx=(left+right)/2,cy=(top+bottom)/2;
-
-        // "Puchun" entry: the reel picture collapses into a centre line, then signal is gone.
-        if(ms<70){
-            int p=(int)(ms-35);
-            for(int y=top;y<bottom;y+=26){
-                int band=Math.min(w,p*(16+((y-top)/26%4)*4));
-                if((((y-top)/26)&1)==0)c.fill(left,y,left+band,Math.min(bottom,y+15),0xff000000);
-                else c.fill(right-band,y,right,Math.min(bottom,y+15),0xff000000);
-            }
-            return;
+    private void drawReelSymbols(DrawContext c,int reel,int x){
+        double phase=view.phase(reel);int middle=(int)Math.floor(phase);double fraction=phase-middle;
+        for(int row=-2;row<=2;row++){
+            String symbol=UiConstants.symbol(reel,middle+row);
+            boolean wide=symbol.equals("seven")||symbol.equals("bar");
+            int textureWidth=wide?320:256,textureHeight=256;
+            int symbolWidth=wide?230:130;
+            int symbolHeight=symbol.equals("bar")?150:130;
+            double symbolY=430+(row-fraction)*130-(symbolHeight-130)/2.0;
+            texture(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,textureWidth,textureHeight,1);
         }
+    }
+
+    private void drawGodReelWindow(DrawContext c,int reel,int x,long ms){
+        // The reel window itself changes state. Nothing is painted over a normally rendered reel.
+        c.fill(x,300,x+270,690,0xff000000);
+
+        // Collapse the actual reel picture into the centre of its own window.
         if(ms<120){
-            float p=(ms-70)/50.0f;p=p*p;
-            int closed=Math.min(h/2,(int)((h/2)*p));
-            c.fill(left,top,right,top+closed,0xff000000);
-            c.fill(left,bottom-closed,right,bottom,0xff000000);
+            float p=Math.min(1f,(ms-35)/85.0f);
+            float scaleY=Math.max(.035f,1f-p*p);
+            c.getMatrices().push();
+            c.getMatrices().translate(0,495,0);
+            c.getMatrices().scale(1,scaleY,1);
+            c.getMatrices().translate(0,-495,0);
+            drawReelSymbols(c,reel,x);
+            c.getMatrices().pop();
             return;
         }
+
+        // The last trace of the reel signal contracts to a thin horizontal line.
         if(ms<165){
-            c.fill(left,top,right,bottom,0xff000000);
             float p=(ms-120)/45.0f;
-            int half=(int)((w/2)*(1.0f-p));
-            int thickness=Math.max(2,(int)(8*(1.0f-p)));
-            c.fill(cx-half,cy-thickness,cx+half,cy+thickness,0xffffffff);
+            int half=(int)(135*(1.0f-p));
+            int thickness=Math.max(1,(int)(5*(1.0f-p)));
+            c.fill(x+135-half,495-thickness,x+135+half,495+thickness,0xffffffff);
             return;
         }
 
-        // Never restore the ordinary reel picture during the GOD result.
-        c.fill(left,top,right,bottom,0xff000000);
-
-        // Each authoritative stop reveals only its middle-line BAR on the dead-black reel window.
-        for(int reel=0;reel<3;reel++)if(view.godRevealed(reel)){
-            int x=670+315*reel;
+        // After blackout, this reel stays dead-black. A stopped GOD reel exposes only its BAR.
+        if(view.godRevealed(reel)){
             long age=view.godRevealAgeMillis(reel);
             if(age>=0&&age<120){
                 float glow=(float)Math.max(0,.24*(1.0-age/120.0));
