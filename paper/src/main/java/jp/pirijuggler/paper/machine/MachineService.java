@@ -138,10 +138,14 @@ public final class MachineService implements Listener, CommandExecutor {
                 long normalBigPpm=((Number)tuning.getOrDefault("normal_big_to_heaven_ppm",0)).longValue();
                 long normalRegPpm=((Number)tuning.getOrDefault("normal_reg_to_heaven_ppm",0)).longValue();
                 long heavenPpm=((Number)tuning.getOrDefault("heaven_to_heaven_ppm",0)).longValue();
+                var settingTuning=jp.pirijuggler.paper.database.StartupProfile.map(
+                        jp.pirijuggler.paper.database.StartupProfile.map(tuning.get("settings")).get(Integer.toString(setting)));
+                int bonusScale=((Number)settingTuning.getOrDefault("bonus_scale_ppm",1_000_000)).intValue();
+                int smallRoleScale=((Number)settingTuning.getOrDefault("small_role_scale_ppm",1_000_000)).intValue();
                 simulating=true;var rng=random.runtimeSimulation();
-                tell(sender,"GOD_SIMULATOR_STARTED setting="+setting+" games="+count+" normalBigToHeavenPpm="+normalBigPpm+" normalRegToHeavenPpm="+normalRegPpm+" heavenToHeavenPpm="+heavenPpm);
+                tell(sender,"GOD_SIMULATOR_STARTED setting="+setting+" games="+count+" normalBigToHeavenPpm="+normalBigPpm+" normalRegToHeavenPpm="+normalRegPpm+" heavenToHeavenPpm="+heavenPpm+" bonusScalePpm="+bonusScale+" smallRoleScalePpm="+smallRoleScale);
                 plugin.executors().simulator(
-                        ()->JugglerGodSimulator.run(weights,setting,count,normalBigPpm,normalRegPpm,heavenPpm,rng),
+                        ()->JugglerGodSimulator.run(weights,setting,count,normalBigPpm,normalRegPpm,heavenPpm,bonusScale,smallRoleScale,rng),
                         (result,error)->{
                             try {if(!stopped){if(error!=null)failure(sender,error);else tell(sender,"PIRI_GOD_SIMULATOR "+new Gson().toJson(result));}}
                             finally {simulating=false;}
