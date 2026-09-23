@@ -59,6 +59,37 @@ class RemoteMachineViewStateTest {
         assertTrue(registry.viewSnapshot().isEmpty());
     }
 
+    @Test void remoteGodBlackoutSurvivesSnapshotAndBarWaitsForVisualStop(){
+        AtomicLong now=new AtomicLong(1_000_000_000L);
+        RemoteMachineRegistry registry=new RemoteMachineRegistry(now::get);
+        JsonObject snap=snapshot(6);
+        snap.addProperty("machineType","JUGGLER_GOD");
+        snap.addProperty("godFreeze",true);
+        snap.addProperty("gameState","BIG_READY");
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,snap));
+        RemoteMachineViewState restored=registry.view(6);
+        assertTrue(restored.godFreeze());
+        assertTrue(restored.godRevealed(0,now.get()));
+        assertTrue(restored.godRevealed(1,now.get()));
+        assertTrue(restored.godRevealed(2,now.get()));
+
+        JsonObject fresh=snapshot(7);
+        fresh.addProperty("machineType","JUGGLER_GOD");
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,fresh));
+        String spinId=UUID.randomUUID().toString();
+        JsonObject spin=id(7);spin.addProperty("spinId",spinId);spin.addProperty("animation","NORMAL");spin.addProperty("godFreeze",true);spin.addProperty("stoppedMask",0);
+        JsonObject phase=new JsonObject();phase.addProperty("left",1.0);phase.addProperty("center",2.0);phase.addProperty("right",3.0);spin.add("startPhase",phase);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SPIN,spin));
+        RemoteMachineViewState live=registry.view(7);
+        assertTrue(live.godFreeze());assertFalse(live.godRevealed(0,now.get()));
+
+        JsonObject stop=id(7);stop.addProperty("spinId",spinId);stop.addProperty("reel","LEFT");stop.addProperty("stopIndex",14);stop.addProperty("durationMs",380);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_STOP,stop));
+        assertFalse(live.godRevealed(0,now.get()));
+        now.addAndGet(2_000_000_000L);
+        assertTrue(live.godRevealed(0,now.get()));
+    }
+
     private static JsonObject snapshot(int id) {
         JsonObject body = id(id);
         body.addProperty("world", UUID.randomUUID().toString());
