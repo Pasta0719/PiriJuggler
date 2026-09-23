@@ -39,9 +39,9 @@ public final class SlotScreen extends Screen {
         c.fill(0,0,width,height,color("SCREEN_OUTSIDE"));var v=SlotLayout.Viewport.fit(width,height);
         long godMs=view.godFreezeElapsedMillis();
         c.getMatrices().push();c.getMatrices().translate(v.x(),v.y(),0);c.getMatrices().scale((float)v.scale(),(float)v.scale(),1);
-        if(godMs>=70&&godMs<320){
-            int step=(int)((godMs-70)/35)%6;
-            float[] sx={-5,5,-3,3,-2,2},sy={2,-2,1,-1,0,0};
+        if(godMs>=70&&godMs<180){
+            int step=(int)((godMs-70)/28)%4;
+            float[] sx={-2,2,-1,1},sy={1,-1,0,0};
             c.getMatrices().translate(sx[step],sy[step],0);
         }
         panel(c,SlotLayout.CABINET,color("CABINET_BG"));
@@ -67,7 +67,7 @@ public final class SlotScreen extends Screen {
             c.disableScissor();
             if(view.godFreeze()){
                 if(godMs<620){
-                    int shade=godMs<110?0x00000000:godMs<190?0xd9000000:godMs<290?0xff000000:godMs<430?0xe8000000:0xbf000000;
+                    int shade=godMs<80?0x00000000:godMs<650?0xff000000:godMs<780?0xe8000000:godMs<1000?0xa8000000:godMs<1200?0x70000000:0x00000000;
                     if(shade!=0)c.fill(x,300,x+270,690,shade);
                 }else if(!view.godRevealed(reel)){
                     c.fill(x,300,x+270,690,0x66000000);
@@ -97,11 +97,10 @@ public final class SlotScreen extends Screen {
         for(var control:SlotLayout.CONTROLS)drawControl(c,control,v.logicalX(mouseX),v.logicalY(mouseY));
         String message=input.closing()?"離席処理中…":errorText();if(!message.isEmpty())text(c,message,1040,990,2,true);
         if(view.godFreeze()){
-            if(godMs>=70&&godMs<120)c.fill(286,201,1634,1044,0x70ffffff);
-            else if(godMs>=120&&godMs<230)c.fill(286,201,1634,1044,0xf0000000);
-            else if(godMs>=230&&godMs<320&&((godMs/35)&1)==0)c.fill(286,201,1634,1044,0x90ffffff);
-            else if(godMs>=320&&godMs<620)c.fill(286,201,1634,1044,0x78000000);
-            else if(godMs>=620&&godMs<900)c.fill(286,201,1634,1044,0x28000000);
+            if(godMs>=80&&godMs<650)c.fill(286,201,1634,1044,0xff000000);
+            else if(godMs>=650&&godMs<780&&((godMs/45)&1)==0)c.fill(286,201,1634,1044,0xe0000000);
+            else if(godMs>=780&&godMs<1000)c.fill(286,201,1634,1044,0x90000000);
+            else if(godMs>=1000&&godMs<1200)c.fill(286,201,1634,1044,0x48000000);
         }
         if(view.godImpactActive()){
             long impact=view.godImpactAgeMillis();
