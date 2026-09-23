@@ -33,7 +33,10 @@ def check(name,ok,evidence=None):
 def action(kind,**kw):
  global seq
  seq+=1; save(cr.with_name(f'command-{seq}.json'),{'id':seq,'kind':kind,**kw}); wait(lambda:cli().get('completed',0)>=seq,'action '+kind)
-def tap(k): action('tap',key=k)
+def tap(k):
+ # Match the already-proven Phase 02 production input path: distinct physical key edges.
+ action('key',key=k,action=1)
+ action('key',key=k,action=0)
 def command(text,expected):
  before=sum(expected in m for m in cli().get('messages',[])); action('command',text=text); wait(lambda:sum(expected in m for m in cli().get('messages',[]))>before,text)
 def click():
