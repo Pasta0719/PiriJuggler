@@ -164,6 +164,8 @@ public final class SlotViewState {
     public long godFreezeElapsedMillis(){return !godFreeze||godFreezeAt==Long.MIN_VALUE?-1L:Math.max(0L,(time.getAsLong()-godFreezeAt)/1_000_000L);}
     public boolean godFreezeInputLocked(){return godFreeze&&time.getAsLong()-spinAt<GOD_FREEZE_INPUT_LOCK_NANOS;}
     public boolean godRevealed(int reel){return reel>=0&&reel<3&&godRevealed[reel]&&godRevealAt[reel]!=Long.MIN_VALUE&&time.getAsLong()>=godRevealAt[reel];}
+    public int godStoppedCount(){int count=0;for(var stop:stops)if(stop!=null)count++;return count;}
+    public boolean godFirstBigAudio(){return state!=null&&state.has("godFirstBigAudio")&&state.get("godFirstBigAudio").getAsBoolean();}
     public long godRevealAgeMillis(int reel){return !godRevealed(reel)?-1L:Math.max(0L,(time.getAsLong()-godRevealAt[reel])/1_000_000L);}
     public boolean godImpactActive(){return godImpactAt!=Long.MIN_VALUE&&time.getAsLong()-godImpactAt<GOD_IMPACT_NANOS;}
     public long godImpactAgeMillis(){return godImpactAt==Long.MIN_VALUE?-1L:Math.max(0L,(time.getAsLong()-godImpactAt)/1_000_000L);}
