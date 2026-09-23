@@ -22,13 +22,13 @@
       "number": 3,
       "file": "next-machine-phases/NEXT_PHASE_03_ECONOMY_SIMULATION.md",
       "title": "Economy / Probability / Long-run Simulation",
-      "status": "IN_PROGRESS"
+      "status": "COMPLETE"
     },
     {
       "number": 4,
       "file": "next-machine-phases/NEXT_PHASE_04_PRESENTATION.md",
       "title": "Presentation / LCD / Audio / Replaceable Assets",
-      "status": "BLOCKED_BY_PHASE_03"
+      "status": "IN_PROGRESS"
     },
     {
       "number": 5,
