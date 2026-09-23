@@ -65,7 +65,7 @@ try:
  action('exit');client.wait(timeout=60);client=None;stop_server()
  start_server('restart');rows=state().get('sessions',[]);check('restart safely recovers persisted successor session',any(s.get('machine_id')==1 and s.get('lifecycle')=='SUSPENDED_SAFE' and s.get('game_state')=='SEATED_READY' for s in rows),rows)
  with sqlite3.connect(SERVER/'plugins/PiriJuggler/piri.db') as db:
-  row=db.execute('SELECT machine_type FROM machines WHERE id=1').fetchone()
+  row=db.execute('SELECT machine_type FROM machines WHERE machine_id=1').fetchone()
  check('machine persistence keeps JUGGLER_GOD type',row and row[0]=='JUGGLER_GOD',row)
  manifest['passed']=True
 except Exception as e: manifest['failure']=str(e);print('NEXT_PHASE05_RUNTIME_FAILURE '+str(e),flush=True)
