@@ -57,9 +57,19 @@ public final class SlotViewState {
                     double endpoint=stopEndpoint(from,target);int visualMs=visualDurationMs(from,endpoint,requested);
                     stops[reel]=new Stop(from,endpoint,now,visualMs*1_000_000L);rest[reel]=target;
                 }
-                if(godFreeze){godRevealed[reel]=true;godRevealAt[reel]=now;}
+                if(godFreeze){
+                    godRevealed[reel]=true;
+                    Stop visual=stops[reel];
+                    godRevealAt[reel]=visual==null?now:visual.at()+visual.duration();
+                }
                 if(b.has("nextStopHints"))stopHints=b.getAsJsonObject("nextStopHints").deepCopy();
-                if(allStopped()){nextGameAt=spinAt+MIN_GAME_INTERVAL_NANOS;if(godFreeze)godImpactAt=now;}
+                if(allStopped()){
+                    nextGameAt=spinAt+MIN_GAME_INTERVAL_NANOS;
+                    if(godFreeze){
+                        godImpactAt=now;
+                        for(long at:godRevealAt)if(at!=Long.MIN_VALUE)godImpactAt=Math.max(godImpactAt,at);
+                    }
+                }
             }}
             case NOTICE -> {if(matchesSpin(b)){notice="ON".equals(b.get("lamp").getAsString());blink="FAST_BLINK_1S".equals(b.get("pattern").getAsString());noticeAt=now;}}
             case DATA_LAMP -> {if(b.has("machineId")&&b.get("machineId").getAsInt()==machine)dataLamp=b.deepCopy();}
@@ -85,7 +95,7 @@ public final class SlotViewState {
     }
     private boolean hasPendingPress(){for(var p:presses)if(p!=null)return true;return false;}
     private boolean allStopped(){for(var s:stops)if(s==null)return false;return true;}
-    private boolean allGodRevealed(){for(boolean revealed:godRevealed)if(!revealed)return false;return true;}
+    private boolean allGodRevealed(){for(int i=0;i<3;i++)if(!godRevealed(i))return false;return true;}
     private int nextPendingReel(){for(int i=0;i<3;i++)if(stops[i]==null&&stopHints.has(new String[]{"left","center","right"}[i]))return i;return -1;}
     private boolean leverReadyState(){
         if(state==null||!state.has("gameState"))return false;
@@ -137,8 +147,8 @@ public final class SlotViewState {
     public boolean godFreeze(){return godFreeze;}
     public long godFreezeElapsedMillis(){return !godFreeze||godFreezeAt==Long.MIN_VALUE?-1L:Math.max(0L,(time.getAsLong()-godFreezeAt)/1_000_000L);}
     public boolean godFreezeInputLocked(){return godFreeze&&time.getAsLong()-spinAt<GOD_FREEZE_INPUT_LOCK_NANOS;}
-    public boolean godRevealed(int reel){return reel>=0&&reel<3&&godRevealed[reel];}
-    public long godRevealAgeMillis(int reel){return reel<0||reel>=3||godRevealAt[reel]==Long.MIN_VALUE?-1L:Math.max(0L,(time.getAsLong()-godRevealAt[reel])/1_000_000L);}
+    public boolean godRevealed(int reel){return reel>=0&&reel<3&&godRevealed[reel]&&godRevealAt[reel]!=Long.MIN_VALUE&&time.getAsLong()>=godRevealAt[reel];}
+    public long godRevealAgeMillis(int reel){return !godRevealed(reel)?-1L:Math.max(0L,(time.getAsLong()-godRevealAt[reel])/1_000_000L);}
     public boolean godImpactActive(){return godImpactAt!=Long.MIN_VALUE&&time.getAsLong()-godImpactAt<GOD_IMPACT_NANOS;}
     public long godImpactAgeMillis(){return godImpactAt==Long.MIN_VALUE?-1L:Math.max(0L,(time.getAsLong()-godImpactAt)/1_000_000L);}
     public boolean stockLampOn(){return state!=null&&state.has("stockLampOn")&&state.get("stockLampOn").getAsBoolean();}
