@@ -39,7 +39,8 @@ tasks.processResources {
         "juggler_god_error", "juggler_god_bonus_start", "juggler_god_bonus_end",
         "juggler_god_big_bgm", "juggler_god_reg_bgm",
         "juggler_god_god_freeze", "juggler_god_god_stop_1", "juggler_god_god_stop_2",
-        "juggler_god_god_stop_3", "juggler_god_god_bonus_start", "juggler_god_god_big_bgm"
+        "juggler_god_god_stop_3", "juggler_god_god_bonus_start", "juggler_god_god_bonus_end",
+        "juggler_god_god_big_bgm"
     )
     from(userAudio) {
         include(names.map { "$it.ogg" })
