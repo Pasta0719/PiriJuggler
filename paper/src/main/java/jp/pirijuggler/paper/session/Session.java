@@ -72,6 +72,7 @@ public record Session(Map<String, Object> snapshot) {
         JsonObject ms=machineState();
         if(ms!=null&&ms.has("godFreeze"))json.addProperty("godFreeze",ms.get("godFreeze").getAsBoolean());
         if(ms!=null&&ms.has("jgMode")){
+            json.addProperty("godPresentationStartMs",ms.has("godPresentationStartMs")?ms.get("godPresentationStartMs").getAsLong():0L);
             boolean godFirstBigAudio=ms.has("bonusOrigin")&&"GOD_CHAIN".equals(ms.get("bonusOrigin").getAsString())
                     &&ms.has("godBigCount")&&ms.get("godBigCount").getAsInt()==1
                     &&publicGameState().name().startsWith("BIG_");
