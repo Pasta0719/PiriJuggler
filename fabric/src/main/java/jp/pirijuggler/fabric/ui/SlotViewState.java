@@ -32,8 +32,9 @@ public final class SlotViewState {
                 for(int i=0;i<3;i++){rest[i]=display.get(new String[]{"left","center","right"}[i]).getAsDouble();if(spin==null)starts[i]=rest[i];}
                 if(!b.get("gameState").getAsString().contains("SPINNING")){
                     spinning=false;
-                    boolean holdGodResult=godFreeze&&"BIG_READY".equals(b.get("gameState").getAsString())
-                            &&b.has("noticeState")&&"GOD".equals(b.get("noticeState").getAsString());
+                    boolean holdGodResult=godFreeze&&allGodRevealed()
+                            &&"BIG_READY".equals(b.get("gameState").getAsString())
+                            &&b.has("lampOn")&&b.get("lampOn").getAsBoolean();
                     if(!holdGodResult){godFreeze=false;Arrays.fill(godRevealed,false);Arrays.fill(godRevealAt,Long.MIN_VALUE);}
                     stopHints=new JsonObject();godNav="";Arrays.fill(presses,null);
                 }
@@ -84,6 +85,7 @@ public final class SlotViewState {
     }
     private boolean hasPendingPress(){for(var p:presses)if(p!=null)return true;return false;}
     private boolean allStopped(){for(var s:stops)if(s==null)return false;return true;}
+    private boolean allGodRevealed(){for(boolean revealed:godRevealed)if(!revealed)return false;return true;}
     private int nextPendingReel(){for(int i=0;i<3;i++)if(stops[i]==null&&stopHints.has(new String[]{"left","center","right"}[i]))return i;return -1;}
     private boolean leverReadyState(){
         if(state==null||!state.has("gameState"))return false;
