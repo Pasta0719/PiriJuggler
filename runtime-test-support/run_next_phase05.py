@@ -57,7 +57,9 @@ try:
  command('piritest fund','TEST_FUNDED');action('close');wait(lambda:not session(),'close');click();wait(lambda:settled() and session()['credit']==50,'reopen')
  command('piritest force god','TEST_FORCE_ARMED GOD');tap(32);wait(lambda:session()['game_state']=='NORMAL_BETTED','bet');tap(32);wait(lambda:settled() and session()['game_state']=='NORMAL_SPINNING','lever')
  check('Paper/Fabric agree on GOD freeze',session()['internal_role']=='GOD' and cli().get('godFreeze') is True)
- for k,m in [(263,1),(264,3)]: tap(k);wait(lambda:settled() and session()['stopped_mask']==m,'stop')
+ for k,m in [(263,1),(264,3)]:
+  wait(lambda:cli().get('stopEnabled') is True,'stop enabled')
+  tap(k);wait(lambda:settled() and session()['stopped_mask']==m,'stop')
  tap(262);wait(lambda:settled() and session()['game_state']=='BIG_READY','BIG ready');check('GOD payout/result agreement',session()['pay_display']==15 and session()['bonus_type']=='BIG' and (cli().get('publicState') or {}).get('gameState')=='BIG_READY')
  action('close');wait(lambda:not session(),'safe close');saved=state()['sessions'][0];check('successor state suspended for recovery',saved['game_state']=='BIG_READY',saved)
  action('exit');client.wait(timeout=60);client=None;stop_server()
