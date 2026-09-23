@@ -12,24 +12,39 @@ public final class SlotViewState {
     private static final long MIN_GAME_INTERVAL_NANOS=2_000_000_000L;
     private static final long GOD_FREEZE_INPUT_LOCK_NANOS=1_200_000_000L;
     private static final long GOD_IMPACT_NANOS=900_000_000L;
-    private final LongSupplier time;
+    private static final long GOD_PRESENTATION_SPIN_NANOS=12_700_000_000L;
+    private static final long GOD_PRESENTATION_LOCK_NANOS=15_000_000_000L;
+    private static final double GOD_PRESENTATION_TARGET=3.0;
+    private final LongSupplier time,wallTimeMs;
     private final double[] starts=new double[3],rest=new double[3];
     private final Stop[] stops=new Stop[3];
     private final Press[] presses=new Press[3];
     private record Stop(double from,double target,long at,long duration) {}
     private record Press(int pressedIndex,int stopIndex,long at) {}
     private UUID session,spin;private int machine;private String machineType="JUGGLER";private long spinAt,noticeAt,nextGameAt;private String animation="NORMAL";private int stopEnableAfterMs;
-    private long godFreezeAt=Long.MIN_VALUE,godImpactAt=Long.MIN_VALUE;
-    private boolean spinning,notice,blink,godFreeze;private final boolean[] godRevealed=new boolean[3];private final long[] godRevealAt={Long.MIN_VALUE,Long.MIN_VALUE,Long.MIN_VALUE};private JsonObject state,dataLamp,stopHints=new JsonObject();private String error="",godNav="";
-    public SlotViewState(LongSupplier nanos){time=nanos;}
+    private long godFreezeAt=Long.MIN_VALUE,godImpactAt=Long.MIN_VALUE,godPresentationAt=Long.MIN_VALUE,godPresentationStartEpochMs=0;
+    private boolean spinning,notice,blink,godFreeze;private final boolean[] godRevealed=new boolean[3];private final double[] godPresentationStart={0,0,0};private final long[] godRevealAt={Long.MIN_VALUE,Long.MIN_VALUE,Long.MIN_VALUE};private JsonObject state,dataLamp,stopHints=new JsonObject();private String error="",godNav="";
+    public SlotViewState(LongSupplier nanos){this(nanos,System::currentTimeMillis);}
+    SlotViewState(LongSupplier nanos,LongSupplier millis){time=Objects.requireNonNull(nanos);wallTimeMs=Objects.requireNonNull(millis);}
     public void receive(Envelope envelope) {
         JsonObject b=envelope.payload();long now=time.getAsLong();
         switch(envelope.packetType()) {
-            case OPEN_MACHINE -> {session=UUID.fromString(b.get("sessionId").getAsString());machine=b.get("machineId").getAsInt();machineType=b.has("machineType")?b.get("machineType").getAsString():"JUGGLER";spin=null;state=null;dataLamp=null;stopHints=new JsonObject();error="";godNav="";spinning=false;notice=false;blink=false;godFreeze=false;godFreezeAt=Long.MIN_VALUE;godImpactAt=Long.MIN_VALUE;Arrays.fill(godRevealed,false);Arrays.fill(godRevealAt,Long.MIN_VALUE);nextGameAt=0;Arrays.fill(stops,null);Arrays.fill(presses,null);Arrays.fill(rest,0);}
+            case OPEN_MACHINE -> {session=UUID.fromString(b.get("sessionId").getAsString());machine=b.get("machineId").getAsInt();machineType=b.has("machineType")?b.get("machineType").getAsString():"JUGGLER";spin=null;state=null;dataLamp=null;stopHints=new JsonObject();error="";godNav="";spinning=false;notice=false;blink=false;godFreeze=false;godFreezeAt=Long.MIN_VALUE;godImpactAt=Long.MIN_VALUE;godPresentationAt=Long.MIN_VALUE;godPresentationStartEpochMs=0;Arrays.fill(godPresentationStart,0);Arrays.fill(godRevealed,false);Arrays.fill(godRevealAt,Long.MIN_VALUE);nextGameAt=0;Arrays.fill(stops,null);Arrays.fill(presses,null);Arrays.fill(rest,0);}
             case PUBLIC_STATE -> {if(matches(b)) {
                 state=b.deepCopy();if(b.has("machineType"))machineType=b.get("machineType").getAsString();notice=b.get("lampOn").getAsBoolean();error="";
                 var display=b.getAsJsonObject("displayStops");
                 for(int i=0;i<3;i++){rest[i]=display.get(new String[]{"left","center","right"}[i]).getAsDouble();if(spin==null)starts[i]=rest[i];}
+                long presentationEpoch=b.has("godPresentationStartMs")?b.get("godPresentationStartMs").getAsLong():0L;
+                if(presentationEpoch>0){
+                    if(godPresentationStartEpochMs!=presentationEpoch){
+                        godPresentationStartEpochMs=presentationEpoch;
+                        for(int i=0;i<3;i++)godPresentationStart[i]=display.get(new String[]{"left","center","right"}[i]).getAsDouble();
+                        long elapsedMs=Math.max(0L,wallTimeMs.getAsLong()-presentationEpoch);
+                        godPresentationAt=now-elapsedMs*1_000_000L;
+                    }
+                }else{
+                    godPresentationStartEpochMs=0L;godPresentationAt=Long.MIN_VALUE;
+                }
                 boolean authoritativeGod=b.has("godFreeze")&&b.get("godFreeze").getAsBoolean();
                 if(authoritativeGod){
                     godFreeze=true;
@@ -141,12 +156,26 @@ public final class SlotViewState {
         return Math.max(requested,(int)Math.ceil(exactMs-1e-9));
     }
     public double phase(int reel){
-        long now=time.getAsLong();Stop stop=stops[reel];
+        long now=time.getAsLong();
+        if(!spinning&&godPresentationAt!=Long.MIN_VALUE)return godPresentationPhase(reel,now);
+        Stop stop=stops[reel];
         if(stop!=null){double p=stop.duration==0?1:Math.min(1,Math.max(0,(now-stop.at)/(double)stop.duration));return p>=1?rest[reel]:machineWrap(stop.from+(stop.target-stop.from)*p);}
         return spinning?machineWrap(starts[reel]+machineDistance((now-spinAt)/1e9)):machineWrap(rest[reel]);
     }
+    private double godPresentationPhase(int reel,long now){
+        long elapsed=Math.max(0L,now-godPresentationAt);
+        if(elapsed>=GOD_PRESENTATION_SPIN_NANOS)return GOD_PRESENTATION_TARGET;
+        double start=godPresentationStart[reel];
+        double target=GOD_PRESENTATION_TARGET;
+        while(target<=start)target+=21.0;
+        target+=42.0;
+        double t=elapsed/(double)GOD_PRESENTATION_SPIN_NANOS;
+        double eased=Math.sin(t*Math.PI/2.0);
+        return machineWrap(start+(target-start)*eased);
+    }
     public boolean lampOn(){long elapsed=time.getAsLong()-noticeAt;return notice&&(!blink||elapsed>=1_000_000_000L||elapsed/100_000_000L%2==0);}
     public boolean canSend(PacketType action){
+        if(godPresentationLocked()&&Set.of(PacketType.SPACE_ACTION,PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT).contains(action))return false;
         if(!spinning||!Set.of(PacketType.SPACE_ACTION,PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT).contains(action))return true;
         long elapsed=time.getAsLong()-spinAt;
         long lock=Math.max(stopEnableAfterMs*1_000_000L,godFreeze?GOD_FREEZE_INPUT_LOCK_NANOS:0L);
@@ -161,6 +190,9 @@ public final class SlotViewState {
     public String machineType(){return machineType;}
     public String godNav(){return godNav;}
     public boolean godFreeze(){return godFreeze;}
+    public boolean godPresentationActive(){return godPresentationAt!=Long.MIN_VALUE;}
+    public boolean godPresentationLocked(){return godPresentationAt!=Long.MIN_VALUE&&time.getAsLong()-godPresentationAt<GOD_PRESENTATION_LOCK_NANOS;}
+    public long godPresentationElapsedMillis(){return godPresentationAt==Long.MIN_VALUE?-1L:Math.max(0L,(time.getAsLong()-godPresentationAt)/1_000_000L);}
     public long godFreezeElapsedMillis(){return !godFreeze||godFreezeAt==Long.MIN_VALUE?-1L:Math.max(0L,(time.getAsLong()-godFreezeAt)/1_000_000L);}
     public boolean godFreezeInputLocked(){return godFreeze&&time.getAsLong()-spinAt<GOD_FREEZE_INPUT_LOCK_NANOS;}
     public boolean godRevealed(int reel){return reel>=0&&reel<3&&godRevealed[reel]&&godRevealAt[reel]!=Long.MIN_VALUE&&time.getAsLong()>=godRevealAt[reel];}
