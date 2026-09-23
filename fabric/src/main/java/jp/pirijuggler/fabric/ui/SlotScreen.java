@@ -61,10 +61,7 @@ public final class SlotScreen extends Screen {
                 texture(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,textureWidth,textureHeight,1);
             }
             c.disableScissor();
-            if(view.godFreeze()&&view.godRevealed(reel)){
-                long age=view.godRevealAgeMillis(reel);
-                if(age>=0&&age<90)c.fill(x,300,x+270,690,0x2affffff);
-            }
+
         }
         var lamp=SlotLayout.LAMP;String name="lamp/piri_chance_"+(view.lampOn()?"on":"off")+".png";
         if(view.lampOn())for(int[] offset:new int[][]{{-4,0},{4,0},{0,4}})texture(c,name,lamp.x()+offset[0],lamp.y()+offset[1],lamp.w(),lamp.h(),512,256,.18f);
@@ -85,14 +82,13 @@ public final class SlotScreen extends Screen {
         if(view.godFreeze())drawGodBlackout(c,godMs);
         c.getMatrices().pop();
     }
-    private static void drawGodBlackout(DrawContext c,long ms){
+    private void drawGodBlackout(DrawContext c,long ms){
         if(ms<35)return;
 
-        // Confine the GOD blackout to the three-reel window only.
-        // Cabinet, data display, lamp and controls remain visible.
         final int left=670,top=300,right=1570,bottom=690;
         final int w=right-left,h=bottom-top,cx=(left+right)/2,cy=(top+bottom)/2;
 
+        // "Puchun" entry: the reel picture collapses into a centre line, then signal is gone.
         if(ms<70){
             int p=(int)(ms-35);
             for(int y=top;y<bottom;y+=26){
@@ -102,21 +98,13 @@ public final class SlotScreen extends Screen {
             }
             return;
         }
-
         if(ms<120){
-            float p=(ms-70)/50.0f;
-            p=p*p;
+            float p=(ms-70)/50.0f;p=p*p;
             int closed=Math.min(h/2,(int)((h/2)*p));
             c.fill(left,top,right,top+closed,0xff000000);
             c.fill(left,bottom-closed,right,bottom,0xff000000);
-
-            int centreTop=top+closed,centreBottom=bottom-closed;
-            for(int y=centreTop;y<centreBottom;y+=18){
-                if((((y-centreTop)/18)&1)==0)c.fill(left,y,right,Math.min(centreBottom,y+4),0x9a000000);
-            }
             return;
         }
-
         if(ms<165){
             c.fill(left,top,right,bottom,0xff000000);
             float p=(ms-120)/45.0f;
@@ -126,15 +114,20 @@ public final class SlotScreen extends Screen {
             return;
         }
 
-        if(ms<900){
-            c.fill(left,top,right,bottom,0xff000000);
-            return;
-        }
+        // Never restore the ordinary reel picture during the GOD result.
+        c.fill(left,top,right,bottom,0xff000000);
 
-        if(ms<940){
-            c.fill(left,top,right,bottom,0xff000000);
-            int half=(int)((w/2)*((ms-900)/40.0f));
-            c.fill(cx-half,cy-2,cx+half,cy+2,0xd8ffffff);
+        // Each authoritative stop reveals only its middle-line BAR on the dead-black reel window.
+        for(int reel=0;reel<3;reel++)if(view.godRevealed(reel)){
+            int x=670+315*reel;
+            long age=view.godRevealAgeMillis(reel);
+            if(age>=0&&age<90){
+                int a=(int)(180*(1.0-age/90.0));
+                c.fill(x+3,401,x+267,589,(Math.max(0,a)<<24)|0x00ffffff);
+            }
+            c.fill(x+7,405,x+263,585,0xff070707);
+            c.fill(x+11,409,x+259,581,0xff181818);
+            texture(c,"symbols/bar.png",x+20,420,230,150,320,256,1);
         }
     }
 
