@@ -76,6 +76,7 @@ public final class AdminStore {
     private void resetDailyRow(String period, int machineId, long now) throws SQLException {
         db.sql("UPDATE machine_period_stats SET total_games=0,big_count=0,reg_count=0,current_games=0,today_difference=0,today_max_difference=0,last_bonus_type=NULL,last_bonus_at=NULL WHERE machine_id=? AND business_period_id=?", machineId, period);
         db.sql("DELETE FROM bonus_history WHERE machine_id=? AND business_period_id=?", machineId, period);
+        db.sql("DELETE FROM juggler_god_history WHERE machine_id=? AND business_period_id=?", machineId, period);
         db.sql("DELETE FROM graph_points WHERE machine_id=? AND business_period_id=?", machineId, period);
         db.sql("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,0,0,?)", machineId, period, now);
     }

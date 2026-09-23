@@ -47,12 +47,14 @@ class AdminStoreTest {
         store.setAuto(state,id,false,NOW+2);state=db.state();store.setEnabled(state,id,false,NOW+3);
         db.sql("UPDATE machine_period_stats SET total_games=33,big_count=2,reg_count=1,current_games=7,today_difference=123,today_max_difference=456,last_bonus_type='BIG',last_bonus_at=? WHERE machine_id=?",NOW,id);
         db.sql("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?, 'BIG',7,?)",id,state.period(),NOW);
+        db.sql("INSERT INTO juggler_god_history(machine_id,business_period_id,event_type,games,occurred_at) VALUES(?,?, 'GOD',7,?)",id,state.period(),NOW);
         db.sql("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,1,3,?)",id,state.period(),NOW);
         store.resetDaily(db.state(),id,NOW+4);
         Machine machine=db.state().machine(id);assertEquals(5,machine.setting());assertFalse(machine.autoSetting());assertFalse(machine.enabled());
         assertEquals(1,scalar("SELECT count(*) FROM setting_history WHERE machine_id=?",id));
         assertEquals(0,scalar("SELECT total_games FROM machine_period_stats WHERE machine_id=?",id));
         assertEquals(0,scalar("SELECT count(*) FROM bonus_history WHERE machine_id=? AND business_period_id=?",id,state.period()));
+        assertEquals(0,scalar("SELECT count(*) FROM juggler_god_history WHERE machine_id=? AND business_period_id=?",id,state.period()));
         assertEquals(1,scalar("SELECT count(*) FROM graph_points WHERE machine_id=? AND business_period_id=?",id,state.period()));
         assertEquals(0,scalar("SELECT game FROM graph_points WHERE machine_id=? AND business_period_id=?",id,state.period()));
     }
