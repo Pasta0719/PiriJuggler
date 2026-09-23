@@ -10,7 +10,7 @@ import jp.pirijuggler.common.reel.GodReelStrip;
 /** Public packets only; visual interpolation never computes a winning result. */
 public final class SlotViewState {
     private static final long MIN_GAME_INTERVAL_NANOS=2_000_000_000L;
-    private static final long GOD_FREEZE_INPUT_LOCK_NANOS=900_000_000L;
+    private static final long GOD_FREEZE_INPUT_LOCK_NANOS=1_200_000_000L;
     private static final long GOD_IMPACT_NANOS=900_000_000L;
     private final LongSupplier time;
     private final double[] starts=new double[3],rest=new double[3];
