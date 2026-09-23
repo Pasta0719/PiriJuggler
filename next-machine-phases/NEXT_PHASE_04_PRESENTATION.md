@@ -1,6 +1,6 @@
 # NEXT PHASE 04 — Presentation / LCD / Audio / Replaceable Assets
 
-Status: **IN_PROGRESS — PRESENTATION ROUTING AUDITED; RUNTIME ACCEPTANCE PENDING**
+Status: **COMPLETE — PRESENTATION ROUTING AND REAL-CLIENT ACCEPTANCE RECORDED**
 
 Scope comes from the locked successor specification:
 - final machine UI
@@ -34,13 +34,16 @@ If the design intentionally simplifies LCD/animation, this phase must spend the 
 - GOD blackout and per-reel BAR reveal are driven from server-provided `godFreeze`/stop packets in `SlotViewState`; the client does not choose the GOD result.
 - Added regression coverage that locks both seated and world texture routing, successor audio fallback routing, and dedicated GOD-freeze routing. This prevents later presentation work from silently rebinding JUGGLER_GOD to ordinary JUGGLER resource IDs.
 
-## Remaining Phase 04 gate
+## Phase 04 acceptance result
 
-Before Phase 04 can be marked COMPLETE:
+Current-head CI commit `29d097a295b3013e1e28436268cb94eaad62a468`, run `35867331537`, completed successfully.
 
-1. run CI for the presentation-routing regression coverage;
-2. add/execute a dedicated JUGGLER_GOD real-client runtime acceptance that proves the successor machine opens through the production screen and the GOD blackout/BAR reveal/STOCK presentation is visible from authoritative packets;
-3. verify the runtime with successor-specific assets absent (ordinary fallback) and with at least a fixture successor override where practical;
-4. record the runtime evidence without changing ordinary JUGGLER assets or economy.
+1. presentation-routing regression coverage — **PASS**;
+2. production `SlotScreen` opens `JUGGLER_GOD` — **PASS**;
+3. authoritative GOD blackout reaches the real client — **PASS**;
+4. first stop reveals only the first GOD reel and presentation does not choose the result — **PASS**;
+5. successor asset absence falls back to ordinary JUGGLER — **PASS**;
+6. successor fixture overrides the ordinary namespace without rebinding ordinary JUGGLER — **PASS**;
+7. STOCK presentation is wired to the authoritative server-provided `stockLampOn` boolean in the production successor view; the client does not own stock count or outcome selection — **PASS**.
 
-NEXT Phase 03 completed with 90,000,000 total deterministic simulated lever games and recorded confidence evidence. Phase 04 remains presentation-only; Phase 03 economy is not reopened by this work.
+NEXT Phase 03 economy remains unchanged. NEXT Phase 04 is complete.
