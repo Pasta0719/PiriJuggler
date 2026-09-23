@@ -124,7 +124,7 @@ public final class JugglerGodGameEngine implements GameEngine {
                 }
             }else if(GameRules.bonus(actual)!=null){
                 String origin=prepared.mode()==JugglerGodRuntime.Mode.HEAVEN?"HEAVEN":
-                        prepared.mode()==JugglerGodRuntime.Mode.GOD_CHAIN?"GOD_CHAIN":"NORMAL";
+                        prepared.mode()==JugglerGodRuntime.Mode.GOD_CHAIN?"GOD_CHAIN":GameRules.bonus(actual);
                 next=prepared.core(prepared.mode(),prepared.heavenTarget(),prepared.heavenProgress(),
                         prepared.guaranteedRemaining(),false,false,origin,
                         prepared.godBigCount(),false,"BONUS_DRAWN");
