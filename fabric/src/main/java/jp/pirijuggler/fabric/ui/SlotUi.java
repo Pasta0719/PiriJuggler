@@ -11,7 +11,7 @@ public final class SlotUi {
     private static SlotViewState view;private static SlotInput input;
     private static final Map<Long,String> ACCEPT_SOUNDS=new LinkedHashMap<>();
     private static long pendingBigBgmAt=-1L;
-    private static String pendingBigBgmName;
+    private static String pendingBigBgmName,pendingGodHitSound;
     private static boolean godBigAudioPending,godBigAudioActive,awaitingInitialPublicState;
     private static Envelope queuedLever;private static Consumer<Envelope> outbound;
 
@@ -65,6 +65,8 @@ public final class SlotUi {
                     boolean godFreeze=b.has("godFreeze")&&b.get("godFreeze").getAsBoolean();
                     if(godFreeze)godBigAudioPending=true;
                     if(!resumed)PiriSounds.queue(godFreeze?special("juggler_god_god_freeze","god_freeze"):sound("lever"),1,0);
+                    if(godBigAudioActive&&"BIG_SPINNING".equals(view.value("gameState")))
+                        PiriSounds.startLoop(special("juggler_god_god_big_bgm",sound("big_bgm")));
                 }
             }
             case TENPAI_SOUND -> {if(view.matchesSpin(b))PiriSounds.queue(sound("tenpai"),1,0);}
@@ -77,9 +79,15 @@ public final class SlotUi {
                         godBigAudioPending=false;godBigAudioActive=godBig;
                         String start=godBig?special("juggler_god_god_bonus_start",sound("bonus_start")):sound("bonus_start");
                         String bgm=godBig?special("juggler_god_god_big_bgm",sound("big_bgm")):sound("big_bgm");
-                        long godHitDelay=godBig?view.godPresentationStartRemainingNanos():0L;
-                        PiriSounds.queueAfter(start,1,0,godHitDelay);
-                        pendingBigBgmName=bgm;pendingBigBgmAt=System.nanoTime()+godHitDelay+BIG_BGM_START_DELAY_NANOS;
+                        if(godBig){
+                            pendingBigBgmAt=-1L;pendingBigBgmName=null;
+                            if(view.godPresentationActive()){
+                                PiriSounds.queueAfter(start,1,0,view.godPresentationStartRemainingNanos());
+                            }else pendingGodHitSound=start;
+                        }else{
+                            PiriSounds.queue(start,1,0);
+                            pendingBigBgmName=bgm;pendingBigBgmAt=System.nanoTime()+BIG_BGM_START_DELAY_NANOS;
+                        }
                     }else if("REG".equals(type)){
                         godBigAudioPending=false;godBigAudioActive=false;pendingBigBgmAt=-1L;pendingBigBgmName=null;
                         PiriSounds.startLoop(sound("reg_bgm"));
@@ -126,6 +134,10 @@ public final class SlotUi {
     }
 
     public static void tick(){
+        if(pendingGodHitSound!=null&&view!=null&&view.godPresentationActive()){
+            String hit=pendingGodHitSound;pendingGodHitSound=null;
+            PiriSounds.queueAfter(hit,1,0,view.godPresentationStartRemainingNanos());
+        }
         if(queuedLever!=null&&view!=null&&view.queuedLeverReady()&&outbound!=null){
             Envelope lever=queuedLever;queuedLever=null;outbound.accept(lever);
         }
@@ -143,7 +155,7 @@ public final class SlotUi {
 
     public static void reset(){
         view=null;input=null;queuedLever=null;outbound=null;ACCEPT_SOUNDS.clear();
-        pendingBigBgmAt=-1L;pendingBigBgmName=null;
+        pendingBigBgmAt=-1L;pendingBigBgmName=null;pendingGodHitSound=null;
         godBigAudioPending=false;godBigAudioActive=false;awaitingInitialPublicState=false;
         PiriSounds.reset();
     }
