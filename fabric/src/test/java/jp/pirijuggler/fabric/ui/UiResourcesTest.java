@@ -47,5 +47,20 @@ class UiResourcesTest {
         }
         // Sound files are deliberately optional: verify the registry contract, never a waveform/hash.
     }
+    @Test void jugglerGodPresentationRoutesThroughDedicatedReplaceableNamespace() throws Exception {
+        String resolver=Files.readString(ROOT.resolve("fabric/src/main/java/jp/pirijuggler/fabric/ui/JugglerGodAssets.java"));
+        assertTrue(resolver.contains("\"textures/juggler_god/\" + ordinaryPath"));
+        assertTrue(resolver.contains("? dedicated : ordinary"));
+        String slot=Files.readString(ROOT.resolve("fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotScreen.java"));
+        String world=Files.readString(ROOT.resolve("fabric/src/main/java/jp/pirijuggler/fabric/render/WorldCabinetRenderer.java"));
+        assertTrue(slot.contains("JugglerGodAssets.texture(view.machineType(),path)"));
+        assertTrue(world.contains("JugglerGodAssets.texture(state.machineType()"));
+        String sounds=Files.readString(ROOT.resolve("fabric/src/main/java/jp/pirijuggler/fabric/ui/PiriSounds.java"));
+        assertTrue(sounds.contains("\"JUGGLER_GOD\".equals(machineType)"));
+        assertTrue(sounds.contains("\"juggler_god_\"+base"));
+        assertTrue(sounds.contains("if(available(dedicated))return dedicated"));
+        String ui=Files.readString(ROOT.resolve("fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotUi.java"));
+        assertTrue(ui.contains("?\"god_freeze\":sound(\"lever\")"));
+    }
     @Test void sevenSegmentGeometryAndInactiveAlphaContract(){assertEquals(7,SevenSegment.RECTANGLES.length);assertArrayEquals(new int[]{8,32,24,8},SevenSegment.RECTANGLES[6]);for(int n=0;n<10;n++)for(int s=0;s<7;s++)assertEquals(SevenSegment.DIGITS[n].indexOf('A'+s)>=0,SevenSegment.active((char)('0'+n),s));assertTrue(SevenSegment.active('-',6));}
 }
