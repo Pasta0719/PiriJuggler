@@ -141,7 +141,7 @@ public final class MachineService implements Listener, CommandExecutor {
                 simulating=true;var rng=random.runtimeSimulation();
                 tell(sender,"GOD_SIMULATOR_STARTED setting="+setting+" games="+count+" normalBigToHeavenPpm="+normalBigPpm+" normalRegToHeavenPpm="+normalRegPpm+" heavenToHeavenPpm="+heavenPpm);
                 plugin.executors().simulator(
-                        ()->JugglerGodSimulator.run(weights,setting,count,normalPpm,heavenPpm,rng),
+                        ()->JugglerGodSimulator.run(weights,setting,count,normalBigPpm,normalRegPpm,heavenPpm,rng),
                         (result,error)->{
                             try {if(!stopped){if(error!=null)failure(sender,error);else tell(sender,"PIRI_GOD_SIMULATOR "+new Gson().toJson(result));}}
                             finally {simulating=false;}
