@@ -114,9 +114,11 @@ class SlotViewStateTest {
 
         for(String reel:new String[]{"LEFT","CENTER","RIGHT"})
             view.receive(packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\""+reel+"\",\"stopIndex\":0,\"durationMs\":0}"));
+        assertFalse(view.godRevealed(0),"BAR must not appear while the reel is still visually stopping");
+        assertFalse(view.godRevealed(1));assertFalse(view.godRevealed(2));
+        time.addAndGet(2_000_000_000L);
         assertTrue(view.godRevealed(0));assertTrue(view.godRevealed(1));assertTrue(view.godRevealed(2));
-        assertTrue(view.godImpactActive());
-        time.addAndGet(900_000_000L);assertFalse(view.godImpactActive());
+        assertFalse(view.godImpactActive());
     }
 
 
@@ -129,6 +131,9 @@ class SlotViewStateTest {
 
         for(String reel:new String[]{"LEFT","CENTER","RIGHT"})
             view.receive(packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\""+reel+"\",\"stopIndex\":0,\"durationMs\":0}"));
+        assertFalse(view.godRevealed(0));
+        time.addAndGet(2_000_000_000L);
+        assertTrue(view.godRevealed(0));assertTrue(view.godRevealed(1));assertTrue(view.godRevealed(2));
 
         view.receive(packet(PacketType.PUBLIC_STATE,
                 "{\"sessionId\":\""+ID+"\",\"machineId\":1,\"gameState\":\"BIG_READY\",\"credit\":47,\"bet\":0,\"pay\":15,\"heldMedals\":0,\"bonusCount\":0,\"lampOn\":true,\"displayStops\":{\"left\":0,\"center\":0,\"right\":0},\"stoppedMask\":0}"));
