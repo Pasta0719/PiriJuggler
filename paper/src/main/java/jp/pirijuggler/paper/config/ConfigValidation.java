@@ -69,8 +69,9 @@ public final class ConfigValidation {
         c.keys("juggler_god.settings", Set.of("1","2","3","4","5","6"));
         for(int setting=1;setting<=6;setting++){
             String base="juggler_god.settings."+setting;
-            c.keys(base, Set.of("bonus_scale_ppm"));
+            c.keys(base, Set.of("bonus_scale_ppm","small_role_scale_ppm"));
             c.integer(base+".bonus_scale_ppm", 0, 1_000_000);
+            c.integer(base+".small_role_scale_ppm", 0, 1_000_000);
         }
         BigInteger denominator = c.integer("premium.denominator", 1, Long.MAX_VALUE);
         BigInteger chance = c.integer("premium.big_chance_weight", 0, Long.MAX_VALUE);
