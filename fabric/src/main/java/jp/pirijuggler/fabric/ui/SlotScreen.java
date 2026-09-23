@@ -88,12 +88,11 @@ public final class SlotScreen extends Screen {
     }
 
     private void drawGodReelWindow(DrawContext c,int reel,int x,long ms){
-        // GOD freeze must not turn the reel window into a featureless black rectangle.
-        // Keep the reel paper/symbols visible at very low illumination.
+        // The blackout is the reel losing illumination, not a black card covering it.
         c.fill(x,300,x+270,690,0xff141414);
-        drawReelSymbolsDark(c,reel,x,.12f);
+        drawReelSymbolsDark(c,reel,x,.10f);
 
-        // Preserve the collapse-style freeze entry, but apply it to the reel image itself.
+        // Keep the original collapse freeze: the lit reel image itself crushes into the centre.
         if(ms<120){
             float p=Math.min(1f,(ms-35)/85.0f);
             float scaleY=Math.max(.035f,1f-p*p);
@@ -101,7 +100,7 @@ public final class SlotScreen extends Screen {
             c.getMatrices().translate(0,495,0);
             c.getMatrices().scale(1,scaleY,1);
             c.getMatrices().translate(0,-495,0);
-            drawReelSymbolsDark(c,reel,x,.28f);
+            drawReelSymbolsDark(c,reel,x,.34f);
             c.getMatrices().pop();
             return;
         }
@@ -114,7 +113,7 @@ public final class SlotScreen extends Screen {
             return;
         }
 
-        // BAR appears only after the authoritative stop animation has actually finished.
+        // BAR appears only after that reel has visually completed its authoritative stop.
         if(view.godRevealed(reel)){
             long age=view.godRevealAgeMillis(reel);
             if(age>=0&&age<120){
