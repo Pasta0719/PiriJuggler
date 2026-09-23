@@ -179,6 +179,16 @@ class SlotViewStateTest {
         assertEquals(4,view.phase(2),1e-9);
         assertFalse(view.canSend(PacketType.SPACE_ACTION));
 
+        nanos.set(400_000_000L);
+        assertEquals(9,view.phase(0),1e-9);
+        assertEquals(11,view.phase(1),1e-9);
+        assertEquals(4,view.phase(2),1e-9);
+
+        nanos.set(800_000_000L);
+        assertNotEquals(9,view.phase(0),1e-6);
+        assertNotEquals(11,view.phase(1),1e-6);
+        assertNotEquals(4,view.phase(2),1e-6);
+
         nanos.set(6_350_000_000L);
         assertNotEquals(9,view.phase(0),1e-6);
         assertNotEquals(11,view.phase(1),1e-6);

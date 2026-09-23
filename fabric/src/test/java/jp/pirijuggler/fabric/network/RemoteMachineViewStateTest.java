@@ -103,6 +103,10 @@ class RemoteMachineViewStateTest {
         registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,snap));
         RemoteMachineViewState view=registry.view(8);
         assertEquals(9,view.phase(0,nanos.get()),1e-9);
+        nanos.set(400_000_000L);
+        assertEquals(9,view.phase(0,nanos.get()),1e-9);
+        nanos.set(800_000_000L);
+        assertNotEquals(9,view.phase(0,nanos.get()),1e-6);
         nanos.set(12_700_000_000L);
         assertEquals(3,view.phase(0,nanos.get()),1e-9);
         assertEquals(3,view.phase(1,nanos.get()),1e-9);

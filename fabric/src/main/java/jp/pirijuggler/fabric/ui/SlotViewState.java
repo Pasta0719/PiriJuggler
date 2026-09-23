@@ -13,6 +13,7 @@ public final class SlotViewState {
     private static final long GOD_FREEZE_INPUT_LOCK_NANOS=1_200_000_000L;
     private static final long GOD_IMPACT_NANOS=900_000_000L;
     private static final long GOD_PRESENTATION_SPIN_NANOS=12_700_000_000L;
+    private static final long GOD_PRESENTATION_START_DELAY_NANOS=400_000_000L;
     private static final long GOD_PRESENTATION_LOCK_NANOS=15_000_000_000L;
     private static final double GOD_PRESENTATION_TARGET=3.0;
     private final LongSupplier time,wallTimeMs;
@@ -170,12 +171,13 @@ public final class SlotViewState {
     }
     private double godPresentationPhase(int reel,long now){
         long elapsed=Math.max(0L,now-godPresentationAt);
-        if(elapsed>=GOD_PRESENTATION_SPIN_NANOS)return GOD_PRESENTATION_TARGET;
         double start=godPresentationStart[reel];
+        if(elapsed<=GOD_PRESENTATION_START_DELAY_NANOS)return machineWrap(start);
+        if(elapsed>=GOD_PRESENTATION_SPIN_NANOS)return GOD_PRESENTATION_TARGET;
         double target=GOD_PRESENTATION_TARGET;
         while(target<=start)target+=21.0;
         target+=42.0;
-        double t=elapsed/(double)GOD_PRESENTATION_SPIN_NANOS;
+        double t=(elapsed-GOD_PRESENTATION_START_DELAY_NANOS)/(double)(GOD_PRESENTATION_SPIN_NANOS-GOD_PRESENTATION_START_DELAY_NANOS);
         double eased=Math.sin(t*Math.PI/2.0);
         return machineWrap(start+(target-start)*eased);
     }
