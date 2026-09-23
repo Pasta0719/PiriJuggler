@@ -63,7 +63,7 @@ try:
  tap(262);wait(lambda:settled() and session()['game_state']=='BIG_READY','BIG ready');check('GOD payout/result agreement',session()['pay_display']==15 and session()['bonus_type']=='BIG' and (cli().get('publicState') or {}).get('gameState')=='BIG_READY')
  action('close');wait(lambda:not session(),'safe close');saved=state()['sessions'][0];check('successor state suspended for recovery',saved['game_state']=='BIG_READY',saved)
  action('exit');client.wait(timeout=60);client=None;stop_server()
- start_server('restart');rows=state().get('sessions',[]);check('restart keeps persisted successor session',any(s.get('machine_id')==1 and s.get('game_state')=='BIG_READY' for s in rows),rows)
+ start_server('restart');rows=state().get('sessions',[]);check('restart safely recovers persisted successor session',any(s.get('machine_id')==1 and s.get('lifecycle')=='SUSPENDED_SAFE' and s.get('game_state')=='SEATED_READY' for s in rows),rows)
  with sqlite3.connect(SERVER/'plugins/PiriJuggler/piri.db') as db:
   row=db.execute('SELECT machine_type FROM machines WHERE id=1').fetchone()
  check('machine persistence keeps JUGGLER_GOD type',row and row[0]=='JUGGLER_GOD',row)
