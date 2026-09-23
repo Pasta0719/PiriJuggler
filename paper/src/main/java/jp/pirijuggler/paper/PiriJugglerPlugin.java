@@ -131,7 +131,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
      */
     private void migrateJugglerGodConfig(java.nio.file.Path path) throws IOException {
         String original = Files.readString(path, StandardCharsets.UTF_8);
-        if (original.matches("(?s).*^juggler_god\\s*:.*")) return;
+        if (original.matches("(?s).*?(?m)^juggler_god\\s*:.*")) return;
         String block = """
 
 juggler_god:
