@@ -247,6 +247,7 @@ public final class RemoteMachineSync {
             body.addProperty("bonusCount", 0);
             body.addProperty("bonusMode", "NONE");
             body.addProperty("godFreeze", false);
+            body.addProperty("godPresentationStartMs", 0L);
             body.addProperty("spinning", false);
         } else {
             // ACTIVE and SUSPENDED_GRACE both retain the public reel state. ESC only closes
@@ -262,6 +263,8 @@ public final class RemoteMachineSync {
             body.addProperty("bonusCount", publicState.get("bonusCount").getAsLong());
             body.addProperty("bonusMode", publicBonusMode(gameState));
             body.addProperty("godFreeze", publicState.has("godFreeze")&&publicState.get("godFreeze").getAsBoolean());
+            body.addProperty("godPresentationStartMs", publicState.has("godPresentationStartMs")
+                    ?publicState.get("godPresentationStartMs").getAsLong():0L);
 
             boolean spinning = gameState.endsWith("_SPINNING");
             body.addProperty("spinning", spinning);
