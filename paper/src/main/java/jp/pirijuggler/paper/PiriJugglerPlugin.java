@@ -72,6 +72,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
         try {
             saveDefaultConfig();
             migrateProtocolConfig(getDataFolder().toPath().resolve("config.yml"));
+            migrateJugglerGodConfig(getDataFolder().toPath().resolve("config.yml"));
             try (var reader = Files.newBufferedReader(getDataFolder().toPath().resolve("config.yml"), StandardCharsets.UTF_8)) {
                 ConfigValidation.Result result = ConfigValidation.load(reader);
                 configurationValid = result.valid();
@@ -121,6 +122,32 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
             Files.writeString(path, migrated, StandardCharsets.UTF_8);
             getLogger().info("Migrated config protocol_version 1 -> " + Protocol.VERSION);
         }
+    }
+
+    /**
+     * Existing production servers keep their operator config.yml across jar upgrades.
+     * saveDefaultConfig() does not merge newly introduced sections, so add the
+     * successor-only defaults before strict validation when upgrading an old config.
+     */
+    private void migrateJugglerGodConfig(java.nio.file.Path path) throws IOException {
+        String original = Files.readString(path, StandardCharsets.UTF_8);
+        if (original.matches("(?s).*^juggler_god\\s*:.*")) return;
+        String block = """
+
+juggler_god:
+  normal_big_to_heaven_ppm: 125000
+  normal_reg_to_heaven_ppm: 62500
+  heaven_to_heaven_ppm: 500000
+  settings:
+    '1': {bonus_scale_ppm: 804200, small_role_scale_ppm: 804200}
+    '2': {bonus_scale_ppm: 801100, small_role_scale_ppm: 801100}
+    '3': {bonus_scale_ppm: 809800, small_role_scale_ppm: 809800}
+    '4': {bonus_scale_ppm: 814400, small_role_scale_ppm: 814400}
+    '5': {bonus_scale_ppm: 824600, small_role_scale_ppm: 824600}
+    '6': {bonus_scale_ppm: 810900, small_role_scale_ppm: 810900}
+""";
+        Files.writeString(path, original.stripTrailing() + "\n" + block, StandardCharsets.UTF_8);
+        getLogger().info("Migrated existing config with juggler_god defaults");
     }
 
     private boolean handleBuildIdentity(CommandSender sender,String[] args) {
