@@ -74,7 +74,7 @@ public final class JugglerGodGameEngine implements GameEngine {
             String current=before.state()==Session.GameState.BIG_BETTED?"BIG":"REG";
             String hit=drawBonusOverlay(machine);
             if(!"NONE".equals(hit)){
-                prepared=runtime.interrupt(hit,current,(int)before.number("bonus_payout_count"),false,
+                prepared=prepared.interrupt(hit,current,(int)before.number("bonus_payout_count"),false,
                         "GOD".equals(hit)?"GOD_IN_GOD_DRAWN":"BONUS_STOCK_DRAWN");
             }
         }
@@ -375,7 +375,9 @@ public final class JugglerGodGameEngine implements GameEngine {
     @Override public Optional<Envelope> resume(Session saved,long sentNanos){
         Optional<Envelope> resumed=delegate.resume(saved,sentNanos);
         if(resumed.isEmpty())return resumed;
-        JugglerGodRuntime runtime=JugglerGodRuntime.fromJson(saved.machineState().toString());
+        JsonObject machineState=saved.machineState();
+        if(machineState==null)return resumed;
+        JugglerGodRuntime runtime=JugglerGodRuntime.fromJson(machineState.toString());
         if(!runtime.godFreeze())return resumed;
         Envelope packet=resumed.get();
         JsonObject body=packet.payload().deepCopy();body.addProperty("godFreeze",true);
