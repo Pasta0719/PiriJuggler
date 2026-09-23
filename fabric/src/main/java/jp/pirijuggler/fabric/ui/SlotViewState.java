@@ -30,7 +30,13 @@ public final class SlotViewState {
                 state=b.deepCopy();if(b.has("machineType"))machineType=b.get("machineType").getAsString();notice=b.get("lampOn").getAsBoolean();error="";
                 var display=b.getAsJsonObject("displayStops");
                 for(int i=0;i<3;i++){rest[i]=display.get(new String[]{"left","center","right"}[i]).getAsDouble();if(spin==null)starts[i]=rest[i];}
-                if(!b.get("gameState").getAsString().contains("SPINNING")){spinning=false;godFreeze=false;Arrays.fill(godRevealed,false);stopHints=new JsonObject();godNav="";Arrays.fill(presses,null);}
+                if(!b.get("gameState").getAsString().contains("SPINNING")){
+                    spinning=false;
+                    boolean holdGodResult=godFreeze&&"BIG_READY".equals(b.get("gameState").getAsString())
+                            &&b.has("noticeState")&&"GOD".equals(b.get("noticeState").getAsString());
+                    if(!holdGodResult){godFreeze=false;Arrays.fill(godRevealed,false);Arrays.fill(godRevealAt,Long.MIN_VALUE);}
+                    stopHints=new JsonObject();godNav="";Arrays.fill(presses,null);
+                }
             }}
             case SPIN_START -> {if(matches(b)) {
                 spin=UUID.fromString(b.get("spinId").getAsString());animation=b.get("animation").getAsString();spinAt=now;spinning=true;godFreeze=b.has("godFreeze")&&b.get("godFreeze").getAsBoolean();godFreezeAt=godFreeze?now:Long.MIN_VALUE;godImpactAt=Long.MIN_VALUE;Arrays.fill(godRevealed,false);Arrays.fill(godRevealAt,Long.MIN_VALUE);error="";
