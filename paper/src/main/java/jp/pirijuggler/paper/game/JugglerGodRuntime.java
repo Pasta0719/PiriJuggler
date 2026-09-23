@@ -88,24 +88,24 @@ public record JugglerGodRuntime(
     public JugglerGodRuntime interrupt(String hit,String currentType,int payoutCount,boolean ended,String event) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,godFreeze,event,additionalBigStock,additionalRegStock,
-                hit,currentType,payoutCount,ended,releasingStock,forcedRole);
+                hit,currentType,payoutCount,ended,releasingStock,forcedRole,godPresentationStartMs);
     }
 
     public JugglerGodRuntime clearInterrupt(String event) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,false,event,additionalBigStock,additionalRegStock,
-                "NONE","NONE",0,false,releasingStock,forcedRole);
+                "NONE","NONE",0,false,releasingStock,forcedRole,godPresentationStartMs);
     }
 
     public JugglerGodRuntime release(int big,int reg,String event) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
-                bonusOrigin,godBigCount,false,event,big,reg,"NONE","NONE",0,false,true,forcedRole);
+                bonusOrigin,godBigCount,false,event,big,reg,"NONE","NONE",0,false,true,forcedRole,godPresentationStartMs);
     }
 
     public JugglerGodRuntime stopReleasing(String event) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,false,event,additionalBigStock,additionalRegStock,
-                "NONE","NONE",0,false,false,forcedRole);
+                "NONE","NONE",0,false,false,forcedRole,godPresentationStartMs);
     }
 
     public static JugglerGodRuntime fromJson(String raw) {
