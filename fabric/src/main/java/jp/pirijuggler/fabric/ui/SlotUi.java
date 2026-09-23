@@ -77,8 +77,9 @@ public final class SlotUi {
                         godBigAudioPending=false;godBigAudioActive=godBig;
                         String start=godBig?special("juggler_god_god_bonus_start",sound("bonus_start")):sound("bonus_start");
                         String bgm=godBig?special("juggler_god_god_big_bgm",sound("big_bgm")):sound("big_bgm");
-                        PiriSounds.queue(start,1,0);
-                        pendingBigBgmName=bgm;pendingBigBgmAt=System.nanoTime()+BIG_BGM_START_DELAY_NANOS;
+                        long godHitDelay=godBig?view.godPresentationStartRemainingNanos():0L;
+                        PiriSounds.queueAfter(start,1,0,godHitDelay);
+                        pendingBigBgmName=bgm;pendingBigBgmAt=System.nanoTime()+godHitDelay+BIG_BGM_START_DELAY_NANOS;
                     }else if("REG".equals(type)){
                         godBigAudioPending=false;godBigAudioActive=false;pendingBigBgmAt=-1L;pendingBigBgmName=null;
                         PiriSounds.startLoop(sound("reg_bgm"));
