@@ -74,7 +74,14 @@ public final class JugglerGodGameEngine implements GameEngine {
         }
 
         if(normalLever){
-            if(godInGodConfirm){
+            if(!"NONE".equals(runtime.forcedRole())){
+                try { forced=InternalRole.valueOf(runtime.forcedRole()); }
+                catch(IllegalArgumentException ignored) { forced=null; }
+                prepared=runtime.forceRole("NONE");
+            }
+            if(forced!=null){
+                // Explicit development force wins over production GOD/heaven/chain draws for this spin only.
+            }else if(godInGodConfirm){
                 forced=InternalRole.GOD;
                 suppressNormalSpinCount=true;
                 prepared=runtime.core(runtime.mode(),runtime.heavenTarget(),runtime.heavenProgress(),
