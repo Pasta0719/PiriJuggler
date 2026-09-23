@@ -47,10 +47,10 @@ try:
  sr=OUT/'server-result.json'; sh=(OUT/'server.log').open('w',encoding='utf-8'); handles.append(sh); server=subprocess.Popen([JAVA,'-Xms512M','-Xmx1536M','-Dfile.encoding=UTF-8','-Dpiri.runtime.phase=next02',f'-Dpiri.runtime.serverResult={sr}','-jar',str(PAPER),'nogui'],cwd=SERVER,stdin=subprocess.PIPE,stdout=sh,stderr=subprocess.STDOUT,text=True,creationflags=FLAGS); wait(lambda:'Done (' in log(OUT/'server.log') and state().get('ready'),'Paper',180)
  cdir=E/'work'/'client-next04-main'; cdir.mkdir(parents=True,exist_ok=True); (cdir/'options.txt').write_text('version:3953\nlang:en_us\nrenderDistance:2\nmaxFps:30\npauseOnLostFocus:false\nsoundCategory_master:0.0\nskipMultiplayerWarning:true\nonboardAccessibility:false\n')
  cr=OUT/'client-result.json'; ch=(OUT/'client.log').open('w',encoding='utf-8'); handles.append(ch); client=subprocess.Popen(GRADLE+['-PruntimeAcceptance=true','-PruntimeScenario=next04-main',f'-PruntimeRun={RUN}','-PruntimeEvidencePhase=NEXT_PHASE_04',':runtime-test-client:runClient','--console=plain'],cwd=ROOT,stdout=ch,stderr=subprocess.STDOUT,creationflags=FLAGS); wait(lambda:cli().get('connected') and cli().get('handshake'),'Fabric',90)
- # Real-client resource-manager proof with successor-specific fixture absent.
- fallback=asset_probe('JUGGLER_GOD','symbols/bar.png')
- check('successor asset falls back to ordinary JUGGLER when override is absent',
-       fallback.get('resolved')=='piri:textures/symbols/bar.png' and fallback.get('available') is True,fallback)
+ # Real-client resource-manager proof: successor now ships seeded dedicated copies of JUGGLER images.
+ dedicated=asset_probe('JUGGLER_GOD','symbols/bar.png')
+ check('successor seeded BAR resolves through dedicated JUGGLER_GOD namespace',
+       dedicated.get('resolved')=='piri:textures/juggler_god/symbols/bar.png' and dedicated.get('available') is True,dedicated)
  ordinary=asset_probe('JUGGLER','symbols/bar.png')
  check('ordinary JUGGLER keeps ordinary asset routing',
        ordinary.get('resolved')=='piri:textures/symbols/bar.png',ordinary)
