@@ -39,7 +39,8 @@ def click():
 def capture(label): action('capture',label=label); time.sleep(1)
 def asset_probe(machine_type,ordinary_path):
  before=len(cli().get('actions',[])); action('asset_probe',machineType=machine_type,ordinaryPath=ordinary_path)
- acts=cli().get('actions',[]); matches=[a for a in acts[before:] if a.get('machineType')==machine_type and a.get('ordinaryPath')==ordinary_path]
+ wait(lambda:any(a.get('resolved') is not None and a.get('machineType')==machine_type and a.get('ordinaryPath')==ordinary_path for a in cli().get('actions',[])[before:]),'asset probe observation')
+ acts=cli().get('actions',[]); matches=[a for a in acts[before:] if a.get('resolved') is not None and a.get('machineType')==machine_type and a.get('ordinaryPath')==ordinary_path]
  return matches[-1] if matches else {}
 try:
  plugins=SERVER/'plugins'; plugins.mkdir(parents=True,exist_ok=True); shutil.copy2(prod['paper'],plugins); shutil.copy2(helper,plugins); (SERVER/'eula.txt').write_text('eula=true\n'); (SERVER/'server.properties').write_text('server-ip=127.0.0.1\nserver-port=25598\nonline-mode=false\nenforce-secure-profile=false\nspawn-protection=0\nview-distance=2\nsimulation-distance=2\ngenerate-structures=false\n')
