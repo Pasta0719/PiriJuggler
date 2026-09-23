@@ -17,6 +17,12 @@
 | big_bgm.ogg | BIG消化中BGM（ループ） |
 | reg_bgm.ogg | REG消化中BGM（ループ） |
 | god_freeze.ogg | GOD成立ゲームのレバー時フリーズ演出 |
+| juggler_god_god_freeze.ogg | JUGGLER_GODでGOD成立時の「プチュン」音（god_freeze.oggより優先） |
+| juggler_god_god_stop_1.ogg | GOD成立ゲームの第1停止音 |
+| juggler_god_god_stop_2.ogg | GOD成立ゲームの第2停止音 |
+| juggler_god_god_stop_3.ogg | GOD成立ゲームの第3停止音 |
+| juggler_god_god_bonus_start.ogg | GOD揃い直後の最初のBIG開始効果音 |
+| juggler_god_god_big_bgm.ogg | GOD揃い直後の最初のBIGだけで使うBGM（ループ） |
 
 ファイル形式はMinecraftが再生できるOGGです。MP3等の拡張子だけを変えてもOGGにはなりません。音の内容・長さは自由です。
 
@@ -33,3 +39,8 @@
 
 
 `god_freeze.ogg` はJuggler + GOD後続仕様のGOD成立ゲーム専用音源です。未配置なら無音で続行します。
+
+
+GOD成立時の専用音は、上記 `juggler_god_god_*.ogg` を置くと通常のJUGGLER_GOD音より優先されます。専用ファイルが無い場合は、停止音・BIG開始音・BIG BGMは通常のJUGGLER_GOD音へフォールバックします。フリーズ音だけは `juggler_god_god_freeze.ogg` → `god_freeze.ogg` の順です。
+
+専用BIG BGMはGOD揃いから入る最初のBIG 1回だけで、BIG終了時に通常どおり停止します。その次のBIGからは通常の `juggler_god_big_bgm.ogg`（未配置なら `big_bgm.ogg`）へ戻ります。
