@@ -65,11 +65,13 @@ class ConfigValidationTest {
     void malformedYamlCannotBecomeValidConfiguration(String yaml) { assertFalse(load(yaml).valid()); }
 
     @Test void successorHeavenTuningIsExplicitAndRangeChecked() throws Exception {
-        assertTrue(load(defaults().replace("normal_to_heaven_ppm: 0","normal_to_heaven_ppm: 1000000")
-                .replace("heaven_to_heaven_ppm: 0","heaven_to_heaven_ppm: 1000000")).valid());
-        assertFalse(load(defaults().replace("normal_to_heaven_ppm: 0","normal_to_heaven_ppm: -1")).valid());
-        assertFalse(load(defaults().replace("heaven_to_heaven_ppm: 0","heaven_to_heaven_ppm: 1000001")).valid());
-        assertFalse(load(defaults().replace("  normal_to_heaven_ppm: 0","")).valid());
+        assertTrue(load(defaults().replace("normal_big_to_heaven_ppm: 125000","normal_big_to_heaven_ppm: 1000000")
+                .replace("normal_reg_to_heaven_ppm: 62500","normal_reg_to_heaven_ppm: 1000000")
+                .replace("heaven_to_heaven_ppm: 500000","heaven_to_heaven_ppm: 1000000")).valid());
+        assertFalse(load(defaults().replace("normal_big_to_heaven_ppm: 125000","normal_big_to_heaven_ppm: -1")).valid());
+        assertFalse(load(defaults().replace("normal_reg_to_heaven_ppm: 62500","normal_reg_to_heaven_ppm: 1000001")).valid());
+        assertFalse(load(defaults().replace("heaven_to_heaven_ppm: 500000","heaven_to_heaven_ppm: 1000001")).valid());
+        assertFalse(load(defaults().replace("  normal_big_to_heaven_ppm: 125000","")).valid());
     }
 
     @Test void duplicateKeysAreRejectedAndValidEditsAreAccepted() throws Exception {
