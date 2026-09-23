@@ -71,6 +71,12 @@ public record Session(Map<String, Object> snapshot) {
         json.addProperty("stoppedMask", number("stopped_mask"));
         JsonObject ms=machineState();
         if(ms!=null&&ms.has("godFreeze"))json.addProperty("godFreeze",ms.get("godFreeze").getAsBoolean());
+        if(ms!=null&&ms.has("jgMode")){
+            boolean godFirstBigAudio=ms.has("bonusOrigin")&&"GOD_CHAIN".equals(ms.get("bonusOrigin").getAsString())
+                    &&ms.has("godBigCount")&&ms.get("godBigCount").getAsInt()==1
+                    &&publicGameState().name().startsWith("BIG_");
+            json.addProperty("godFirstBigAudio",godFirstBigAudio);
+        }
         if(ms!=null&&ms.has("godBigCount"))json.addProperty("godChainBigCount",ms.get("godBigCount").getAsInt());
         if(ms!=null&&ms.has("additionalBigStock")&&ms.has("additionalRegStock"))
             json.addProperty("stockLampOn",ms.get("additionalBigStock").getAsInt()>0||ms.get("additionalRegStock").getAsInt()>0);
