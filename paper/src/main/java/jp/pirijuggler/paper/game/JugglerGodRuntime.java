@@ -67,13 +67,13 @@ public record JugglerGodRuntime(
     public JugglerGodRuntime stock(int big,int reg,String event) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,godFreeze,event,big,reg,pendingBonusHit,suspendedBonusType,
-                suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock);
+                suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,forcedRole);
     }
 
     public JugglerGodRuntime interrupt(String hit,String currentType,int payoutCount,boolean ended,String event) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,godFreeze,event,additionalBigStock,additionalRegStock,
-                hit,currentType,payoutCount,ended,releasingStock);
+                hit,currentType,payoutCount,ended,releasingStock,forcedRole);
     }
 
     public JugglerGodRuntime clearInterrupt(String event) {
