@@ -193,17 +193,43 @@ try:
     stats=dbrows("SELECT total_games,current_games,big_count FROM machine_period_stats WHERE machine_id=1")[0]
     check("GOD trigger counts one normal game before guaranteed zero-G stock",stats["total_games"]==1 and stats["big_count"]==1,stats)
 
+    def stop_spin(prefix,spinning_state):
+        for key,mask in [(263,1),(264,3)]:
+            tap(key);wait(lambda:settled() and session()["stopped_mask"]==mask,prefix+" stop")
+        tap(262)
+        wait(lambda:settled() and session()["game_state"]!=spinning_state,prefix+" settle")
+
     def finish_bonus():
-        # BIG is 20 payout rounds of 14 medals under production rules.
-        for _ in range(20):
-            wait(lambda:session()["game_state"]=="BIG_READY","BIG ready")
-            tap(32);wait_state("BIG_BETTED")
-            tap(32);wait(lambda:settled() and session()["game_state"]=="BIG_SPINNING" and cli().get("stopEnabled"),"BIG lever")
-            for key,mask in [(263,1),(264,3)]:
-                tap(key);wait(lambda:settled() and session()["stopped_mask"]==mask,"BIG stop")
-            tap(262)
-            wait(lambda:session()["game_state"] in ("BIG_READY","SEATED_READY"),"BIG settle")
-        wait_state("SEATED_READY")
+        # Drain the active BIG plus any visible bonus-in-bonus acquisitions and
+        # stock releases. New Phase 03 gameplay may interrupt a bonus round with
+        # BIG/REG entry confirmation or GOD BAR confirmation, then resume it.
+        for _ in range(2000):
+            st=session()["game_state"]
+            if st=="SEATED_READY":
+                return
+            if st in ("BIG_READY","REG_READY"):
+                kind="BIG" if st=="BIG_READY" else "REG"
+                tap(32);wait_state(kind+"_BETTED")
+                tap(32);wait(lambda:settled() and session()["game_state"]==kind+"_SPINNING" and cli().get("stopEnabled"),kind+" lever")
+                stop_spin(kind,kind+"_SPINNING")
+                continue
+            if st in ("BONUS_PENDING_BIG","BONUS_PENDING_REG"):
+                kind="BIG" if st.endswith("BIG") else "REG"
+                tap(32);wait_state("BONUS_ENTRY_BETTED_"+kind)
+                continue
+            if st in ("BONUS_ENTRY_BETTED_BIG","BONUS_ENTRY_BETTED_REG"):
+                kind="BIG" if st.endswith("BIG") else "REG"
+                tap(32);wait(lambda:settled() and session()["game_state"]=="BONUS_ENTRY_SPINNING_"+kind and cli().get("stopEnabled"),kind+" entry lever")
+                stop_spin(kind+" entry","BONUS_ENTRY_SPINNING_"+kind)
+                continue
+            if st=="NORMAL_BETTED":
+                runtime=json.loads(session()["machine_state_json"])
+                check("bonus interrupt NORMAL_BETTED is pending GOD",runtime.get("pendingBonusHit")=="GOD",runtime)
+                tap(32);wait(lambda:settled() and session()["game_state"]=="NORMAL_SPINNING" and cli().get("stopEnabled"),"bonus GOD lever")
+                stop_spin("bonus GOD","NORMAL_SPINNING")
+                continue
+            raise RuntimeError("Unexpected bonus drain state "+st)
+        raise RuntimeError("Bonus drain exceeded safety bound")
 
     # Finish the initial GOD BIG, then verify four guaranteed successor BIGs.
     progress("GOD_BIG_COMPLETE",index=1,**snapshot())
