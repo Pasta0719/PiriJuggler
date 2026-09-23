@@ -22,7 +22,10 @@ public final class RemoteMachineViewState {
     private String facing;
     private String machineType = "JUGGLER";
     private boolean enabled, occupied, godFreeze;
-    private long godFreezeAt=Long.MIN_VALUE;
+    private long godFreezeAt=Long.MIN_VALUE,godPresentationAt=Long.MIN_VALUE;
+    private final double[] godPresentationStart={0,0,0};
+    private static final long GOD_PRESENTATION_SPIN_NANOS=12_700_000_000L;
+    private static final double GOD_PRESENTATION_TARGET=3.0;
     private String gameState;
     private final int[] displayStops = new int[3];
     private final double[] startPhases = new double[3];
@@ -42,7 +45,7 @@ public final class RemoteMachineViewState {
         this.machineId = machineId;
     }
 
-    static RemoteMachineViewState fromSnapshot(int machineId, JsonObject body, long now) {
+    static RemoteMachineViewState fromSnapshot(int machineId, JsonObject body, long now,long wallNowMs) {
         RemoteMachineViewState state = new RemoteMachineViewState(machineId);
         state.world = UUID.fromString(body.get("world").getAsString());
         state.worldName = body.get("worldName").getAsString();
@@ -61,6 +64,14 @@ public final class RemoteMachineViewState {
         state.displayStops[0] = ds.get("left").getAsInt();
         state.displayStops[1] = ds.get("center").getAsInt();
         state.displayStops[2] = ds.get("right").getAsInt();
+        long presentationEpoch=body.has("godPresentationStartMs")?body.get("godPresentationStartMs").getAsLong():0L;
+        if(presentationEpoch>0){
+            state.godPresentationStart[0]=state.displayStops[0];
+            state.godPresentationStart[1]=state.displayStops[1];
+            state.godPresentationStart[2]=state.displayStops[2];
+            long elapsedMs=Math.max(0L,wallNowMs-presentationEpoch);
+            state.godPresentationAt=now-elapsedMs*1_000_000L;
+        }
         state.stoppedMask = body.get("stoppedMask").getAsInt();
         state.lampOn = body.get("lampOn").getAsBoolean();
         state.lampBlink = false;
@@ -160,6 +171,7 @@ public final class RemoteMachineViewState {
 
     public double phase(int reel, long now) {
         if (reel < 0 || reel > 2) throw new IllegalArgumentException("reel");
+        if(!spinning&&godPresentationAt!=Long.MIN_VALUE)return godPresentationPhase(reel,now);
         StopMotion stop = stops[reel];
         if (stop != null) {
             if (stop.durationNanos == 0) return stop.finalStop;
@@ -169,6 +181,18 @@ public final class RemoteMachineViewState {
         }
         if (!spinning) return displayStops[reel];
         return ReelMotion.wrap(startPhases[reel] + ReelMotion.delta(profile, (now - spinAt) / 1_000_000_000.0));
+    }
+
+    private double godPresentationPhase(int reel,long now){
+        long elapsed=Math.max(0L,now-godPresentationAt);
+        if(elapsed>=GOD_PRESENTATION_SPIN_NANOS)return GOD_PRESENTATION_TARGET;
+        double start=godPresentationStart[reel];
+        double target=GOD_PRESENTATION_TARGET;
+        while(target<=start)target+=21.0;
+        target+=42.0;
+        double t=elapsed/(double)GOD_PRESENTATION_SPIN_NANOS;
+        double eased=Math.sin(t*Math.PI/2.0);
+        return ReelMotion.wrap(start+(target-start)*eased);
     }
 
     public boolean lampVisible(long now) {
