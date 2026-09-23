@@ -131,6 +131,7 @@ public final class RemoteMachineSync {
                 copyString(source, body, "spinId");
                 copyString(source, body, "animation");
                 copyObject(source, body, "startPhase");
+                copyBoolean(source, body, "godFreeze");
                 PiriDatabase.State state = stateSupplier.get();
                 Session current = state == null ? null : state.sessions().stream()
                         .filter(s -> s.machine() == machineId && s.lifecycle() == Session.Lifecycle.ACTIVE)
@@ -245,6 +246,7 @@ public final class RemoteMachineSync {
             body.addProperty("pay", 0);
             body.addProperty("bonusCount", 0);
             body.addProperty("bonusMode", "NONE");
+            body.addProperty("godFreeze", false);
             body.addProperty("spinning", false);
         } else {
             // ACTIVE and SUSPENDED_GRACE both retain the public reel state. ESC only closes
@@ -259,6 +261,7 @@ public final class RemoteMachineSync {
             body.addProperty("pay", publicState.get("pay").getAsLong());
             body.addProperty("bonusCount", publicState.get("bonusCount").getAsLong());
             body.addProperty("bonusMode", publicBonusMode(gameState));
+            body.addProperty("godFreeze", publicState.has("godFreeze")&&publicState.get("godFreeze").getAsBoolean());
 
             boolean spinning = gameState.endsWith("_SPINNING");
             body.addProperty("spinning", spinning);
@@ -360,6 +363,11 @@ public final class RemoteMachineSync {
     private static void copyInt(JsonObject from, JsonObject to, String name) {
         if (from.has(name) && from.get(name).isJsonPrimitive() && from.getAsJsonPrimitive(name).isNumber())
             to.addProperty(name, from.get(name).getAsInt());
+    }
+
+    private static void copyBoolean(JsonObject from, JsonObject to, String name) {
+        if (from.has(name) && from.get(name).isJsonPrimitive() && from.getAsJsonPrimitive(name).isBoolean())
+            to.addProperty(name, from.get(name).getAsBoolean());
     }
 
     private static void copyObject(JsonObject from, JsonObject to, String name) {
