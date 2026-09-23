@@ -64,6 +64,12 @@ public final class JugglerGodGameEngine implements GameEngine {
                 &&(before.state()==Session.GameState.BIG_BETTED||before.state()==Session.GameState.REG_BETTED);
         boolean godInGodConfirm=normalLever&&"GOD".equals(runtime.pendingBonusHit());
 
+        if(bonusLever&&runtime.godFreeze()&&"GOD_CHAIN".equals(runtime.bonusOrigin())){
+            prepared=runtime.core(runtime.mode(),runtime.heavenTarget(),runtime.heavenProgress(),
+                    runtime.guaranteedRemaining(),runtime.forceChainBig(),runtime.countNextChainGame(),
+                    runtime.bonusOrigin(),runtime.godBigCount(),false,"GOD_PRESENTATION_DONE");
+        }
+
         if(bonusLever&&"NONE".equals(runtime.pendingBonusHit())){
             String current=before.state()==Session.GameState.BIG_BETTED?"BIG":"REG";
             String hit=drawBonusOverlay(machine);
@@ -198,7 +204,7 @@ public final class JugglerGodGameEngine implements GameEngine {
         }else if(legacy.finished()&&before.state()==Session.GameState.NORMAL_SPINNING
                 &&"GOD".equals(before.text("internal_role"))){
             next=runtime.core(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
-                    "GOD_CHAIN",1,false,"GOD_STARTED");
+                    "GOD_CHAIN",1,true,"GOD_STARTED");
         }else if(legacy.bonusStarted()!=null&&"GOD_CHAIN".equals(next.bonusOrigin())&&!next.releasingStock()){
             next=recordGodChainBonusStart(next);
         }
@@ -366,7 +372,15 @@ public final class JugglerGodGameEngine implements GameEngine {
                 .map(e->new GameTransition.Scheduled(e.delayMs(),e.packet())).toList();
     }
 
-    @Override public Optional<Envelope> resume(Session saved,long sentNanos){return delegate.resume(saved,sentNanos);}
+    @Override public Optional<Envelope> resume(Session saved,long sentNanos){
+        Optional<Envelope> resumed=delegate.resume(saved,sentNanos);
+        if(resumed.isEmpty())return resumed;
+        JugglerGodRuntime runtime=JugglerGodRuntime.fromJson(saved.machineState().toString());
+        if(!runtime.godFreeze())return resumed;
+        Envelope packet=resumed.get();
+        JsonObject body=packet.payload().deepCopy();body.addProperty("godFreeze",true);
+        return Optional.of(new Envelope(packet.protocol(),packet.packetType(),body));
+    }
     @Override public Session capture(Session saved,long now){return delegate.capture(saved,now);}
     @Override public void forget(UUID session){delegate.forget(session);}
 
