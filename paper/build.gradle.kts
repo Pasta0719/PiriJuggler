@@ -12,6 +12,13 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:3.50.3.0")
 }
 
+tasks.withType<Test>().configureEach {
+    testLogging {
+        events("failed")
+        showStandardStreams = true
+    }
+}
+
 tasks.processResources {
     inputs.property("version", project.version)
     filesMatching("plugin.yml") { expand("version" to project.version) }
