@@ -88,15 +88,17 @@ public final class SlotScreen extends Screen {
     private static void drawGodBlackout(DrawContext c,long ms){
         if(ms<35)return;
 
-        // The GOD blackout is an event, not a black rectangle or a fade:
-        // the picture tears into horizontal bands, collapses toward the centre,
-        // leaves a short bright scan-line, then the signal is completely gone.
+        // Confine the GOD blackout to the three-reel window only.
+        // Cabinet, data display, lamp and controls remain visible.
+        final int left=670,top=300,right=1570,bottom=690;
+        final int w=right-left,h=bottom-top,cx=(left+right)/2,cy=(top+bottom)/2;
+
         if(ms<70){
             int p=(int)(ms-35);
-            for(int y=0;y<1080;y+=54){
-                int band=Math.min(1920,p*(32+(y/54%4)*7));
-                if(((y/54)&1)==0)c.fill(0,y,band,Math.min(1080,y+30),0xff000000);
-                else c.fill(1920-band,y,1920,Math.min(1080,y+30),0xff000000);
+            for(int y=top;y<bottom;y+=26){
+                int band=Math.min(w,p*(16+((y-top)/26%4)*4));
+                if((((y-top)/26)&1)==0)c.fill(left,y,left+band,Math.min(bottom,y+15),0xff000000);
+                else c.fill(right-band,y,right,Math.min(bottom,y+15),0xff000000);
             }
             return;
         }
@@ -104,36 +106,35 @@ public final class SlotScreen extends Screen {
         if(ms<120){
             float p=(ms-70)/50.0f;
             p=p*p;
-            int closed=Math.min(540,(int)(540*p));
-            c.fill(0,0,1920,closed,0xff000000);
-            c.fill(0,1080-closed,1920,1080,0xff000000);
+            int closed=Math.min(h/2,(int)((h/2)*p));
+            c.fill(left,top,right,top+closed,0xff000000);
+            c.fill(left,bottom-closed,right,bottom,0xff000000);
 
-            int centreTop=closed,centreBottom=1080-closed;
-            for(int y=centreTop;y<centreBottom;y+=34){
-                if(((y/34)&1)==0)c.fill(0,y,1920,Math.min(centreBottom,y+5),0x9a000000);
+            int centreTop=top+closed,centreBottom=bottom-closed;
+            for(int y=centreTop;y<centreBottom;y+=18){
+                if((((y-centreTop)/18)&1)==0)c.fill(left,y,right,Math.min(centreBottom,y+4),0x9a000000);
             }
             return;
         }
 
         if(ms<165){
-            c.fill(0,0,1920,1080,0xff000000);
+            c.fill(left,top,right,bottom,0xff000000);
             float p=(ms-120)/45.0f;
-            int half=(int)(960*(1.0f-p));
-            int thickness=Math.max(2,(int)(10*(1.0f-p)));
-            c.fill(960-half,540-thickness,960+half,540+thickness,0xffffffff);
+            int half=(int)((w/2)*(1.0f-p));
+            int thickness=Math.max(2,(int)(8*(1.0f-p)));
+            c.fill(cx-half,cy-thickness,cx+half,cy+thickness,0xffffffff);
             return;
         }
 
         if(ms<900){
-            c.fill(0,0,1920,1080,0xff000000);
+            c.fill(left,top,right,bottom,0xff000000);
             return;
         }
 
-        // A very short signal-kick before the picture is handed back to the normal renderer.
         if(ms<940){
-            c.fill(0,0,1920,1080,0xff000000);
-            int half=(int)(960*((ms-900)/40.0f));
-            c.fill(960-half,538,960+half,542,0xd8ffffff);
+            c.fill(left,top,right,bottom,0xff000000);
+            int half=(int)((w/2)*((ms-900)/40.0f));
+            c.fill(cx-half,cy-2,cx+half,cy+2,0xd8ffffff);
         }
     }
 
