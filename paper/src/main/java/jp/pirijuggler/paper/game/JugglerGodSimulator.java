@@ -41,13 +41,15 @@ public final class JugglerGodSimulator {
     }
 
     /** Compatibility entry point for the untuned Phase 02/03 boundary. */
-    public static Result run(RoleWeights weights,int setting,long games,long normalToHeavenPpm,long heavenToHeavenPpm,RandomGenerator random) {
-        return run(weights,setting,games,normalToHeavenPpm,heavenToHeavenPpm,1_000_000,random);
+    public static Result run(RoleWeights weights,int setting,long games,long normalBigToHeavenPpm,long normalRegToHeavenPpm,long heavenToHeavenPpm,RandomGenerator random) {
+        return run(weights,setting,games,normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm,1_000_000,random);
     }
 
-    public static Result run(RoleWeights weights,int setting,long games,long normalToHeavenPpm,long heavenToHeavenPpm,int bonusScalePpm,RandomGenerator random) {
+    public static Result run(RoleWeights weights,int setting,long games,long normalBigToHeavenPpm,long normalRegToHeavenPpm,long heavenToHeavenPpm,int bonusScalePpm,RandomGenerator random) {
         if(setting<1||setting>6||games<1||games>100_000_000L)throw new IllegalArgumentException("Simulator bounds");
-        if(normalToHeavenPpm<0||normalToHeavenPpm>1_000_000||heavenToHeavenPpm<0||heavenToHeavenPpm>1_000_000
+        if(normalBigToHeavenPpm<0||normalBigToHeavenPpm>1_000_000
+                ||normalRegToHeavenPpm<0||normalRegToHeavenPpm>1_000_000
+                ||heavenToHeavenPpm<0||heavenToHeavenPpm>1_000_000
                 ||bonusScalePpm<0||bonusScalePpm>1_000_000)
             throw new IllegalArgumentException("Phase 03 tuning");
 
@@ -117,8 +119,11 @@ public final class JugglerGodSimulator {
                 }else{
                     mode=Mode.NORMAL;heavenTarget=0;heavenProgress=0;
                 }
-            }else if(random.nextLong(1_000_000)<normalToHeavenPpm){
-                mode=Mode.HEAVEN;heavenTarget=random.nextInt(32)+1;heavenProgress=0;heavenEntries++;
+            }else {
+                long normalHeavenPpm=big?normalBigToHeavenPpm:normalRegToHeavenPpm;
+                if(random.nextLong(1_000_000)<normalHeavenPpm){
+                    mode=Mode.HEAVEN;heavenTarget=random.nextInt(32)+1;heavenProgress=0;heavenEntries++;
+                }
             }
         }
 
