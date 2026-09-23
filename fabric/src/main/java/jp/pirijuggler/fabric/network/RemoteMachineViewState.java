@@ -21,7 +21,8 @@ public final class RemoteMachineViewState {
     private int x, y, z;
     private String facing;
     private String machineType = "JUGGLER";
-    private boolean enabled, occupied;
+    private boolean enabled, occupied, godFreeze;
+    private long godFreezeAt=Long.MIN_VALUE;
     private String gameState;
     private final int[] displayStops = new int[3];
     private final double[] startPhases = new double[3];
@@ -54,6 +55,8 @@ public final class RemoteMachineViewState {
         state.enabled = body.get("enabled").getAsBoolean();
         state.occupied = body.get("occupied").getAsBoolean();
         state.gameState = body.get("gameState").getAsString();
+        state.godFreeze = body.has("godFreeze") && body.get("godFreeze").getAsBoolean();
+        state.godFreezeAt = state.godFreeze ? now-165_000_000L : Long.MIN_VALUE;
         JsonObject ds = body.getAsJsonObject("displayStops");
         state.displayStops[0] = ds.get("left").getAsInt();
         state.displayStops[1] = ds.get("center").getAsInt();
@@ -111,6 +114,8 @@ public final class RemoteMachineViewState {
         }
         spinAt = now;
         spinning = stoppedMask != 7;
+        godFreeze = body.has("godFreeze") && body.get("godFreeze").getAsBoolean();
+        godFreezeAt = godFreeze ? now : Long.MIN_VALUE;
     }
 
     void applyStop(JsonObject body, long now) {
@@ -193,6 +198,17 @@ public final class RemoteMachineViewState {
     public long regCount() { return regCount; }
     public String bonusMode() { return bonusMode; }
     public boolean spinning() { return spinning; }
+    public boolean godFreeze() { return godFreeze; }
+    public long godFreezeElapsedMillis(long now) {
+        return !godFreeze||godFreezeAt==Long.MIN_VALUE?-1L:Math.max(0L,(now-godFreezeAt)/1_000_000L);
+    }
+    public boolean godRevealed(int reel,long now) {
+        if(!godFreeze||reel<0||reel>2)return false;
+        if(!spinning&&stoppedMask==7)return true;
+        if((stoppedMask&(1<<reel))==0)return false;
+        StopMotion stop=stops[reel];
+        return stop==null||now>=stop.at+stop.durationNanos;
+    }
     public UUID spinId() { return spinId; }
 
     public int displayStop(int reel) {
