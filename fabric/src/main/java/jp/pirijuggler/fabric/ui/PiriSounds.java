@@ -34,7 +34,7 @@ public final class PiriSounds {
     private static SoundInstance loop;private static String loopName;
     private record Pending(String name,long at){}
     private static final class LoopSound extends AbstractSoundInstance {
-        private LoopSound(SoundEvent event){super(event,SoundCategory.MASTER,SoundInstance.createRandom());repeat=true;repeatDelay=0;relative=true;attenuationType=SoundInstance.AttenuationType.NONE;volume=1.0f;pitch=1.0f;}
+        private LoopSound(SoundEvent event){super(event,SoundCategory.MASTER,SoundInstance.createRandom());repeat=true;repeatDelay=0;relative=true;attenuationType=SoundInstance.AttenuationType.NONE;volume=0.45f;pitch=1.0f;}
     }
     public static void register(){for(String name:NAMES){var id=Identifier.of("piri",name);EVENTS.put(name,Registry.register(Registries.SOUND_EVENT,id,SoundEvent.of(id)));}}
     public static void queue(String name,int count,long spacingNanos){queueAfter(name,count,spacingNanos,0);}
