@@ -30,22 +30,38 @@ public final class SlotViewState {
                 state=b.deepCopy();if(b.has("machineType"))machineType=b.get("machineType").getAsString();notice=b.get("lampOn").getAsBoolean();error="";
                 var display=b.getAsJsonObject("displayStops");
                 for(int i=0;i<3;i++){rest[i]=display.get(new String[]{"left","center","right"}[i]).getAsDouble();if(spin==null)starts[i]=rest[i];}
+                boolean authoritativeGod=b.has("godFreeze")&&b.get("godFreeze").getAsBoolean();
+                if(authoritativeGod){
+                    godFreeze=true;
+                    if(godFreezeAt==Long.MIN_VALUE)godFreezeAt=now-165_000_000L;
+                    int mask=b.has("stoppedMask")?b.get("stoppedMask").getAsInt():0;
+                    boolean completed="BIG_READY".equals(b.get("gameState").getAsString());
+                    for(int i=0;i<3;i++)if(completed||(mask&(1<<i))!=0){
+                        godRevealed[i]=true;
+                        if(godRevealAt[i]==Long.MIN_VALUE)godRevealAt[i]=now-250_000_000L;
+                    }
+                }
                 if(!b.get("gameState").getAsString().contains("SPINNING")){
                     spinning=false;
-                    boolean holdGodResult=godFreeze&&allGodRevealed()
-                            &&"BIG_READY".equals(b.get("gameState").getAsString())
-                            &&b.has("lampOn")&&b.get("lampOn").getAsBoolean();
-                    if(!holdGodResult){godFreeze=false;Arrays.fill(godRevealed,false);Arrays.fill(godRevealAt,Long.MIN_VALUE);}
+                    boolean holdGodResult=authoritativeGod&&allGodRevealed();
+                    if(!holdGodResult){godFreeze=false;godFreezeAt=Long.MIN_VALUE;Arrays.fill(godRevealed,false);Arrays.fill(godRevealAt,Long.MIN_VALUE);}
                     stopHints=new JsonObject();godNav="";Arrays.fill(presses,null);
                 }
             }}
             case SPIN_START -> {if(matches(b)) {
-                spin=UUID.fromString(b.get("spinId").getAsString());animation=b.get("animation").getAsString();spinAt=now;spinning=true;godFreeze=b.has("godFreeze")&&b.get("godFreeze").getAsBoolean();godFreezeAt=godFreeze?now:Long.MIN_VALUE;godImpactAt=Long.MIN_VALUE;Arrays.fill(godRevealed,false);Arrays.fill(godRevealAt,Long.MIN_VALUE);error="";
+                spin=UUID.fromString(b.get("spinId").getAsString());animation=b.get("animation").getAsString();spinAt=now;spinning=true;
+                boolean resumed="RESUME_NORMAL".equals(animation);
+                godFreeze=b.has("godFreeze")&&b.get("godFreeze").getAsBoolean();
+                godFreezeAt=godFreeze?(resumed?now-165_000_000L:now):Long.MIN_VALUE;godImpactAt=Long.MIN_VALUE;
+                Arrays.fill(godRevealed,false);Arrays.fill(godRevealAt,Long.MIN_VALUE);error="";
                 stopEnableAfterMs=b.has("stopEnableAfterMs")?b.get("stopEnableAfterMs").getAsInt():ReelMotion.Profile.valueOf(animation).clientDelayMs();
                 stopHints=b.has("stopHints")?b.getAsJsonObject("stopHints").deepCopy():new JsonObject();
                 godNav=b.has("godNav")?b.get("godNav").getAsString():"";
                 var phases=b.getAsJsonObject("startPhase");for(int i=0;i<3;i++)starts[i]=phases.get(new String[]{"left","center","right"}[i]).getAsDouble();Arrays.fill(stops,null);Arrays.fill(presses,null);
-                if(animation.equals("RESUME_NORMAL")&&state!=null&&state.has("stoppedMask"))for(int i=0;i<3;i++)if((state.get("stoppedMask").getAsInt()&(1<<i))!=0)stops[i]=new Stop(rest[i],rest[i],now,0);
+                if(resumed&&state!=null&&state.has("stoppedMask"))for(int i=0;i<3;i++)if((state.get("stoppedMask").getAsInt()&(1<<i))!=0){
+                    stops[i]=new Stop(rest[i],rest[i],now,0);
+                    if(godFreeze){godRevealed[i]=true;godRevealAt[i]=now-250_000_000L;}
+                }
             }}
             case REEL_STOP -> {if(matchesSpin(b)) {
                 int reel=switch(b.get("reel").getAsString()){case "LEFT"->0;case "CENTER"->1;case "RIGHT"->2;default->throw new IllegalArgumentException("Unknown reel");};
