@@ -86,8 +86,10 @@ public final class SlotUi {
                 }
             }
             case BONUS_END -> {
+                boolean bigEnd=b.has("bonusType")&&"BIG".equals(b.get("bonusType").getAsString());
+                boolean godFirstBigEnd=bigEnd&&"JUGGLER_GOD".equals(view.machineType())&&godBigAudioActive;
                 pendingBigBgmAt=-1L;pendingBigBgmName=null;godBigAudioPending=false;godBigAudioActive=false;PiriSounds.stopLoop();
-                if(b.has("bonusType")&&"BIG".equals(b.get("bonusType").getAsString()))PiriSounds.queue(sound("bonus_end"),1,0);
+                if(bigEnd)PiriSounds.queue(godFirstBigEnd?special("juggler_god_god_bonus_end",sound("bonus_end")):sound("bonus_end"),1,0);
             }
             case PUBLIC_STATE -> {
                 if(view.matches(b)){
