@@ -21,9 +21,10 @@ sound:
   bonus_end_volume: 0.90
 
 juggler_god:
-  # Phase 03 tuning values. Concrete values remain unset until explicitly approved.
-  normal_to_heaven_ppm: 0
-  heaven_to_heaven_ppm: 0
+  # User-approved heaven probabilities.
+  normal_big_to_heaven_ppm: 125000
+  normal_reg_to_heaven_ppm: 62500
+  heaven_to_heaven_ppm: 500000
   settings:
     '1': {bonus_scale_ppm: 1000000}
     '2': {bonus_scale_ppm: 1000000}
