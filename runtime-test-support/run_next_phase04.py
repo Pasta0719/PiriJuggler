@@ -37,11 +37,21 @@ def command(text,expected):
 def click():
  before=sum(p.get('type')=='OPEN_MACHINE' for p in cli().get('packets',[])); action('aim',x=0); action('click',x=0); wait(lambda:sum(p.get('type')=='OPEN_MACHINE' for p in cli().get('packets',[]))>before,'open')
 def capture(label): action('capture',label=label); time.sleep(1)
+def asset_probe(machine_type,ordinary_path):
+ before=len(cli().get('actions',[])); action('asset_probe',machineType=machine_type,ordinaryPath=ordinary_path)
+ acts=cli().get('actions',[]); return acts[-1] if len(acts)>before else {}
 try:
  plugins=SERVER/'plugins'; plugins.mkdir(parents=True,exist_ok=True); shutil.copy2(prod['paper'],plugins); shutil.copy2(helper,plugins); (SERVER/'eula.txt').write_text('eula=true\n'); (SERVER/'server.properties').write_text('server-ip=127.0.0.1\nserver-port=25598\nonline-mode=false\nenforce-secure-profile=false\nspawn-protection=0\nview-distance=2\nsimulation-distance=2\ngenerate-structures=false\n')
  sr=OUT/'server-result.json'; sh=(OUT/'server.log').open('w',encoding='utf-8'); handles.append(sh); server=subprocess.Popen([JAVA,'-Xms512M','-Xmx1536M','-Dfile.encoding=UTF-8','-Dpiri.runtime.phase=next02',f'-Dpiri.runtime.serverResult={sr}','-jar',str(PAPER),'nogui'],cwd=SERVER,stdin=subprocess.PIPE,stdout=sh,stderr=subprocess.STDOUT,text=True,creationflags=FLAGS); wait(lambda:'Done (' in log(OUT/'server.log') and state().get('ready'),'Paper',180)
  cdir=E/'work'/'client-next04-main'; cdir.mkdir(parents=True,exist_ok=True); (cdir/'options.txt').write_text('version:3953\nlang:en_us\nrenderDistance:2\nmaxFps:30\npauseOnLostFocus:false\nsoundCategory_master:0.0\nskipMultiplayerWarning:true\nonboardAccessibility:false\n')
  cr=OUT/'client-result.json'; ch=(OUT/'client.log').open('w',encoding='utf-8'); handles.append(ch); client=subprocess.Popen(GRADLE+['-PruntimeAcceptance=true','-PruntimeScenario=next04-main',f'-PruntimeRun={RUN}','-PruntimeEvidencePhase=NEXT_PHASE_04',':runtime-test-client:runClient','--console=plain'],cwd=ROOT,stdout=ch,stderr=subprocess.STDOUT,creationflags=FLAGS); wait(lambda:cli().get('connected') and cli().get('handshake'),'Fabric',90)
+ # Real-client resource-manager proof with successor-specific fixture absent.
+ fallback=asset_probe('JUGGLER_GOD','gui/reel_strip.png')
+ check('successor asset falls back to ordinary JUGGLER when override is absent',
+       fallback.get('resolved')=='piri:textures/gui/reel_strip.png' and fallback.get('available') is True,fallback)
+ ordinary=asset_probe('JUGGLER','gui/reel_strip.png')
+ check('ordinary JUGGLER keeps ordinary asset routing',
+       ordinary.get('resolved')=='piri:textures/gui/reel_strip.png',ordinary)
  action('aim',x=0); command('piri machine create JUGGLER_GOD','MACHINE_CREATED 1'); click(); wait(lambda:settled() and session()['game_state']=='SEATED_READY','seat'); check('production SlotScreen opens successor',cli().get('screen')=='SlotScreen' and cli().get('machineType')=='JUGGLER_GOD',{'screen':cli().get('screen'),'machineType':cli().get('machineType')}); capture('open')
  command('piritest fund','TEST_FUNDED'); action('close'); wait(lambda:not session() or session().get('lifecycle')!='ACTIVE','close'); click(); wait(lambda:settled() and session()['credit']==50,'reopen'); command('piritest force god','TEST_FORCE_ARMED GOD'); tap(32); wait(lambda:session()['game_state']=='NORMAL_BETTED','bet'); tap(32); wait(lambda:settled() and session()['game_state']=='NORMAL_SPINNING' and cli().get('stopEnabled'),'GOD lever'); check('authoritative GOD blackout state reaches client',cli().get('godFreeze') is True and cli().get('godRevealed')==[False,False,False],{'godFreeze':cli().get('godFreeze'),'godRevealed':cli().get('godRevealed')}); capture('god-blackout')
  tap(263); wait(lambda:cli().get('godRevealed',[False]*3)[0] is True,'left reveal'); check('first stop reveals only first GOD reel',cli().get('godRevealed')==[True,False,False],cli().get('godRevealed')); capture('god-left-reveal'); tap(264); wait(lambda:cli().get('godRevealed',[False]*3)[:2]==[True,True],'center reveal'); capture('god-two-reveal'); tap(262); wait(lambda:settled() and session()['game_state']=='BIG_READY','GOD settle'); capture('god-big-ready')
