@@ -88,32 +88,21 @@ public final class SlotScreen extends Screen {
     }
 
     private void drawGodReelWindow(DrawContext c,int reel,int x,long ms){
-        // The reel window itself changes state. Nothing is painted over a normally rendered reel.
-        c.fill(x,300,x+270,690,0xff000000);
+        // Do not cover or replace the reel with a black rectangle. The reel remains physically
+        // present; only its illumination is cut, so symbols and reel paper stay faintly visible.
+        c.fill(x,300,x+270,690,0xff0a0a0a);
+        drawReelSymbolsDark(c,reel,x,.10f);
 
-        // Collapse the actual reel picture into the centre of its own window.
-        if(ms<120){
-            float p=Math.min(1f,(ms-35)/85.0f);
-            float scaleY=Math.max(.035f,1f-p*p);
-            c.getMatrices().push();
-            c.getMatrices().translate(0,495,0);
-            c.getMatrices().scale(1,scaleY,1);
-            c.getMatrices().translate(0,-495,0);
-            drawReelSymbols(c,reel,x);
-            c.getMatrices().pop();
-            return;
-        }
-
-        // The last trace of the reel signal contracts to a thin horizontal line.
+        // During the short "puchun" entry the reel illumination dies rapidly, but the reel itself
+        // never disappears from the window.
         if(ms<165){
-            float p=(ms-120)/45.0f;
-            int half=(int)(135*(1.0f-p));
-            int thickness=Math.max(1,(int)(5*(1.0f-p)));
-            c.fill(x+135-half,495-thickness,x+135+half,495+thickness,0xffffffff);
-            return;
+            float p=Math.min(1f,(ms-35)/130.0f);
+            int a=(int)(Math.max(0,90*(1.0f-p)));
+            if(a>0)c.fill(x,300,x+270,690,(a<<24));
         }
 
-        // After blackout, this reel stays dead-black. A stopped GOD reel exposes only its BAR.
+        // Each authoritative stop makes only the middle BAR regain light while the rest of that
+        // physical reel remains unlit.
         if(view.godRevealed(reel)){
             long age=view.godRevealAgeMillis(reel);
             if(age>=0&&age<120){
@@ -122,6 +111,19 @@ public final class SlotScreen extends Screen {
                 texture(c,"symbols/bar.png",x+18,418,234,154,320,256,glow);
             }
             texture(c,"symbols/bar.png",x+20,420,230,150,320,256,1);
+        }
+    }
+
+    private void drawReelSymbolsDark(DrawContext c,int reel,int x,float brightness){
+        double phase=view.phase(reel);int middle=(int)Math.floor(phase);double fraction=phase-middle;
+        for(int row=-2;row<=2;row++){
+            String symbol=UiConstants.symbol(reel,middle+row);
+            boolean wide=symbol.equals("seven")||symbol.equals("bar");
+            int textureWidth=wide?320:256,textureHeight=256;
+            int symbolWidth=wide?230:130;
+            int symbolHeight=symbol.equals("bar")?150:130;
+            double symbolY=430+(row-fraction)*130-(symbolHeight-130)/2.0;
+            textureTint(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,textureWidth,textureHeight,1,brightness);
         }
     }
 
@@ -238,8 +240,11 @@ public final class SlotScreen extends Screen {
         for(int i=0;i<value.length();i++)for(int s=0;s<7;s++)if(SevenSegment.active(value.charAt(i),s)){int[] r=SevenSegment.RECTANGLES[s];c.fill(i*48+r[0],r[1],i*48+r[0]+r[2],r[1]+r[3],active);}c.getMatrices().pop();
     }
     private void texture(DrawContext c,String path,double x,double y,int w,int h,int tw,int th,float alpha){
+        textureTint(c,path,x,y,w,h,tw,th,alpha,1);
+    }
+    private void textureTint(DrawContext c,String path,double x,double y,int w,int h,int tw,int th,float alpha,float brightness){
         Identifier id=JugglerGodAssets.texture(view.machineType(),path);client.getTextureManager().bindTexture(id);client.getTextureManager().getTexture(id).setFilter(true,false);
-        c.getMatrices().push();c.getMatrices().translate(x,y,0);c.getMatrices().scale(w/(float)tw,h/(float)th,1);c.setShaderColor(1,1,1,alpha);c.drawTexture(id,0,0,0,0,tw,th,tw,th);c.setShaderColor(1,1,1,1);c.getMatrices().pop();
+        c.getMatrices().push();c.getMatrices().translate(x,y,0);c.getMatrices().scale(w/(float)tw,h/(float)th,1);c.setShaderColor(brightness,brightness,brightness,alpha);c.drawTexture(id,0,0,0,0,tw,th,tw,th);c.setShaderColor(1,1,1,1);c.getMatrices().pop();
     }
     private static void line(DrawContext c,float x1,float y1,float x2,float y2,float width,int tint){
         float dx=x2-x1,dy=y2-y1,len=(float)Math.sqrt(dx*dx+dy*dy);if(len==0){c.fill((int)x1-1,(int)y1-1,(int)x1+2,(int)y1+2,tint);return;}float nx=-dy/len*width/2,ny=dx/len*width/2;
