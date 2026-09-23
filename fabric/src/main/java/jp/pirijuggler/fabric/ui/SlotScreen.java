@@ -45,7 +45,7 @@ public final class SlotScreen extends Screen {
         panel(c,SlotLayout.DATA_LEFT,color("DISPLAY_BG"));
         panel(c,SlotLayout.DATA_RIGHT,color("DISPLAY_BG"));
         data(c,v.logicalX(mouseX),v.logicalY(mouseY));
-        c.fill(670,300,1570,690,view.godFreeze()&&godMs>=35?0xff000000:color("REEL_SEPARATOR"));
+        c.fill(670,300,1570,690,view.godFreeze()&&godMs>=35?0xff111111:color("REEL_SEPARATOR"));
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;
             var clip=v.clip(new SlotLayout.Rect(x,300,270,390));c.enableScissor(clip.x(),clip.y(),clip.x()+clip.w(),clip.y()+clip.h());
@@ -88,10 +88,12 @@ public final class SlotScreen extends Screen {
     }
 
     private void drawGodReelWindow(DrawContext c,int reel,int x,long ms){
-        // Keep the previous collapse-style freeze, but render it as the reel window itself.
-        // The gaps between reels are black too, so the three windows read as one blackout field.
-        c.fill(x,300,x+270,690,0xff000000);
+        // GOD freeze must not turn the reel window into a featureless black rectangle.
+        // Keep the reel paper/symbols visible at very low illumination.
+        c.fill(x,300,x+270,690,0xff141414);
+        drawReelSymbolsDark(c,reel,x,.12f);
 
+        // Preserve the collapse-style freeze entry, but apply it to the reel image itself.
         if(ms<120){
             float p=Math.min(1f,(ms-35)/85.0f);
             float scaleY=Math.max(.035f,1f-p*p);
@@ -99,7 +101,7 @@ public final class SlotScreen extends Screen {
             c.getMatrices().translate(0,495,0);
             c.getMatrices().scale(1,scaleY,1);
             c.getMatrices().translate(0,-495,0);
-            drawReelSymbols(c,reel,x);
+            drawReelSymbolsDark(c,reel,x,.28f);
             c.getMatrices().pop();
             return;
         }
@@ -108,7 +110,7 @@ public final class SlotScreen extends Screen {
             float p=(ms-120)/45.0f;
             int half=(int)(135*(1.0f-p));
             int thickness=Math.max(1,(int)(5*(1.0f-p)));
-            c.fill(x+135-half,495-thickness,x+135+half,495+thickness,0xffffffff);
+            c.fill(x+135-half,495-thickness,x+135+half,495+thickness,0xffd8d8d8);
             return;
         }
 
@@ -121,6 +123,19 @@ public final class SlotScreen extends Screen {
                 texture(c,"symbols/bar.png",x+18,418,234,154,320,256,glow);
             }
             texture(c,"symbols/bar.png",x+20,420,230,150,320,256,1);
+        }
+    }
+
+    private void drawReelSymbolsDark(DrawContext c,int reel,int x,float brightness){
+        double phase=view.phase(reel);int middle=(int)Math.floor(phase);double fraction=phase-middle;
+        for(int row=-2;row<=2;row++){
+            String symbol=UiConstants.symbol(reel,middle+row);
+            boolean wide=symbol.equals("seven")||symbol.equals("bar");
+            int textureWidth=wide?320:256,textureHeight=256;
+            int symbolWidth=wide?230:130;
+            int symbolHeight=symbol.equals("bar")?150:130;
+            double symbolY=430+(row-fraction)*130-(symbolHeight-130)/2.0;
+            textureTint(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,textureWidth,textureHeight,1,brightness);
         }
     }
 
