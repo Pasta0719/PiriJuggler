@@ -90,6 +90,25 @@ class RemoteMachineViewStateTest {
         assertTrue(live.godRevealed(0,now.get()));
     }
 
+    @Test void spectatorGodPresentationAlsoReverseAlignsToCenterSevens(){
+        AtomicLong nanos=new AtomicLong();
+        AtomicLong millis=new AtomicLong(200_000L);
+        RemoteMachineRegistry registry=new RemoteMachineRegistry(nanos::get,millis::get);
+        JsonObject snap=snapshot(8);
+        snap.addProperty("machineType","JUGGLER_GOD");
+        snap.addProperty("gameState","BIG_READY");
+        snap.addProperty("godPresentationStartMs",200_000L);
+        JsonObject stops=snap.getAsJsonObject("displayStops");
+        stops.addProperty("left",9);stops.addProperty("center",11);stops.addProperty("right",4);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,snap));
+        RemoteMachineViewState view=registry.view(8);
+        assertEquals(9,view.phase(0,nanos.get()),1e-9);
+        nanos.set(12_700_000_000L);
+        assertEquals(3,view.phase(0,nanos.get()),1e-9);
+        assertEquals(3,view.phase(1,nanos.get()),1e-9);
+        assertEquals(3,view.phase(2,nanos.get()),1e-9);
+    }
+
     private static JsonObject snapshot(int id) {
         JsonObject body = id(id);
         body.addProperty("world", UUID.randomUUID().toString());
