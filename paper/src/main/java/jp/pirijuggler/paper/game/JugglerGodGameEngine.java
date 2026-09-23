@@ -21,7 +21,8 @@ public final class JugglerGodGameEngine implements GameEngine {
     private final NormalGame delegate;
     private final RandomStreams random;
     private final RoleWeights weights;
-    private final long normalToHeavenPpm;
+    private final long normalBigToHeavenPpm;
+    private final long normalRegToHeavenPpm;
     private final long heavenToHeavenPpm;
     private final int[] bonusScalePpm=new int[7];
 
@@ -30,14 +31,17 @@ public final class JugglerGodGameEngine implements GameEngine {
         this.random=Objects.requireNonNull(random);
         this.weights=Objects.requireNonNull(weights);
         Map<String,Object> tuning=map(config==null?null:config.get("juggler_god"));
-        normalToHeavenPpm=number(tuning.get("normal_to_heaven_ppm"),0);
+        normalBigToHeavenPpm=number(tuning.get("normal_big_to_heaven_ppm"),0);
+        normalRegToHeavenPpm=number(tuning.get("normal_reg_to_heaven_ppm"),0);
         heavenToHeavenPpm=number(tuning.get("heaven_to_heaven_ppm"),0);
         Map<String,Object> settings=map(tuning.get("settings"));
         for(int setting=1;setting<=6;setting++){
             Map<String,Object> row=map(settings.get(Integer.toString(setting)));
             bonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
         }
-        if(normalToHeavenPpm<0||normalToHeavenPpm>1_000_000||heavenToHeavenPpm<0||heavenToHeavenPpm>1_000_000)
+        if(normalBigToHeavenPpm<0||normalBigToHeavenPpm>1_000_000
+                ||normalRegToHeavenPpm<0||normalRegToHeavenPpm>1_000_000
+                ||heavenToHeavenPpm<0||heavenToHeavenPpm>1_000_000)
             throw new IllegalArgumentException("JUGGLER_GOD heaven tuning");
         for(int setting=1;setting<=6;setting++)if(bonusScalePpm[setting]<0||bonusScalePpm[setting]>1_000_000)
             throw new IllegalArgumentException("JUGGLER_GOD bonus scale");
@@ -299,7 +303,9 @@ public final class JugglerGodGameEngine implements GameEngine {
                     "NONE",state.godBigCount(),false,"HEAVEN_END");
         }
 
-        if(rng.nextLong(1_000_000)<normalToHeavenPpm)
+        long normalHeavenPpm="BIG".equals(state.bonusOrigin())?normalBigToHeavenPpm:
+                "REG".equals(state.bonusOrigin())?normalRegToHeavenPpm:0;
+        if(rng.nextLong(1_000_000)<normalHeavenPpm)
             return enterHeaven(state,rng.nextInt(32)+1,"NORMAL_TO_HEAVEN");
         return state.core(JugglerGodRuntime.Mode.NORMAL,0,0,0,false,false,
                 "NONE",state.godBigCount(),false,"NORMAL");
