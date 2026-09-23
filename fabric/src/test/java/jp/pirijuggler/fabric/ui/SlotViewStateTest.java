@@ -101,4 +101,22 @@ class SlotViewStateTest {
         assertTrue(view.canSend(PacketType.STOP_CENTER));
     }
 
+    @Test void jugglerGodFreezeHasCinematicInputLockAndFinalImpactWindow(){
+        var time=new AtomicLong();
+        var view=new SlotViewState(time::get);
+        view.receive(packet(PacketType.OPEN_MACHINE,"{\"sessionId\":\""+ID+"\",\"machineId\":1,\"machineType\":\"JUGGLER_GOD\"}"));
+        var b=start().payload();b.addProperty("godFreeze",true);b.addProperty("stopEnableAfterMs",150);
+        view.receive(Envelope.current(PacketType.SPIN_START,b));
+        assertTrue(view.godFreeze());
+        assertTrue(view.godFreezeInputLocked());
+        time.set(899_000_000L);assertFalse(view.canSend(PacketType.STOP_LEFT));
+        time.set(900_000_000L);assertTrue(view.canSend(PacketType.STOP_LEFT));assertFalse(view.godFreezeInputLocked());
+
+        for(String reel:new String[]{"LEFT","CENTER","RIGHT"})
+            view.receive(packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\""+reel+"\",\"stopIndex\":0,\"durationMs\":0}"));
+        assertTrue(view.godRevealed(0));assertTrue(view.godRevealed(1));assertTrue(view.godRevealed(2));
+        assertTrue(view.godImpactActive());
+        time.addAndGet(900_000_000L);assertFalse(view.godImpactActive());
+    }
+
 }
