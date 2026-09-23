@@ -13,18 +13,19 @@ dependencies {
 }
 
 val scenario = providers.gradleProperty("runtimeScenario").orElse("normal").get()
-require(scenario in setOf("normal", "mismatch", "phase02-create", "phase02-owner", "phase02-other", "phase03-ui", "phase04-reels", "phase05-game", "phase12-owner", "phase12-spectator", "god02-main", "next02-main"))
+require(scenario in setOf("normal", "mismatch", "phase02-create", "phase02-owner", "phase02-other", "phase03-ui", "phase04-reels", "phase05-game", "phase12-owner", "phase12-spectator", "god02-main", "next02-main", "next04-main"))
 val phase = providers.gradleProperty("runtimeEvidencePhase").orElse(if (scenario.startsWith("phase02")) "PHASE_02" else "PHASE_01").get()
-require(phase in setOf("PHASE_01", "PHASE_02", "PHASE_02_PHASE01_REGRESSION", "PHASE_03", "PHASE_03_PHASE01_REGRESSION", "PHASE_04", "PHASE_04_PHASE01_REGRESSION", "PHASE_05", "PHASE_05_PHASE01_REGRESSION", "PHASE_05_REEL_REGRESSION", "PHASE_05_BAR_BIG", "PHASE_05_BAR_REG", "PHASE_12", "GOD_PHASE_02", "NEXT_PHASE_02"))
+require(phase in setOf("PHASE_01", "PHASE_02", "PHASE_02_PHASE01_REGRESSION", "PHASE_03", "PHASE_03_PHASE01_REGRESSION", "PHASE_04", "PHASE_04_PHASE01_REGRESSION", "PHASE_05", "PHASE_05_PHASE01_REGRESSION", "PHASE_05_REEL_REGRESSION", "PHASE_05_BAR_BIG", "PHASE_05_BAR_REG", "PHASE_12", "GOD_PHASE_02", "NEXT_PHASE_02", "NEXT_PHASE_04"))
 val runtimeRun = providers.gradleProperty("runtimeRun").orElse("current").get()
 require(runtimeRun.matches(Regex("[a-zA-Z0-9_-]+")))
-val evidenceDirectory = rootProject.file(if (phase == "GOD_PHASE_02" || phase == "NEXT_PHASE_02") "runtime-evidence/$phase/attempts/$runtimeRun" else if (phase == "PHASE_02" || phase == "PHASE_03" || phase == "PHASE_12" || (phase == "PHASE_04" || phase == "PHASE_05_REEL_REGRESSION") || (phase == "PHASE_05" || phase.startsWith("PHASE_05_BAR_"))) "runtime-evidence/$phase/attempts/$runtimeRun/$scenario" else "runtime-evidence/$phase/$scenario")
+val evidenceDirectory = rootProject.file(if (phase == "GOD_PHASE_02" || phase == "NEXT_PHASE_02" || phase == "NEXT_PHASE_04") "runtime-evidence/$phase/attempts/$runtimeRun" else if (phase == "PHASE_02" || phase == "PHASE_03" || phase == "PHASE_12" || (phase == "PHASE_04" || phase == "PHASE_05_REEL_REGRESSION") || (phase == "PHASE_05" || phase.startsWith("PHASE_05_BAR_"))) "runtime-evidence/$phase/attempts/$runtimeRun/$scenario" else "runtime-evidence/$phase/$scenario")
 val player = when {
     scenario == "phase02-other" || scenario == "phase12-spectator" -> "PiriRuntimeTest2"
     phase == "PHASE_12" && scenario == "mismatch" -> "PiriRuntimeMismatch"
     else -> "PiriRuntimeTest"
 }
 val port = when (phase) {
+    "NEXT_PHASE_04" -> "25598"
     "NEXT_PHASE_02" -> "25597"
     "GOD_PHASE_02" -> "25596"
     "PHASE_12" -> "25590"
