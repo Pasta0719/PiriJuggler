@@ -1,8 +1,8 @@
 {
   "colors": {
     "SCREEN_OUTSIDE": "#000000",
-    "CABINET_BG": "#3C0A10",
-    "CABINET_BG_DARK": "#220508",
+    "CABINET_BG": "#123326",
+    "CABINET_BG_DARK": "#081A12",
     "CABINET_EDGE": "#B68A42",
     "CABINET_EDGE_LIGHT": "#E4C174",
     "REEL_BG": "#F4F1E8",
