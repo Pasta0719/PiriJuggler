@@ -227,6 +227,11 @@ try:
                 tap(32);wait(lambda:settled() and session()["game_state"]==kind+"_SPINNING" and cli().get("stopEnabled"),kind+" lever")
                 stop_spin(kind,kind+"_SPINNING")
                 continue
+            if st in ("BIG_BETTED","REG_BETTED"):
+                kind="BIG" if st=="BIG_BETTED" else "REG"
+                tap(32);wait(lambda:settled() and session()["game_state"]==kind+"_SPINNING" and cli().get("stopEnabled"),kind+" lever")
+                stop_spin(kind,kind+"_SPINNING")
+                continue
             if st in ("BONUS_PENDING_BIG","BONUS_PENDING_REG"):
                 kind="BIG" if st.endswith("BIG") else "REG"
                 tap(32);wait_state("BONUS_ENTRY_BETTED_"+kind)
