@@ -38,7 +38,7 @@ public final class SlotScreen extends Screen {
         var v=SlotLayout.Viewport.fit(width,height);
         double lx=v.logicalX(x),ly=v.logicalY(y);
         if(lx<34||lx>=278||ly<455||ly>=746)return false;
-        JsonObject data=view.dataLamp();
+        JsonObject data=view.dataLampView();
         JsonArray history=data!=null&&data.has("history")?data.getAsJsonArray("history"):new JsonArray();
         int maxOffset=Math.max(0,history.size()-10);
         if(verticalAmount<0)historyOffset=Math.min(maxOffset,historyOffset+10);
@@ -155,7 +155,7 @@ public final class SlotScreen extends Screen {
 
     private String errorText(){if(view.error().isEmpty())return "";try{return ErrorMessages.japanese(ErrorCode.valueOf(view.error()));}catch(IllegalArgumentException e){return view.error();}}
     private void data(DrawContext c,double mx,double my){
-        JsonObject data=view.dataLamp();
+        JsonObject data=view.dataLampView();
         long total=data!=null&&data.has("totalGames")?data.get("totalGames").getAsLong():0;
         long big=data!=null&&data.has("bigCount")?data.get("bigCount").getAsLong():0;
         long reg=data!=null&&data.has("regCount")?data.get("regCount").getAsLong():0;

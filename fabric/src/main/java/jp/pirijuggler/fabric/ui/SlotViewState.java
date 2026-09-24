@@ -193,6 +193,8 @@ public final class SlotViewState {
     }
     public JsonObject publicState(){return state==null?null:state.deepCopy();}
     public JsonObject dataLamp(){return dataLamp==null?null:dataLamp.deepCopy();}
+    /** Render-thread read-only view. Avoid cloning the 100-row history + graph every frame. */
+    JsonObject dataLampView(){return dataLamp;}
     public String error(){return error;}
     public int machineId(){return machine;}
     public String machineType(){return machineType;}
