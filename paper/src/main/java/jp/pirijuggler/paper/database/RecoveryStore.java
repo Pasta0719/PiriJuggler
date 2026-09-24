@@ -20,6 +20,7 @@ import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.SplittableRandom;
 
 /**
@@ -360,6 +361,15 @@ public final class RecoveryStore {
     ) throws Exception {
         String hit=runtime.pendingBonusHit();
         int machine=before.machine();
+
+        if(before.state()==Session.GameState.BONUS_ENTRY_SPINNING_BIG)
+            completeSpecialSpin(values,DisplayRole.BIG_ENTRY);
+        else if(before.state()==Session.GameState.BONUS_ENTRY_SPINNING_REG)
+            completeSpecialSpin(values,DisplayRole.REG_ENTRY);
+        else if(before.state()==Session.GameState.NORMAL_SPINNING&&"GOD".equals(hit)){
+            StopTriplet stops=completeNormal(values,InternalRole.GOD,null,((Number)values.get("stopped_mask")).intValue());
+            putStops(values,stops);
+        }
 
         // If disconnect happened while the bonus round itself was still spinning, finish
         // exactly that already-paid round first. The overlay draw has already happened.
