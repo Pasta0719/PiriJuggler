@@ -67,6 +67,10 @@ public final class JugglerGodMachineDataSimulator {
             graph(at());
         }
 
+        void chargeGuaranteedChainBet(){
+            difference=Math.subtractExact(difference,FixedGameRules.NORMAL_BET);
+        }
+
         void advanceContinuationGame()throws Exception{
             total=Math.addExact(total,1);
             current=Math.addExact(current,1);
@@ -80,14 +84,14 @@ public final class JugglerGodMachineDataSimulator {
                     machineId,period,games,at());
         }
 
-        void finishBonus(String type,int historyGames)throws Exception{
+        void finishBonus(String type,int historyGames,int bonusCost)throws Exception{
             if("BIG".equals(type)){big=Math.addExact(big,1);addedBig=Math.addExact(addedBig,1);}
             else if("REG".equals(type)){reg=Math.addExact(reg,1);addedReg=Math.addExact(addedReg,1);}
             else throw new IllegalArgumentException("bonus type");
             long eventAt=at();
             execute(db,"INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,?,?,?)",
                     machineId,period,type,historyGames,eventAt);
-            difference=Math.addExact(difference,(long)GameRules.bonusGross(type)-GameRules.bonusTotalBet(type));
+            difference=Math.addExact(difference,(long)GameRules.bonusGross(type)-bonusCost);
             max=Math.max(max,difference);
             current=0;
             graph(eventAt);
@@ -192,62 +196,60 @@ public final class JugglerGodMachineDataSimulator {
     }
 
     private static boolean resolveOrdinaryBonus(State s,String initial,int initialHistoryGames)throws Exception{
-        ArrayDeque<QueuedBonus> queue=new ArrayDeque<>();
-        queue.addLast(new QueuedBonus(initial,initialHistoryGames,false));
-        boolean forceHeaven=false;
-
-        while(!queue.isEmpty()){
-            QueuedBonus q=queue.removeFirst();
-            if(q.continuationGame())s.advanceContinuationGame();
-            int history=q.continuationGame()?1:q.historyGames();
-
-            int rounds=GameRules.bonusGames(q.type());
-            for(int i=0;i<rounds;i++){
-                if(s.random.nextInt(GOD_DENOMINATOR)==0){
-                    s.difference=Math.addExact(s.difference,GameRules.payout(InternalRole.GOD));
-                    s.max=Math.max(s.max,s.difference);
-                    s.godHistory(0);
-                    resolveGodChain(s);
-                    forceHeaven=true;
-                    continue;
-                }
-                InternalRole hit=s.weights.drawJugglerGod(s.setting,s.random,s.bonusScalePpm,s.smallRoleScalePpm);
-                String stock=GameRules.bonus(hit);
-                if(stock!=null)queue.addLast(new QueuedBonus(stock,0,false));
-            }
-            s.finishBonus(q.type(),history);
+        ArrayDeque<String> stock=new ArrayDeque<>();
+        stock.addLast(initial);
+        boolean first=true;
+        while(!stock.isEmpty()){
+            String type=stock.removeFirst();
+            int history=first?initialHistoryGames:0;
+            first=false;
+            playStockBonus(s,type,history,false,stock);
         }
-        return forceHeaven;
+        // Match production: a GOD overlay in an ordinary/heaven bonus is +7 BIG stock,
+        // but does not replace the parent bonus's normal/heaven transition.
+        return false;
     }
 
     private static void resolveGodChain(State s)throws Exception{
-        ArrayDeque<QueuedBonus> queue=new ArrayDeque<>();
-        for(int i=0;i<5;i++)queue.addLast(new QueuedBonus("BIG",0,false));
-
+        playParentGodBig(s,true,false);
+        for(int i=0;i<4;i++)playParentGodBig(s,false,false);
         int rate=CONTINUATION_PERCENT[s.setting];
-        while(s.random.nextInt(100)<rate)
-            queue.addLast(new QueuedBonus("BIG",1,true));
+        while(s.random.nextInt(100)<rate)playParentGodBig(s,false,true);
+    }
 
-        while(!queue.isEmpty()){
-            QueuedBonus q=queue.removeFirst();
-            if(q.continuationGame())s.advanceContinuationGame();
-            int history=q.continuationGame()?1:0;
+    private static void playParentGodBig(State s,boolean first,boolean continuation)throws Exception{
+        if(!first){
+            if(continuation)s.advanceContinuationGame();
+            else s.chargeGuaranteedChainBet();
+        }
+        int history=continuation?1:0;
+        int cost=first
+                ?FixedGameRules.BONUS_BET*GameRules.bonusGames("BIG")
+                :GameRules.bonusTotalBet("BIG");
+        ArrayDeque<String> stock=new ArrayDeque<>();
+        drawBonusRounds(s,"BIG",true,stock);
+        s.finishBonus("BIG",history,cost);
+        while(!stock.isEmpty())playStockBonus(s,stock.removeFirst(),0,true,stock);
+    }
 
-            int rounds=GameRules.bonusGames(q.type());
-            for(int i=0;i<rounds;i++){
-                if(s.random.nextInt(GOD_DENOMINATOR)==0){
-                    s.difference=Math.addExact(s.difference,GameRules.payout(InternalRole.GOD));
-                    s.max=Math.max(s.max,s.difference);
-                    s.godHistory(0);
-                    for(int n=0;n<GOD_IN_GOD_BIG_STOCK;n++)
-                        queue.addLast(new QueuedBonus("BIG",0,false));
-                    continue;
-                }
-                InternalRole hit=s.weights.drawJugglerGod(s.setting,s.random,s.bonusScalePpm,s.smallRoleScalePpm);
-                String stock=GameRules.bonus(hit);
-                if(stock!=null)queue.addLast(new QueuedBonus(stock,0,false));
+    private static void playStockBonus(State s,String type,int history,boolean insideGod,ArrayDeque<String> stock)throws Exception{
+        drawBonusRounds(s,type,insideGod,stock);
+        s.finishBonus(type,history,GameRules.bonusTotalBet(type));
+    }
+
+    private static void drawBonusRounds(State s,String type,boolean insideGod,ArrayDeque<String> stock)throws Exception{
+        int rounds=GameRules.bonusGames(type);
+        for(int i=0;i<rounds;i++){
+            if(s.random.nextInt(GOD_DENOMINATOR)==0){
+                s.difference=Math.addExact(s.difference,GameRules.payout(InternalRole.GOD));
+                s.max=Math.max(s.max,s.difference);
+                s.godHistory(0);
+                for(int n=0;n<GOD_IN_GOD_BIG_STOCK;n++)stock.addLast("BIG");
+                continue;
             }
-            s.finishBonus(q.type(),history);
+            InternalRole hit=s.weights.drawJugglerGod(s.setting,s.random,s.bonusScalePpm,s.smallRoleScalePpm);
+            String next=GameRules.bonus(hit);
+            if(next!=null)stock.addLast(next);
         }
     }
 
