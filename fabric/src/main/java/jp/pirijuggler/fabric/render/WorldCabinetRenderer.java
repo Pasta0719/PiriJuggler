@@ -120,11 +120,12 @@ public final class WorldCabinetRenderer {
             for(int row=-2;row<=2;row++){
                 String symbol=UiConstants.symbol(reel,middle+row);
                 boolean wide=symbol.equals("seven")||symbol.equals("bar");
-                double boxW=wide?230:130;
+                boolean godMachine="JUGGLER_GOD".equals(state.machineType());
+                double boxW=godMachine?(symbol.equals("bar")?230:130):(wide?230:130);
                 double boxH=symbol.equals("bar")?150:130;
                 double sy=430+(row-fraction)*130-(boxH-130)/2.0;
                 double sw=boxW,sh=boxH;
-                if("JUGGLER_GOD".equals(state.machineType())){
+                if(godMachine){
                     var size=JugglerGodAssets.textureSize(state.machineType(),"symbols/"+symbol+".png");
                     double fit=Math.min(boxW/size.width(),boxH/size.height());
                     sw=size.width()*fit;sh=size.height()*fit;

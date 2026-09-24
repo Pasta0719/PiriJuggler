@@ -98,8 +98,12 @@ public final class SlotScreen extends Screen {
             String symbol=UiConstants.symbol(reel,middle+row);
             boolean wide=symbol.equals("seven")||symbol.equals("bar");
             int textureWidth=wide?320:256,textureHeight=256;
-            int symbolWidth=wide?230:130;
-            int symbolHeight=symbol.equals("bar")?150:130;
+            int ordinarySymbolWidth=wide?230:130;
+            int ordinarySymbolHeight=symbol.equals("bar")?150:130;
+            int godSymbolWidth=symbol.equals("bar")?230:130;
+            int godSymbolHeight=symbol.equals("bar")?150:130;
+            int symbolWidth="JUGGLER_GOD".equals(view.machineType())?godSymbolWidth:ordinarySymbolWidth;
+            int symbolHeight="JUGGLER_GOD".equals(view.machineType())?godSymbolHeight:ordinarySymbolHeight;
             double symbolY=430+(row-fraction)*130-(symbolHeight-130)/2.0;
             if("JUGGLER_GOD".equals(view.machineType()))
                 textureFitActual(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,1,1);
@@ -154,7 +158,7 @@ public final class SlotScreen extends Screen {
             String symbol=UiConstants.symbol(reel,middle+row);
             boolean wide=symbol.equals("seven")||symbol.equals("bar");
             int textureWidth=wide?320:256,textureHeight=256;
-            int symbolWidth=wide?230:130;
+            int symbolWidth=symbol.equals("bar")?230:130;
             int symbolHeight=symbol.equals("bar")?150:130;
             double symbolY=430+(row-fraction)*130-(symbolHeight-130)/2.0;
             textureFitActual(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,1,brightness);
