@@ -125,9 +125,9 @@ public final class WorldCabinetRenderer {
                 double sy=430+(row-fraction)*130-(boxH-130)/2.0;
                 double sw=boxW,sh=boxH;
                 if("JUGGLER_GOD".equals(state.machineType())){
-                    double tw=wide?320:256,th=256;
-                    double fit=Math.min(boxW/tw,boxH/th);
-                    sw=tw*fit;sh=th*fit;
+                    var size=JugglerGodAssets.textureSize(state.machineType(),"symbols/"+symbol+".png");
+                    double fit=Math.min(boxW/size.width(),boxH/size.height());
+                    sw=size.width()*fit;sh=size.height()*fit;
                     sy+=(boxH-sh)/2.0;
                 }
                 symbolTint(consumers,basis,camera,state.machineType(),symbol,x+(270-sw)/2.0,sy,sw,sh,300,690,
@@ -135,8 +135,10 @@ public final class WorldCabinetRenderer {
             }
 
             if(godBlackout&&state.godRevealed(reel,now)){
-                double boxW=230,boxH=150,fit=Math.min(boxW/320.0,boxH/256.0);
-                double sw=320*fit,sh=256*fit;
+                double boxW=230,boxH=150;
+                var size=JugglerGodAssets.textureSize(state.machineType(),"symbols/bar.png");
+                double fit=Math.min(boxW/size.width(),boxH/size.height());
+                double sw=size.width()*fit,sh=size.height()*fit;
                 symbolTint(consumers,basis,camera,state.machineType(),"bar",x+(270-sw)/2.0,420+(boxH-sh)/2.0,sw,sh,300,690,0xffffffff);
             }
         }
@@ -146,8 +148,10 @@ public final class WorldCabinetRenderer {
                 ?JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_on.png")
                 :JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_off.png");
         if("JUGGLER_GOD".equals(state.machineType())){
-            double boxW=300,boxH=170,fit=Math.min(boxW/512.0,boxH/256.0);
-            double lw=512*fit,lh=256*fit;
+            double boxW=300,boxH=170;
+            var size=JugglerGodAssets.textureSize(state.machineType(),"lamp/piri_chance_"+(state.lampVisible(now)?"on":"off")+".png");
+            double fit=Math.min(boxW/size.width(),boxH/size.height());
+            double lw=size.width()*fit,lh=size.height()*fit;
             rect(consumers,lamp,basis,camera,350+(boxW-lw)/2.0,390+(boxH-lh)/2.0,lw,lh,.0025,0xffffffff,0,0,1,1);
         }else{
             rect(consumers,lamp,basis,camera,350,390,300,170,.0025,0xffffffff,0,0,1,1);

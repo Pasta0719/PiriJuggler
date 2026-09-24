@@ -72,10 +72,10 @@ public final class SlotScreen extends Screen {
         var lamp=SlotLayout.LAMP;String name="lamp/piri_chance_"+(view.lampOn()?"on":"off")+".png";
         boolean godMachine="JUGGLER_GOD".equals(view.machineType());
         if(view.lampOn())for(int[] offset:new int[][]{{-4,0},{4,0},{0,4}}){
-            if(godMachine)textureFit(c,name,lamp.x()+offset[0],lamp.y()+offset[1],lamp.w(),lamp.h(),512,256,.18f,1);
+            if(godMachine)textureFitActual(c,name,lamp.x()+offset[0],lamp.y()+offset[1],lamp.w(),lamp.h(),.18f,1);
             else texture(c,name,lamp.x()+offset[0],lamp.y()+offset[1],lamp.w(),lamp.h(),512,256,.18f);
         }
-        if(godMachine)textureFit(c,name,lamp.x(),lamp.y(),lamp.w(),lamp.h(),512,256,1,1);
+        if(godMachine)textureFitActual(c,name,lamp.x(),lamp.y(),lamp.w(),lamp.h(),1,1);
         else texture(c,name,lamp.x(),lamp.y(),lamp.w(),lamp.h(),512,256,1);
         if("JUGGLER_GOD".equals(view.machineType())){
             int stockOn=view.stockLampOn()?color("DISPLAY_GREEN"):color("BUTTON_METAL_DARK");
@@ -102,7 +102,7 @@ public final class SlotScreen extends Screen {
             int symbolHeight=symbol.equals("bar")?150:130;
             double symbolY=430+(row-fraction)*130-(symbolHeight-130)/2.0;
             if("JUGGLER_GOD".equals(view.machineType()))
-                textureFit(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,textureWidth,textureHeight,1,1);
+                textureFitActual(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,1,1);
             else
                 texture(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,textureWidth,textureHeight,1);
         }
@@ -141,10 +141,10 @@ public final class SlotScreen extends Screen {
             long age=view.godRevealAgeMillis(reel);
             if(age>=0&&age<120){
                 float glow=(float)Math.max(0,.24*(1.0-age/120.0));
-                textureFit(c,"symbols/bar.png",x+14,414,242,162,320,256,glow,1);
-                textureFit(c,"symbols/bar.png",x+18,418,234,154,320,256,glow,1);
+                textureFitActual(c,"symbols/bar.png",x+14,414,242,162,glow,1);
+                textureFitActual(c,"symbols/bar.png",x+18,418,234,154,glow,1);
             }
-            textureFit(c,"symbols/bar.png",x+20,420,230,150,320,256,1,1);
+            textureFitActual(c,"symbols/bar.png",x+20,420,230,150,1,1);
         }
     }
 
@@ -157,7 +157,7 @@ public final class SlotScreen extends Screen {
             int symbolWidth=wide?230:130;
             int symbolHeight=symbol.equals("bar")?150:130;
             double symbolY=430+(row-fraction)*130-(symbolHeight-130)/2.0;
-            textureFit(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,textureWidth,textureHeight,1,brightness);
+            textureFitActual(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,1,brightness);
         }
     }
 
@@ -281,12 +281,16 @@ public final class SlotScreen extends Screen {
     private void texture(DrawContext c,String path,double x,double y,int w,int h,int tw,int th,float alpha){
         textureTint(c,path,x,y,w,h,tw,th,alpha,1);
     }
-    private void textureFit(DrawContext c,String path,double x,double y,int boxW,int boxH,int tw,int th,float alpha,float brightness){
-        double scale=Math.min(boxW/(double)tw,boxH/(double)th);
-        int w=Math.max(1,(int)Math.round(tw*scale));
-        int h=Math.max(1,(int)Math.round(th*scale));
+    private void textureFitActual(DrawContext c,String path,double x,double y,int boxW,int boxH,float alpha,float brightness){
+        var size=JugglerGodAssets.textureSize(view.machineType(),path);
+        double scale=Math.min(boxW/(double)size.width(),boxH/(double)size.height());
+        double w=size.width()*scale,h=size.height()*scale;
         double dx=x+(boxW-w)/2.0,dy=y+(boxH-h)/2.0;
-        textureTint(c,path,dx,dy,w,h,tw,th,alpha,brightness);
+        textureTintExact(c,path,dx,dy,w,h,size.width(),size.height(),alpha,brightness);
+    }
+    private void textureTintExact(DrawContext c,String path,double x,double y,double w,double h,int tw,int th,float alpha,float brightness){
+        Identifier id=JugglerGodAssets.texture(view.machineType(),path);client.getTextureManager().bindTexture(id);client.getTextureManager().getTexture(id).setFilter(true,false);
+        c.getMatrices().push();c.getMatrices().translate(x,y,0);c.getMatrices().scale((float)(w/tw),(float)(h/th),1);c.setShaderColor(brightness,brightness,brightness,alpha);c.drawTexture(id,0,0,0,0,tw,th,tw,th);c.setShaderColor(1,1,1,1);c.getMatrices().pop();
     }
     private void textureTint(DrawContext c,String path,double x,double y,int w,int h,int tw,int th,float alpha,float brightness){
         Identifier id=JugglerGodAssets.texture(view.machineType(),path);client.getTextureManager().bindTexture(id);client.getTextureManager().getTexture(id).setFilter(true,false);
