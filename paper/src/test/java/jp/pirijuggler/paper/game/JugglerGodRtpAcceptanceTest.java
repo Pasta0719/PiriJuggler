@@ -15,7 +15,7 @@ class JugglerGodRtpAcceptanceTest {
     private static final int REPLICATIONS = 5;
     private static final double[] TARGET = {0.0,97.5,99.0,101.5,105.0,109.5,115.0};
     private static final int[] BONUS_SCALE = {0,743613,734884,734653,739194,741839,696323};
-    private static final int[] SMALL_ROLE_SCALE = {0,805150,800295,810566,816063,824997,810240};
+    private static final int[] SMALL_ROLE_SCALE = {0,813500,809600,819100,827000,841000,833500};
     private static final double TOLERANCE_PP = 2.0;
     // Student-t 97.5th percentile for df=4 (two-sided 95% CI, n=5).
     private static final double T95_DF4 = 2.7764451051977987;

@@ -139,12 +139,12 @@ juggler_god:
   normal_reg_to_heaven_ppm: 62500
   heaven_to_heaven_ppm: 500000
   settings:
-    '1': {bonus_scale_ppm: 743613, small_role_scale_ppm: 805150}
-    '2': {bonus_scale_ppm: 734884, small_role_scale_ppm: 800295}
-    '3': {bonus_scale_ppm: 734653, small_role_scale_ppm: 810566}
-    '4': {bonus_scale_ppm: 739194, small_role_scale_ppm: 816063}
-    '5': {bonus_scale_ppm: 741839, small_role_scale_ppm: 824997}
-    '6': {bonus_scale_ppm: 696323, small_role_scale_ppm: 810240}
+    '1': {bonus_scale_ppm: 743613, small_role_scale_ppm: 813500}
+    '2': {bonus_scale_ppm: 734884, small_role_scale_ppm: 809600}
+    '3': {bonus_scale_ppm: 734653, small_role_scale_ppm: 819100}
+    '4': {bonus_scale_ppm: 739194, small_role_scale_ppm: 827000}
+    '5': {bonus_scale_ppm: 741839, small_role_scale_ppm: 841000}
+    '6': {bonus_scale_ppm: 696323, small_role_scale_ppm: 833500}
 """;
         Files.writeString(path, original.stripTrailing() + "\n" + block, StandardCharsets.UTF_8);
         getLogger().info("Migrated existing config with juggler_god defaults");

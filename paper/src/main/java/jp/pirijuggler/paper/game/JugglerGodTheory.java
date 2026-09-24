@@ -67,7 +67,16 @@ public final class JugglerGodTheory {
         double netFromBig=(rhsBigNet*d-b*rhsRegNet)/det;
 
         double continuation=CONTINUATION_PERCENT[setting]/100.0;
-        double baseSeeds=5.0+continuation/(1.0-continuation);
+        double continuationSeeds=continuation/(1.0-continuation);
+        double baseSeeds=5.0+continuationSeeds;
+
+        // netFromBig is the value of a released BIG stock: 1-medal entry + 20x2 bonus bets.
+        // Parent GOD BIG #1 starts directly from BAR GOD, so it is one medal better than a stock BIG.
+        // The four guaranteed follow-ups and all post-guarantee continuation BIGs first consume the
+        // production 3-medal normal bet, so they are three medals worse than a stock BIG.
+        double firstParentNet=netFromBig+1.0;
+        double followParentNet=netFromBig-3.0;
+        double outerNet=15.0+firstParentNet+(4.0+continuationSeeds)*followParentNet;
 
         return new Result(
                 setting,pBig,pReg,GOD_P,radius,
@@ -76,7 +85,7 @@ public final class JugglerGodTheory {
                 baseSeeds*totalBigFromBig,
                 baseSeeds*totalRegFromBig,
                 baseSeeds*gigFromBig,
-                15.0+baseSeeds*netFromBig
+                outerNet
         );
     }
 
