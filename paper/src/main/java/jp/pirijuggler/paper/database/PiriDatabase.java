@@ -148,9 +148,7 @@ public final class PiriDatabase implements AutoCloseable {
             if (existing != null && existing.lifecycle() == Session.Lifecycle.SUSPENDED_SAFE)
                 sql("UPDATE player_sessions SET source_business_period_id=? WHERE player_uuid=?", period, player.toString());
 
-            // Recovery may have changed machine_runtime_json. Reload before copying it into the
-            // new/returned session; otherwise stale pre-recovery GOD-chain state can erase the
-            // guaranteed 0G continuation that recovery just restored.
+            // Recovery may have changed machine_runtime_json. Always reload after recovery.
             machine=requireMachine(id);
             String machineState=switch(machine.type()){
                 case GOD -> GodMachineRuntime.fromJson(machine.runtimeJson()).gameplay().toJsonString();
@@ -163,6 +161,26 @@ public final class PiriDatabase implements AutoCloseable {
                         UUID.randomUUID().toString(), player.toString(), id, period, machine.left(), machine.center(), machine.right(), machineState, now);
             } else {
                 sql("UPDATE player_sessions SET lifecycle='ACTIVE',lock_expires_at=NULL,machine_state_json=?,last_activity=? WHERE player_uuid=?", machineState, now, player.toString());
+            }
+
+            // A forced recovery completes the bonus that was in progress, but confirmed
+            // JUGGLER_GOD stock must remain playable. Resume one stock immediately as the
+            // same 0G BONUS_PENDING path used during uninterrupted play. bonusOrigin/mode
+            // are deliberately preserved so the final stock still reaches the correct
+            // GOD-end heaven or HEAVEN 50% continuation transition.
+            if(machine.type()==MachineType.JUGGLER_GOD){
+                JugglerGodRuntime runtime=JugglerGodRuntime.fromJson(machine.runtimeJson());
+                if(runtime.stockLampOn()){
+                    boolean big=runtime.additionalBigStock()>0;
+                    int nextBig=runtime.additionalBigStock()-(big?1:0);
+                    int nextReg=runtime.additionalRegStock()-(big?0:1);
+                    String type=big?"BIG":"REG";
+                    JugglerGodRuntime release=runtime.release(nextBig,nextReg,"RECOVERY_STOCK_RELEASE_"+type);
+                    machineState=release.toJsonString();
+                    sql("UPDATE machines SET machine_runtime_json=?,updated_at=? WHERE machine_id=?",machineState,now,id);
+                    sql("UPDATE player_sessions SET game_state=?,current_bet=0,bonus_type=?,bonus_payout_count=0,lamp_on=0,notice_state='NONE',machine_state_json=?,last_activity=? WHERE player_uuid=?",
+                            "BONUS_PENDING_"+type,type,machineState,now,player.toString());
+                }
             }
             return session(player);
         });
