@@ -52,6 +52,8 @@ class JugglerGodCoreTest extends GameFixture {
         JugglerGodRuntime persisted=JugglerGodRuntime.fromJson(db.state().machine(s.machine()).runtimeJson());
         assertEquals(JugglerGodRuntime.Mode.GOD_CHAIN,persisted.mode());
         assertEquals("GOD_CHAIN",persisted.bonusOrigin());
+        assertFalse(persisted.forceChainBig(),"guaranteed BIG reservation must be consumed at lever-on");
+        assertFalse(persisted.countNextChainGame());
     }
 
     @Test void postGuaranteeGodContinuationCountsAsOneGame() throws Exception {
@@ -63,6 +65,10 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals(1,lever.normalSpins());
         s=store.commit(lever);
         assertEquals(1,scalar("SELECT total_games FROM machine_period_stats WHERE machine_id=?",s.machine()));
+        JugglerGodRuntime persisted=JugglerGodRuntime.fromJson(db.state().machine(s.machine()).runtimeJson());
+        assertFalse(persisted.forceChainBig(),"1G continuation reservation must be one-shot");
+        assertFalse(persisted.countNextChainGame(),"1G marker must be consumed together with the reservation");
+        assertEquals("GOD_CHAIN",persisted.bonusOrigin());
     }
 
     @Test void heavenBeforeTargetCannotNaturallyStartBonus() throws Exception {
@@ -206,6 +212,20 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals(3,unlocked.after().number("display_center_stop"));
         assertEquals(3,unlocked.after().number("display_right_stop"));
         assertEquals(0,JugglerGodRuntime.fromJson(unlocked.machineRuntimeJson()).godPresentationStartMs());
+    }
+
+    @Test void consumedContinuationCannotSelfRearmBeforeBonusEnd() throws Exception {
+        var runtime=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,0,true,true,
+                "NONE",20,false,"GOD_CONTINUE");
+        Rig rig=rig(runtime,6);
+        Session s=action(rig,rig.session(),PacketType.SPACE_ACTION,0);
+        GameTransition lever=plan(rig,s,PacketType.SPACE_ACTION,1_000_000_000L);
+        assertEquals("BIG",lever.after().text("internal_role"));
+        JugglerGodRuntime afterLever=JugglerGodRuntime.fromJson(lever.machineRuntimeJson());
+        assertFalse(afterLever.forceChainBig());
+        assertFalse(afterLever.countNextChainGame());
+        assertEquals("GOD_CHAIN",afterLever.bonusOrigin());
+        assertEquals("BONUS_DRAWN",afterLever.lastEvent());
     }
 
 }

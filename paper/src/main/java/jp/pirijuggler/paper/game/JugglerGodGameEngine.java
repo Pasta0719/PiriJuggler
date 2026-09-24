@@ -119,6 +119,13 @@ public final class JugglerGodGameEngine implements GameEngine {
             }else if(runtime.mode()==JugglerGodRuntime.Mode.GOD_CHAIN&&runtime.forceChainBig()){
                 forced=InternalRole.BIG;
                 suppressNormalSpinCount=!runtime.countNextChainGame();
+                // A queued GOD-chain BIG is a one-shot reservation. Consume the reservation
+                // at lever-on so it cannot survive into the started BIG and accidentally
+                // retrigger itself forever. A following 0G/1G BIG can only be armed by the
+                // fresh post-bonus continuation decision.
+                prepared=runtime.core(runtime.mode(),runtime.heavenTarget(),runtime.heavenProgress(),
+                        runtime.guaranteedRemaining(),false,false,runtime.bonusOrigin(),
+                        runtime.godBigCount(),runtime.godFreeze(),"GOD_CHAIN_BIG_CONSUMED");
             }else if(runtime.mode()!=JugglerGodRuntime.Mode.GOD_CHAIN
                     &&random.gameplay(machine.id()).nextInt(GOD_DENOMINATOR)==0){
                 forced=InternalRole.GOD;
