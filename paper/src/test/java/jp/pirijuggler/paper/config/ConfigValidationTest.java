@@ -72,7 +72,7 @@ class ConfigValidationTest {
         assertFalse(load(defaults().replace("normal_reg_to_heaven_ppm: 62500","normal_reg_to_heaven_ppm: 1000001")).valid());
         assertFalse(load(defaults().replace("heaven_to_heaven_ppm: 500000","heaven_to_heaven_ppm: 1000001")).valid());
         assertFalse(load(defaults().replace("  normal_big_to_heaven_ppm: 125000","")).valid());
-        assertFalse(load(defaults().replace("small_role_scale_ppm: 804200","small_role_scale_ppm: 1000001")).valid());
+        assertFalse(load(defaults().replace("small_role_scale_ppm: 805150","small_role_scale_ppm: 1000001")).valid());
     }
 
     @Test void duplicateKeysAreRejectedAndValidEditsAreAccepted() throws Exception {
