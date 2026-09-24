@@ -228,4 +228,33 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals("BONUS_DRAWN",afterLever.lastEvent());
     }
 
+    @Test void godContinuationSuccessArmsExactlyOneCountedBig() {
+        var before=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,0,false,false,
+                "GOD_CHAIN",9,false,"GOD_BIG_STARTED");
+        var rng=new java.util.Random(0L){
+            @Override public int nextInt(int bound){return 0;}
+        };
+        var after=JugglerGodTransitions.afterBonus(before,6,rng,125000,62500,500000);
+        assertEquals(JugglerGodRuntime.Mode.GOD_CHAIN,after.mode());
+        assertTrue(after.forceChainBig());
+        assertTrue(after.countNextChainGame());
+        assertEquals(0,after.guaranteedRemaining());
+        assertEquals("GOD_CONTINUE",after.lastEvent());
+    }
+
+    @Test void godContinuationFailureAlwaysLeavesChainForFreshHeaven() {
+        var before=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,0,false,false,
+                "GOD_CHAIN",9,false,"GOD_BIG_STARTED");
+        var rng=new java.util.Random(0L){
+            @Override public int nextInt(int bound){return bound-1;}
+        };
+        var after=JugglerGodTransitions.afterBonus(before,6,rng,125000,62500,500000);
+        assertEquals(JugglerGodRuntime.Mode.HEAVEN,after.mode());
+        assertFalse(after.forceChainBig());
+        assertFalse(after.countNextChainGame());
+        assertEquals(32,after.heavenTarget());
+        assertEquals(0,after.heavenProgress());
+        assertEquals("GOD_END_HEAVEN",after.lastEvent());
+    }
+
 }
