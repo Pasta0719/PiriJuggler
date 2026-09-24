@@ -18,10 +18,12 @@ import java.util.SplittableRandom;
 public final class MachineDataSimulationService {
     private final PiriJugglerPlugin plugin;
     private final RoleWeights weights;
+    private final Map<String,Object> config;
     private boolean running;
 
     public MachineDataSimulationService(PiriJugglerPlugin plugin, Map<String,Object> config) {
         this.plugin=plugin;
+        this.config=config;
         this.weights=new RoleWeights(config);
     }
 
@@ -53,7 +55,9 @@ public final class MachineDataSimulationService {
         running=true;
         sender.sendMessage(Component.text("SIMULATION_STARTED machine="+machineId+" setting="+setting+" games="+games));
         plugin.executors().database(
-                ()->MachineDataSimulator.run(dbFile,weights,machineId,setting,games,period,random,System.currentTimeMillis()),
+                ()->machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD
+                        ?JugglerGodMachineDataSimulator.run(dbFile,weights,config,machineId,setting,games,period,random,System.currentTimeMillis())
+                        :MachineDataSimulator.run(dbFile,weights,machineId,setting,games,period,random,System.currentTimeMillis()),
                 (result,error)->{
                     running=false;
                     if(error!=null){
@@ -89,7 +93,9 @@ public final class MachineDataSimulationService {
             for(int i=0;i<machines.size();i++){
                 Machine machine=machines.get(i);
                 var random=masterRandom.split();
-                results.add(MachineDataSimulator.run(dbFile,weights,machine.id(),machine.setting(),games,period,random,now+(long)i*games));
+                results.add(machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD
+                        ?JugglerGodMachineDataSimulator.run(dbFile,weights,config,machine.id(),machine.setting(),games,period,random,now+(long)i*games)
+                        :MachineDataSimulator.run(dbFile,weights,machine.id(),machine.setting(),games,period,random,now+(long)i*games));
             }
             return results;
         },(results,error)->{
