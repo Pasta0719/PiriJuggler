@@ -12,7 +12,7 @@ import java.util.random.RandomGenerator;
  */
 public final class JugglerGodSimulator {
     private static final int GOD_DENOMINATOR = 8192;
-    private static final int[] CONTINUATION_PERCENT = {0,25,30,35,45,55,70};
+    private static final int[] CONTINUATION_PERCENT = {0,75,78,80,82,85,90};
     private static final int GOD_IN_GOD_BIG_STOCK = 7;
 
     public record Result(

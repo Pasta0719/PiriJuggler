@@ -26,12 +26,12 @@ juggler_god:
   normal_reg_to_heaven_ppm: 62500
   heaven_to_heaven_ppm: 500000
   settings:
-    '1': {bonus_scale_ppm: 804200, small_role_scale_ppm: 804200}
-    '2': {bonus_scale_ppm: 801100, small_role_scale_ppm: 801100}
-    '3': {bonus_scale_ppm: 809800, small_role_scale_ppm: 809800}
-    '4': {bonus_scale_ppm: 814400, small_role_scale_ppm: 814400}
-    '5': {bonus_scale_ppm: 824600, small_role_scale_ppm: 824600}
-    '6': {bonus_scale_ppm: 810900, small_role_scale_ppm: 810900}
+    '1': {bonus_scale_ppm: 743613, small_role_scale_ppm: 805150}
+    '2': {bonus_scale_ppm: 734884, small_role_scale_ppm: 800295}
+    '3': {bonus_scale_ppm: 734653, small_role_scale_ppm: 810566}
+    '4': {bonus_scale_ppm: 739194, small_role_scale_ppm: 816063}
+    '5': {bonus_scale_ppm: 741839, small_role_scale_ppm: 824997}
+    '6': {bonus_scale_ppm: 696323, small_role_scale_ppm: 810240}
 
 premium:
   big_chance_weight: 50000

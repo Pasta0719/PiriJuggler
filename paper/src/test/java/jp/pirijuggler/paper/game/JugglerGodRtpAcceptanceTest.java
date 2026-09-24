@@ -14,7 +14,8 @@ class JugglerGodRtpAcceptanceTest {
     private static final long GAMES_PER_REPLICATION = 3_000_000L;
     private static final int REPLICATIONS = 5;
     private static final double[] TARGET = {0.0,97.5,99.0,101.5,105.0,109.5,115.0};
-    private static final int[] SCALE = {0,804200,801100,809800,814400,824600,810900};
+    private static final int[] BONUS_SCALE = {0,743613,734884,734653,739194,741839,696323};
+    private static final int[] SMALL_ROLE_SCALE = {0,805150,800295,810566,816063,824997,810240};
     private static final double TOLERANCE_PP = 2.0;
     // Student-t 97.5th percentile for df=4 (two-sided 95% CI, n=5).
     private static final double T95_DF4 = 2.7764451051977987;
@@ -29,7 +30,7 @@ class JugglerGodRtpAcceptanceTest {
                 var result=JugglerGodSimulator.run(
                         weights,setting,GAMES_PER_REPLICATION,
                         125_000,62_500,500_000,
-                        SCALE[setting],SCALE[setting],
+                        BONUS_SCALE[setting],SMALL_ROLE_SCALE[setting],
                         new SplittableRandom(seed));
                 rtp[replication]=result.payoutPercent();
                 totalBet+=result.totalBet();totalPayout+=result.totalPayout();

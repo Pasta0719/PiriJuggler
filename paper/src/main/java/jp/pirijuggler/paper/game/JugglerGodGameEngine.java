@@ -22,7 +22,7 @@ public final class JugglerGodGameEngine implements GameEngine {
     private static final int GOD_PRESENTATION_SEVEN_STOP=3;
     private static final Set<PacketType> GOD_PRESENTATION_INPUTS=Set.of(
             PacketType.SPACE_ACTION,PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT);
-    private static final int[] CONTINUATION_PERCENT={0,25,30,35,45,55,70};
+    private static final int[] CONTINUATION_PERCENT={0,75,78,80,82,85,90};
 
     private final NormalGame delegate;
     private final RandomStreams random;
