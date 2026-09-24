@@ -121,8 +121,9 @@ public final class WorldCabinetRenderer {
                 String symbol=UiConstants.symbol(reel,middle+row);
                 boolean wide=symbol.equals("seven")||symbol.equals("bar");
                 boolean godMachine="JUGGLER_GOD".equals(state.machineType());
-                double boxW=godMachine?(symbol.equals("bar")?230:130):(wide?230:130);
-                double boxH=symbol.equals("bar")?150:130;
+                boolean godLarge=symbol.equals("seven")||symbol.equals("grape")||symbol.equals("replay");
+                double boxW=godMachine?(symbol.equals("bar")?230:godLarge?230:130):(wide?230:130);
+                double boxH=godMachine?(symbol.equals("bar")?150:godLarge?150:130):(symbol.equals("bar")?150:130);
                 double sy=430+(row-fraction)*130-(boxH-130)/2.0;
                 double sw=boxW,sh=boxH;
                 if(godMachine){
