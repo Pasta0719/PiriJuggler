@@ -16,7 +16,7 @@ import static jp.pirijuggler.fabric.ui.UiConstants.color;
 
 public final class SlotScreen extends Screen {
     private static final DateTimeFormatter HISTORY_TIME=DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("Asia/Tokyo"));
-    private final SlotViewState view;private final SlotInput input;private String pressed="";private long leverAt=Long.MIN_VALUE;
+    private final SlotViewState view;private final SlotInput input;private String pressed="";private long leverAt=Long.MIN_VALUE;private int historyOffset=0;
     public SlotScreen(SlotViewState view,SlotInput input){super(Text.literal("Piri Slot"));this.view=view;this.input=input;}
     @Override public boolean shouldPause(){return false;}
     @Override public boolean shouldCloseOnEsc(){return false;}
@@ -34,6 +34,17 @@ public final class SlotScreen extends Screen {
         }return false;
     }
     @Override public boolean mouseReleased(double x,double y,int button){if(button==0)pressed="";return button==0;}
+    @Override public boolean mouseScrolled(double x,double y,double horizontalAmount,double verticalAmount){
+        var v=SlotLayout.Viewport.fit(width,height);
+        double lx=v.logicalX(x),ly=v.logicalY(y);
+        if(lx<34||lx>=278||ly<455||ly>=746)return false;
+        JsonObject data=view.dataLamp();
+        JsonArray history=data!=null&&data.has("history")?data.getAsJsonArray("history"):new JsonArray();
+        int maxOffset=Math.max(0,history.size()-10);
+        if(verticalAmount<0)historyOffset=Math.min(maxOffset,historyOffset+10);
+        else if(verticalAmount>0)historyOffset=Math.max(0,historyOffset-10);
+        return verticalAmount!=0;
+    }
     @Override public void renderBackground(DrawContext context,int mouseX,int mouseY,float delta){}
     @Override public void render(DrawContext c,int mouseX,int mouseY,float delta){
         c.fill(0,0,width,height,color("SCREEN_OUTSIDE"));var v=SlotLayout.Viewport.fit(width,height);
@@ -169,11 +180,16 @@ public final class SlotScreen extends Screen {
         digitsFitCentered(c,signed(diff),156,382,188,.78f,diff>=0?color("DISPLAY_GREEN"):color("DISPLAY_WHITE"));
         c.fill(38,448,274,451,color("BUTTON_METAL_DARK"));
         text(c,"BONUS HISTORY",42,465,1.55f,false,color("DISPLAY_WHITE"));
-        text(c,"NEWEST",42,492,1.05f,false,color("DISPLAY_WHITE"));
         JsonArray history=data!=null&&data.has("history")?data.getAsJsonArray("history"):new JsonArray();
+        int maxHistoryOffset=Math.max(0,history.size()-10);
+        historyOffset=Math.max(0,Math.min(historyOffset,maxHistoryOffset));
+        int shownFrom=history.isEmpty()?0:historyOffset+1;
+        int shownTo=Math.min(history.size(),historyOffset+10);
+        text(c,historyOffset==0?"NEWEST":"OLDER",42,492,1.05f,false,color("DISPLAY_WHITE"));
+        if(!history.isEmpty())text(c,shownFrom+"-"+shownTo+" / "+history.size(),252,492,.90f,true,color("DISPLAY_WHITE"));
         String hoverTime=null;
-        for(int i=0;i<Math.min(10,history.size());i++){
-            JsonObject item=history.get(i).getAsJsonObject();String type=item.get("type").getAsString();int y=521+i*22;
+        for(int row=0;row<10&&historyOffset+row<history.size();row++){
+            JsonObject item=history.get(historyOffset+row).getAsJsonObject();String type=item.get("type").getAsString();int y=521+row*22;
             int tint="GOD".equals(type)?color("DISPLAY_GREEN"):"BIG".equals(type)?color("DISPLAY_BIG"):color("DISPLAY_REG");
             text(c,type,44,y,1.22f,false,tint);
             text(c,item.get("games").getAsString()+"G",139,y,1.22f,false,color("DISPLAY_WHITE"));

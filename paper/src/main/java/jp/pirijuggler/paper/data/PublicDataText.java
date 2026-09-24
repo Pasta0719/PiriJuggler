@@ -23,7 +23,7 @@ public final class PublicDataText {
         lines.add("BONUS HISTORY (NEWEST)");
         JsonArray history=data.has("history")?data.getAsJsonArray("history"):new JsonArray();
         if(history.isEmpty())lines.add("-- no bonus yet --");
-        else for(int i=0;i<history.size();i++){
+        else for(int i=0;i<Math.min(10,history.size());i++){
             JsonObject item=history.get(i).getAsJsonObject();
             lines.add(item.get("type").getAsString()+"  "+item.get("games").getAsLong()+"G");
         }

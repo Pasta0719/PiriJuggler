@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DataLampSnapshotTest {
-    @Test void snapshotUsesOnlyRequestedPeriodNewestTenHistoryAndExactPiriChainBoundary() throws Exception {
+    @Test void snapshotUsesOnlyRequestedPeriodUpToHundredHistoryAndExactPiriChainBoundary() throws Exception {
         try(var c=DriverManager.getConnection("jdbc:sqlite::memory:")){
             c.createStatement().execute("CREATE TABLE machine_period_stats(machine_id INTEGER,business_period_id TEXT,total_games INTEGER,big_count INTEGER,reg_count INTEGER,current_games INTEGER,today_difference INTEGER,today_max_difference INTEGER)");
             c.createStatement().execute("CREATE TABLE bonus_history(id INTEGER PRIMARY KEY AUTOINCREMENT,machine_id INTEGER,business_period_id TEXT,bonus_type TEXT,games INTEGER,occurred_at INTEGER)");
@@ -23,7 +23,7 @@ class DataLampSnapshotTest {
             var json=DataLampSnapshot.read(c,1,"current");
             assertEquals(120,json.get("totalGames").getAsLong());assertEquals(3,json.get("bigCount").getAsLong());assertEquals(2,json.get("regCount").getAsLong());
             assertEquals(100,json.get("currentGames").getAsLong());assertEquals(45,json.get("todayDifference").getAsLong());assertEquals(300,json.get("todayMaxDifference").getAsLong());assertTrue(json.get("piriChain").getAsBoolean());assertEquals(12,json.get("piriChainCount").getAsInt());
-            assertEquals(10,json.getAsJsonArray("history").size());assertEquals(12,json.getAsJsonArray("history").get(0).getAsJsonObject().get("games").getAsLong());assertEquals(3,json.getAsJsonArray("history").get(9).getAsJsonObject().get("games").getAsLong());
+            assertEquals(12,json.getAsJsonArray("history").size());assertEquals(12,json.getAsJsonArray("history").get(0).getAsJsonObject().get("games").getAsLong());assertEquals(1,json.getAsJsonArray("history").get(11).getAsJsonObject().get("games").getAsLong());
             assertEquals(3,json.getAsJsonArray("graph").size());
             assertEquals(1,json.getAsJsonArray("graph").get(0).getAsJsonObject().get("game").getAsLong(),"visible graph starts at 1G, not the initialization point");
             assertEquals(120,json.getAsJsonArray("graph").get(2).getAsJsonObject().get("game").getAsLong(),"visible graph reaches the current total game");

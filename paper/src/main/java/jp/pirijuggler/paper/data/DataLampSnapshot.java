@@ -32,8 +32,8 @@ public final class DataLampSnapshot {
                 ?"SELECT type,games,occurred_at FROM ("+
                     "SELECT bonus_type AS type,games,occurred_at,id*2 AS ord FROM bonus_history WHERE machine_id=? AND business_period_id=? UNION ALL "+
                     "SELECT event_type AS type,games,occurred_at,id*2+1 AS ord FROM juggler_god_history WHERE machine_id=? AND business_period_id=?"+
-                    ") ORDER BY occurred_at DESC,ord DESC LIMIT 10"
-                :"SELECT bonus_type AS type,games,occurred_at FROM bonus_history WHERE machine_id=? AND business_period_id=? ORDER BY id DESC LIMIT 10";
+                    ") ORDER BY occurred_at DESC,ord DESC LIMIT 100"
+                :"SELECT bonus_type AS type,games,occurred_at FROM bonus_history WHERE machine_id=? AND business_period_id=? ORDER BY id DESC LIMIT 100";
         try(PreparedStatement ps=connection.prepareStatement(historySql)){
             ps.setInt(1,machineId);ps.setString(2,businessPeriodId);
             if(hasGodHistory){ps.setInt(3,machineId);ps.setString(4,businessPeriodId);}
