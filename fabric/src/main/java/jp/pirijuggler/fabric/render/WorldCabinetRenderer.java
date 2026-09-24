@@ -108,8 +108,11 @@ public final class WorldCabinetRenderer {
 
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;
+            int reelBg="JUGGLER_GOD".equals(state.machineType())
+                    ?UiConstants.color("JUGGLER_GOD_REEL_BG")
+                    :UiConstants.color("REEL_BG");
             rect(consumers,WHITE,basis,camera,x,300,270,390,.0015,
-                    godBlackout?0xff141414:UiConstants.color("REEL_BG"),0,0,1,1);
+                    godBlackout?0xff141414:reelBg,0,0,1,1);
 
             double phase=state.phase(reel,now);
             int middle=(int)Math.floor(phase);

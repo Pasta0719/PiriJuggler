@@ -63,7 +63,8 @@ public final class SlotScreen extends Screen {
             var clip=v.clip(new SlotLayout.Rect(x,300,270,390));c.enableScissor(clip.x(),clip.y(),clip.x()+clip.w(),clip.y()+clip.h());
             if(view.godFreeze()&&godMs>=35)drawGodReelWindow(c,reel,x,godMs);
             else{
-                c.fill(x,300,x+270,690,color("REEL_BG"));
+                int reelBg="JUGGLER_GOD".equals(view.machineType())?color("JUGGLER_GOD_REEL_BG"):color("REEL_BG");
+                c.fill(x,300,x+270,690,reelBg);
                 drawReelSymbols(c,reel,x);
             }
             c.disableScissor();
