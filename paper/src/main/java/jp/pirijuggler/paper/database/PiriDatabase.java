@@ -139,27 +139,35 @@ public final class PiriDatabase implements AutoCloseable {
             if (existing != null && existing.machine() != id) throw new DomainException("RECOVERY_REQUIRED");
             if (!rows("SELECT session_id FROM player_sessions WHERE machine_id=? AND lifecycle IN ('ACTIVE','SUSPENDED_GRACE') AND player_uuid<>?", id, player.toString()).isEmpty())
                 throw new DomainException("MACHINE_OCCUPIED");
+
+            if (existing != null && existing.lifecycle() == Session.Lifecycle.SUSPENDED_GRACE && existing.number("lock_expires_at") <= now) {
+                if(!existing.ready()) recovery().settle(existing,now);
+                sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE player_uuid=?", player.toString());
+                existing = session(player);
+            }
+            if (existing != null && existing.lifecycle() == Session.Lifecycle.SUSPENDED_SAFE)
+                sql("UPDATE player_sessions SET source_business_period_id=? WHERE player_uuid=?", period, player.toString());
+
+            // Recovery may have changed machine_runtime_json. Reload before copying it into the
+            // new/returned session; otherwise stale pre-recovery GOD-chain state can erase the
+            // guaranteed 0G continuation that recovery just restored.
+            machine=requireMachine(id);
             String machineState=switch(machine.type()){
                 case GOD -> GodMachineRuntime.fromJson(machine.runtimeJson()).gameplay().toJsonString();
                 case JUGGLER_GOD -> JugglerGodRuntime.fromJson(machine.runtimeJson()).toJsonString();
                 default -> null;
             };
+
             if (existing == null) {
                 sql("INSERT INTO player_sessions(session_id,player_uuid,machine_id,source_business_period_id,game_state,lifecycle,credit,held_medals,display_left_stop,display_center_stop,display_right_stop,machine_state_json,last_activity) VALUES(?,?,?,?,'SEATED_READY','ACTIVE',0,0,?,?,?,?,?)",
                         UUID.randomUUID().toString(), player.toString(), id, period, machine.left(), machine.center(), machine.right(), machineState, now);
             } else {
-                if (existing.lifecycle() == Session.Lifecycle.SUSPENDED_GRACE && existing.number("lock_expires_at") <= now) {
-                    if(!existing.ready()) recovery().settle(existing,now);
-                    sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE player_uuid=?", player.toString());
-                    existing = session(player);
-                }
-                if (existing.lifecycle() == Session.Lifecycle.SUSPENDED_SAFE)
-                    sql("UPDATE player_sessions SET source_business_period_id=? WHERE player_uuid=?", period, player.toString());
                 sql("UPDATE player_sessions SET lifecycle='ACTIVE',lock_expires_at=NULL,machine_state_json=?,last_activity=? WHERE player_uuid=?", machineState, now, player.toString());
             }
             return session(player);
         });
     }
+
     public String closeSession(UUID player, UUID sessionId, int machine, long sequence, long now, long graceMs) throws Exception {
         return closeSession(player,sessionId,machine,sequence,now,graceMs,null);
     }

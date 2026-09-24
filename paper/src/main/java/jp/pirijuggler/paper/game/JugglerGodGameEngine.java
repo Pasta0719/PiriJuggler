@@ -22,7 +22,6 @@ public final class JugglerGodGameEngine implements GameEngine {
     private static final int GOD_PRESENTATION_SEVEN_STOP=3;
     private static final Set<PacketType> GOD_PRESENTATION_INPUTS=Set.of(
             PacketType.SPACE_ACTION,PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT);
-    private static final int[] CONTINUATION_PERCENT={0,75,78,80,82,85,90};
 
     private final NormalGame delegate;
     private final RandomStreams random;
@@ -331,39 +330,9 @@ public final class JugglerGodGameEngine implements GameEngine {
     }
 
     private JugglerGodRuntime afterBonus(Machine machine,JugglerGodRuntime state){
-        var rng=random.gameplay(machine.id());
-        if("GOD_CHAIN".equals(state.bonusOrigin())||state.mode()==JugglerGodRuntime.Mode.GOD_CHAIN){
-            if(state.guaranteedRemaining()>0){
-                return state.core(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,
-                        state.guaranteedRemaining()-1,true,false,"NONE",
-                        state.godBigCount(),false,"GOD_GUARANTEED_NEXT");
-            }
-            int rate=CONTINUATION_PERCENT[machine.setting()];
-            if(rng.nextInt(100)<rate){
-                return state.core(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,
-                        0,true,true,"NONE",state.godBigCount(),false,"GOD_CONTINUE");
-            }
-            return enterHeaven(state,rng.nextInt(32)+1,"GOD_END_HEAVEN");
-        }
-
-        if("HEAVEN".equals(state.bonusOrigin())){
-            if(rng.nextLong(1_000_000)<heavenToHeavenPpm)
-                return enterHeaven(state,rng.nextInt(32)+1,"HEAVEN_CONTINUE");
-            return state.core(JugglerGodRuntime.Mode.NORMAL,0,0,0,false,false,
-                    "NONE",state.godBigCount(),false,"HEAVEN_END");
-        }
-
-        long normalHeavenPpm="BIG".equals(state.bonusOrigin())?normalBigToHeavenPpm:
-                "REG".equals(state.bonusOrigin())?normalRegToHeavenPpm:0;
-        if(rng.nextLong(1_000_000)<normalHeavenPpm)
-            return enterHeaven(state,rng.nextInt(32)+1,"NORMAL_TO_HEAVEN");
-        return state.core(JugglerGodRuntime.Mode.NORMAL,0,0,0,false,false,
-                "NONE",state.godBigCount(),false,"NORMAL");
-    }
-
-    private static JugglerGodRuntime enterHeaven(JugglerGodRuntime state,int target,String event){
-        return state.core(JugglerGodRuntime.Mode.HEAVEN,target,0,0,false,false,
-                "NONE",state.godBigCount(),false,event);
+        return JugglerGodTransitions.afterBonus(
+                state,machine.setting(),random.gameplay(machine.id()),
+                normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm);
     }
 
     private static JugglerGodRuntime load(Session before,Machine machine){

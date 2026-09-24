@@ -5,6 +5,8 @@ import jp.pirijuggler.common.reel.GodReelStrip;
 import jp.pirijuggler.common.reel.GodStopControl;
 import jp.pirijuggler.common.reel.Reel;
 import jp.pirijuggler.paper.game.GameRules;
+import jp.pirijuggler.paper.game.JugglerGodRuntime;
+import jp.pirijuggler.paper.game.JugglerGodTransitions;
 import jp.pirijuggler.paper.game.god.GodMachineRuntime;
 import jp.pirijuggler.paper.game.PremiumPolicy;
 import jp.pirijuggler.paper.game.RoleWeights;
@@ -30,6 +32,7 @@ public final class RecoveryStore {
     private final PremiumPolicy premiums;
     private final StopSolver solver;
     private final long seed;
+    private final long normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm;
     private final Map<Integer, SplittableRandom> random = new HashMap<>();
 
     public RecoveryStore(PiriDatabase db, Map<String,Object> config, StopSolver solver) {
@@ -42,6 +45,10 @@ public final class RecoveryStore {
         this.premiums=new PremiumPolicy(config);
         this.solver=solver;
         this.seed=seed;
+        Map<String,Object> tuning=StartupProfile.map(config.get("juggler_god"));
+        this.normalBigToHeavenPpm=number(tuning.get("normal_big_to_heaven_ppm"),0);
+        this.normalRegToHeavenPpm=number(tuning.get("normal_reg_to_heaven_ppm"),0);
+        this.heavenToHeavenPpm=number(tuning.get("heaven_to_heaven_ppm"),0);
     }
 
     /**
@@ -68,10 +75,14 @@ public final class RecoveryStore {
         Map<String,Object> machineRow=row("SELECT setting,machine_type FROM machines WHERE machine_id=?",machine);
         int setting=((Number)machineRow.get("setting")).intValue();
         boolean god="GOD".equals(machineRow.get("machine_type"));
+        boolean jugglerGod="JUGGLER_GOD".equals(machineRow.get("machine_type"));
         String settledGodRuntime=null;
+        String settledJugglerGodRuntime=null;
 
         if(god){
             settledGodRuntime=settleGod(before,values,stats,now);
+        } else if(jugglerGod){
+            settledJugglerGodRuntime=settleJugglerGod(before,values,stats,setting,now);
         } else switch(before.state()) {
             case NORMAL_BETTED -> settleFreshNormal(values,stats,setting,now);
             case NORMAL_SPINNING -> settleStoredNormal(values,stats,now);
@@ -108,9 +119,10 @@ public final class RecoveryStore {
                 values.get("game_state"),values.get("credit"),values.get("held_medals"),values.get("spin_id"),values.get("internal_role"),values.get("premium_type"),values.get("notice_state"),values.get("lamp_on"),values.get("bonus_type"),values.get("bonus_payout_count"),values.get("current_bet"),values.get("pay_display"),values.get("display_left_stop"),values.get("display_center_stop"),values.get("display_right_stop"),values.get("stopped_mask"),values.get("phase_left"),values.get("phase_center"),values.get("phase_right"),values.get("motion_profile"),values.get("machine_state_json"),values.get("last_activity"),before.id().toString());
         db.sql("UPDATE machine_period_stats SET total_games=?,big_count=?,reg_count=?,current_games=?,today_difference=?,today_max_difference=?,last_bonus_type=?,last_bonus_at=? WHERE machine_id=? AND business_period_id=?",
                 stats.total,stats.big,stats.reg,stats.current,stats.difference,stats.max,stats.lastBonus,stats.lastBonusAt,machine,period);
-        if(settledGodRuntime!=null)
+        String settledMachineRuntime=settledGodRuntime!=null?settledGodRuntime:settledJugglerGodRuntime;
+        if(settledMachineRuntime!=null)
             db.sql("UPDATE machines SET last_left_stop=?,last_center_stop=?,last_right_stop=?,machine_runtime_json=?,updated_at=? WHERE machine_id=?",
-                    values.get("display_left_stop"),values.get("display_center_stop"),values.get("display_right_stop"),settledGodRuntime,now,machine);
+                    values.get("display_left_stop"),values.get("display_center_stop"),values.get("display_right_stop"),settledMachineRuntime,now,machine);
         else
             db.sql("UPDATE machines SET last_left_stop=?,last_center_stop=?,last_right_stop=?,updated_at=? WHERE machine_id=?",
                     values.get("display_left_stop"),values.get("display_center_stop"),values.get("display_right_stop"),now,machine);
@@ -121,6 +133,60 @@ public final class RecoveryStore {
 
     static String settlementTransactionId(Session session){
         return "SETTLE:"+session.id()+":"+session.sequence();
+    }
+
+    private String settleJugglerGod(Session before,Map<String,Object> values,Stats stats,int setting,long now) throws Exception {
+        JsonObject sessionState=before.machineState();
+        JugglerGodRuntime runtime;
+        if(sessionState!=null&&sessionState.has("jgMode"))runtime=JugglerGodRuntime.fromJson(sessionState.toString());
+        else{
+            Object raw=row("SELECT machine_runtime_json FROM machines WHERE machine_id=?",before.machine()).get("machine_runtime_json");
+            runtime=JugglerGodRuntime.fromJson(raw instanceof String s?s:null);
+        }
+
+        boolean bonusCompleted=false;
+        switch(before.state()){
+            case NORMAL_BETTED -> settleFreshNormal(values,stats,setting,now);
+            case NORMAL_SPINNING -> settleStoredNormal(values,stats,now);
+            case REPLAY_READY -> settleReplayChain(values,stats,setting,now);
+            case BONUS_PENDING_BIG -> {settleUnstartedBonus(values,stats,"BIG",false,now);bonusCompleted=true;}
+            case BONUS_PENDING_REG -> {settleUnstartedBonus(values,stats,"REG",false,now);bonusCompleted=true;}
+            case BONUS_ENTRY_BETTED_BIG -> {settleUnstartedBonus(values,stats,"BIG",true,now);bonusCompleted=true;}
+            case BONUS_ENTRY_BETTED_REG -> {settleUnstartedBonus(values,stats,"REG",true,now);bonusCompleted=true;}
+            case BONUS_ENTRY_SPINNING_BIG -> {
+                completeSpecialSpin(values,DisplayRole.BIG_ENTRY);
+                settleUnstartedBonus(values,stats,"BIG",true,now);bonusCompleted=true;
+            }
+            case BONUS_ENTRY_SPINNING_REG -> {
+                completeSpecialSpin(values,DisplayRole.REG_ENTRY);
+                settleUnstartedBonus(values,stats,"REG",true,now);bonusCompleted=true;
+            }
+            case BIG_READY -> {settleRunningBonus(values,stats,"BIG",false,now);bonusCompleted=true;}
+            case REG_READY -> {settleRunningBonus(values,stats,"REG",false,now);bonusCompleted=true;}
+            case BIG_BETTED -> {settleRunningBonus(values,stats,"BIG",true,now);bonusCompleted=true;}
+            case REG_BETTED -> {settleRunningBonus(values,stats,"REG",true,now);bonusCompleted=true;}
+            case BIG_SPINNING -> {
+                completeBonusSpin(values);settleRunningBonus(values,stats,"BIG",true,now);bonusCompleted=true;
+            }
+            case REG_SPINNING -> {
+                completeBonusSpin(values);settleRunningBonus(values,stats,"REG",true,now);bonusCompleted=true;
+            }
+            case SEATED_READY -> {}
+        }
+
+        if(!bonusCompleted)return runtime.toJsonString();
+
+        runtime=runtime.core(runtime.mode(),runtime.heavenTarget(),runtime.heavenProgress(),
+                runtime.guaranteedRemaining(),runtime.forceChainBig(),runtime.countNextChainGame(),
+                runtime.bonusOrigin(),runtime.godBigCount(),false,"RECOVERY_BONUS_SETTLED").clearPresentation("RECOVERY_BONUS_SETTLED");
+
+        // Existing confirmed stocks still belong to the machine. Do not advance the parent
+        // GOD/heaven transition until those stocks have been released and consumed.
+        if(runtime.stockLampOn())return runtime.toJsonString();
+
+        if(runtime.releasingStock())runtime=runtime.stopReleasing("RECOVERY_STOCK_RELEASES_DONE");
+        return JugglerGodTransitions.afterBonus(runtime,setting,rng(before.machine()),
+                normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm).toJsonString();
     }
 
     /**
@@ -320,6 +386,7 @@ public final class RecoveryStore {
 
     private Map<String,Object> row(String sql,Object...args) throws Exception {var rows=db.rows(sql,args);if(rows.isEmpty())throw new IllegalStateException("Missing recovery row");return rows.getFirst();}
     private SplittableRandom rng(int machine){return random.computeIfAbsent(machine,id->new SplittableRandom(mix(seed^id)));}
+    private static long number(Object value,long fallback){return value instanceof Number n?n.longValue():fallback;}
     private static long mix(long value){value=(value^(value>>>30))*0xbf58476d1ce4e5b9L;value=(value^(value>>>27))*0x94d049bb133111ebL;return value^(value>>>31);}
 
     private static final class Stats {

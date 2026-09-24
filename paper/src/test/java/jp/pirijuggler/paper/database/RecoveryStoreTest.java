@@ -3,6 +3,7 @@ package jp.pirijuggler.paper.database;
 import jp.pirijuggler.paper.config.ConfigValidation;
 import com.google.gson.JsonObject;
 import jp.pirijuggler.paper.game.god.*;
+import jp.pirijuggler.paper.game.JugglerGodRuntime;
 import jp.pirijuggler.paper.machine.Machine;
 import jp.pirijuggler.paper.machine.MachineType;
 import jp.pirijuggler.paper.reel.StopCatalogue;
@@ -141,6 +142,31 @@ class RecoveryStoreTest {
         assertEquals(50,settled.number("credit"));
         assertEquals(0,settled.number("held_medals"));
         assertEquals(3,scalar("SELECT today_difference FROM machine_period_stats WHERE machine_id="+machine));
+    }
+
+    @Test void jugglerGodGraceExpiryKeepsGuaranteedZeroGameContinuation() throws Exception {
+        int machine=db.create(new Machine.Location(UUID.randomUUID(),"world",8,64,0,"NORTH"),MachineType.JUGGLER_GOD,NOW);
+        UUID player=UUID.randomUUID();
+        db.seat(player,machine,NOW);
+
+        var runtime=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
+                "GOD_CHAIN",1,false,"GOD_BIG_STARTED");
+        db.setMachineRuntimeJson(machine,runtime.toJsonString(),NOW);
+        db.sql("UPDATE player_sessions SET game_state='BIG_READY',lifecycle='SUSPENDED_GRACE',lock_expires_at=?,bonus_type='BIG',bonus_payout_count=0,machine_state_json=?,last_client_sequence=21 WHERE player_uuid=?",
+                NOW,runtime.toJsonString(),player.toString());
+
+        Session reseated=db.seat(player,machine,NOW+1);
+        assertEquals(Session.GameState.SEATED_READY,reseated.state());
+        JugglerGodRuntime recovered=JugglerGodRuntime.fromJson(reseated.machineState().toString());
+        assertEquals(JugglerGodRuntime.Mode.GOD_CHAIN,recovered.mode());
+        assertEquals(3,recovered.guaranteedRemaining());
+        assertTrue(recovered.forceChainBig(),"next guaranteed BIG must survive leave/recovery");
+        assertFalse(recovered.countNextChainGame(),"guaranteed BIG remains a 0G continuation");
+
+        String stored=(String)db.rows("SELECT machine_runtime_json FROM machines WHERE machine_id="+machine).getFirst().get("machine_runtime_json");
+        JugglerGodRuntime machineRuntime=JugglerGodRuntime.fromJson(stored);
+        assertTrue(machineRuntime.forceChainBig());
+        assertEquals(3,machineRuntime.guaranteedRemaining());
     }
 
     private long scalar(String sql) throws Exception {
