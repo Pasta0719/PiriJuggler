@@ -51,8 +51,8 @@ public final class SlotScreen extends Screen {
         long godMs=view.godFreezeElapsedMillis();
         c.getMatrices().push();c.getMatrices().translate(v.x(),v.y(),0);c.getMatrices().scale((float)v.scale(),(float)v.scale(),1);
 
-        int cabinetBg="JUGGLER_GOD".equals(view.machineType())?color("JUGGLER_GOD_CABINET_BG"):color("CABINET_BG");
-        panel(c,SlotLayout.CABINET,cabinetBg);
+        if("JUGGLER_GOD".equals(view.machineType()))godCabinetPanel(c,SlotLayout.CABINET);
+        else panel(c,SlotLayout.CABINET,color("CABINET_BG"));
         panel(c,SlotLayout.DATA,color("DISPLAY_BG"));
         panel(c,SlotLayout.DATA_LEFT,color("DISPLAY_BG"));
         panel(c,SlotLayout.DATA_RIGHT,color("DISPLAY_BG"));
@@ -282,6 +282,33 @@ public final class SlotScreen extends Screen {
         var b=Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP,VertexFormats.POSITION_COLOR);b.vertex(matrix,x1+nx,y1+ny,0).color(tint);b.vertex(matrix,x1-nx,y1-ny,0).color(tint);b.vertex(matrix,x2+nx,y2+ny,0).color(tint);b.vertex(matrix,x2-nx,y2-ny,0).color(tint);BufferRenderer.drawWithGlobalProgram(b.end());RenderSystem.enableCull();RenderSystem.disableBlend();
     }
     private static void panel(DrawContext c,SlotLayout.Rect r,int fill){rounded(c,r.x(),r.y(),r.w(),r.h(),18,color("CABINET_EDGE"));rounded(c,r.x()+4,r.y()+4,r.w()-8,r.h()-8,12,fill);}
+    private static void godCabinetPanel(DrawContext c,SlotLayout.Rect r){
+        rounded(c,r.x(),r.y(),r.w(),r.h(),18,color("CABINET_EDGE_LIGHT"));
+        roundedVerticalGradient(c,r.x()+4,r.y()+4,r.w()-8,r.h()-8,12,
+                color("JUGGLER_GOD_GOLD_TOP"),color("JUGGLER_GOD_GOLD_BOTTOM"));
+        // Thin soft highlight bands break the flat-fill look and give the face a metallic sheen.
+        c.fill(r.x()+18,r.y()+24,r.x()+r.w()-18,r.y()+34,color("JUGGLER_GOD_GOLD_HIGHLIGHT"));
+        c.fill(r.x()+18,r.y()+38,r.x()+r.w()-18,r.y()+42,color("JUGGLER_GOD_GOLD_SHINE"));
+        c.fill(r.x()+18,r.y()+r.h()-34,r.x()+r.w()-18,r.y()+r.h()-24,color("JUGGLER_GOD_GOLD_SHADOW"));
+    }
+    private static void roundedVerticalGradient(DrawContext c,float x,float y,float w,float h,float radius,int top,int bottom){
+        c.draw();RenderSystem.enableBlend();RenderSystem.defaultBlendFunc();RenderSystem.disableCull();RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        var b=Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_FAN,VertexFormats.POSITION_COLOR);var matrix=c.getMatrices().peek().getPositionMatrix();
+        b.vertex(matrix,x+w/2,y+h/2,0).color(mixColor(top,bottom,.5f));
+        for(int corner=0;corner<4;corner++)for(int step=0;step<=16;step++){
+            double angle=Math.toRadians(corner*90+step*90/16.0);float cx=corner==0||corner==3?x+w-radius:x+radius,cy=corner<2?y+h-radius:y+radius;
+            float py=cy+(float)Math.sin(angle)*radius;
+            float t=Math.max(0,Math.min(1,(py-y)/h));
+            b.vertex(matrix,cx+(float)Math.cos(angle)*radius,py,0).color(mixColor(top,bottom,t));
+        }
+        b.vertex(matrix,x+w,y+h-radius,0).color(mixColor(top,bottom,Math.max(0,Math.min(1,(h-radius)/h))));
+        BufferRenderer.drawWithGlobalProgram(b.end());RenderSystem.enableCull();RenderSystem.disableBlend();
+    }
+    private static int mixColor(int a,int b,float t){
+        int aa=a>>>24&255,ar=a>>>16&255,ag=a>>>8&255,ab=a&255;
+        int ba=b>>>24&255,br=b>>>16&255,bg=b>>>8&255,bb=b&255;
+        return ((int)(aa+(ba-aa)*t)<<24)|((int)(ar+(br-ar)*t)<<16)|((int)(ag+(bg-ag)*t)<<8)|(int)(ab+(bb-ab)*t);
+    }
     private static void rounded(DrawContext c,float x,float y,float w,float h,float radius,int tint){
         c.draw();RenderSystem.enableBlend();RenderSystem.defaultBlendFunc();RenderSystem.disableCull();RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         var b=Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_FAN,VertexFormats.POSITION_COLOR);var matrix=c.getMatrices().peek().getPositionMatrix();

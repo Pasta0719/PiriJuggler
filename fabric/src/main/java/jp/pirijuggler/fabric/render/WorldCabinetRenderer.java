@@ -76,10 +76,30 @@ public final class WorldCabinetRenderer {
         localText(consumers,client.textRenderer,basis,camera,.31,dataY+.050,"合算",.00205f,UiConstants.color("DISPLAY_GREEN"),true);
         localText(consumers,client.textRenderer,basis,camera,.31,dataY-.018,combined,.00285f,UiConstants.color("DISPLAY_WHITE"),true);
 
-        // Exact SlotScreen cabinet palette: gold edge + burgundy face.
-        quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH,CabinetPlacement.HEIGHT,0,UiConstants.color("CABINET_EDGE"),0,0,1,1);
-        int cabinetBg="JUGGLER_GOD".equals(state.machineType())?UiConstants.color("JUGGLER_GOD_CABINET_BG"):UiConstants.color("CABINET_BG");
-        quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.015,CabinetPlacement.HEIGHT-.015,.0006,cabinetBg,0,0,1,1);
+        // Cabinet face. JUGGLER_GOD uses layered gold bands instead of a flat color.
+        boolean jugglerGod="JUGGLER_GOD".equals(state.machineType());
+        quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH,CabinetPlacement.HEIGHT,0,
+                jugglerGod?UiConstants.color("CABINET_EDGE_LIGHT"):UiConstants.color("CABINET_EDGE"),0,0,1,1);
+        if(jugglerGod){
+            double innerW=CabinetPlacement.WIDTH-.015,innerH=CabinetPlacement.HEIGHT-.015;
+            double bandH=innerH/5.0;
+            int[] gold={
+                    UiConstants.color("JUGGLER_GOD_GOLD_TOP"),
+                    UiConstants.color("JUGGLER_GOD_GOLD_MID"),
+                    UiConstants.color("JUGGLER_GOD_GOLD_MID"),
+                    UiConstants.color("JUGGLER_GOD_GOLD_LOW"),
+                    UiConstants.color("JUGGLER_GOD_GOLD_BOTTOM")
+            };
+            for(int i=0;i<5;i++){
+                double cy=innerH/2.0-bandH/2.0-i*bandH;
+                quad(consumers,WHITE,basis,camera,0,cy,innerW,bandH+.001,.0006,gold[i],0,0,1,1);
+            }
+            quad(consumers,WHITE,basis,camera,0,innerH/2.0-.030,innerW-.030,.015,.0008,
+                    UiConstants.color("JUGGLER_GOD_GOLD_HIGHLIGHT"),0,0,1,1);
+        }else{
+            quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.015,CabinetPlacement.HEIGHT-.015,.0006,
+                    UiConstants.color("CABINET_BG"),0,0,1,1);
+        }
 
         // SlotScreen reel separator: (670,300)-(1570,690), mapped inside CABINET.
         boolean godBlackout=state.godFreeze();
