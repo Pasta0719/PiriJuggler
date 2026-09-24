@@ -120,15 +120,24 @@ public final class WorldCabinetRenderer {
             for(int row=-2;row<=2;row++){
                 String symbol=UiConstants.symbol(reel,middle+row);
                 boolean wide=symbol.equals("seven")||symbol.equals("bar");
-                double sw=wide?230:130;
-                double sh=symbol.equals("bar")?150:130;
-                double sy=430+(row-fraction)*130-(sh-130)/2.0;
+                double boxW=wide?230:130;
+                double boxH=symbol.equals("bar")?150:130;
+                double sy=430+(row-fraction)*130-(boxH-130)/2.0;
+                double sw=boxW,sh=boxH;
+                if("JUGGLER_GOD".equals(state.machineType())){
+                    double tw=wide?320:256,th=256;
+                    double fit=Math.min(boxW/tw,boxH/th);
+                    sw=tw*fit;sh=th*fit;
+                    sy+=(boxH-sh)/2.0;
+                }
                 symbolTint(consumers,basis,camera,state.machineType(),symbol,x+(270-sw)/2.0,sy,sw,sh,300,690,
                         godBlackout?0xff202020:0xffffffff);
             }
 
             if(godBlackout&&state.godRevealed(reel,now)){
-                symbolTint(consumers,basis,camera,state.machineType(),"bar",x+20,420,230,150,300,690,0xffffffff);
+                double boxW=230,boxH=150,fit=Math.min(boxW/320.0,boxH/256.0);
+                double sw=320*fit,sh=256*fit;
+                symbolTint(consumers,basis,camera,state.machineType(),"bar",x+(270-sw)/2.0,420+(boxH-sh)/2.0,sw,sh,300,690,0xffffffff);
             }
         }
 
@@ -136,7 +145,13 @@ public final class WorldCabinetRenderer {
         Identifier lamp=state.lampVisible(now)
                 ?JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_on.png")
                 :JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_off.png");
-        rect(consumers,lamp,basis,camera,350,390,300,170,.0025,0xffffffff,0,0,1,1);
+        if("JUGGLER_GOD".equals(state.machineType())){
+            double boxW=300,boxH=170,fit=Math.min(boxW/512.0,boxH/256.0);
+            double lw=512*fit,lh=256*fit;
+            rect(consumers,lamp,basis,camera,350+(boxW-lw)/2.0,390+(boxH-lh)/2.0,lw,lh,.0025,0xffffffff,0,0,1,1);
+        }else{
+            rect(consumers,lamp,basis,camera,350,390,300,170,.0025,0xffffffff,0,0,1,1);
+        }
 
         // Exact status panel: (670,710,900,95), but only public remote fields.
         rect(consumers,WHITE,basis,camera,670,710,900,95,.0012,UiConstants.color("DISPLAY_BG"),0,0,1,1);
