@@ -63,7 +63,11 @@ public final class SlotUi {
                 if(view.matches(b)){
                     boolean resumed="RESUME_NORMAL".equals(b.get("animation").getAsString());
                     boolean godFreeze=b.has("godFreeze")&&b.get("godFreeze").getAsBoolean();
-                    if(godFreeze)godBigAudioPending=true;
+                    if(godFreeze){
+                        godBigAudioPending=true;
+                        pendingBigBgmAt=-1L;pendingBigBgmName=null;pendingGodHitSound=null;
+                        PiriSounds.stopAll();
+                    }
                     if(!resumed)PiriSounds.queue(godFreeze?special("juggler_god_god_freeze","god_freeze"):sound("lever"),1,0);
                     if(godBigAudioActive&&"BIG_SPINNING".equals(view.value("gameState")))
                         PiriSounds.startLoop(special("juggler_god_god_big_bgm",sound("big_bgm")));
