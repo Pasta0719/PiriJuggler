@@ -407,13 +407,11 @@ public final class MachineService implements Listener, CommandExecutor {
         if (!machine.enabled()) { error(player, "MACHINE_DISABLED"); return; }
         Session session = state.session(owner);
         if (session != null && session.machine() != machine.id()) {
-            Machine occupied = state.machine(session.machine());
-            String occupiedType = occupied == null ? "不明" : machineTypeName(occupied.type());
-            tell(player, "すでに台" + session.machine() + "（" + occupiedType + "）で遊技中です。台" + session.machine() + "を開き、クレジット・メダルが残っている場合は清算してからESCキーで離席してください。");
+            tell(player, "すでに台" + session.machine() + "で遊技中です。台" + session.machine() + "を開き、クレジット・メダルが残っている場合は清算してからESCキーで離席してください。");
             return;
         }
         if (pendingMachines.contains(machine.id()) || (state.busy(machine.id()) && (session == null || !session.ownsLock()))) {
-            tell(player, "台" + machine.id() + "（" + machineTypeName(machine.type()) + "）はほかのプレイヤーが遊技中です。空くまでお待ちください。");
+            tell(player, "台" + machine.id() + "はほかのプレイヤーが遊技中です。空くまでお待ちください。");
             return;
         }
         submit(player, owner, machine.id(), () -> database.seat(owner, machine.id(), System.currentTimeMillis()), seated -> {
@@ -723,15 +721,6 @@ public final class MachineService implements Listener, CommandExecutor {
         if (sender != null) error(sender, code);
     }
     private static void tell(CommandSender sender, String message) { sender.sendMessage(Component.text(message)); }
-    private static String machineTypeName(MachineType type) {
-        return switch (type) {
-            case JUGGLER -> "ジャグラー";
-            case JUGGLER_GOD -> "ジャグラーGOD";
-            case OKIDOKI -> "沖ドキ";
-            case GOD -> "GOD";
-            case DISC -> "ディスクアップ";
-        };
-    }
     private static String friendlyError(String code) {
         try {
             return switch (ErrorCode.valueOf(code)) {
