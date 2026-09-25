@@ -185,8 +185,11 @@ public final class JugglerGodGameEngine implements GameEngine {
             String current=before.state()==Session.GameState.BIG_SPINNING?"BIG":"REG";
             int count=Math.addExact((int)before.number("bonus_payout_count"),14);
             boolean ended="BIG".equals(current)?count>266:count>98;
+            boolean trueGodInGod="GOD".equals(runtime.pendingBonusHit())&&"GOD_CHAIN".equals(runtime.bonusOrigin());
             next=runtime.interrupt(runtime.pendingBonusHit(),current,count,ended,
-                    "GOD".equals(runtime.pendingBonusHit())?"GOD_IN_GOD_CONFIRM_READY":"BONUS_STOCK_CONFIRM_READY");
+                    "GOD".equals(runtime.pendingBonusHit())
+                            ?(trueGodInGod?"GOD_IN_GOD_CONFIRM_READY":"BONUS_GOD_CONFIRM_READY")
+                            :"BONUS_STOCK_CONFIRM_READY");
             if("GOD".equals(runtime.pendingBonusHit())){
                 rawAfter=rewrite(rawAfter,Map.of(
                         "game_state","NORMAL_BETTED","current_bet",0,"bonus_payout_count",0,
@@ -236,9 +239,13 @@ public final class JugglerGodGameEngine implements GameEngine {
             suppressBonusStart=true;
             bonusStarted=null;
         }else if(overlayGodFinish){
-            next=runtime.consumePendingHit("BONUS_GOD_CONFIRMED")
-                    .core(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
-                            "GOD_CHAIN",1,false,"GOD_STARTED")
+            // Ordinary BIG/REG -> GOD: discard the interrupted remainder, compensate it with one BIG stock,
+            // then enter exactly the normal GOD chain. REG is intentionally upgraded to BIG stock too.
+            int big=Math.addExact(runtime.additionalBigStock(),1);
+            next=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
+                    "GOD_CHAIN",1,false,"GOD_STARTED",
+                    big,runtime.additionalRegStock(),"NONE","NONE",0,false,
+                    runtime.releasingStock(),runtime.forcedRole(),runtime.godPresentationStartMs())
                     .startPresentation(Math.addExact(now,legacy.publicDelayMs()),"GOD_STARTED");
             suppressBonusStart=true;
             bonusStarted=null;
