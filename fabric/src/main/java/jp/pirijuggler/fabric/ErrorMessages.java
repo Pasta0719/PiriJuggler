@@ -14,9 +14,9 @@ public final class ErrorMessages {
             case NOT_ENOUGH_VAULT -> "所持金が足りません。";
             case NOT_ENOUGH_MEDALS -> "メダルが足りません。";
             case INVENTORY_FULL -> "インベントリに空きがありません。空きを作ってからお試しください。";
-            case MACHINE_OCCUPIED -> "この台はほかのプレイヤーが遊技中です。";
+            case MACHINE_OCCUPIED -> "この台はほかのプレイヤーが遊技中です。空くまでお待ちください。";
             case MACHINE_DISABLED -> "この台は現在利用できません。";
-            case SESSION_MISMATCH -> "台との接続状態が変わりました。いったん離席して、もう一度座り直してください。";
+            case SESSION_MISMATCH -> "台との接続状態が変わりました。画面を閉じて、遊技していた台をもう一度開いてください。";
             case SEQUENCE_OLD -> "操作が重複しました。もう一度お試しください。";
             case SPIN_MISMATCH -> "遊技状態が更新されました。もう一度お試しください。";
             case STOP_TOO_EARLY -> "まだリールを止められません。";
