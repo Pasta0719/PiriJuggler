@@ -167,6 +167,8 @@ public final class SlotScreen extends Screen {
         }
     }
 
+    private static boolean isJugglerGod(String type){return "JUGGLER_GOD".equals(type)||"JUGGLER_GOD_EXTREME".equals(type);}
+
     private String errorText(){
         if(view.error().isEmpty())return "";
         try{
