@@ -171,23 +171,13 @@ public final class SlotScreen extends Screen {
         if(view.error().isEmpty())return "";
         try{
             ErrorCode code=ErrorCode.valueOf(view.error());
-            String machine="台"+view.machineId()+"（"+machineTypeName(view.machineType())+"）";
+            String machine="台"+view.machineId();
             return switch(code){
                 case MACHINE_OCCUPIED -> machine+"はほかのプレイヤーが遊技中です。空くまでお待ちください。";
                 case SESSION_MISMATCH -> machine+"との接続状態が変わりました。画面を閉じて、この台をもう一度開いてください。";
                 default -> ErrorMessages.japanese(code);
             };
         }catch(IllegalArgumentException e){return view.error();}
-    }
-    private static String machineTypeName(String type){
-        return switch(type){
-            case "JUGGLER" -> "ジャグラー";
-            case "JUGGLER_GOD" -> "ジャグラーGOD";
-            case "OKIDOKI" -> "沖ドキ";
-            case "GOD" -> "GOD";
-            case "DISC" -> "ディスクアップ";
-            default -> type;
-        };
     }
     private void data(DrawContext c,double mx,double my){
         JsonObject data=view.dataLampView();
