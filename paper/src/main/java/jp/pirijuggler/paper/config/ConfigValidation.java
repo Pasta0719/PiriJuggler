@@ -53,7 +53,7 @@ public final class ConfigValidation {
 
     public static Result validate(Map<String, Object> values) {
         Check c = new Check(values);
-        c.keys("", Set.of("protocol_version", "economy", "game", "sound", "juggler_god", "premium", "prizes", "events", "probabilities"));
+        c.keys("", Set.of("protocol_version", "economy", "game", "sound", "juggler_god", "juggler_god_extreme", "premium", "prizes", "events", "probabilities"));
         c.equalInteger("protocol_version", Protocol.VERSION);
         c.keys("economy", Set.of("loan_medals", "loan_amount"));
         c.integer("economy.loan_medals", 1, Integer.MAX_VALUE);
@@ -72,6 +72,23 @@ public final class ConfigValidation {
             c.keys(base, Set.of("bonus_scale_ppm","small_role_scale_ppm"));
             c.integer(base+".bonus_scale_ppm", 0, 1_000_000);
             c.integer(base+".small_role_scale_ppm", 0, 1_000_000);
+        }
+        c.keys("juggler_god_extreme", Set.of("god_denominator","big_payout","reg_payout","god_guaranteed_bigs","god_in_god_big_stock","normal_big_to_heaven_ppm","normal_reg_to_heaven_ppm","heaven_to_heaven_ppm","settings"));
+        c.integer("juggler_god_extreme.god_denominator", 2, Integer.MAX_VALUE);
+        c.integer("juggler_god_extreme.big_payout", 14, 14_000);
+        c.integer("juggler_god_extreme.reg_payout", 14, 14_000);
+        c.integer("juggler_god_extreme.god_guaranteed_bigs", 1, 100);
+        c.integer("juggler_god_extreme.god_in_god_big_stock", 0, 100);
+        c.integer("juggler_god_extreme.normal_big_to_heaven_ppm", 0, 1_000_000);
+        c.integer("juggler_god_extreme.normal_reg_to_heaven_ppm", 0, 1_000_000);
+        c.integer("juggler_god_extreme.heaven_to_heaven_ppm", 0, 1_000_000);
+        c.keys("juggler_god_extreme.settings", Set.of("1","2","3","4","5","6"));
+        for(int setting=1;setting<=6;setting++){
+            String base="juggler_god_extreme.settings."+setting;
+            c.keys(base, Set.of("bonus_scale_ppm","small_role_scale_ppm","god_continuation_percent"));
+            c.integer(base+".bonus_scale_ppm", 0, 1_000_000);
+            c.integer(base+".small_role_scale_ppm", 0, 1_000_000);
+            c.integer(base+".god_continuation_percent", 0, 99);
         }
         BigInteger denominator = c.integer("premium.denominator", 1, Long.MAX_VALUE);
         BigInteger chance = c.integer("premium.big_chance_weight", 0, Long.MAX_VALUE);
