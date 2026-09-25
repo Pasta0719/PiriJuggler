@@ -21,6 +21,7 @@ public final class NormalGame {
         double[] starts(){return new double[]{left,center,right};}
     }
     private final RoleWeights weights;private final RandomStreams random;private final StopSolver solver;private final MainThread main;private final PremiumPolicy premium;private final boolean legacyBarPremium;
+    private final int bigThreshold,regThreshold;
     private final Map<UUID,Motion> motions=new HashMap<>();
 
     public NormalGame(RoleWeights weights,RandomStreams random,StopSolver solver,MainThread main) {
@@ -30,7 +31,12 @@ public final class NormalGame {
         this(weights,random,solver,main,config,true);
     }
     public NormalGame(RoleWeights weights,RandomStreams random,StopSolver solver,MainThread main,Map<String,Object> config,boolean legacyBarPremium) {
+        this(weights,random,solver,main,config,legacyBarPremium,FixedGameRules.BIG_PAYOUT,FixedGameRules.REG_PAYOUT);
+    }
+    public NormalGame(RoleWeights weights,RandomStreams random,StopSolver solver,MainThread main,Map<String,Object> config,boolean legacyBarPremium,int bigPayout,int regPayout) {
+        if(bigPayout<14||regPayout<14||bigPayout%14!=0||regPayout%14!=0)throw new IllegalArgumentException("Bonus payout must be positive multiples of 14");
         this.weights=weights;this.random=random;this.solver=solver;this.main=main;this.premium=config==null?null:new PremiumPolicy(config);this.legacyBarPremium=legacyBarPremium;
+        this.bigThreshold=bigPayout-14;this.regThreshold=regPayout-14;
     }
 
     public Transition plan(Session before,PacketType action,long sequence,int setting,long now,long receivedNanos,int ping) {
@@ -135,7 +141,7 @@ public final class NormalGame {
                             if(!solver.catalogue().evaluation(round.display()).valid(role))throw new IllegalStateException("Unexpected bonus display shape");
                             payout=14;putBalance(values,balance(before).payout(14));values.put("pay_display",14);
                             long count=Math.addExact(before.number("bonus_payout_count"),14);values.put("bonus_payout_count",count);values.put("current_bet",0);
-                            boolean big=state==Session.GameState.BIG_SPINNING;boolean end=big?count>266:count>98;
+                            boolean big=state==Session.GameState.BIG_SPINNING;boolean end=big?count>bigThreshold:count>regThreshold;
                             if(end){bonusEnded=true;values.put("game_state","SEATED_READY");values.put("bonus_payout_count",0);values.put("lamp_on",0);values.put("notice_state","NONE");values.put("bonus_type",null);}
                             else values.put("game_state",big?"BIG_READY":"REG_READY");
                             clearSpin(values);scheduled.add(new Scheduled(delay,Envelope.current(PacketType.PAYOUT,new JsonObject())));
