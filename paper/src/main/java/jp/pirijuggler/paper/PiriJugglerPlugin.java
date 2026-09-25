@@ -166,12 +166,12 @@ juggler_god_extreme:
   normal_reg_to_heaven_ppm: 30000
   heaven_to_heaven_ppm: 700000
   settings:
-    '1': {bonus_scale_ppm: 571306, small_role_scale_ppm: 700000, god_continuation_percent: 75}
-    '2': {bonus_scale_ppm: 562676, small_role_scale_ppm: 700000, god_continuation_percent: 78}
-    '3': {bonus_scale_ppm: 568762, small_role_scale_ppm: 700000, god_continuation_percent: 80}
-    '4': {bonus_scale_ppm: 574193, small_role_scale_ppm: 700000, god_continuation_percent: 82}
-    '5': {bonus_scale_ppm: 582626, small_role_scale_ppm: 700000, god_continuation_percent: 85}
-    '6': {bonus_scale_ppm: 550852, small_role_scale_ppm: 700000, god_continuation_percent: 90}
+    '1': {bonus_scale_ppm: 566259, small_role_scale_ppm: 700000, god_continuation_percent: 75}
+    '2': {bonus_scale_ppm: 557664, small_role_scale_ppm: 700000, god_continuation_percent: 78}
+    '3': {bonus_scale_ppm: 563702, small_role_scale_ppm: 700000, god_continuation_percent: 80}
+    '4': {bonus_scale_ppm: 569053, small_role_scale_ppm: 700000, god_continuation_percent: 82}
+    '5': {bonus_scale_ppm: 577396, small_role_scale_ppm: 700000, god_continuation_percent: 85}
+    '6': {bonus_scale_ppm: 545547, small_role_scale_ppm: 700000, god_continuation_percent: 90}
 """;
         Files.writeString(path, original.stripTrailing() + "\n" + block, StandardCharsets.UTF_8);
         getLogger().info("Migrated existing config with juggler_god_extreme defaults");
