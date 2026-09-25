@@ -55,7 +55,7 @@ public final class MachineDataSimulationService {
         running=true;
         sender.sendMessage(Component.text("SIMULATION_STARTED machine="+machineId+" setting="+setting+" games="+games));
         plugin.executors().database(
-                ()->machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD
+                ()->(machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD||machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD_EXTREME)
                         ?JugglerGodMachineDataSimulator.run(dbFile,weights,config,machineId,setting,games,period,random,System.currentTimeMillis())
                         :MachineDataSimulator.run(dbFile,weights,machineId,setting,games,period,random,System.currentTimeMillis()),
                 (result,error)->{
@@ -93,7 +93,7 @@ public final class MachineDataSimulationService {
             for(int i=0;i<machines.size();i++){
                 Machine machine=machines.get(i);
                 var random=masterRandom.split();
-                results.add(machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD
+                results.add((machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD||machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD_EXTREME)
                         ?JugglerGodMachineDataSimulator.run(dbFile,weights,config,machine.id(),machine.setting(),games,period,random,now+(long)i*games)
                         :MachineDataSimulator.run(dbFile,weights,machine.id(),machine.setting(),games,period,random,now+(long)i*games));
             }
