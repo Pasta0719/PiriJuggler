@@ -290,4 +290,5 @@ public final class WorldCabinetRenderer {
     private static CabinetPlacement.Vec relative(CabinetPlacement.Vec p,Vec3d cam){
         return new CabinetPlacement.Vec(p.x()-cam.x,p.y()-cam.y,p.z()-cam.z);
     }
+    private static boolean isJugglerGod(String type){return "JUGGLER_GOD".equals(type)||"JUGGLER_GOD_EXTREME".equals(type);}
 }
