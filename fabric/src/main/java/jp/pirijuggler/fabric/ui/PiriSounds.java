@@ -59,6 +59,11 @@ public final class PiriSounds {
         if(!available(name))return;loopName=name;loop=new LoopSound(EVENTS.get(name));MinecraftClient.getInstance().getSoundManager().play(loop);
     }
     public static void stopLoop(){if(loop!=null)MinecraftClient.getInstance().getSoundManager().stop(loop);loop=null;loopName=null;}
-    public static void reset(){QUEUE.clear();stopLoop();}
+    public static void stopAll(){
+        var manager=MinecraftClient.getInstance().getSoundManager();
+        for(SoundInstance sound:ONE_SHOTS)manager.stop(sound);
+        ONE_SHOTS.clear();QUEUE.clear();stopLoop();
+    }
+    public static void reset(){stopAll();}
     private PiriSounds(){}
 }
