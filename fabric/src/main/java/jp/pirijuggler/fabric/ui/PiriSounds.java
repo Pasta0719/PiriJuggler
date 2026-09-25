@@ -42,7 +42,7 @@ public final class PiriSounds {
     public static void tick(){long now=System.nanoTime();while(!QUEUE.isEmpty()&&QUEUE.peek().at<=now)play(QUEUE.remove().name);}
     public static boolean available(String name){return NAMES.contains(name)&&MinecraftClient.getInstance().getResourceManager().getResource(Identifier.of("piri","sounds/"+name+".ogg")).isPresent();}
     public static String forMachine(String machineType,String base){
-        if("JUGGLER_GOD".equals(machineType)){
+        if("JUGGLER_GOD".equals(machineType)||"JUGGLER_GOD_EXTREME".equals(machineType)){
             String dedicated="juggler_god_"+base;
             if(available(dedicated))return dedicated;
         }
