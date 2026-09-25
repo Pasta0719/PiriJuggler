@@ -10,7 +10,16 @@ public final class JugglerGodTransitions {
             JugglerGodRuntime state,int setting,RandomGenerator rng,
             long normalBigToHeavenPpm,long normalRegToHeavenPpm,long heavenToHeavenPpm
     ){
-        if(state==null||rng==null||setting<1||setting>6)throw new IllegalArgumentException("JUGGLER_GOD transition args");
+        return afterBonus(state,setting,rng,normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm,CONTINUATION_PERCENT);
+    }
+
+    public static JugglerGodRuntime afterBonus(
+            JugglerGodRuntime state,int setting,RandomGenerator rng,
+            long normalBigToHeavenPpm,long normalRegToHeavenPpm,long heavenToHeavenPpm,
+            int[] continuationPercent
+    ){
+        if(state==null||rng==null||setting<1||setting>6||continuationPercent==null||continuationPercent.length<7)
+            throw new IllegalArgumentException("JUGGLER_GOD transition args");
 
         if("GOD_CHAIN".equals(state.bonusOrigin())||state.mode()==JugglerGodRuntime.Mode.GOD_CHAIN){
             if(state.guaranteedRemaining()>0){
@@ -18,7 +27,7 @@ public final class JugglerGodTransitions {
                         state.guaranteedRemaining()-1,true,false,"NONE",
                         state.godBigCount(),false,"GOD_GUARANTEED_NEXT");
             }
-            if(rng.nextInt(100)<CONTINUATION_PERCENT[setting]){
+            if(rng.nextInt(100)<continuationPercent[setting]){
                 return state.core(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,
                         0,true,true,"NONE",state.godBigCount(),false,"GOD_CONTINUE");
             }
