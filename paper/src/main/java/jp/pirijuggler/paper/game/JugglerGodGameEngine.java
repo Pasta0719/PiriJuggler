@@ -85,7 +85,8 @@ public final class JugglerGodGameEngine implements GameEngine {
                 &&(before.state()==Session.GameState.NORMAL_BETTED||before.state()==Session.GameState.REPLAY_READY);
         boolean bonusLever=action==PacketType.SPACE_ACTION
                 &&(before.state()==Session.GameState.BIG_BETTED||before.state()==Session.GameState.REG_BETTED);
-        boolean godInGodConfirm=normalLever&&"GOD".equals(runtime.pendingBonusHit());
+        boolean godOverlayConfirm=normalLever&&"GOD".equals(runtime.pendingBonusHit());
+        boolean godInGodConfirm=godOverlayConfirm&&"GOD_CHAIN".equals(runtime.bonusOrigin());
 
         if(bonusLever&&runtime.godFreeze()&&"GOD_CHAIN".equals(runtime.bonusOrigin())){
             prepared=runtime.core(runtime.mode(),runtime.heavenTarget(),runtime.heavenProgress(),
@@ -110,12 +111,13 @@ public final class JugglerGodGameEngine implements GameEngine {
             }
             if(forced!=null){
                 // Explicit development force wins over production GOD/heaven/chain draws for this spin only.
-            }else if(godInGodConfirm){
+            }else if(godOverlayConfirm){
                 forced=InternalRole.GOD;
                 suppressNormalSpinCount=true;
                 prepared=runtime.core(runtime.mode(),runtime.heavenTarget(),runtime.heavenProgress(),
                         runtime.guaranteedRemaining(),runtime.forceChainBig(),runtime.countNextChainGame(),
-                        runtime.bonusOrigin(),runtime.godBigCount(),true,"GOD_IN_GOD_FREEZE");
+                        runtime.bonusOrigin(),runtime.godBigCount(),true,
+                        godInGodConfirm?"GOD_IN_GOD_FREEZE":"BONUS_GOD_FREEZE");
             }else if(runtime.mode()==JugglerGodRuntime.Mode.GOD_CHAIN&&runtime.forceChainBig()){
                 forced=InternalRole.BIG;
                 suppressNormalSpinCount=!runtime.countNextChainGame();
@@ -217,9 +219,11 @@ public final class JugglerGodGameEngine implements GameEngine {
             bonusStarted=null;
         }
 
-        // GOD-in-GOD BAR alignment confirms +7 BIG stock, without replacing the outer GOD.
-        boolean godInGodFinish=legacy.finished()&&before.state()==Session.GameState.NORMAL_SPINNING
+        // A GOD drawn inside an ordinary BIG/REG is a full GOD, not GOD-in-GOD.
+        // Only a GOD acquired while the interrupted bonus itself came from GOD_CHAIN receives +7 stock.
+        boolean overlayGodFinish=legacy.finished()&&before.state()==Session.GameState.NORMAL_SPINNING
                 &&"GOD".equals(before.text("internal_role"))&&"GOD".equals(runtime.pendingBonusHit());
+        boolean godInGodFinish=overlayGodFinish&&"GOD_CHAIN".equals(runtime.bonusOrigin());
         if(godInGodFinish){
             int big=Math.addExact(runtime.additionalBigStock(),GOD_IN_GOD_BIG_STOCK);
             next=new JugglerGodRuntime(runtime.mode(),runtime.heavenTarget(),runtime.heavenProgress(),
@@ -229,6 +233,13 @@ public final class JugglerGodGameEngine implements GameEngine {
             rawAfter=restoreOrRelease(rawAfter,machine,next,runtime.suspendedBonusType(),
                     runtime.suspendedBonusPayoutCount(),runtime.suspendedBonusEnded());
             next=loadRuntime(rawAfter,next);
+            suppressBonusStart=true;
+            bonusStarted=null;
+        }else if(overlayGodFinish){
+            next=runtime.consumePendingHit("BONUS_GOD_CONFIRMED")
+                    .core(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
+                            "GOD_CHAIN",1,false,"GOD_STARTED")
+                    .startPresentation(Math.addExact(now,legacy.publicDelayMs()),"GOD_STARTED");
             suppressBonusStart=true;
             bonusStarted=null;
         }else if(legacy.finished()&&before.state()==Session.GameState.NORMAL_SPINNING
