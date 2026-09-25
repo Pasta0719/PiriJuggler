@@ -39,7 +39,7 @@ juggler_god_extreme:
   big_payout: 420
   reg_payout: 168
   god_guaranteed_bigs: 8
-  god_in_god_big_stock: 5
+  god_in_god_big_stock: 10
   normal_big_to_heaven_ppm: 60000
   normal_reg_to_heaven_ppm: 30000
   heaven_to_heaven_ppm: 700000
