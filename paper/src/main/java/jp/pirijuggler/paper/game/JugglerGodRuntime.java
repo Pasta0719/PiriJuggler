@@ -110,6 +110,14 @@ public record JugglerGodRuntime(
                 "NONE","NONE",0,false,releasingStock,forcedRole,godPresentationStartMs);
     }
 
+    /** Clear only the acquired overlay hit while keeping the interrupted bonus available for later resume. */
+    public JugglerGodRuntime consumePendingHit(String event) {
+        return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
+                bonusOrigin,godBigCount,godFreeze,event,additionalBigStock,additionalRegStock,
+                "NONE",suspendedBonusType,suspendedBonusPayoutCount,suspendedBonusEnded,
+                releasingStock,forcedRole,godPresentationStartMs);
+    }
+
     public JugglerGodRuntime release(int big,int reg,String event) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,false,event,big,reg,"NONE","NONE",0,false,true,forcedRole,godPresentationStartMs);
