@@ -352,7 +352,7 @@ public final class RecoveryStore {
             int setting,int machine,long now
     ) throws Exception {
         runtime=simulateJugglerGodBonusOverlays(runtime,type,jgBonusGames(type),setting,machine,values,stats,now);
-        settleUnstartedBonus(values,stats,type,entryBetAlreadyPaid,now);
+        settleJugglerGodBonusEconomy(values,stats,type,entryBetAlreadyPaid,now);
         return postJugglerGodBonus(runtime,setting,machine);
     }
 
@@ -367,8 +367,26 @@ public final class RecoveryStore {
         long rounds=remainingGross/14;
         long overlayRounds=Math.max(0,rounds-(currentSpinOverlayAlreadyDrawn?1:0));
         runtime=simulateJugglerGodBonusOverlays(runtime,type,overlayRounds,setting,machine,values,stats,now);
-        settleRunningBonus(values,stats,type,currentBetAlreadyPaid,now);
+        settleJugglerGodRunningBonusEconomy(values,stats,type,currentBetAlreadyPaid,now);
         return postJugglerGodBonus(runtime,setting,machine);
+    }
+
+    private void settleJugglerGodBonusEconomy(Map<String,Object> values,Stats stats,String type,boolean entryBetAlreadyPaid,long now) throws Exception {
+        long gross=jgBonusGross(type);
+        long bonusBet=2L*jgBonusGames(type);
+        long net=gross-bonusBet-(entryBetAlreadyPaid?0:1);
+        addAssets(values,net);stats.addDifference(net);
+        addBonus(stats,values,type,now);
+        stats.current=0;graph(values,stats,now);
+    }
+
+    private void settleJugglerGodRunningBonusEconomy(Map<String,Object> values,Stats stats,String type,boolean currentBetAlreadyPaid,long now) throws Exception {
+        long gross=jgBonusGross(type),paid=((Number)values.get("bonus_payout_count")).longValue();
+        long remainingGross=gross-paid;
+        if(remainingGross<0||remainingGross%14!=0)throw new IllegalStateException("Invalid JUGGLER_GOD bonus payout count");
+        long games=remainingGross/14;
+        long net=currentBetAlreadyPaid?(games==0?0:Math.subtractExact(Math.multiplyExact(games,14),Math.multiplyExact(games-1,2))):Math.multiplyExact(games,12);
+        addAssets(values,net);stats.addDifference(net);stats.current=0;graph(values,stats,now);
     }
 
     private JugglerGodRuntime postJugglerGodBonus(JugglerGodRuntime runtime,int setting,int machine){
