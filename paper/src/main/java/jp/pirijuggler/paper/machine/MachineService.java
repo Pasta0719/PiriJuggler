@@ -409,7 +409,7 @@ public final class MachineService implements Listener, CommandExecutor {
         if (session != null && session.machine() != machine.id()) {
             Machine occupied = state.machine(session.machine());
             String occupiedType = occupied == null ? "不明" : machineTypeName(occupied.type());
-            tell(player, "すでに台" + session.machine() + "（" + occupiedType + "）で遊技中です。台" + session.machine() + "を開いてESCキーで離席してから、もう一度お試しください。");
+            tell(player, "すでに台" + session.machine() + "（" + occupiedType + "）で遊技中です。台" + session.machine() + "を開き、クレジット・メダルが残っている場合は清算してからESCキーで離席してください。");
             return;
         }
         if (pendingMachines.contains(machine.id()) || (state.busy(machine.id()) && (session == null || !session.ownsLock()))) {
