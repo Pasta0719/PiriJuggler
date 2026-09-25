@@ -31,7 +31,7 @@ public final class PiriSounds {
     }
     private static final Map<String,SoundEvent> EVENTS=new HashMap<>();
     private static final PriorityQueue<Pending> QUEUE=new PriorityQueue<>(Comparator.comparingLong(Pending::at));
-    private static SoundInstance loop;private static String loopName;
+    private static SoundInstance loop;private static String loopName;private static final List<SoundInstance> ONE_SHOTS=new ArrayList<>();
     private record Pending(String name,long at){}
     private static final class LoopSound extends AbstractSoundInstance {
         private LoopSound(SoundEvent event){super(event,SoundCategory.MASTER,SoundInstance.createRandom());repeat=true;repeatDelay=0;relative=true;attenuationType=SoundInstance.AttenuationType.NONE;volume=0.45f;pitch=1.0f;}
@@ -48,7 +48,12 @@ public final class PiriSounds {
         }
         return base;
     }
-    public static void play(String name){if(available(name))MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(EVENTS.get(name),1));}
+    public static void play(String name){
+        if(!available(name))return;
+        SoundInstance sound=PositionedSoundInstance.master(EVENTS.get(name),1);
+        ONE_SHOTS.add(sound);
+        MinecraftClient.getInstance().getSoundManager().play(sound);
+    }
     public static void startLoop(String name){
         if(!name.equals("big_bgm")&&!name.equals("reg_bgm")&&!name.equals("juggler_god_big_bgm")&&!name.equals("juggler_god_reg_bgm")&&!name.equals("juggler_god_god_big_bgm"))throw new IllegalArgumentException(name);if(name.equals(loopName)&&loop!=null)return;stopLoop();
         if(!available(name))return;loopName=name;loop=new LoopSound(EVENTS.get(name));MinecraftClient.getInstance().getSoundManager().play(loop);
