@@ -16,8 +16,6 @@ import java.util.*;
  * GOD BIG chain and visible bonus-in-bonus stock.
  */
 public final class JugglerGodGameEngine implements GameEngine {
-    private static final int GOD_DENOMINATOR=8192;
-    private static final int GOD_IN_GOD_BIG_STOCK=7;
     private static final long GOD_PRESENTATION_LOCK_MS=15_000L;
     private static final int GOD_PRESENTATION_SEVEN_STOP=3;
     private static final Set<PacketType> GOD_PRESENTATION_INPUTS=Set.of(
@@ -31,27 +29,48 @@ public final class JugglerGodGameEngine implements GameEngine {
     private final long heavenToHeavenPpm;
     private final int[] bonusScalePpm=new int[7];
     private final int[] smallRoleScalePpm=new int[7];
+    private final int[] continuationPercent=new int[7];
+    private final int godDenominator;
+    private final int godInGodBigStock;
+    private final int godGuaranteedBigs;
+    private final int bigThreshold;
+    private final int regThreshold;
 
     public JugglerGodGameEngine(NormalGame delegate,RandomStreams random,RoleWeights weights,Map<String,Object> config) {
+        this(delegate,random,weights,config,"juggler_god");
+    }
+
+    public JugglerGodGameEngine(NormalGame delegate,RandomStreams random,RoleWeights weights,Map<String,Object> config,String configKey) {
         this.delegate=Objects.requireNonNull(delegate);
         this.random=Objects.requireNonNull(random);
         this.weights=Objects.requireNonNull(weights);
-        Map<String,Object> tuning=map(config==null?null:config.get("juggler_god"));
+        Map<String,Object> tuning=map(config==null?null:config.get(configKey));
+        godDenominator=(int)number(tuning.get("god_denominator"),8192);
+        godInGodBigStock=(int)number(tuning.get("god_in_god_big_stock"),7);
+        godGuaranteedBigs=(int)number(tuning.get("god_guaranteed_bigs"),5);
+        int bigPayout=(int)number(tuning.get("big_payout"),280);
+        int regPayout=(int)number(tuning.get("reg_payout"),112);
+        bigThreshold=bigPayout-14;regThreshold=regPayout-14;
         normalBigToHeavenPpm=number(tuning.get("normal_big_to_heaven_ppm"),0);
         normalRegToHeavenPpm=number(tuning.get("normal_reg_to_heaven_ppm"),0);
         heavenToHeavenPpm=number(tuning.get("heaven_to_heaven_ppm"),0);
         Map<String,Object> settings=map(tuning.get("settings"));
+        int[] defaults={0,75,78,80,82,85,90};
         for(int setting=1;setting<=6;setting++){
             Map<String,Object> row=map(settings.get(Integer.toString(setting)));
             bonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
             smallRoleScalePpm[setting]=(int)number(row.get("small_role_scale_ppm"),1_000_000);
+            continuationPercent[setting]=(int)number(row.get("god_continuation_percent"),defaults[setting]);
         }
+        if(godDenominator<2||godInGodBigStock<0||godGuaranteedBigs<1||bigThreshold<0||regThreshold<0)
+            throw new IllegalArgumentException("JUGGLER_GOD profile tuning");
         if(normalBigToHeavenPpm<0||normalBigToHeavenPpm>1_000_000
                 ||normalRegToHeavenPpm<0||normalRegToHeavenPpm>1_000_000
                 ||heavenToHeavenPpm<0||heavenToHeavenPpm>1_000_000)
             throw new IllegalArgumentException("JUGGLER_GOD heaven tuning");
         for(int setting=1;setting<=6;setting++)if(bonusScalePpm[setting]<0||bonusScalePpm[setting]>1_000_000
-                ||smallRoleScalePpm[setting]<0||smallRoleScalePpm[setting]>1_000_000)
+                ||smallRoleScalePpm[setting]<0||smallRoleScalePpm[setting]>1_000_000
+                ||continuationPercent[setting]<0||continuationPercent[setting]>=100)
             throw new IllegalArgumentException("JUGGLER_GOD role scale");
     }
 
@@ -129,7 +148,7 @@ public final class JugglerGodGameEngine implements GameEngine {
                         runtime.guaranteedRemaining(),false,false,runtime.bonusOrigin(),
                         runtime.godBigCount(),runtime.godFreeze(),"GOD_CHAIN_BIG_CONSUMED");
             }else if(runtime.mode()!=JugglerGodRuntime.Mode.GOD_CHAIN
-                    &&random.gameplay(machine.id()).nextInt(GOD_DENOMINATOR)==0){
+                    &&random.gameplay(machine.id()).nextInt(godDenominator)==0){
                 forced=InternalRole.GOD;
             }else if(runtime.mode()==JugglerGodRuntime.Mode.HEAVEN){
                 int progress=Math.min(32,runtime.heavenProgress()+1);
@@ -184,7 +203,7 @@ public final class JugglerGodGameEngine implements GameEngine {
                 &&!"NONE".equals(runtime.pendingBonusHit())){
             String current=before.state()==Session.GameState.BIG_SPINNING?"BIG":"REG";
             int count=Math.addExact((int)before.number("bonus_payout_count"),14);
-            boolean ended="BIG".equals(current)?count>266:count>98;
+            boolean ended="BIG".equals(current)?count>bigThreshold:count>regThreshold;
             boolean trueGodInGod="GOD".equals(runtime.pendingBonusHit())&&"GOD_CHAIN".equals(runtime.bonusOrigin());
             next=runtime.interrupt(runtime.pendingBonusHit(),current,count,ended,
                     "GOD".equals(runtime.pendingBonusHit())
@@ -228,7 +247,7 @@ public final class JugglerGodGameEngine implements GameEngine {
                 &&"GOD".equals(before.text("internal_role"))&&"GOD".equals(runtime.pendingBonusHit());
         boolean godInGodFinish=overlayGodFinish&&"GOD_CHAIN".equals(runtime.bonusOrigin());
         if(godInGodFinish){
-            int big=Math.addExact(runtime.additionalBigStock(),GOD_IN_GOD_BIG_STOCK);
+            int big=Math.addExact(runtime.additionalBigStock(),godInGodBigStock);
             next=new JugglerGodRuntime(runtime.mode(),runtime.heavenTarget(),runtime.heavenProgress(),
                     runtime.guaranteedRemaining(),runtime.forceChainBig(),runtime.countNextChainGame(),
                     runtime.bonusOrigin(),runtime.godBigCount(),false,"GOD_IN_GOD_CONFIRMED",
@@ -242,7 +261,7 @@ public final class JugglerGodGameEngine implements GameEngine {
             // Ordinary BIG/REG -> GOD: discard the interrupted remainder, compensate it with one BIG stock,
             // then enter exactly the normal GOD chain. REG is intentionally upgraded to BIG stock too.
             int big=Math.addExact(runtime.additionalBigStock(),1);
-            next=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
+            next=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,godGuaranteedBigs-1,false,false,
                     "GOD_CHAIN",1,false,"GOD_STARTED",
                     big,runtime.additionalRegStock(),"NONE","NONE",0,false,
                     runtime.releasingStock(),runtime.forcedRole(),runtime.godPresentationStartMs())
@@ -251,7 +270,7 @@ public final class JugglerGodGameEngine implements GameEngine {
             bonusStarted=null;
         }else if(legacy.finished()&&before.state()==Session.GameState.NORMAL_SPINNING
                 &&"GOD".equals(before.text("internal_role"))){
-            next=runtime.core(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
+            next=runtime.core(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,godGuaranteedBigs-1,false,false,
                     "GOD_CHAIN",1,false,"GOD_STARTED")
                     .startPresentation(Math.addExact(now,legacy.publicDelayMs()),"GOD_STARTED");
         }else if(legacy.bonusStarted()!=null&&"GOD_CHAIN".equals(next.bonusOrigin())&&!next.releasingStock()){
@@ -310,7 +329,7 @@ public final class JugglerGodGameEngine implements GameEngine {
 
     private String drawBonusOverlay(Machine machine){
         var rng=random.gameplay(machine.id());
-        if(rng.nextInt(GOD_DENOMINATOR)==0)return "GOD";
+        if(rng.nextInt(godDenominator)==0)return "GOD";
         InternalRole role=weights.drawJugglerGod(machine.setting(),rng,bonusScalePpm[machine.setting()],smallRoleScalePpm[machine.setting()]);
         String bonus=GameRules.bonus(role);
         return bonus==null?"NONE":bonus;
@@ -357,7 +376,7 @@ public final class JugglerGodGameEngine implements GameEngine {
     private JugglerGodRuntime afterBonus(Machine machine,JugglerGodRuntime state){
         return JugglerGodTransitions.afterBonus(
                 state,machine.setting(),random.gameplay(machine.id()),
-                normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm);
+                normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm,continuationPercent);
     }
 
     private static JugglerGodRuntime load(Session before,Machine machine){
