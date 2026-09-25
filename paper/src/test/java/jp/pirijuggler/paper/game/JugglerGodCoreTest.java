@@ -181,6 +181,30 @@ class JugglerGodCoreTest extends GameFixture {
         assertTrue(interrupted.releasingStock());
     }
 
+    @Test void consumingPendingGodCanPreserveInterruptedBonusUntilReplacementDecision() {
+        var state=JugglerGodRuntime.initial().interrupt("GOD","BIG",210,false,"BONUS_GOD_CONFIRM_READY");
+        var consumed=state.consumePendingHit("BONUS_GOD_CONFIRMED");
+        assertEquals("NONE",consumed.pendingBonusHit());
+        assertEquals("BIG",consumed.suspendedBonusType());
+        assertEquals(210,consumed.suspendedBonusPayoutCount());
+    }
+
+    @Test void ordinaryBonusGodReplacementStateUsesFullGodChainAndOneBigCompensation() {
+        var interrupted=JugglerGodRuntime.initial().interrupt("GOD","REG",84,false,"BONUS_GOD_CONFIRM_READY");
+        var replacement=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
+                "GOD_CHAIN",1,false,"GOD_STARTED",
+                interrupted.additionalBigStock()+1,interrupted.additionalRegStock(),
+                "NONE","NONE",0,false,interrupted.releasingStock(),
+                interrupted.forcedRole(),interrupted.godPresentationStartMs());
+        assertEquals(JugglerGodRuntime.Mode.GOD_CHAIN,replacement.mode());
+        assertEquals(4,replacement.guaranteedRemaining());
+        assertEquals(1,replacement.godBigCount());
+        assertEquals(1,replacement.additionalBigStock());
+        assertEquals(0,replacement.additionalRegStock());
+        assertEquals("NONE",replacement.pendingBonusHit());
+        assertEquals("NONE",replacement.suspendedBonusType());
+    }
+
     @Test void runtimeRoundTripPreservesHiddenSuccessorState() {
         var state=new JugglerGodRuntime(JugglerGodRuntime.Mode.HEAVEN,32,17,4,true,true,"GOD_CHAIN",9,true,"TEST");
         assertEquals(state,JugglerGodRuntime.fromJson(state.toJsonString()));
