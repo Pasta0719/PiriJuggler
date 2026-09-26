@@ -24,7 +24,7 @@ public final class SlotUi {
                 int pressed=view.localInput(envelope.packetType());
                 if(pressed>=0){
                     envelope.payload().addProperty("pressedIndex",pressed);
-                    if("JUGGLER_GOD".equals(view.machineType())&&view.godFreeze()){
+                    if(isJugglerGod(view.machineType())&&view.godFreeze()){
                         int ordinal=Math.max(1,Math.min(3,view.godStoppedCount()));
                         PiriSounds.queue(special("juggler_god_god_stop_"+ordinal,sound("stop")),1,0);
                     }else PiriSounds.queue(sound("stop"),1,0);
@@ -79,7 +79,7 @@ public final class SlotUi {
                 if(b.has("bonusType")){
                     String type=b.get("bonusType").getAsString();
                     if("BIG".equals(type)){
-                        boolean godBig="JUGGLER_GOD".equals(view.machineType())&&(godBigAudioPending||view.godFirstBigAudio());
+                        boolean godBig=isJugglerGod(view.machineType())&&(godBigAudioPending||view.godFirstBigAudio());
                         godBigAudioPending=false;godBigAudioActive=godBig;
                         String start=godBig?special("juggler_god_god_bonus_start",sound("bonus_start")):sound("bonus_start");
                         String bgm=godBig?special("juggler_god_god_big_bgm",sound("big_bgm")):sound("big_bgm");
@@ -100,7 +100,7 @@ public final class SlotUi {
             }
             case BONUS_END -> {
                 boolean bigEnd=b.has("bonusType")&&"BIG".equals(b.get("bonusType").getAsString());
-                boolean godFirstBigEnd=bigEnd&&"JUGGLER_GOD".equals(view.machineType())&&godBigAudioActive;
+                boolean godFirstBigEnd=bigEnd&&isJugglerGod(view.machineType())&&godBigAudioActive;
                 pendingBigBgmAt=-1L;pendingBigBgmName=null;godBigAudioPending=false;godBigAudioActive=false;PiriSounds.stopLoop();
                 if(bigEnd)PiriSounds.queue(godFirstBigEnd?special("juggler_god_god_bonus_end",sound("bonus_end")):sound("bonus_end"),1,0);
             }
