@@ -1,0 +1,35 @@
+name: JUGGLER GOD distribution probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'paper/src/test/java/jp/pirijuggler/paper/game/JugglerGodDistributionProbeTest.java'
+      - '.github/workflows/juggler-god-distribution-probe.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [standard, extreme]
+        setting: [1, 2, 3, 4, 5, 6]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Run 60k x 10k distribution probe
+        run: >
+          ./gradlew :paper:test
+          --tests jp.pirijuggler.paper.game.JugglerGodDistributionProbeTest
+          -Dpiri.specRoot=$GITHUB_WORKSPACE
+          -Dpiri.dist.profile=${{ matrix.profile }}
+          -Dpiri.dist.setting=${{ matrix.setting }}
+          -Dpiri.dist.games=60000
+          -Dpiri.dist.trials=10000
+          --info
