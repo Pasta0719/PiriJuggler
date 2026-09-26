@@ -224,9 +224,8 @@ public final class JugglerGodGameEngine implements GameEngine {
         }
 
         // Visible 7 alignment confirms a newly acquired BIG/REG stock, then resumes the suspended bonus.
-        boolean acquisitionEntryFinish=legacy.finished()
-                &&(before.state()==Session.GameState.BONUS_ENTRY_SPINNING_BIG||before.state()==Session.GameState.BONUS_ENTRY_SPINNING_REG)
-                &&Set.of("BIG","REG").contains(runtime.pendingBonusHit());
+        boolean acquisitionEntryFinish=isAcquisitionEntryFinish(
+                legacy.finished(),before.state(),runtime);
         if(acquisitionEntryFinish){
             int big=runtime.additionalBigStock()+("BIG".equals(runtime.pendingBonusHit())?1:0);
             int reg=runtime.additionalRegStock()+("REG".equals(runtime.pendingBonusHit())?1:0);
@@ -316,6 +315,12 @@ public final class JugglerGodGameEngine implements GameEngine {
                 legacy.finished(),legacy.lever(),bonusStarted,bonusEnded,
                 legacy.publicDelayMs(),legacy.packets(),legacy.afterStart(),scheduled,next.toJsonString()
         );
+    }
+
+    static boolean isAcquisitionEntryFinish(boolean finished,Session.GameState state,JugglerGodRuntime runtime){
+        return finished
+                &&(state==Session.GameState.BONUS_ENTRY_SPINNING_BIG||state==Session.GameState.BONUS_ENTRY_SPINNING_REG)
+                &&Set.of("BIG","REG").contains(runtime.pendingBonusHit());
     }
 
     private static GameTransition rejectDuringGodPresentation(Session before,JugglerGodRuntime runtime,long sequence,long now){
