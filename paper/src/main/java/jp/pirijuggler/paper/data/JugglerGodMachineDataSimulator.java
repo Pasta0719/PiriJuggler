@@ -97,18 +97,20 @@ public final class JugglerGodMachineDataSimulator {
                     machineId,period,games,at());
         }
 
-        void finishBonus(String type,int historyGames,int bonusCost)throws Exception{
+        void recordBonusHit(String type,int historyGames)throws Exception{
             if("BIG".equals(type)){big=Math.addExact(big,1);addedBig=Math.addExact(addedBig,1);}
             else if("REG".equals(type)){reg=Math.addExact(reg,1);addedReg=Math.addExact(addedReg,1);}
             else throw new IllegalArgumentException("bonus type");
             long eventAt=at();
             execute(db,"INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,?,?,?)",
                     machineId,period,type,historyGames,eventAt);
-            // Bonus payout rounds and entry costs are applied incrementally before completion.
+            lastBonus=type;lastBonusAt=eventAt;
+        }
+
+        void finishBonus()throws Exception{
             max=Math.max(max,difference);
             current=0;
-            graph(eventAt);
-            lastBonus=type;lastBonusAt=eventAt;
+            graph(at());
         }
 
         void enterHeaven(){
@@ -198,6 +200,7 @@ public final class JugglerGodMachineDataSimulator {
                     int historyGames=(int)s.current;
                     boolean forceHeaven=resolveOrdinaryBonus(s,bonus,historyGames);
 
+                    if(!s.hasBudget())continue;
                     if(forceHeaven){
                         s.enterHeaven();
                     }else if(originHeaven){
@@ -272,10 +275,11 @@ public final class JugglerGodMachineDataSimulator {
                 ?FixedGameRules.BONUS_BET*s.bonusGames("BIG")
                 :s.bonusTotalBet("BIG");
         if(!first)s.difference=Math.subtractExact(s.difference,FixedGameRules.ENTRY_BET);
+        s.recordBonusHit("BIG",history);
         ArrayDeque<String> stock=new ArrayDeque<>();
         BonusRoundResult rounds=drawBonusRounds(s,"BIG",true,stock);
         if(!rounds.completed())return false;
-        s.finishBonus("BIG",history,cost);
+        s.finishBonus();
         while(!stock.isEmpty()&&s.hasBudget()){
             BonusPlayResult released=playStockBonus(s,stock.removeFirst(),0,true,stock);
             if(!released.completed())return false;
@@ -286,9 +290,10 @@ public final class JugglerGodMachineDataSimulator {
     private static BonusPlayResult playStockBonus(State s,String type,int history,boolean insideGod,ArrayDeque<String> stock)throws Exception{
         if(!s.hasBudget())return new BonusPlayResult(false,false);
         s.difference=Math.subtractExact(s.difference,FixedGameRules.ENTRY_BET);
+        s.recordBonusHit(type,history);
         BonusRoundResult rounds=drawBonusRounds(s,type,insideGod,stock);
         if(!rounds.completed())return new BonusPlayResult(rounds.ordinaryGod(),false);
-        s.finishBonus(type,history,s.bonusTotalBet(type));
+        s.finishBonus();
         return new BonusPlayResult(rounds.ordinaryGod(),true);
     }
 
