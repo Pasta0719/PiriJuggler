@@ -184,4 +184,11 @@ class PiriDatabaseTest {
         assertEquals(0,((Number)scalar("SELECT count(*) FROM metadata WHERE key='"+key+"'")).longValue());
     }
 
+    @Test void realSeatClearsSyntheticSimulationCursor() throws Exception {
+        int id=create(21);String key="SIM_CURSOR:"+db.state().period()+":"+id;
+        db.sql("INSERT INTO metadata(key,value) VALUES(?,?)",key,"stale");
+        db.seat(player,id,NOW+1);
+        assertEquals(0,((Number)scalar("SELECT count(*) FROM metadata WHERE key='"+key+"'")).longValue());
+    }
+
 }
