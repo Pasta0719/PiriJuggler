@@ -230,6 +230,41 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals("NONE",replacement.suspendedBonusType());
     }
 
+    @Test void finishingGodChainStockReleaseReturnsToGuaranteedChainBeforeHeaven() {
+        var releasing=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,3,false,false,
+                "GOD_CHAIN",2,false,"STOCK_RELEASE_REG",
+                0,0,"NONE","NONE",0,false,true);
+        var stopped=releasing.stopReleasing("STOCK_RELEASES_DONE");
+        var rng=new java.util.Random(0L);
+        var after=JugglerGodTransitions.afterBonus(stopped,1,rng,125000,62500,500000);
+        assertEquals(JugglerGodRuntime.Mode.GOD_CHAIN,after.mode());
+        assertEquals(2,after.guaranteedRemaining());
+        assertTrue(after.forceChainBig());
+        assertFalse(after.countNextChainGame());
+    }
+
+    @Test void finishingFinalGodChainStockReleaseCanOnlyContinueOrEnterHeaven() {
+        var releasing=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,0,false,false,
+                "GOD_CHAIN",9,false,"STOCK_RELEASE_BIG",
+                0,0,"NONE","NONE",0,false,true);
+        var failRng=new java.util.Random(0L){@Override public int nextInt(int bound){return bound-1;}};
+        var after=JugglerGodTransitions.afterBonus(releasing.stopReleasing("DONE"),1,failRng,125000,62500,500000);
+        assertEquals(JugglerGodRuntime.Mode.HEAVEN,after.mode());
+        assertTrue(after.heavenTarget()>=1&&after.heavenTarget()<=32);
+        assertFalse(after.forceChainBig());
+    }
+
+    @Test void heavenStockReleasePreservesHeavenOriginUntilFinalStockFinishes() {
+        var state=new JugglerGodRuntime(JugglerGodRuntime.Mode.HEAVEN,12,12,0,false,false,
+                "HEAVEN",0,false,"BONUS_STOCK_CONFIRMED",
+                1,1,"NONE","NONE",0,false,true);
+        assertEquals(JugglerGodRuntime.Mode.HEAVEN,state.mode());
+        assertEquals("HEAVEN",state.bonusOrigin());
+        assertTrue(state.stockLampOn());
+        var roundTrip=JugglerGodRuntime.fromJson(state.toJsonString());
+        assertEquals(state,roundTrip);
+    }
+
     @Test void runtimeRoundTripPreservesHiddenSuccessorState() {
         var state=new JugglerGodRuntime(JugglerGodRuntime.Mode.HEAVEN,32,17,4,true,true,"GOD_CHAIN",9,true,"TEST");
         assertEquals(state,JugglerGodRuntime.fromJson(state.toJsonString()));
