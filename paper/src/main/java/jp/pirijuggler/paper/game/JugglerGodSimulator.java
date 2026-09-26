@@ -47,6 +47,11 @@ public final class JugglerGodSimulator {
 
     private static final class BonusAccumulator {
         long bet,payout,addedBig,addedReg,god,godBig,godReg,continuation,godInGod,countedNormalSpins;
+        void add(BonusResolution r){
+            bet+=r.bet;payout+=r.payout;addedBig+=r.addedBig;addedReg+=r.addedReg;god+=r.god;
+            godBig+=r.godBig;godReg+=r.godReg;continuation+=r.godContinuationBig;
+            godInGod+=r.godInGod;countedNormalSpins+=r.countedNormalSpins;
+        }
         BonusResolution result(boolean forceHeaven){
             return new BonusResolution(bet,payout,addedBig,addedReg,god,godBig,godReg,
                     continuation,godInGod,countedNormalSpins,forceHeaven);
@@ -161,10 +166,16 @@ public final class JugglerGodSimulator {
         stock.addLast(initial);
         while(!stock.isEmpty()){
             String type=stock.removeFirst();
-            playStockBonus(a,type,false,stock,weights,setting,bonusScalePpm,smallRoleScalePpm,random);
+            if(playStockBonus(a,type,false,stock,weights,setting,bonusScalePpm,smallRoleScalePpm,random)){
+                // Production semantics: GOD during an ordinary/heaven bonus discards the
+                // interrupted remainder, starts a complete GOD chain, and adds +1 BIG stock.
+                a.add(resolveGodChain(weights,setting,bonusScalePpm,smallRoleScalePpm,random));
+                stock.addLast("BIG");a.addedBig++;
+                while(!stock.isEmpty())
+                    playStockBonus(a,stock.removeFirst(),true,stock,weights,setting,bonusScalePpm,smallRoleScalePpm,random);
+                return a.result(true);
+            }
         }
-        // Current production keeps the original bonus's ordinary/heaven transition even when
-        // a GOD overlay was found; overlay GOD itself does not force a second parent GOD chain.
         return a.result(false);
     }
 
@@ -192,14 +203,11 @@ public final class JugglerGodSimulator {
             BonusAccumulator a,boolean first,boolean continuation,
             RoleWeights weights,int setting,int bonusScalePpm,int smallRoleScalePpm,RandomGenerator random
     ){
-        if(first){
-            a.bet+=FixedGameRules.BONUS_BET*GameRules.bonusGames("BIG");
-        }else{
-            // Production reaches a forced BIG through the normal 3-medal bet. The project's
-            // theoretical RTP convention also reserves the ordinary 1-medal bonus-entry cost.
-            a.bet+=FixedGameRules.NORMAL_BET+GameRules.bonusTotalBet("BIG");
+        if(!first){
+            // Follow-up parent BIGs use a paid normal 3-medal spin plus the 1-medal
+            // bonus-entry convention. Per-round 2-medal bets are accounted below.
+            a.bet+=FixedGameRules.NORMAL_BET+FixedGameRules.ENTRY_BET;
         }
-        a.payout+=GameRules.bonusGross("BIG");
         a.godBig++;
         if(continuation){a.continuation++;a.countedNormalSpins++;}
 
@@ -211,29 +219,34 @@ public final class JugglerGodSimulator {
         }
     }
 
-    private static void playStockBonus(
+    private static boolean playStockBonus(
             BonusAccumulator a,String type,boolean insideGod,ArrayDeque<String> stock,
             RoleWeights weights,int setting,int bonusScalePpm,int smallRoleScalePpm,RandomGenerator random
     ){
-        a.bet+=GameRules.bonusTotalBet(type);
-        a.payout+=GameRules.bonusGross(type);
+        a.bet+=FixedGameRules.ENTRY_BET;
         if(insideGod){
             if("BIG".equals(type))a.godBig++;else a.godReg++;
         }
-        drawBonusRounds(a,type,insideGod,stock,weights,setting,bonusScalePpm,smallRoleScalePpm,random);
+        return drawBonusRounds(a,type,insideGod,stock,weights,setting,bonusScalePpm,smallRoleScalePpm,random);
     }
 
-    private static void drawBonusRounds(
+    private static boolean drawBonusRounds(
             BonusAccumulator a,String type,boolean insideGod,ArrayDeque<String> stock,
             RoleWeights weights,int setting,int bonusScalePpm,int smallRoleScalePpm,RandomGenerator random
     ){
         int rounds=GameRules.bonusGames(type);
         for(int i=0;i<rounds;i++){
+            a.bet+=FixedGameRules.BONUS_BET;
+            a.payout+=14;
             if(random.nextInt(GOD_DENOMINATOR)==0){
                 a.payout+=GameRules.payout(InternalRole.GOD);
-                if(insideGod)a.godInGod++;else a.god++;
-                for(int n=0;n<GOD_IN_GOD_BIG_STOCK;n++){stock.addLast("BIG");a.addedBig++;}
-                continue;
+                if(insideGod){
+                    a.godInGod++;
+                    for(int n=0;n<GOD_IN_GOD_BIG_STOCK;n++){stock.addLast("BIG");a.addedBig++;}
+                    continue;
+                }
+                a.god++;
+                return true;
             }
             InternalRole hit=weights.drawJugglerGod(setting,random,bonusScalePpm,smallRoleScalePpm);
             String next=GameRules.bonus(hit);
@@ -242,6 +255,7 @@ public final class JugglerGodSimulator {
                 if("BIG".equals(next))a.addedBig++;else a.addedReg++;
             }
         }
+        return false;
     }
 
     private JugglerGodSimulator(){}
