@@ -29,6 +29,17 @@ class MachineDataSimulatorContinuityTest {
         @Override public long nextLong(long bound){ return bound-1; }
     }
 
+    static final class SequenceRandom implements RandomGenerator {
+        private final ArrayDeque<Integer> ints=new ArrayDeque<>();
+        SequenceRandom(int... values){for(int value:values)ints.addLast(value);}
+        @Override public long nextLong(){ return Long.MAX_VALUE; }
+        @Override public int nextInt(int bound){
+            if(ints.isEmpty())return bound-1;
+            return Math.floorMod(ints.removeFirst(),bound);
+        }
+        @Override public long nextLong(long bound){ return bound-1; }
+    }
+
     @BeforeEach void open() throws Exception {
         try(var reader=Files.newBufferedReader(Path.of(System.getProperty("piri.specRoot"),"paper/src/main/resources/config.yml"))){
             config=ConfigValidation.load(reader).values();
@@ -145,6 +156,23 @@ class MachineDataSimulatorContinuityTest {
         assertEquals("REG",after.getAsJsonArray("stock").get(0).getAsString(),"pre-GOD stock must remain deferred");
         assertEquals(0,after.getAsJsonArray("godStock").size());
         assertEquals(1,after.get("compensationBig").getAsInt(),"compensation also waits until the parent GOD chain ends");
+    }
+
+    @Test void bonusOverlayDuringGodChainStaysInGodChainQueue() throws Exception {
+        int id=create(MachineType.JUGGLER_GOD,7);
+        putCursor(id,"{\"version\":3,\"kind\":\"JUGGLER_GOD\",\"mode\":\"NORMAL\","+
+                "\"activeBonus\":\"BIG\",\"activeRemaining\":2,\"activeInsideGod\":true,\"activeNeedsEntry\":false,\"activeEntryCharged\":false,\"activeHistoryGames\":0,"+
+                "\"stock\":[],\"godStock\":[],\"stockInsideGod\":false,\"godChainActive\":true,\"godStartPending\":false,\"godGuaranteedRemaining\":1,"+
+                "\"continuationGamePending\":false,\"heavenAfterGod\":true,\"compensationBig\":0}");
+
+        // First int avoids GOD (1/8192). Second lands exactly at the first scaled BIG interval.
+        JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,id,1,1,period(),
+                new SequenceRandom(1,331_757_497),NOW+100);
+
+        JsonObject after=cursor(id);
+        assertEquals(1,after.getAsJsonArray("godStock").size());
+        assertEquals("BIG",after.getAsJsonArray("godStock").get(0).getAsString());
+        assertEquals(0,after.getAsJsonArray("stock").size(),"GOD-chain overlay must not leak into deferred post-GOD stock");
     }
 
 }
