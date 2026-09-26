@@ -427,6 +427,26 @@ public final class RecoveryStore {
         int reg=runtime.additionalRegStock();
         if("GOD".equals(hit)){
             addAssets(values,15);stats.addDifference(15);graph(values,stats,now);
+            boolean trueGodInGod="GOD_CHAIN".equals(runtime.bonusOrigin());
+            if(!trueGodInGod){
+                // Match live production exactly: GOD inside an ordinary BIG/REG discards the
+                // interrupted remainder, starts a full parent GOD, and compensates +1 BIG stock.
+                db.sql("INSERT INTO juggler_god_history(machine_id,business_period_id,event_type,games,occurred_at) VALUES(?,?,'GOD',?,?)",
+                        values.get("machine_id"),values.get("source_business_period_id"),stats.current,now);
+                JugglerGodRuntime god=new JugglerGodRuntime(
+                        JugglerGodRuntime.Mode.GOD_CHAIN,0,0,jgGuaranteedBigs()-1,false,false,
+                        "GOD_CHAIN",1,false,"RECOVERY_GOD_STARTED",
+                        Math.addExact(big,1),reg,"NONE","NONE",0,false,false,
+                        runtime.forcedRole(),0);
+                god=simulateJugglerGodBonusOverlays(god,"BIG",jgBonusGames("BIG"),setting,machine,values,stats,now);
+                long net=(long)jgBonusGross("BIG")-2L*jgBonusGames("BIG");
+                addAssets(values,net);stats.addDifference(net);
+                stats.big=Math.addExact(stats.big,1);stats.lastBonus="BIG";stats.lastBonusAt=now;
+                db.sql("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,'BIG',0,?)",
+                        values.get("machine_id"),values.get("source_business_period_id"),now);
+                stats.current=0;graph(values,stats,now);
+                return postJugglerGodBonus(god,setting,machine).toJsonString();
+            }
             big=Math.addExact(big,jgGodInGodBigStock());
         }else if("BIG".equals(hit)){
             big=Math.addExact(big,1);
