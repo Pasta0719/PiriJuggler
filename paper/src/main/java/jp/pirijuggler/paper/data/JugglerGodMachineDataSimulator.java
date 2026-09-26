@@ -217,10 +217,15 @@ public final class JugglerGodMachineDataSimulator {
             String type=stock.removeFirst();
             int history=first?initialHistoryGames:0;
             first=false;
-            playStockBonus(s,type,history,false,stock);
+            if(playStockBonus(s,type,history,false,stock)){
+                // Production semantics: GOD during an ordinary/heaven BIG or REG starts a
+                // complete parent GOD chain and compensates the interrupted bonus with +1 BIG.
+                resolveGodChain(s);
+                stock.addFirst("BIG");
+                while(!stock.isEmpty())playStockBonus(s,stock.removeFirst(),0,true,stock);
+                return true;
+            }
         }
-        // Match production: a GOD overlay in an ordinary/heaven bonus uses the profile BIG stock grant,
-        // but does not replace the parent bonus's normal/heaven transition.
         return false;
     }
 
@@ -246,18 +251,20 @@ public final class JugglerGodMachineDataSimulator {
         while(!stock.isEmpty())playStockBonus(s,stock.removeFirst(),0,true,stock);
     }
 
-    private static void playStockBonus(State s,String type,int history,boolean insideGod,ArrayDeque<String> stock)throws Exception{
-        drawBonusRounds(s,type,insideGod,stock);
+    private static boolean playStockBonus(State s,String type,int history,boolean insideGod,ArrayDeque<String> stock)throws Exception{
+        boolean ordinaryGod=drawBonusRounds(s,type,insideGod,stock);
         s.finishBonus(type,history,s.bonusTotalBet(type));
+        return ordinaryGod;
     }
 
-    private static void drawBonusRounds(State s,String type,boolean insideGod,ArrayDeque<String> stock)throws Exception{
+    private static boolean drawBonusRounds(State s,String type,boolean insideGod,ArrayDeque<String> stock)throws Exception{
         int rounds=s.bonusGames(type);
         for(int i=0;i<rounds;i++){
             if(s.random.nextInt(s.godDenominator)==0){
                 s.difference=Math.addExact(s.difference,GameRules.payout(InternalRole.GOD));
                 s.max=Math.max(s.max,s.difference);
                 s.godHistory(0);
+                if(!insideGod)return true;
                 for(int n=0;n<s.godInGodBigStock;n++)stock.addLast("BIG");
                 continue;
             }
@@ -265,6 +272,7 @@ public final class JugglerGodMachineDataSimulator {
             String next=GameRules.bonus(hit);
             if(next!=null)stock.addLast(next);
         }
+        return false;
     }
 
     private static long number(Object value,long fallback){
