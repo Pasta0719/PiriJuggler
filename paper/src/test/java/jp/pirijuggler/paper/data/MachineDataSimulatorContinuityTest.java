@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import jp.pirijuggler.paper.config.ConfigValidation;
 import jp.pirijuggler.paper.database.PiriDatabase;
+import jp.pirijuggler.paper.database.StartupProfile;
 import jp.pirijuggler.paper.game.RoleWeights;
 import jp.pirijuggler.paper.machine.Machine;
 import jp.pirijuggler.paper.machine.MachineType;
@@ -165,9 +166,23 @@ class MachineDataSimulatorContinuityTest {
                 "\"stock\":[],\"godStock\":[],\"stockInsideGod\":false,\"godChainActive\":true,\"godStartPending\":false,\"godGuaranteedRemaining\":1,"+
                 "\"continuationGamePending\":false,\"heavenAfterGod\":true,\"compensationBig\":0}");
 
-        // First int avoids GOD (1/8192). Second lands exactly at the first scaled BIG interval.
+        // Derive the first BIG interval from the current setting instead of freezing an old weight.
+        var probabilities=StartupProfile.map(StartupProfile.map(config.get("probabilities")).get("settings"));
+        var roles=StartupProfile.map(probabilities.get("1"));
+        var god=StartupProfile.map(config.get("juggler_god"));
+        var setting=StartupProfile.map(StartupProfile.map(god.get("settings")).get("1"));
+        long smallScale=((Number)setting.get("small_role_scale_ppm")).longValue();
+        int bigRoll=Math.toIntExact(((Number)roles.get("replay")).longValue()
+                +((Number)roles.get("grape")).longValue()*smallScale/1_000_000
+                +((Number)roles.get("bell")).longValue()*smallScale/1_000_000
+                +((Number)roles.get("cherry")).longValue()*smallScale/1_000_000
+                +((Number)roles.get("piero")).longValue()*smallScale/1_000_000);
+        assertEquals(jp.pirijuggler.paper.reel.InternalRole.BIG,
+                weights.drawJugglerGod(1,new SequenceRandom(bigRoll),
+                        ((Number)setting.get("bonus_scale_ppm")).intValue(),(int)smallScale));
+        // First int avoids GOD; second draws BIG during the carried GOD-chain bonus.
         JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,id,1,1,period(),
-                new SequenceRandom(1,331_757_497),NOW+100);
+                new SequenceRandom(1,bigRoll),NOW+100);
 
         JsonObject after=cursor(id);
         assertEquals(1,after.getAsJsonArray("godStock").size());
