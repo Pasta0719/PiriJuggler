@@ -77,7 +77,7 @@ public final class WorldCabinetRenderer {
         localText(consumers,client.textRenderer,basis,camera,.31,dataY-.018,combined,.00285f,UiConstants.color("DISPLAY_WHITE"),true);
 
         // Cabinet face. JUGGLER_GOD uses layered gold bands instead of a flat color.
-        boolean jugglerGod="JUGGLER_GOD".equals(state.machineType());
+        boolean jugglerGod=isJugglerGod(state.machineType());
         quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH,CabinetPlacement.HEIGHT,0,
                 jugglerGod?UiConstants.color("CABINET_EDGE_LIGHT"):UiConstants.color("CABINET_EDGE"),0,0,1,1);
         if(jugglerGod){
@@ -108,7 +108,7 @@ public final class WorldCabinetRenderer {
 
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;
-            int reelBg="JUGGLER_GOD".equals(state.machineType())
+            int reelBg=isJugglerGod(state.machineType())
                     ?UiConstants.color("JUGGLER_GOD_REEL_BG")
                     :UiConstants.color("REEL_BG");
             rect(consumers,WHITE,basis,camera,x,300,270,390,.0015,
@@ -120,7 +120,7 @@ public final class WorldCabinetRenderer {
             for(int row=-2;row<=2;row++){
                 String symbol=UiConstants.symbol(reel,middle+row);
                 boolean wide=symbol.equals("seven")||symbol.equals("bar");
-                boolean godMachine="JUGGLER_GOD".equals(state.machineType());
+                boolean godMachine=isJugglerGod(state.machineType());
                 boolean godLarge=symbol.equals("seven")||symbol.equals("grape")||symbol.equals("replay");
                 double boxW=godMachine?(symbol.equals("bar")?230:godLarge?230:130):(wide?230:130);
                 double boxH=godMachine?(symbol.equals("bar")?150:godLarge?150:130):(symbol.equals("bar")?150:130);
@@ -149,7 +149,7 @@ public final class WorldCabinetRenderer {
         Identifier lamp=state.lampVisible(now)
                 ?JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_on.png")
                 :JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_off.png");
-        if("JUGGLER_GOD".equals(state.machineType())){
+        if(isJugglerGod(state.machineType())){
             double boxW=300,boxH=170;
             var size=JugglerGodAssets.textureSize(state.machineType(),"lamp/piri_chance_"+(state.lampVisible(now)?"on":"off")+".png");
             double fit=Math.min(boxW/size.width(),boxH/size.height());
