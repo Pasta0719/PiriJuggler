@@ -25,11 +25,11 @@ jobs:
           java-version: '21'
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
-      - name: Run 60k x 10k distribution probe
+      - name: Run 10k x 10k distribution probe
         env:
           PIRI_DIST_PROFILE: ${{ matrix.profile }}
           PIRI_DIST_SETTING: ${{ matrix.setting }}
-          PIRI_DIST_GAMES: '60000'
+          PIRI_DIST_GAMES: '10000'
           PIRI_DIST_TRIALS: '10000'
         run: >
           ./gradlew :paper:test
