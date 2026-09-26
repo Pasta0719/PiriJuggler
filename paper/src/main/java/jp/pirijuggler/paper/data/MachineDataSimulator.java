@@ -46,6 +46,7 @@ public final class MachineDataSimulator {
                     if(bonus!=null){
                         if(bonus.equals("BIG")){big=Math.addExact(big,1);addedBig++;}else{reg=Math.addExact(reg,1);addedReg++;}
                         execute(db,"INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,?,?,?)",machineId,period,bonus,current,at);
+                        lastBonus=bonus;lastBonusAt=at;
                         int bonusRounds=GameRules.bonusGames(bonus);
                         long playable=Math.min((long)bonusRounds,games-simulatedSpins);
                         if(playable>0)difference=Math.subtractExact(difference,FixedGameRules.ENTRY_BET);
@@ -55,7 +56,6 @@ public final class MachineDataSimulator {
                         if(playable==bonusRounds){
                             current=0;
                             execute(db,"INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,?,?,?)",machineId,period,total,difference,at);
-                            lastBonus=bonus;lastBonusAt=at;
                         }
                     }
                     free=role==InternalRole.REPLAY;
