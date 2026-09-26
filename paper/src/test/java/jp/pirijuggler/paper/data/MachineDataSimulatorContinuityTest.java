@@ -133,4 +133,18 @@ class MachineDataSimulatorContinuityTest {
         assertTrue(c.get("godChainActive").getAsBoolean());
         assertEquals(1,stat("big_count",id),"guaranteed BIG hit is recorded exactly once");
     }
+    @Test void godChainStockRunsBeforeDeferredPreGodStock() throws Exception {
+        int id=create(MachineType.JUGGLER_GOD,6);
+        putCursor(id,"{\"version\":3,\"kind\":\"JUGGLER_GOD\",\"mode\":\"NORMAL\",\"activeBonus\":\"NONE\",\"activeRemaining\":0,"+
+                "\"stock\":[\"REG\"],\"godStock\":[\"BIG\"],\"stockInsideGod\":true,"+
+                "\"godChainActive\":true,\"godStartPending\":false,\"godGuaranteedRemaining\":0,\"continuationGamePending\":false,\"heavenAfterGod\":true,\"compensationBig\":1}");
+
+        JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,id,1,1,period(),new HighRandom(),NOW+90);
+        JsonObject after=cursor(id);
+        assertEquals("BIG",after.get("activeBonus").getAsString(),"GOD-in-GOD stock must release inside the chain first");
+        assertEquals("REG",after.getAsJsonArray("stock").get(0).getAsString(),"pre-GOD stock must remain deferred");
+        assertEquals(0,after.getAsJsonArray("godStock").size());
+        assertEquals(1,after.get("compensationBig").getAsInt(),"compensation also waits until the parent GOD chain ends");
+    }
+
 }
