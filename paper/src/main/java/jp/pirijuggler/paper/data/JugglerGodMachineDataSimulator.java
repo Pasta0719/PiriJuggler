@@ -104,11 +104,7 @@ public final class JugglerGodMachineDataSimulator {
             long eventAt=at();
             execute(db,"INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,?,?,?)",
                     machineId,period,type,historyGames,eventAt);
-            // Bonus payout rounds are applied one spin at a time by consumeBonusSpin().
-            // Preserve the non-round costs that production charges outside those rounds.
-            int roundBet=FixedGameRules.BONUS_BET*bonusGames(type);
-            int nonRoundCost=Math.max(0,bonusCost-roundBet);
-            difference=Math.subtractExact(difference,nonRoundCost);
+            // Bonus payout rounds and entry costs are applied incrementally before completion.
             max=Math.max(max,difference);
             current=0;
             graph(eventAt);
@@ -275,6 +271,7 @@ public final class JugglerGodMachineDataSimulator {
         int cost=first
                 ?FixedGameRules.BONUS_BET*s.bonusGames("BIG")
                 :s.bonusTotalBet("BIG");
+        if(!first)s.difference=Math.subtractExact(s.difference,FixedGameRules.ENTRY_BET);
         ArrayDeque<String> stock=new ArrayDeque<>();
         BonusRoundResult rounds=drawBonusRounds(s,"BIG",true,stock);
         if(!rounds.completed())return false;
@@ -287,6 +284,8 @@ public final class JugglerGodMachineDataSimulator {
     }
 
     private static BonusPlayResult playStockBonus(State s,String type,int history,boolean insideGod,ArrayDeque<String> stock)throws Exception{
+        if(!s.hasBudget())return new BonusPlayResult(false,false);
+        s.difference=Math.subtractExact(s.difference,FixedGameRules.ENTRY_BET);
         BonusRoundResult rounds=drawBonusRounds(s,type,insideGod,stock);
         if(!rounds.completed())return new BonusPlayResult(rounds.ordinaryGod(),false);
         s.finishBonus(type,history,s.bonusTotalBet(type));
