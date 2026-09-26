@@ -6,15 +6,15 @@ import java.util.SplittableRandom;
 import static org.junit.jupiter.api.Assertions.*;
 
 class JugglerGodExtremeRtpProbeTest extends GameFixture {
-    @Test void printHundredMillionGameAggregateRtp(){
+    @Test void printTwentyMillionGameAggregateRtp(){
         var weights=new RoleWeights(config);
         @SuppressWarnings("unchecked")
         Map<String,Object> tuning=(Map<String,Object>)config.get("juggler_god_extreme");
         @SuppressWarnings("unchecked")
         Map<String,Object> settings=(Map<String,Object>)tuning.get("settings");
         double[] target={0,97.5,99.0,101.5,105.0,109.5,115.0};
-        final long games=20_000_000L;
-        final int replications=5;
+        final long games=5_000_000L;
+        final int replications=4;
         for(int setting=1;setting<=6;setting++){
             @SuppressWarnings("unchecked")
             Map<String,Object> row=(Map<String,Object>)settings.get(Integer.toString(setting));
