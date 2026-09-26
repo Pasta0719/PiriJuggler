@@ -22,6 +22,8 @@ import java.util.random.RandomGenerator;
 public final class JugglerGodMachineDataSimulator {
     private enum Mode { NORMAL, HEAVEN }
     private record QueuedBonus(String type,int historyGames,boolean continuationGame) {}
+    private record BonusRoundResult(boolean ordinaryGod,boolean completed) {}
+    private record BonusPlayResult(boolean ordinaryGod,boolean completed) {}
 
     private static final class State {
         final Connection db;
@@ -177,7 +179,7 @@ public final class JugglerGodMachineDataSimulator {
                         s.advanceNormalGame(GameRules.payout(InternalRole.GOD));
                         s.godHistory((int)s.current);
                         resolveGodChain(s);
-                        s.enterHeaven();
+                        if(s.hasBudget())s.enterHeaven();
                         continue;
                     }
 
@@ -227,60 +229,79 @@ public final class JugglerGodMachineDataSimulator {
         ArrayDeque<String> stock=new ArrayDeque<>();
         stock.addLast(initial);
         boolean first=true;
-        while(!stock.isEmpty()){
+        while(!stock.isEmpty()&&s.hasBudget()){
             String type=stock.removeFirst();
             int history=first?initialHistoryGames:0;
             first=false;
-            if(playStockBonus(s,type,history,false,stock)){
+            BonusPlayResult played=playStockBonus(s,type,history,false,stock);
+            if(!played.completed())return false;
+            if(played.ordinaryGod()){
                 // Production semantics: GOD during an ordinary/heaven BIG or REG starts a
                 // complete parent GOD chain and compensates the interrupted bonus with +1 BIG.
                 resolveGodChain(s);
+                if(!s.hasBudget())return true;
                 stock.addFirst("BIG");
-                while(!stock.isEmpty())playStockBonus(s,stock.removeFirst(),0,true,stock);
+                while(!stock.isEmpty()&&s.hasBudget()){
+                    BonusPlayResult released=playStockBonus(s,stock.removeFirst(),0,true,stock);
+                    if(!released.completed())break;
+                }
                 return true;
             }
         }
         return false;
     }
 
-    private static void resolveGodChain(State s)throws Exception{
-        playParentGodBig(s,true,false);
-        for(int i=1;i<s.guaranteedBigs;i++)playParentGodBig(s,false,false);
+    private static boolean resolveGodChain(State s)throws Exception{
+        if(!playParentGodBig(s,true,false))return false;
+        for(int i=1;i<s.guaranteedBigs;i++){
+            if(!s.hasBudget()||!playParentGodBig(s,false,false))return false;
+        }
         int rate=s.continuationPercent;
-        while(s.random.nextInt(100)<rate)playParentGodBig(s,false,true);
+        while(s.hasBudget()&&s.random.nextInt(100)<rate){
+            if(!playParentGodBig(s,false,true))return false;
+        }
+        return true;
     }
 
-    private static void playParentGodBig(State s,boolean first,boolean continuation)throws Exception{
+    private static boolean playParentGodBig(State s,boolean first,boolean continuation)throws Exception{
+        if(!s.hasBudget())return false;
         if(!first){
-            if(continuation)s.advanceContinuationGame();
-            else s.chargeGuaranteedChainBet();
+            if(continuation){
+                s.advanceContinuationGame();
+                if(!s.hasBudget())return false;
+            }else s.chargeGuaranteedChainBet();
         }
         int history=continuation?1:0;
         int cost=first
                 ?FixedGameRules.BONUS_BET*s.bonusGames("BIG")
                 :s.bonusTotalBet("BIG");
         ArrayDeque<String> stock=new ArrayDeque<>();
-        drawBonusRounds(s,"BIG",true,stock);
+        BonusRoundResult rounds=drawBonusRounds(s,"BIG",true,stock);
+        if(!rounds.completed())return false;
         s.finishBonus("BIG",history,cost);
-        while(!stock.isEmpty())playStockBonus(s,stock.removeFirst(),0,true,stock);
+        while(!stock.isEmpty()&&s.hasBudget()){
+            BonusPlayResult released=playStockBonus(s,stock.removeFirst(),0,true,stock);
+            if(!released.completed())return false;
+        }
+        return true;
     }
 
-    private static boolean playStockBonus(State s,String type,int history,boolean insideGod,ArrayDeque<String> stock)throws Exception{
-        boolean ordinaryGod=drawBonusRounds(s,type,insideGod,stock);
-        if(!s.hasBudget()&&s.simulatedSpins>=s.targetSpins)return ordinaryGod;
+    private static BonusPlayResult playStockBonus(State s,String type,int history,boolean insideGod,ArrayDeque<String> stock)throws Exception{
+        BonusRoundResult rounds=drawBonusRounds(s,type,insideGod,stock);
+        if(!rounds.completed())return new BonusPlayResult(rounds.ordinaryGod(),false);
         s.finishBonus(type,history,s.bonusTotalBet(type));
-        return ordinaryGod;
+        return new BonusPlayResult(rounds.ordinaryGod(),true);
     }
 
-    private static boolean drawBonusRounds(State s,String type,boolean insideGod,ArrayDeque<String> stock)throws Exception{
+    private static BonusRoundResult drawBonusRounds(State s,String type,boolean insideGod,ArrayDeque<String> stock)throws Exception{
         int rounds=s.bonusGames(type);
         for(int i=0;i<rounds;i++){
-            if(!s.consumeBonusSpin())return false;
+            if(!s.consumeBonusSpin())return new BonusRoundResult(false,false);
             if(s.random.nextInt(s.godDenominator)==0){
                 s.difference=Math.addExact(s.difference,GameRules.payout(InternalRole.GOD));
                 s.max=Math.max(s.max,s.difference);
                 s.godHistory(0);
-                if(!insideGod)return true;
+                if(!insideGod)return new BonusRoundResult(true,true);
                 for(int n=0;n<s.godInGodBigStock;n++)stock.addLast("BIG");
                 continue;
             }
@@ -288,7 +309,7 @@ public final class JugglerGodMachineDataSimulator {
             String next=GameRules.bonus(hit);
             if(next!=null)stock.addLast(next);
         }
-        return false;
+        return new BonusRoundResult(false,true);
     }
 
     private static long number(Object value,long fallback){
