@@ -53,7 +53,7 @@ public final class MachineDataSimulationService {
         var dbFile=plugin.getDataFolder().toPath().resolve("piri.db");
         var random=new SplittableRandom(new SecureRandom().nextLong());
         running=true;
-        sender.sendMessage(Component.text("SIMULATION_STARTED machine="+machineId+" setting="+setting+" games="+games));
+        sender.sendMessage(Component.text("SIMULATION_STARTED machine="+machineId+" setting="+setting+" targetSpins="+games));
         plugin.executors().database(
                 ()->(machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD||machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD_EXTREME)
                         ?JugglerGodMachineDataSimulator.run(dbFile,weights,config,machineId,setting,games,period,random,System.currentTimeMillis())
@@ -65,7 +65,7 @@ public final class MachineDataSimulationService {
                         sender.sendMessage(Component.text(error.getMessage()==null?"DB_ERROR":error.getMessage()));
                         return;
                     }
-                    sender.sendMessage(Component.text("SIMULATION_DONE machine="+result.machineId()+" setting="+result.setting()+" games="+result.games()+" BIG="+result.big()+" REG="+result.reg()+" DIFF="+signed(result.difference())+" MAX="+signed(result.maxDifference())+" CURRENT="+result.currentGames()));
+                    sender.sendMessage(Component.text("SIMULATION_DONE machine="+result.machineId()+" setting="+result.setting()+" spins="+result.games()+" BIG="+result.big()+" REG="+result.reg()+" DIFF="+signed(result.difference())+" MAX="+signed(result.maxDifference())+" CURRENT="+result.currentGames()));
                 });
         return true;
     }
@@ -84,7 +84,7 @@ public final class MachineDataSimulationService {
         var dbFile=plugin.getDataFolder().toPath().resolve("piri.db");
         final long seed=new SecureRandom().nextLong();
         running=true;
-        sender.sendMessage(Component.text("SIMULATION_ALL_STARTED machines="+machines.size()+" gamesEach="+games+" totalGames="+Math.multiplyExact((long)machines.size(),games)));
+        sender.sendMessage(Component.text("SIMULATION_ALL_STARTED machines="+machines.size()+" targetSpinsEach="+games));
 
         plugin.executors().database(()->{
             List<MachineDataSimulator.Result> results=new ArrayList<>(machines.size());
@@ -105,14 +105,15 @@ public final class MachineDataSimulationService {
                 sender.sendMessage(Component.text(error.getMessage()==null?"DB_ERROR":error.getMessage()));
                 return;
             }
-            long totalBig=0,totalReg=0,totalDifference=0;
+            long totalBig=0,totalReg=0,totalDifference=0,totalSpins=0;
             for(var result:results){
                 totalBig=Math.addExact(totalBig,result.big());
                 totalReg=Math.addExact(totalReg,result.reg());
                 totalDifference=Math.addExact(totalDifference,result.difference());
-                sender.sendMessage(Component.text("SIM machine="+result.machineId()+" setting="+result.setting()+" BIG="+result.big()+" REG="+result.reg()+" DIFF="+signed(result.difference())+" CURRENT="+result.currentGames()));
+                totalSpins=Math.addExact(totalSpins,result.games());
+                sender.sendMessage(Component.text("SIM machine="+result.machineId()+" setting="+result.setting()+" spins="+result.games()+" BIG="+result.big()+" REG="+result.reg()+" DIFF="+signed(result.difference())+" CURRENT="+result.currentGames()));
             }
-            sender.sendMessage(Component.text("SIMULATION_ALL_DONE machines="+results.size()+" gamesEach="+games+" totalGames="+Math.multiplyExact((long)results.size(),games)+" BIG="+totalBig+" REG="+totalReg+" DIFF_SUM="+signed(totalDifference)));
+            sender.sendMessage(Component.text("SIMULATION_ALL_DONE machines="+results.size()+" targetSpinsEach="+games+" actualSpins="+totalSpins+" BIG="+totalBig+" REG="+totalReg+" DIFF_SUM="+signed(totalDifference)));
         });
         return true;
     }
