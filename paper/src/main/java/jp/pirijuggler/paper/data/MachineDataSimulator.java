@@ -48,6 +48,7 @@ public final class MachineDataSimulator {
                         execute(db,"INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,?,?,?)",machineId,period,bonus,current,at);
                         int bonusRounds=GameRules.bonusGames(bonus);
                         long playable=Math.min((long)bonusRounds,games-simulatedSpins);
+                        if(playable>0)difference=Math.subtractExact(difference,FixedGameRules.ENTRY_BET);
                         simulatedSpins=Math.addExact(simulatedSpins,playable);
                         difference=Math.addExact(difference,Math.multiplyExact(playable,12L));
                         max=Math.max(max,difference);
