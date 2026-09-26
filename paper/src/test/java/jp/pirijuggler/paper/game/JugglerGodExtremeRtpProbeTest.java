@@ -7,7 +7,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class JugglerGodExtremeRtpProbeTest extends GameFixture {
     @Test void printHundredMillionGameRtpForSelectedSetting(){
-        int setting=Integer.parseInt(System.getProperty("piri.extreme.setting","1"));
+        String selected=System.getProperty("piri.extreme.setting");
+        org.junit.jupiter.api.Assumptions.assumeTrue(selected!=null,"100M EXTREME RTP probe runs only when explicitly requested");
+        int setting=Integer.parseInt(selected);
         if(setting<1||setting>6)throw new IllegalArgumentException("setting");
 
         var weights=new RoleWeights(config);
