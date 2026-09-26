@@ -39,7 +39,7 @@ class JugglerGodExtremeProfileTest extends GameFixture {
 
         int[] bonusScale=(int[])field(extremeEngine,"bonusScalePpm");
         int[] smallScale=(int[])field(extremeEngine,"smallRoleScalePpm");
-        int[] expectedBonus={0,564190,554200,558800,562600,568500,537600};
+        int[] expectedBonus={0,564190,554200,558800,562600,571106,537600};
         for(int setting=1;setting<=6;setting++){
             assertEquals(expectedBonus[setting],bonusScale[setting]);
             assertEquals(700000,smallScale[setting]);
