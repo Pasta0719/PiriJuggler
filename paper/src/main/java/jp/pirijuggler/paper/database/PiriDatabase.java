@@ -84,6 +84,7 @@ public final class PiriDatabase implements AutoCloseable {
                                 id, period, now, old, setting, resolved.reason(), profile);
                     }
                     metadata("current_jvm_start_ms", Long.toString(jvmStart)); metadata("current_business_period_id", period);
+                    sql("DELETE FROM metadata WHERE key LIKE 'SIM_CURSOR:%'");
                     sql("DELETE FROM metadata WHERE key='next_start_profile'");
                 }
                 return null;
