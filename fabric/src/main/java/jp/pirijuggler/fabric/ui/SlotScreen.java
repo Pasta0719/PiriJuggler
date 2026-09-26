@@ -51,7 +51,7 @@ public final class SlotScreen extends Screen {
         long godMs=view.godFreezeElapsedMillis();
         c.getMatrices().push();c.getMatrices().translate(v.x(),v.y(),0);c.getMatrices().scale((float)v.scale(),(float)v.scale(),1);
 
-        if("JUGGLER_GOD".equals(view.machineType()))godCabinetPanel(c,SlotLayout.CABINET);
+        if(isJugglerGod(view.machineType()))godCabinetPanel(c,SlotLayout.CABINET);
         else panel(c,SlotLayout.CABINET,color("CABINET_BG"));
         panel(c,SlotLayout.DATA,color("DISPLAY_BG"));
         panel(c,SlotLayout.DATA_LEFT,color("DISPLAY_BG"));
@@ -63,21 +63,21 @@ public final class SlotScreen extends Screen {
             var clip=v.clip(new SlotLayout.Rect(x,300,270,390));c.enableScissor(clip.x(),clip.y(),clip.x()+clip.w(),clip.y()+clip.h());
             if(view.godFreeze()&&godMs>=35)drawGodReelWindow(c,reel,x,godMs);
             else{
-                int reelBg="JUGGLER_GOD".equals(view.machineType())?color("JUGGLER_GOD_REEL_BG"):color("REEL_BG");
+                int reelBg=isJugglerGod(view.machineType())?color("JUGGLER_GOD_REEL_BG"):color("REEL_BG");
                 c.fill(x,300,x+270,690,reelBg);
                 drawReelSymbols(c,reel,x);
             }
             c.disableScissor();
         }
         var lamp=SlotLayout.LAMP;String name="lamp/piri_chance_"+(view.lampOn()?"on":"off")+".png";
-        boolean godMachine="JUGGLER_GOD".equals(view.machineType());
+        boolean godMachine=isJugglerGod(view.machineType());
         if(view.lampOn())for(int[] offset:new int[][]{{-4,0},{4,0},{0,4}}){
             if(godMachine)textureFitActual(c,name,lamp.x()+offset[0],lamp.y()+offset[1],lamp.w(),lamp.h(),.18f,1);
             else texture(c,name,lamp.x()+offset[0],lamp.y()+offset[1],lamp.w(),lamp.h(),512,256,.18f);
         }
         if(godMachine)textureFitActual(c,name,lamp.x(),lamp.y(),lamp.w(),lamp.h(),1,1);
         else texture(c,name,lamp.x(),lamp.y(),lamp.w(),lamp.h(),512,256,1);
-        if("JUGGLER_GOD".equals(view.machineType())){
+        if(isJugglerGod(view.machineType())){
             int stockOn=view.stockLampOn()?color("DISPLAY_GREEN"):color("BUTTON_METAL_DARK");
             rounded(c,1390,835,150,58,14,stockOn);
             rounded(c,1396,841,138,46,10,color("DISPLAY_BG"));
@@ -103,10 +103,10 @@ public final class SlotScreen extends Screen {
             boolean godLarge=symbol.equals("seven")||symbol.equals("grape")||symbol.equals("replay");
             int godSymbolWidth=symbol.equals("bar")?230:godLarge?230:130;
             int godSymbolHeight=symbol.equals("bar")?150:godLarge?150:130;
-            int symbolWidth="JUGGLER_GOD".equals(view.machineType())?godSymbolWidth:ordinarySymbolWidth;
-            int symbolHeight="JUGGLER_GOD".equals(view.machineType())?godSymbolHeight:ordinarySymbolHeight;
+            int symbolWidth=isJugglerGod(view.machineType())?godSymbolWidth:ordinarySymbolWidth;
+            int symbolHeight=isJugglerGod(view.machineType())?godSymbolHeight:ordinarySymbolHeight;
             double symbolY=430+(row-fraction)*130-(symbolHeight-130)/2.0;
-            if("JUGGLER_GOD".equals(view.machineType()))
+            if(isJugglerGod(view.machineType()))
                 textureFitActual(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,1,1);
             else
                 texture(c,"symbols/"+symbol+".png",x+(270-symbolWidth)/2.0,symbolY,symbolWidth,symbolHeight,textureWidth,textureHeight,1);
