@@ -51,6 +51,7 @@ class AdminStoreTest {
         db.sql("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?, 'BIG',7,?)",id,state.period(),NOW);
         db.sql("INSERT INTO juggler_god_history(machine_id,business_period_id,event_type,games,occurred_at) VALUES(?,?, 'GOD',7,?)",id,state.period(),NOW);
         db.sql("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,1,3,?)",id,state.period(),NOW);
+        db.sql("INSERT INTO metadata(key,value) VALUES(?,?)","SIM_CURSOR:"+state.period()+":"+id,"stale");
         store.resetDaily(db.state(),id,NOW+4);
         Machine machine=db.state().machine(id);assertEquals(5,machine.setting());assertFalse(machine.autoSetting());assertFalse(machine.enabled());
         assertEquals(1,scalar("SELECT count(*) FROM setting_history WHERE machine_id=?",id));
@@ -59,6 +60,7 @@ class AdminStoreTest {
         assertEquals(0,scalar("SELECT count(*) FROM juggler_god_history WHERE machine_id=? AND business_period_id=?",id,state.period()));
         assertEquals(1,scalar("SELECT count(*) FROM graph_points WHERE machine_id=? AND business_period_id=?",id,state.period()));
         assertEquals(0,scalar("SELECT game FROM graph_points WHERE machine_id=? AND business_period_id=?",id,state.period()));
+        assertEquals(0,scalar("SELECT count(*) FROM metadata WHERE key=?","SIM_CURSOR:"+state.period()+":"+id));
     }
 
     @Test void dailyResetClearsAllJugglerGodRuntimeBenefits() throws Exception {
