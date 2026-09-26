@@ -227,12 +227,7 @@ public final class JugglerGodGameEngine implements GameEngine {
         boolean acquisitionEntryFinish=isAcquisitionEntryFinish(
                 legacy.finished(),before.state(),runtime);
         if(acquisitionEntryFinish){
-            int big=runtime.additionalBigStock()+("BIG".equals(runtime.pendingBonusHit())?1:0);
-            int reg=runtime.additionalRegStock()+("REG".equals(runtime.pendingBonusHit())?1:0);
-            next=new JugglerGodRuntime(runtime.mode(),runtime.heavenTarget(),runtime.heavenProgress(),
-                    runtime.guaranteedRemaining(),runtime.forceChainBig(),runtime.countNextChainGame(),
-                    runtime.bonusOrigin(),runtime.godBigCount(),false,"BONUS_STOCK_CONFIRMED",
-                    big,reg,"NONE","NONE",0,false,runtime.releasingStock());
+            next=confirmAcquiredStock(runtime);
             rawAfter=restoreOrRelease(rawAfter,machine,next,runtime.suspendedBonusType(),
                     runtime.suspendedBonusPayoutCount(),runtime.suspendedBonusEnded());
             next=loadRuntime(rawAfter,next);
@@ -315,6 +310,18 @@ public final class JugglerGodGameEngine implements GameEngine {
                 legacy.finished(),legacy.lever(),bonusStarted,bonusEnded,
                 legacy.publicDelayMs(),legacy.packets(),legacy.afterStart(),scheduled,next.toJsonString()
         );
+    }
+
+    static JugglerGodRuntime confirmAcquiredStock(JugglerGodRuntime runtime){
+        if(!Set.of("BIG","REG").contains(runtime.pendingBonusHit()))
+            throw new IllegalArgumentException("No BIG/REG acquisition pending");
+        int big=runtime.additionalBigStock()+("BIG".equals(runtime.pendingBonusHit())?1:0);
+        int reg=runtime.additionalRegStock()+("REG".equals(runtime.pendingBonusHit())?1:0);
+        return new JugglerGodRuntime(runtime.mode(),runtime.heavenTarget(),runtime.heavenProgress(),
+                runtime.guaranteedRemaining(),runtime.forceChainBig(),runtime.countNextChainGame(),
+                runtime.bonusOrigin(),runtime.godBigCount(),false,"BONUS_STOCK_CONFIRMED",
+                big,reg,"NONE","NONE",0,false,runtime.releasingStock(),
+                runtime.forcedRole(),runtime.godPresentationStartMs());
     }
 
     static boolean isAcquisitionEntryFinish(boolean finished,Session.GameState state,JugglerGodRuntime runtime){
