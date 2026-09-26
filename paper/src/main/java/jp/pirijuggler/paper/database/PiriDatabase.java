@@ -146,6 +146,11 @@ public final class PiriDatabase implements AutoCloseable {
             if (!rows("SELECT session_id FROM player_sessions WHERE machine_id=? AND lifecycle IN ('ACTIVE','SUSPENDED_GRACE') AND player_uuid<>?", id, player.toString()).isEmpty())
                 throw new DomainException("MACHINE_OCCUPIED");
 
+            // Real play supersedes any synthetic /piri sim continuation cursor.
+            // Otherwise a later simulation could resurrect a bonus that existed before
+            // the player actually used the machine.
+            sql("DELETE FROM metadata WHERE key=?", "SIM_CURSOR:"+period+":"+id);
+
             if (existing != null && existing.lifecycle() == Session.Lifecycle.SUSPENDED_GRACE && existing.number("lock_expires_at") <= now) {
                 if(!existing.ready()) recovery().settle(existing,now);
                 sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE player_uuid=?", player.toString());
