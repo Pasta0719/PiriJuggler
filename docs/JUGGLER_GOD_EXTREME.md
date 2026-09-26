@@ -32,7 +32,7 @@ RTP-fit bonus scales, including 1/16384 GOD, 8 guaranteed BIGs, +10 GOD-in-GOD, 
 - setting 2: 554200 ppm
 - setting 3: 558800 ppm
 - setting 4: 562600 ppm
-- setting 5: 568500 ppm
+- setting 5: 571106 ppm
 - setting 6: 537600 ppm
 
 ## Commands
