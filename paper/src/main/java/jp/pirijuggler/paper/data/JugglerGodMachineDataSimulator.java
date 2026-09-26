@@ -41,6 +41,7 @@ public final class JugglerGodMachineDataSimulator {
         int activeHistoryGames;
 
         final ArrayDeque<String> stock=new ArrayDeque<>();
+        final ArrayDeque<String> godStock=new ArrayDeque<>();
         boolean stockInsideGod;
 
         boolean postBonusPending;
@@ -77,6 +78,11 @@ public final class JugglerGodMachineDataSimulator {
                         String type=e.getAsString();
                         if("BIG".equals(type)||"REG".equals(type))c.stock.addLast(type);
                     }
+                if(j.has("godStock")&&j.get("godStock").isJsonArray())
+                    for(var e:j.getAsJsonArray("godStock")){
+                        String type=e.getAsString();
+                        if("BIG".equals(type)||"REG".equals(type))c.godStock.addLast(type);
+                    }
                 c.stockInsideGod=bool(j,"stockInsideGod",false);
                 c.postBonusPending=bool(j,"postBonusPending",false);
                 c.postBonusOrigin=text(j,"postBonusOrigin","NORMAL");
@@ -103,6 +109,7 @@ public final class JugglerGodMachineDataSimulator {
             j.addProperty("activeInsideGod",activeInsideGod);j.addProperty("activeNeedsEntry",activeNeedsEntry);
             j.addProperty("activeEntryCharged",activeEntryCharged);j.addProperty("activeHistoryGames",activeHistoryGames);
             JsonArray q=new JsonArray();for(String type:stock)q.add(type);j.add("stock",q);
+            JsonArray gq=new JsonArray();for(String type:godStock)gq.add(type);j.add("godStock",gq);
             j.addProperty("stockInsideGod",stockInsideGod);
             j.addProperty("postBonusPending",postBonusPending);j.addProperty("postBonusOrigin",postBonusOrigin);j.addProperty("postBonusType",postBonusType);
             j.addProperty("godChainActive",godChainActive);j.addProperty("godStartPending",godStartPending);
@@ -313,8 +320,8 @@ public final class JugglerGodMachineDataSimulator {
         }
 
         if(c.godChainActive){
-            if(!c.stock.isEmpty()){
-                startBonus(s,c,c.stock.removeFirst(),0,true,true);
+            if(!c.godStock.isEmpty()){
+                startBonus(s,c,c.godStock.removeFirst(),0,true,true);
                 return;
             }
             if(c.godGuaranteedRemaining>0){
@@ -387,8 +394,9 @@ public final class JugglerGodMachineDataSimulator {
             s.max=Math.max(s.max,s.difference);
             s.godHistory(0);
             if(c.activeInsideGod){
-                for(int i=0;i<s.godInGodBigStock;i++)c.stock.addLast("BIG");
-                c.stockInsideGod=true;
+                ArrayDeque<String> destination=c.godChainActive?c.godStock:c.stock;
+                for(int i=0;i<s.godInGodBigStock;i++)destination.addLast("BIG");
+                if(!c.godChainActive)c.stockInsideGod=true;
             }else{
                 // Production replacement semantics: the interrupted ordinary/HEAVEN bonus
                 // ends here, then a full GOD chain runs, followed by one compensation BIG
