@@ -152,7 +152,7 @@ public final class PiriDatabase implements AutoCloseable {
             machine=requireMachine(id);
             String machineState=switch(machine.type()){
                 case GOD -> GodMachineRuntime.fromJson(machine.runtimeJson()).gameplay().toJsonString();
-                case JUGGLER_GOD -> JugglerGodRuntime.fromJson(machine.runtimeJson()).toJsonString();
+                case JUGGLER_GOD, JUGGLER_GOD_EXTREME -> JugglerGodRuntime.fromJson(machine.runtimeJson()).toJsonString();
                 default -> null;
             };
 
@@ -168,10 +168,11 @@ public final class PiriDatabase implements AutoCloseable {
             // same 0G BONUS_PENDING path used during uninterrupted play. bonusOrigin/mode
             // are deliberately preserved so the final stock still reaches the correct
             // GOD-end heaven or HEAVEN 50% continuation transition.
-            if(machine.type()==MachineType.JUGGLER_GOD){
+            if(machine.type()==MachineType.JUGGLER_GOD||machine.type()==MachineType.JUGGLER_GOD_EXTREME){
                 JugglerGodRuntime runtime=JugglerGodRuntime.fromJson(machine.runtimeJson());
                 if(runtime.stockLampOn()){
-                    boolean big=runtime.additionalBigStock()>0;
+                    boolean preferReg="RECOVERY_STOCK_PRIORITY_REG".equals(runtime.lastEvent())&&runtime.additionalRegStock()>0;
+                    boolean big=!preferReg&&runtime.additionalBigStock()>0;
                     int nextBig=runtime.additionalBigStock()-(big?1:0);
                     int nextReg=runtime.additionalRegStock()-(big?0:1);
                     String type=big?"BIG":"REG";

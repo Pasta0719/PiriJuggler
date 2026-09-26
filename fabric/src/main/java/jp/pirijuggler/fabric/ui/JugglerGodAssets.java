@@ -20,7 +20,7 @@ public final class JugglerGodAssets {
 
     public static Identifier texture(String machineType, String ordinaryPath) {
         Identifier ordinary = Identifier.of("piri", "textures/" + ordinaryPath);
-        if (!"JUGGLER_GOD".equals(machineType)) return ordinary;
+        if (!"JUGGLER_GOD".equals(machineType)&&!"JUGGLER_GOD_EXTREME".equals(machineType)) return ordinary;
         Identifier dedicated = Identifier.of("piri", "textures/juggler_god/" + ordinaryPath);
         return MinecraftClient.getInstance().getResourceManager().getResource(dedicated).isPresent()
                 ? dedicated : ordinary;

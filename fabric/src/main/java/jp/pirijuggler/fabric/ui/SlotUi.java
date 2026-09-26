@@ -154,6 +154,7 @@ public final class SlotUi {
         if(input!=null&&input.closeExpired()&&hidesHud())MinecraftClient.getInstance().setScreen(null);
     }
 
+    private static boolean isJugglerGod(String type){return "JUGGLER_GOD".equals(type)||"JUGGLER_GOD_EXTREME".equals(type);}
     private static String sound(String base){return PiriSounds.forMachine(view==null?null:view.machineType(),base);}
     private static String special(String dedicated,String fallback){return PiriSounds.available(dedicated)?dedicated:fallback;}
 

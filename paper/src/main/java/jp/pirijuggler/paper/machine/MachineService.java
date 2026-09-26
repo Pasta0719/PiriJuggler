@@ -71,8 +71,13 @@ public final class MachineService implements Listener, CommandExecutor {
         random=RandomStreams.production();weights=new RoleWeights(config);
         var jugglerGame=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin),config);
         var jugglerGodGame=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin),config,false);
+        var extremeTuning=jp.pirijuggler.paper.database.StartupProfile.map(config.get("juggler_god_extreme"));
+        int extremeBig=((Number)extremeTuning.getOrDefault("big_payout",420)).intValue();
+        int extremeReg=((Number)extremeTuning.getOrDefault("reg_payout",168)).intValue();
+        var jugglerGodExtremeGame=new NormalGame(weights,random,plugin.reels().solver(),new PaperMainThread(plugin),config,false,extremeBig,extremeReg);
         games=new GameEngines().register(MachineType.JUGGLER,new JugglerGameEngine(jugglerGame))
                 .register(MachineType.JUGGLER_GOD,new JugglerGodGameEngine(jugglerGodGame,random,weights,config))
+                .register(MachineType.JUGGLER_GOD_EXTREME,new JugglerGodGameEngine(jugglerGodExtremeGame,random,weights,config,"juggler_god_extreme"))
                 .register(MachineType.GOD,new jp.pirijuggler.paper.game.god.GodGameEngine(random));
         remote=new RemoteMachineSync(plugin,()->state,plugin::canUseSlot,(saved,nowNanos)->engine(saved.machine()).capture(saved,nowNanos));
         var gameConfig=jp.pirijuggler.paper.database.StartupProfile.map(config.get("game"));
@@ -162,6 +167,33 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length==3 && (args[0].equalsIgnoreCase("jugglergodrole") || args[0].equalsIgnoreCase("jgrole"))) {
                 commandJugglerGodRole(sender,Integer.parseInt(args[1]),args[2]); return true;
             }
+            if(args.length>=2 && (args[0].equalsIgnoreCase("jgextreme")||args[0].equalsIgnoreCase("extreme"))){
+                String action=args[1].toLowerCase(Locale.ROOT);
+                if(action.equals("create")&&args.length==2){
+                    Machine.Location target=target(sender);
+                    submit(sender,null,0,()->database.create(target,MachineType.JUGGLER_GOD_EXTREME,System.currentTimeMillis()),
+                            id->{tell(sender,"EXTREME_MACHINE_CREATED "+id);remote.machineChanged(id);});
+                    return true;
+                }
+                if(action.equals("setting")&&args.length==4){
+                    int id=Integer.parseInt(args[2]);
+                    requireExtreme(id);
+                    commandSetting(sender,id,Integer.parseInt(args[3]));
+                    return true;
+                }
+                if(action.equals("role")&&args.length==4){
+                    int id=Integer.parseInt(args[2]);
+                    requireExtreme(id);
+                    commandJugglerGodRole(sender,id,args[3]);
+                    return true;
+                }
+                if(action.equals("info")&&args.length==3){
+                    int id=Integer.parseInt(args[2]);Machine machine=requireExtreme(id);
+                    tell(sender,"EXTREME_INFO id="+id+" setting="+machine.setting()+" world="+machine.location().worldName()+" xyz="+machine.location().x()+","+machine.location().y()+","+machine.location().z()+" busy="+busy(id));
+                    return true;
+                }
+                throw new DomainException("Usage: /piri jgextreme create|setting <id> <1-6>|role <id> <role|clear>|info <id>");
+            }
             if (args.length >= 2 && args[0].equalsIgnoreCase("key") && args[1].equalsIgnoreCase("give") && args.length <= 3) {
                 Player target = args.length == 3 ? Bukkit.getPlayerExact(args[2]) : sender instanceof Player player ? player : null;
                 if (target == null) throw new DomainException("PLAYER_REQUIRED");
@@ -177,7 +209,7 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length >= 2 && args[0].equalsIgnoreCase("event")) {
                 commandEvent(sender,args); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri jgrole <id> <MISS|REPLAY|GRAPE|CHERRY|BELL|PIERO|BIG|REG|CHERRY_BIG|CHERRY_REG|PIERO_BIG|PIERO_REG|GOD|clear>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|JUGGLER_GOD_EXTREME|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri jgrole <id> <MISS|REPLAY|GRAPE|CHERRY|BELL|PIERO|BIG|REG|CHERRY_BIG|CHERRY_REG|PIERO_BIG|PIERO_REG|GOD|clear>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
@@ -254,9 +286,15 @@ public final class MachineService implements Listener, CommandExecutor {
         });
     }
 
+    private Machine requireExtreme(int id){
+        Machine machine=state.machine(id);
+        if(machine==null||machine.type()!=MachineType.JUGGLER_GOD_EXTREME)throw new DomainException("INVALID_STATE");
+        return machine;
+    }
+
     private void commandJugglerGodRole(CommandSender sender,int id,String rawRole) {
         Machine machine=state.machine(id);
-        if(machine==null||machine.type()!=MachineType.JUGGLER_GOD)throw new DomainException("INVALID_STATE");
+        if(machine==null||(machine.type()!=MachineType.JUGGLER_GOD&&machine.type()!=MachineType.JUGGLER_GOD_EXTREME))throw new DomainException("INVALID_STATE");
         if(busy(id))throw new DomainException("MACHINE_OCCUPIED");
 
         final String roleName;

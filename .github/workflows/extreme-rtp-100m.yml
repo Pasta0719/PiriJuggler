@@ -1,0 +1,28 @@
+name: EXTREME RTP 100M
+
+on:
+  push:
+    branches: [ feature/juggler-god-extreme ]
+    paths:
+      - 'paper/src/main/java/jp/pirijuggler/paper/game/JugglerGodExtremeSimulator.java'
+      - 'paper/src/test/java/jp/pirijuggler/paper/game/JugglerGodExtremeRtpProbeTest.java'
+      - 'paper/src/main/resources/config.yml'
+      - '.github/workflows/extreme-rtp-100m.yml'
+  workflow_dispatch:
+
+jobs:
+  rtp:
+    strategy:
+      fail-fast: false
+      matrix:
+        setting: [1, 2, 3, 4, 5, 6]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Run 100M games
+        run: ./gradlew :paper:test --tests jp.pirijuggler.paper.game.JugglerGodExtremeRtpProbeTest -Dpiri.extreme.setting=${{ matrix.setting }} --console=plain

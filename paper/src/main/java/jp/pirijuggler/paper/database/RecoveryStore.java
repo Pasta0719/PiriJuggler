@@ -28,8 +28,6 @@ import java.util.SplittableRandom;
  * It consumes a private recovery RNG stream; no draw, role or premium is exposed publicly.
  */
 public final class RecoveryStore {
-    private static final int JG_GOD_DENOMINATOR=8192;
-    private static final int JG_GOD_IN_GOD_BIG_STOCK=7;
     private final PiriDatabase db;
     private final RoleWeights weights;
     private final PremiumPolicy premiums;
@@ -38,6 +36,12 @@ public final class RecoveryStore {
     private final long normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm;
     private final int[] jgBonusScalePpm=new int[7];
     private final int[] jgSmallRoleScalePpm=new int[7];
+    private final long extremeNormalBigToHeavenPpm,extremeNormalRegToHeavenPpm,extremeHeavenToHeavenPpm;
+    private final int[] extremeBonusScalePpm=new int[7];
+    private final int[] extremeSmallRoleScalePpm=new int[7];
+    private final int[] extremeContinuationPercent=new int[7];
+    private final int extremeGodDenominator,extremeGodInGodBigStock,extremeGuaranteedBigs,extremeBigPayout,extremeRegPayout;
+    private boolean activeExtreme;
     private final Map<Integer, SplittableRandom> random = new HashMap<>();
 
     public RecoveryStore(PiriDatabase db, Map<String,Object> config, StopSolver solver) {
@@ -59,6 +63,23 @@ public final class RecoveryStore {
             Map<String,Object> row=StartupProfile.map(settings.get(Integer.toString(setting)));
             jgBonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
             jgSmallRoleScalePpm[setting]=(int)number(row.get("small_role_scale_ppm"),1_000_000);
+        }
+        Map<String,Object> extreme=StartupProfile.map(config.get("juggler_god_extreme"));
+        extremeGodDenominator=(int)number(extreme.get("god_denominator"),16384);
+        extremeGodInGodBigStock=(int)number(extreme.get("god_in_god_big_stock"),10);
+        extremeGuaranteedBigs=(int)number(extreme.get("god_guaranteed_bigs"),8);
+        extremeBigPayout=(int)number(extreme.get("big_payout"),420);
+        extremeRegPayout=(int)number(extreme.get("reg_payout"),168);
+        extremeNormalBigToHeavenPpm=number(extreme.get("normal_big_to_heaven_ppm"),60000);
+        extremeNormalRegToHeavenPpm=number(extreme.get("normal_reg_to_heaven_ppm"),30000);
+        extremeHeavenToHeavenPpm=number(extreme.get("heaven_to_heaven_ppm"),700000);
+        Map<String,Object> extremeSettings=StartupProfile.map(extreme.get("settings"));
+        int[] defaults={0,75,78,80,82,85,90};
+        for(int setting=1;setting<=6;setting++){
+            Map<String,Object> row=StartupProfile.map(extremeSettings.get(Integer.toString(setting)));
+            extremeBonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
+            extremeSmallRoleScalePpm[setting]=(int)number(row.get("small_role_scale_ppm"),1_000_000);
+            extremeContinuationPercent[setting]=(int)number(row.get("god_continuation_percent"),defaults[setting]);
         }
     }
 
@@ -86,7 +107,8 @@ public final class RecoveryStore {
         Map<String,Object> machineRow=row("SELECT setting,machine_type FROM machines WHERE machine_id=?",machine);
         int setting=((Number)machineRow.get("setting")).intValue();
         boolean god="GOD".equals(machineRow.get("machine_type"));
-        boolean jugglerGod="JUGGLER_GOD".equals(machineRow.get("machine_type"));
+        boolean jugglerGod="JUGGLER_GOD".equals(machineRow.get("machine_type"))||"JUGGLER_GOD_EXTREME".equals(machineRow.get("machine_type"));
+        activeExtreme="JUGGLER_GOD_EXTREME".equals(machineRow.get("machine_type"));
         String settledGodRuntime=null;
         String settledJugglerGodRuntime=null;
 
@@ -222,7 +244,7 @@ public final class RecoveryStore {
                     runtime.godFreeze(),"RECOVERY_GOD_CHAIN_BIG_CONSUMED");
             return new JgDraw(InternalRole.BIG,consumed,spins);
         }
-        if(runtime.mode()!=JugglerGodRuntime.Mode.GOD_CHAIN&&rng.nextInt(JG_GOD_DENOMINATOR)==0)
+        if(runtime.mode()!=JugglerGodRuntime.Mode.GOD_CHAIN&&rng.nextInt(jgGodDenominator())==0)
             return new JgDraw(InternalRole.GOD,runtime,1);
         if(runtime.mode()==JugglerGodRuntime.Mode.HEAVEN){
             int progress=Math.min(32,runtime.heavenProgress()+1);
@@ -285,14 +307,14 @@ public final class RecoveryStore {
                 values.get("machine_id"),values.get("source_business_period_id"),stats.current,now);
 
         JugglerGodRuntime god=new JugglerGodRuntime(
-                JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
+                JugglerGodRuntime.Mode.GOD_CHAIN,0,0,jgGuaranteedBigs()-1,false,false,
                 "GOD_CHAIN",1,false,"RECOVERY_GOD_STARTED",
                 runtime.additionalBigStock(),runtime.additionalRegStock(),"NONE","NONE",0,false,false,
                 runtime.forcedRole(),0);
 
         // First GOD BIG starts directly: no one-medal entry cost.
-        god=simulateJugglerGodBonusOverlays(god,"BIG",GameRules.bonusGames("BIG"),setting,machine,values,stats,now);
-        long net=(long)GameRules.bonusGross("BIG")-2L*GameRules.bonusGames("BIG");
+        god=simulateJugglerGodBonusOverlays(god,"BIG",jgBonusGames("BIG"),setting,machine,values,stats,now);
+        long net=(long)jgBonusGross("BIG")-2L*jgBonusGames("BIG");
         addAssets(values,net);stats.addDifference(net);
         stats.big=Math.addExact(stats.big,1);stats.lastBonus="BIG";stats.lastBonusAt=now;
         db.sql("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,'BIG',0,?)",
@@ -308,9 +330,9 @@ public final class RecoveryStore {
         JugglerGodRuntime runtime=initial;
         SplittableRandom rng=rng(machine);
         for(long i=0;i<rounds;i++){
-            if(rng.nextInt(JG_GOD_DENOMINATOR)==0){
+            if(rng.nextInt(jgGodDenominator())==0){
                 addAssets(values,15);stats.addDifference(15);
-                runtime=runtime.stock(Math.addExact(runtime.additionalBigStock(),JG_GOD_IN_GOD_BIG_STOCK),
+                runtime=runtime.stock(Math.addExact(runtime.additionalBigStock(),jgGodInGodBigStock()),
                         runtime.additionalRegStock(),"RECOVERY_GOD_IN_GOD");
                 continue;
             }
@@ -329,8 +351,8 @@ public final class RecoveryStore {
             Map<String,Object> values,Stats stats,String type,boolean entryBetAlreadyPaid,JugglerGodRuntime runtime,
             int setting,int machine,long now
     ) throws Exception {
-        runtime=simulateJugglerGodBonusOverlays(runtime,type,GameRules.bonusGames(type),setting,machine,values,stats,now);
-        settleUnstartedBonus(values,stats,type,entryBetAlreadyPaid,now);
+        runtime=simulateJugglerGodBonusOverlays(runtime,type,jgBonusGames(type),setting,machine,values,stats,now);
+        settleJugglerGodBonusEconomy(values,stats,type,entryBetAlreadyPaid,now);
         return postJugglerGodBonus(runtime,setting,machine);
     }
 
@@ -338,22 +360,47 @@ public final class RecoveryStore {
             Map<String,Object> values,Stats stats,String type,boolean currentBetAlreadyPaid,boolean currentSpinOverlayAlreadyDrawn,
             JugglerGodRuntime runtime,int setting,int machine,long now
     ) throws Exception {
-        long gross=GameRules.bonusGross(type);
+        String recoveryStockPriority=runtime.additionalBigStock()>0?"BIG":runtime.additionalRegStock()>0?"REG":"NONE";
+        long gross=jgBonusGross(type);
         long paid=((Number)values.get("bonus_payout_count")).longValue();
         long remainingGross=gross-paid;
         if(remainingGross<0||remainingGross%14!=0)throw new IllegalStateException("Invalid JUGGLER_GOD bonus payout count");
         long rounds=remainingGross/14;
         long overlayRounds=Math.max(0,rounds-(currentSpinOverlayAlreadyDrawn?1:0));
         runtime=simulateJugglerGodBonusOverlays(runtime,type,overlayRounds,setting,machine,values,stats,now);
-        settleRunningBonus(values,stats,type,currentBetAlreadyPaid,now);
-        return postJugglerGodBonus(runtime,setting,machine);
+        settleJugglerGodRunningBonusEconomy(values,stats,type,currentBetAlreadyPaid,now);
+        runtime=postJugglerGodBonus(runtime,setting,machine);
+        if(!"NONE".equals(recoveryStockPriority)&&runtime.stockLampOn())
+            runtime=runtime.stock(runtime.additionalBigStock(),runtime.additionalRegStock(),"RECOVERY_STOCK_PRIORITY_"+recoveryStockPriority);
+        return runtime;
+    }
+
+    private void settleJugglerGodBonusEconomy(Map<String,Object> values,Stats stats,String type,boolean entryBetAlreadyPaid,long now) throws Exception {
+        long gross=jgBonusGross(type);
+        long bonusBet=2L*jgBonusGames(type);
+        long net=gross-bonusBet-(entryBetAlreadyPaid?0:1);
+        addAssets(values,net);stats.addDifference(net);
+        addBonus(stats,values,type,now);
+        stats.current=0;graph(values,stats,now);
+    }
+
+    private void settleJugglerGodRunningBonusEconomy(Map<String,Object> values,Stats stats,String type,boolean currentBetAlreadyPaid,long now) throws Exception {
+        long gross=jgBonusGross(type),paid=((Number)values.get("bonus_payout_count")).longValue();
+        long remainingGross=gross-paid;
+        if(remainingGross<0||remainingGross%14!=0)throw new IllegalStateException("Invalid JUGGLER_GOD bonus payout count");
+        long games=remainingGross/14;
+        long net=currentBetAlreadyPaid?(games==0?0:Math.subtractExact(Math.multiplyExact(games,14),Math.multiplyExact(games-1,2))):Math.multiplyExact(games,12);
+        addAssets(values,net);stats.addDifference(net);stats.current=0;graph(values,stats,now);
     }
 
     private JugglerGodRuntime postJugglerGodBonus(JugglerGodRuntime runtime,int setting,int machine){
         if(runtime.stockLampOn())return runtime;
         if(runtime.releasingStock())runtime=runtime.stopReleasing("RECOVERY_STOCK_RELEASES_DONE");
         return JugglerGodTransitions.afterBonus(runtime,setting,rng(machine),
-                normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm);
+                activeExtreme?extremeNormalBigToHeavenPpm:normalBigToHeavenPpm,
+                activeExtreme?extremeNormalRegToHeavenPpm:normalRegToHeavenPpm,
+                activeExtreme?extremeHeavenToHeavenPpm:heavenToHeavenPpm,
+                activeExtreme?extremeContinuationPercent:new int[]{0,75,78,80,82,85,90});
     }
 
     private String settlePendingJugglerGodOverlay(
@@ -384,7 +431,27 @@ public final class RecoveryStore {
         int reg=runtime.additionalRegStock();
         if("GOD".equals(hit)){
             addAssets(values,15);stats.addDifference(15);graph(values,stats,now);
-            big=Math.addExact(big,JG_GOD_IN_GOD_BIG_STOCK);
+            boolean trueGodInGod="GOD_CHAIN".equals(runtime.bonusOrigin());
+            if(!trueGodInGod){
+                // Match live production exactly: GOD inside an ordinary BIG/REG discards the
+                // interrupted remainder, starts a full parent GOD, and compensates +1 BIG stock.
+                db.sql("INSERT INTO juggler_god_history(machine_id,business_period_id,event_type,games,occurred_at) VALUES(?,?,'GOD',?,?)",
+                        values.get("machine_id"),values.get("source_business_period_id"),stats.current,now);
+                JugglerGodRuntime god=new JugglerGodRuntime(
+                        JugglerGodRuntime.Mode.GOD_CHAIN,0,0,jgGuaranteedBigs()-1,false,false,
+                        "GOD_CHAIN",1,false,"RECOVERY_GOD_STARTED",
+                        Math.addExact(big,1),reg,"NONE","NONE",0,false,false,
+                        runtime.forcedRole(),0);
+                god=simulateJugglerGodBonusOverlays(god,"BIG",jgBonusGames("BIG"),setting,machine,values,stats,now);
+                long net=(long)jgBonusGross("BIG")-2L*jgBonusGames("BIG");
+                addAssets(values,net);stats.addDifference(net);
+                stats.big=Math.addExact(stats.big,1);stats.lastBonus="BIG";stats.lastBonusAt=now;
+                db.sql("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,'BIG',0,?)",
+                        values.get("machine_id"),values.get("source_business_period_id"),now);
+                stats.current=0;graph(values,stats,now);
+                return postJugglerGodBonus(god,setting,machine).toJsonString();
+            }
+            big=Math.addExact(big,jgGodInGodBigStock());
         }else if("BIG".equals(hit)){
             big=Math.addExact(big,1);
         }else if("REG".equals(hit)){
@@ -417,7 +484,7 @@ public final class RecoveryStore {
         completeBonusSpin(values);
         addAssets(values,14);stats.addDifference(14);
         int count=Math.addExact(((Number)values.get("bonus_payout_count")).intValue(),14);
-        boolean ended="BIG".equals(type)?count>266:count>98;
+        boolean ended="BIG".equals(type)?count>jgBonusGross("BIG")-14:count>jgBonusGross("REG")-14;
         values.put("bonus_payout_count",ended?0:count);
         values.put("current_bet",0);
         if(ended){stats.current=0;graph(values,stats,now);}
@@ -602,6 +669,14 @@ public final class RecoveryStore {
         db.sql("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,?,?,?)",
                 values.get("machine_id"),values.get("source_business_period_id"),stats.total,stats.difference,now);
     }
+
+    private int jgGodDenominator(){return activeExtreme?extremeGodDenominator:8192;}
+    private int jgGodInGodBigStock(){return activeExtreme?extremeGodInGodBigStock:7;}
+    private int jgGuaranteedBigs(){return activeExtreme?extremeGuaranteedBigs:5;}
+    private int jgBonusScale(int setting){return activeExtreme?extremeBonusScalePpm[setting]:jgBonusScalePpm[setting];}
+    private int jgSmallRoleScale(int setting){return activeExtreme?extremeSmallRoleScalePpm[setting]:jgSmallRoleScalePpm[setting];}
+    private int jgBonusGross(String type){return activeExtreme?("BIG".equals(type)?extremeBigPayout:extremeRegPayout):GameRules.bonusGross(type);}
+    private int jgBonusGames(String type){return jgBonusGross(type)/14;}
 
     private static void addAssets(Map<String,Object> values,long amount){
         if(amount==0)return;

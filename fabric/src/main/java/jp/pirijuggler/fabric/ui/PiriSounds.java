@@ -42,7 +42,7 @@ public final class PiriSounds {
     public static void tick(){long now=System.nanoTime();while(!QUEUE.isEmpty()&&QUEUE.peek().at<=now)play(QUEUE.remove().name);}
     public static boolean available(String name){return NAMES.contains(name)&&MinecraftClient.getInstance().getResourceManager().getResource(Identifier.of("piri","sounds/"+name+".ogg")).isPresent();}
     public static String forMachine(String machineType,String base){
-        if("JUGGLER_GOD".equals(machineType)){
+        if("JUGGLER_GOD".equals(machineType)||"JUGGLER_GOD_EXTREME".equals(machineType)){
             String dedicated="juggler_god_"+base;
             if(available(dedicated))return dedicated;
         }
@@ -59,6 +59,11 @@ public final class PiriSounds {
         if(!available(name))return;loopName=name;loop=new LoopSound(EVENTS.get(name));MinecraftClient.getInstance().getSoundManager().play(loop);
     }
     public static void stopLoop(){if(loop!=null)MinecraftClient.getInstance().getSoundManager().stop(loop);loop=null;loopName=null;}
-    public static void reset(){QUEUE.clear();stopLoop();}
+    public static void stopAll(){
+        var manager=MinecraftClient.getInstance().getSoundManager();
+        for(SoundInstance sound:ONE_SHOTS)manager.stop(sound);
+        ONE_SHOTS.clear();QUEUE.clear();stopLoop();
+    }
+    public static void reset(){stopAll();}
     private PiriSounds(){}
 }

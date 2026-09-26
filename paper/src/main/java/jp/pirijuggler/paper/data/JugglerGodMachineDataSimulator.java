@@ -20,10 +20,6 @@ import java.util.random.RandomGenerator;
  * Mirrors the production successor economy instead of falling back to ordinary JUGGLER weights.
  */
 public final class JugglerGodMachineDataSimulator {
-    private static final int GOD_DENOMINATOR=8192;
-    private static final int[] CONTINUATION_PERCENT={0,75,78,80,82,85,90};
-    private static final int GOD_IN_GOD_BIG_STOCK=7;
-
     private enum Mode { NORMAL, HEAVEN }
     private record QueuedBonus(String type,int historyGames,boolean continuationGame) {}
 
@@ -32,6 +28,7 @@ public final class JugglerGodMachineDataSimulator {
         final RoleWeights weights;
         final RandomGenerator random;
         final int machineId,setting,bonusScalePpm,smallRoleScalePpm;
+        final int godDenominator,godInGodBigStock,guaranteedBigs,continuationPercent,bigPayout,regPayout;
         final String period;
         final long normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm;
         long total,big,reg,current,difference,max,addedBig,addedReg,clock;
@@ -42,10 +39,14 @@ public final class JugglerGodMachineDataSimulator {
         int heavenTarget,heavenProgress;
 
         State(Connection db,RoleWeights weights,RandomGenerator random,int machineId,int setting,String period,
-              int bonusScalePpm,int smallRoleScalePpm,long normalBigToHeavenPpm,long normalRegToHeavenPpm,long heavenToHeavenPpm,
+              int bonusScalePpm,int smallRoleScalePpm,int godDenominator,int godInGodBigStock,int guaranteedBigs,
+              int continuationPercent,int bigPayout,int regPayout,
+              long normalBigToHeavenPpm,long normalRegToHeavenPpm,long heavenToHeavenPpm,
               long total,long big,long reg,long current,long difference,long max,long clock){
             this.db=db;this.weights=weights;this.random=random;this.machineId=machineId;this.setting=setting;this.period=period;
             this.bonusScalePpm=bonusScalePpm;this.smallRoleScalePpm=smallRoleScalePpm;
+            this.godDenominator=godDenominator;this.godInGodBigStock=godInGodBigStock;this.guaranteedBigs=guaranteedBigs;
+            this.continuationPercent=continuationPercent;this.bigPayout=bigPayout;this.regPayout=regPayout;
             this.normalBigToHeavenPpm=normalBigToHeavenPpm;this.normalRegToHeavenPpm=normalRegToHeavenPpm;this.heavenToHeavenPpm=heavenToHeavenPpm;
             this.total=total;this.big=big;this.reg=reg;this.current=current;this.difference=difference;this.max=max;this.clock=clock;
         }
@@ -91,7 +92,7 @@ public final class JugglerGodMachineDataSimulator {
             long eventAt=at();
             execute(db,"INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,?,?,?)",
                     machineId,period,type,historyGames,eventAt);
-            difference=Math.addExact(difference,(long)GameRules.bonusGross(type)-bonusCost);
+            difference=Math.addExact(difference,(long)bonusGross(type)-bonusCost);
             max=Math.max(max,difference);
             current=0;
             graph(eventAt);
@@ -101,6 +102,10 @@ public final class JugglerGodMachineDataSimulator {
         void enterHeaven(){
             mode=Mode.HEAVEN;heavenTarget=random.nextInt(32)+1;heavenProgress=0;
         }
+
+        int bonusGross(String type){return "BIG".equals(type)?bigPayout:regPayout;}
+        int bonusGames(String type){return bonusGross(type)/14;}
+        int bonusTotalBet(String type){return FixedGameRules.ENTRY_BET+FixedGameRules.BONUS_BET*bonusGames(type);}
     }
 
     public static MachineDataSimulator.Result run(
@@ -112,15 +117,6 @@ public final class JugglerGodMachineDataSimulator {
         if(machineId<1||setting<1||setting>6||games<1||games>100_000L)
             throw new IllegalArgumentException("simulation bounds");
 
-        Map<String,Object> tuning=StartupProfile.map(config.get("juggler_god"));
-        long normalBigPpm=number(tuning.get("normal_big_to_heaven_ppm"),0);
-        long normalRegPpm=number(tuning.get("normal_reg_to_heaven_ppm"),0);
-        long heavenPpm=number(tuning.get("heaven_to_heaven_ppm"),0);
-        Map<String,Object> settings=StartupProfile.map(tuning.get("settings"));
-        Map<String,Object> row=StartupProfile.map(settings.get(Integer.toString(setting)));
-        int bonusScale=(int)number(row.get("bonus_scale_ppm"),1_000_000);
-        int smallRoleScale=(int)number(row.get("small_role_scale_ppm"),1_000_000);
-
         Class.forName("org.sqlite.JDBC");
         try(Connection db=DriverManager.getConnection("jdbc:sqlite:"+databaseFile.toAbsolutePath())){
             try(var statement=db.createStatement()){
@@ -129,12 +125,30 @@ public final class JugglerGodMachineDataSimulator {
             }
             db.setAutoCommit(false);
             try{
+                var machineRows=query(db,"SELECT machine_type FROM machines WHERE machine_id=? AND deleted=0",machineId);
+                if(machineRows.isEmpty())throw new IllegalArgumentException("Missing machine");
+                boolean extreme="JUGGLER_GOD_EXTREME".equals(machineRows.getFirst().get("machine_type"));
+                Map<String,Object> tuning=StartupProfile.map(config.get(extreme?"juggler_god_extreme":"juggler_god"));
+                long normalBigPpm=number(tuning.get("normal_big_to_heaven_ppm"),0);
+                long normalRegPpm=number(tuning.get("normal_reg_to_heaven_ppm"),0);
+                long heavenPpm=number(tuning.get("heaven_to_heaven_ppm"),0);
+                int godDenominator=(int)number(tuning.get("god_denominator"),8192);
+                int godInGodBigStock=(int)number(tuning.get("god_in_god_big_stock"),7);
+                int guaranteedBigs=(int)number(tuning.get("god_guaranteed_bigs"),5);
+                int bigPayout=(int)number(tuning.get("big_payout"),FixedGameRules.BIG_PAYOUT);
+                int regPayout=(int)number(tuning.get("reg_payout"),FixedGameRules.REG_PAYOUT);
+                Map<String,Object> settings=StartupProfile.map(tuning.get("settings"));
+                Map<String,Object> row=StartupProfile.map(settings.get(Integer.toString(setting)));
+                int bonusScale=(int)number(row.get("bonus_scale_ppm"),1_000_000);
+                int smallRoleScale=(int)number(row.get("small_role_scale_ppm"),1_000_000);
+                int continuation=(int)number(row.get("god_continuation_percent"),new int[]{0,75,78,80,82,85,90}[setting]);
                 if(!query(db,"SELECT session_id FROM player_sessions WHERE machine_id=? AND lifecycle IN ('ACTIVE','SUSPENDED_GRACE') LIMIT 1",machineId).isEmpty())
                     throw new DomainException("MACHINE_OCCUPIED");
                 var rows=query(db,"SELECT total_games,big_count,reg_count,current_games,today_difference,today_max_difference FROM machine_period_stats WHERE machine_id=? AND business_period_id=?",machineId,period);
                 if(rows.isEmpty())throw new IllegalArgumentException("Missing machine stats");
                 Map<String,Object> stats=rows.getFirst();
                 State s=new State(db,weights,random,machineId,setting,period,bonusScale,smallRoleScale,
+                        godDenominator,godInGodBigStock,guaranteedBigs,continuation,bigPayout,regPayout,
                         normalBigPpm,normalRegPpm,heavenPpm,
                         n(stats,"total_games"),n(stats,"big_count"),n(stats,"reg_count"),n(stats,"current_games"),
                         n(stats,"today_difference"),n(stats,"today_max_difference"),now);
@@ -144,8 +158,8 @@ public final class JugglerGodMachineDataSimulator {
                     if((i&65535)==0&&Thread.currentThread().isInterrupted())
                         throw new java.util.concurrent.CancellationException("Simulator interrupted");
 
-                    // GOD is an independent 1/8192 draw before the normal/heaven role table.
-                    if(random.nextInt(GOD_DENOMINATOR)==0){
+                    // GOD is an independent profile draw before the normal/heaven role table.
+                    if(random.nextInt(s.godDenominator)==0){
                         s.advanceNormalGame(GameRules.payout(InternalRole.GOD));
                         s.godHistory((int)s.current);
                         resolveGodChain(s);
@@ -205,15 +219,15 @@ public final class JugglerGodMachineDataSimulator {
             first=false;
             playStockBonus(s,type,history,false,stock);
         }
-        // Match production: a GOD overlay in an ordinary/heaven bonus is +7 BIG stock,
+        // Match production: a GOD overlay in an ordinary/heaven bonus uses the profile BIG stock grant,
         // but does not replace the parent bonus's normal/heaven transition.
         return false;
     }
 
     private static void resolveGodChain(State s)throws Exception{
         playParentGodBig(s,true,false);
-        for(int i=0;i<4;i++)playParentGodBig(s,false,false);
-        int rate=CONTINUATION_PERCENT[s.setting];
+        for(int i=1;i<s.guaranteedBigs;i++)playParentGodBig(s,false,false);
+        int rate=s.continuationPercent;
         while(s.random.nextInt(100)<rate)playParentGodBig(s,false,true);
     }
 
@@ -224,8 +238,8 @@ public final class JugglerGodMachineDataSimulator {
         }
         int history=continuation?1:0;
         int cost=first
-                ?FixedGameRules.BONUS_BET*GameRules.bonusGames("BIG")
-                :GameRules.bonusTotalBet("BIG");
+                ?FixedGameRules.BONUS_BET*s.bonusGames("BIG")
+                :s.bonusTotalBet("BIG");
         ArrayDeque<String> stock=new ArrayDeque<>();
         drawBonusRounds(s,"BIG",true,stock);
         s.finishBonus("BIG",history,cost);
@@ -234,17 +248,17 @@ public final class JugglerGodMachineDataSimulator {
 
     private static void playStockBonus(State s,String type,int history,boolean insideGod,ArrayDeque<String> stock)throws Exception{
         drawBonusRounds(s,type,insideGod,stock);
-        s.finishBonus(type,history,GameRules.bonusTotalBet(type));
+        s.finishBonus(type,history,s.bonusTotalBet(type));
     }
 
     private static void drawBonusRounds(State s,String type,boolean insideGod,ArrayDeque<String> stock)throws Exception{
-        int rounds=GameRules.bonusGames(type);
+        int rounds=s.bonusGames(type);
         for(int i=0;i<rounds;i++){
-            if(s.random.nextInt(GOD_DENOMINATOR)==0){
+            if(s.random.nextInt(s.godDenominator)==0){
                 s.difference=Math.addExact(s.difference,GameRules.payout(InternalRole.GOD));
                 s.max=Math.max(s.max,s.difference);
                 s.godHistory(0);
-                for(int n=0;n<GOD_IN_GOD_BIG_STOCK;n++)stock.addLast("BIG");
+                for(int n=0;n<s.godInGodBigStock;n++)stock.addLast("BIG");
                 continue;
             }
             InternalRole hit=s.weights.drawJugglerGod(s.setting,s.random,s.bonusScalePpm,s.smallRoleScalePpm);

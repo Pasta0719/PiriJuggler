@@ -14,7 +14,7 @@ public final class MachineScreenFactory {
     public static Screen create(String machineType, SlotViewState view, SlotInput input) {
         String type = machineType == null ? "JUGGLER" : machineType;
         return switch (type) {
-            case "JUGGLER", "JUGGLER_GOD" -> new SlotScreen(view, input);
+            case "JUGGLER", "JUGGLER_GOD", "JUGGLER_GOD_EXTREME" -> new SlotScreen(view, input);
             case "GOD" -> new GodScreen(view,input);
             case "OKIDOKI", "DISC" -> new MachineUnavailableScreen(type, input);
             default -> new MachineUnavailableScreen(type, input);

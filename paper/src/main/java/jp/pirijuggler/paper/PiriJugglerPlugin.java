@@ -73,6 +73,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
             saveDefaultConfig();
             migrateProtocolConfig(getDataFolder().toPath().resolve("config.yml"));
             migrateJugglerGodConfig(getDataFolder().toPath().resolve("config.yml"));
+            migrateJugglerGodExtremeConfig(getDataFolder().toPath().resolve("config.yml"));
             try (var reader = Files.newBufferedReader(getDataFolder().toPath().resolve("config.yml"), StandardCharsets.UTF_8)) {
                 ConfigValidation.Result result = ConfigValidation.load(reader);
                 configurationValid = result.valid();
@@ -148,6 +149,32 @@ juggler_god:
 """;
         Files.writeString(path, original.stripTrailing() + "\n" + block, StandardCharsets.UTF_8);
         getLogger().info("Migrated existing config with juggler_god defaults");
+    }
+
+    private void migrateJugglerGodExtremeConfig(java.nio.file.Path path) throws IOException {
+        String original = Files.readString(path, StandardCharsets.UTF_8);
+        if (original.matches("(?s).*?(?m)^juggler_god_extreme\\s*:.*")) return;
+        String block = """
+
+juggler_god_extreme:
+  god_denominator: 16384
+  big_payout: 420
+  reg_payout: 168
+  god_guaranteed_bigs: 8
+  god_in_god_big_stock: 10
+  normal_big_to_heaven_ppm: 60000
+  normal_reg_to_heaven_ppm: 30000
+  heaven_to_heaven_ppm: 700000
+  settings:
+    '1': {bonus_scale_ppm: 564190, small_role_scale_ppm: 700000, god_continuation_percent: 75}
+    '2': {bonus_scale_ppm: 554200, small_role_scale_ppm: 700000, god_continuation_percent: 78}
+    '3': {bonus_scale_ppm: 558800, small_role_scale_ppm: 700000, god_continuation_percent: 80}
+    '4': {bonus_scale_ppm: 562600, small_role_scale_ppm: 700000, god_continuation_percent: 82}
+    '5': {bonus_scale_ppm: 571106, small_role_scale_ppm: 700000, god_continuation_percent: 85}
+    '6': {bonus_scale_ppm: 537600, small_role_scale_ppm: 700000, god_continuation_percent: 90}
+""";
+        Files.writeString(path, original.stripTrailing() + "\n" + block, StandardCharsets.UTF_8);
+        getLogger().info("Migrated existing config with juggler_god_extreme defaults");
     }
 
     private boolean handleBuildIdentity(CommandSender sender,String[] args) {
