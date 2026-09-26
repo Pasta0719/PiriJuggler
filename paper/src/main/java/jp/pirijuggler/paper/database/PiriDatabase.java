@@ -171,7 +171,8 @@ public final class PiriDatabase implements AutoCloseable {
             if(machine.type()==MachineType.JUGGLER_GOD||machine.type()==MachineType.JUGGLER_GOD_EXTREME){
                 JugglerGodRuntime runtime=JugglerGodRuntime.fromJson(machine.runtimeJson());
                 if(runtime.stockLampOn()){
-                    boolean big=runtime.additionalBigStock()>0;
+                    boolean preferReg="RECOVERY_STOCK_PRIORITY_REG".equals(runtime.lastEvent())&&runtime.additionalRegStock()>0;
+                    boolean big=!preferReg&&runtime.additionalBigStock()>0;
                     int nextBig=runtime.additionalBigStock()-(big?1:0);
                     int nextReg=runtime.additionalRegStock()-(big?0:1);
                     String type=big?"BIG":"REG";
