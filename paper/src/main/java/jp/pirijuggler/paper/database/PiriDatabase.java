@@ -116,6 +116,7 @@ public final class PiriDatabase implements AutoCloseable {
         transaction(() -> {
             requireMachine(id); requireFree(id);
             sql("UPDATE machines SET machine_type=?,updated_at=? WHERE machine_id=?", type.name(), now, id);
+            sql("DELETE FROM metadata WHERE key=?", "SIM_CURSOR:"+period+":"+id);
             return null;
         });
     }
@@ -129,7 +130,12 @@ public final class PiriDatabase implements AutoCloseable {
         });
     }
     public void remove(int id, long now) throws Exception {
-        transaction(() -> { requireMachine(id); requireFree(id); sql("UPDATE machines SET deleted=1,enabled=0,updated_at=? WHERE machine_id=?", now, id); return null; });
+        transaction(() -> {
+            requireMachine(id); requireFree(id);
+            sql("UPDATE machines SET deleted=1,enabled=0,updated_at=? WHERE machine_id=?", now, id);
+            sql("DELETE FROM metadata WHERE key=?", "SIM_CURSOR:"+period+":"+id);
+            return null;
+        });
     }
     public Session seat(UUID player, int id, long now) throws Exception {
         return transaction(() -> {
