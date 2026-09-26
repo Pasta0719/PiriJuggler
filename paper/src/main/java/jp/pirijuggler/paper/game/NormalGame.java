@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import jp.pirijuggler.common.protocol.*;
 import jp.pirijuggler.common.reel.*;
 import jp.pirijuggler.paper.machine.DomainException;
+import jp.pirijuggler.paper.config.FixedGameRules;
 import jp.pirijuggler.paper.reel.*;
 import jp.pirijuggler.paper.session.Session;
 import jp.pirijuggler.paper.threading.MainThread;
