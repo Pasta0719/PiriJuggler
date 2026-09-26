@@ -265,6 +265,48 @@ class RecoveryStoreTest {
         assertEquals(JugglerGodRuntime.Mode.HEAVEN,recovered.mode());
     }
 
+    @Test void jugglerGodRecoveryConsumesRegAcquiredWhileAlreadyReleasingStock() throws Exception {
+        int machine=db.create(new Machine.Location(UUID.randomUUID(),"world",14,64,0,"NORTH"),MachineType.JUGGLER_GOD,NOW);
+        UUID player=UUID.randomUUID();
+        db.seat(player,machine,NOW);
+        var runtime=new JugglerGodRuntime(
+                JugglerGodRuntime.Mode.GOD_CHAIN,0,0,0,false,false,"GOD_CHAIN",5,false,
+                "BONUS_STOCK_CONFIRM_READY",0,0,"REG","REG",112,true,true);
+        db.setMachineRuntimeJson(machine,runtime.toJsonString(),NOW);
+        db.sql("UPDATE player_sessions SET game_state='BONUS_ENTRY_BETTED_REG',lifecycle='SUSPENDED_GRACE',lock_expires_at=?,machine_state_json=?,last_client_sequence=45 WHERE player_uuid=?",
+                NOW,runtime.toJsonString(),player.toString());
+
+        Session reseated=db.seat(player,machine,NOW+1);
+        assertEquals(Session.GameState.BONUS_PENDING_REG,reseated.state());
+        JugglerGodRuntime recovered=JugglerGodRuntime.fromJson(reseated.machineState().toString());
+        assertEquals("NONE",recovered.pendingBonusHit());
+        assertEquals(0,recovered.additionalRegStock(),
+                "the newly confirmed REG is immediately consumed exactly once for release");
+        assertTrue(recovered.releasingStock());
+        assertEquals("GOD_CHAIN",recovered.bonusOrigin());
+    }
+
+    @Test void extremeRecoveryGodInGodAddsTenBigStockAndReleasesExactlyOne() throws Exception {
+        int machine=db.create(new Machine.Location(UUID.randomUUID(),"world",15,64,0,"NORTH"),MachineType.JUGGLER_GOD_EXTREME,NOW);
+        UUID player=UUID.randomUUID();
+        db.seat(player,machine,NOW);
+        var runtime=new JugglerGodRuntime(
+                JugglerGodRuntime.Mode.GOD_CHAIN,0,0,0,false,false,"GOD_CHAIN",8,true,
+                "GOD_IN_GOD_CONFIRM_READY",0,0,"GOD","BIG",420,true,false);
+        db.setMachineRuntimeJson(machine,runtime.toJsonString(),NOW);
+        db.sql("UPDATE player_sessions SET game_state='NORMAL_BETTED',lifecycle='SUSPENDED_GRACE',lock_expires_at=?,machine_state_json=?,last_client_sequence=46 WHERE player_uuid=?",
+                NOW,runtime.toJsonString(),player.toString());
+
+        Session reseated=db.seat(player,machine,NOW+1);
+        assertEquals(Session.GameState.BONUS_PENDING_BIG,reseated.state());
+        JugglerGodRuntime recovered=JugglerGodRuntime.fromJson(reseated.machineState().toString());
+        assertEquals(9,recovered.additionalBigStock(),
+                "EXTREME GOD-in-GOD adds ten BIG stocks and recovery releases exactly one");
+        assertTrue(recovered.releasingStock());
+        assertEquals("GOD_CHAIN",recovered.bonusOrigin());
+        assertEquals(JugglerGodRuntime.Mode.GOD_CHAIN,recovered.mode());
+    }
+
     @Test void jugglerGodRecoveryConfirmsPendingGodInGodAsSevenBigStock() throws Exception {
         int machine=db.create(new Machine.Location(UUID.randomUUID(),"world",13,64,0,"NORTH"),MachineType.JUGGLER_GOD,NOW);
         UUID player=UUID.randomUUID();
