@@ -174,4 +174,14 @@ class PiriDatabaseTest {
         var session = db.state().session(player); assertEquals(3, session.openPacket().size());
         var json = session.publicState(); assertEquals(13, json.size()); assertFalse(json.toString().contains("internal")); assertFalse(json.has("setting"));
     }
+    @Test void machineTypeChangeAndRemovalClearSimulatorCursor() throws Exception {
+        int id=create(20);String key="SIM_CURSOR:"+db.state().period()+":"+id;
+        db.sql("INSERT INTO metadata(key,value) VALUES(?,?)",key,"stale");
+        db.setMachineType(id,MachineType.JUGGLER_GOD,NOW+1);
+        assertEquals(0,((Number)scalar("SELECT count(*) FROM metadata WHERE key='"+key+"'")).longValue());
+        db.sql("INSERT INTO metadata(key,value) VALUES(?,?)",key,"stale");
+        db.remove(id,NOW+2);
+        assertEquals(0,((Number)scalar("SELECT count(*) FROM metadata WHERE key='"+key+"'")).longValue());
+    }
+
 }
