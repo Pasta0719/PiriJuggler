@@ -30,7 +30,7 @@ public final class JugglerGodMachineDataSimulator {
         final int machineId,setting,bonusScalePpm,smallRoleScalePpm;
         final int godDenominator,godInGodBigStock,guaranteedBigs,continuationPercent,bigPayout,regPayout;
         final String period;
-        final long normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm;
+        final long normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm,targetSpins;
         long total,big,reg,current,difference,max,addedBig,addedReg,clock,simulatedSpins;
         boolean free;
         String lastBonus;
@@ -41,17 +41,25 @@ public final class JugglerGodMachineDataSimulator {
         State(Connection db,RoleWeights weights,RandomGenerator random,int machineId,int setting,String period,
               int bonusScalePpm,int smallRoleScalePpm,int godDenominator,int godInGodBigStock,int guaranteedBigs,
               int continuationPercent,int bigPayout,int regPayout,
-              long normalBigToHeavenPpm,long normalRegToHeavenPpm,long heavenToHeavenPpm,
+              long normalBigToHeavenPpm,long normalRegToHeavenPpm,long heavenToHeavenPpm,long targetSpins,
               long total,long big,long reg,long current,long difference,long max,long clock){
             this.db=db;this.weights=weights;this.random=random;this.machineId=machineId;this.setting=setting;this.period=period;
             this.bonusScalePpm=bonusScalePpm;this.smallRoleScalePpm=smallRoleScalePpm;
             this.godDenominator=godDenominator;this.godInGodBigStock=godInGodBigStock;this.guaranteedBigs=guaranteedBigs;
             this.continuationPercent=continuationPercent;this.bigPayout=bigPayout;this.regPayout=regPayout;
-            this.normalBigToHeavenPpm=normalBigToHeavenPpm;this.normalRegToHeavenPpm=normalRegToHeavenPpm;this.heavenToHeavenPpm=heavenToHeavenPpm;
+            this.normalBigToHeavenPpm=normalBigToHeavenPpm;this.normalRegToHeavenPpm=normalRegToHeavenPpm;this.heavenToHeavenPpm=heavenToHeavenPpm;this.targetSpins=targetSpins;
             this.total=total;this.big=big;this.reg=reg;this.current=current;this.difference=difference;this.max=max;this.clock=clock;
         }
 
         long at(){ return clock++; }
+        boolean hasBudget(){ return simulatedSpins<targetSpins; }
+        boolean consumeBonusSpin(){
+            if(!hasBudget())return false;
+            simulatedSpins=Math.addExact(simulatedSpins,1);
+            difference=Math.addExact(difference,12);
+            max=Math.max(max,difference);
+            return true;
+        }
 
         void graph(long at)throws Exception{
             execute(db,"INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,?,?,?)",
@@ -70,7 +78,6 @@ public final class JugglerGodMachineDataSimulator {
         }
 
         void chargeGuaranteedChainBet(){
-            simulatedSpins=Math.addExact(simulatedSpins,1);
             difference=Math.subtractExact(difference,FixedGameRules.NORMAL_BET);
         }
 
@@ -95,7 +102,11 @@ public final class JugglerGodMachineDataSimulator {
             long eventAt=at();
             execute(db,"INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,?,?,?)",
                     machineId,period,type,historyGames,eventAt);
-            difference=Math.addExact(difference,(long)bonusGross(type)-bonusCost);
+            // Bonus payout rounds are applied one spin at a time by consumeBonusSpin().
+            // Preserve the non-round costs that production charges outside those rounds.
+            int roundBet=FixedGameRules.BONUS_BET*bonusGames(type);
+            int nonRoundCost=Math.max(0,bonusCost-roundBet);
+            difference=Math.subtractExact(difference,nonRoundCost);
             max=Math.max(max,difference);
             current=0;
             graph(eventAt);
@@ -152,7 +163,7 @@ public final class JugglerGodMachineDataSimulator {
                 Map<String,Object> stats=rows.getFirst();
                 State s=new State(db,weights,random,machineId,setting,period,bonusScale,smallRoleScale,
                         godDenominator,godInGodBigStock,guaranteedBigs,continuation,bigPayout,regPayout,
-                        normalBigPpm,normalRegPpm,heavenPpm,
+                        normalBigPpm,normalRegPpm,heavenPpm,games,
                         n(stats,"total_games"),n(stats,"big_count"),n(stats,"reg_count"),n(stats,"current_games"),
                         n(stats,"today_difference"),n(stats,"today_max_difference"),now);
 
@@ -243,8 +254,6 @@ public final class JugglerGodMachineDataSimulator {
         if(!first){
             if(continuation)s.advanceContinuationGame();
             else s.chargeGuaranteedChainBet();
-            // Follow-up GOD BIGs use the ordinary bonus-entry alignment path.
-            s.simulatedSpins=Math.addExact(s.simulatedSpins,1);
         }
         int history=continuation?1:0;
         int cost=first
@@ -257,9 +266,8 @@ public final class JugglerGodMachineDataSimulator {
     }
 
     private static boolean playStockBonus(State s,String type,int history,boolean insideGod,ArrayDeque<String> stock)throws Exception{
-        // Releasing a stocked BIG/REG requires its visible entry-alignment spin.
-        s.simulatedSpins=Math.addExact(s.simulatedSpins,1);
         boolean ordinaryGod=drawBonusRounds(s,type,insideGod,stock);
+        if(!s.hasBudget()&&s.simulatedSpins>=s.targetSpins)return ordinaryGod;
         s.finishBonus(type,history,s.bonusTotalBet(type));
         return ordinaryGod;
     }
@@ -267,26 +275,18 @@ public final class JugglerGodMachineDataSimulator {
     private static boolean drawBonusRounds(State s,String type,boolean insideGod,ArrayDeque<String> stock)throws Exception{
         int rounds=s.bonusGames(type);
         for(int i=0;i<rounds;i++){
-            s.simulatedSpins=Math.addExact(s.simulatedSpins,1);
+            if(!s.consumeBonusSpin())return false;
             if(s.random.nextInt(s.godDenominator)==0){
                 s.difference=Math.addExact(s.difference,GameRules.payout(InternalRole.GOD));
                 s.max=Math.max(s.max,s.difference);
                 s.godHistory(0);
-                // The acquired GOD is confirmed by its own visible spin after the
-                // parent bonus round has stopped.
-                s.simulatedSpins=Math.addExact(s.simulatedSpins,1);
                 if(!insideGod)return true;
                 for(int n=0;n<s.godInGodBigStock;n++)stock.addLast("BIG");
                 continue;
             }
             InternalRole hit=s.weights.drawJugglerGod(s.setting,s.random,s.bonusScalePpm,s.smallRoleScalePpm);
             String next=GameRules.bonus(hit);
-            if(next!=null){
-                // BIG/REG acquired during a bonus is visibly confirmed on its own
-                // alignment spin before the parent bonus resumes.
-                s.simulatedSpins=Math.addExact(s.simulatedSpins,1);
-                stock.addLast(next);
-            }
+            if(next!=null)stock.addLast(next);
         }
         return false;
     }
