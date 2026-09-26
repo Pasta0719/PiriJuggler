@@ -412,7 +412,10 @@ public final class JugglerGodMachineDataSimulator {
         }else{
             InternalRole hit=s.weights.drawJugglerGod(s.setting,s.random,s.bonusScalePpm,s.smallRoleScalePpm);
             String next=GameRules.bonus(hit);
-            if(next!=null)c.stock.addLast(next);
+            if(next!=null){
+                if(c.activeInsideGod&&c.godChainActive)c.godStock.addLast(next);
+                else c.stock.addLast(next);
+            }
         }
 
         if(c.activeRemaining==0)finishActive(s,c);
