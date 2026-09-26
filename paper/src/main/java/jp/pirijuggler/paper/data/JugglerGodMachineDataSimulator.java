@@ -198,6 +198,12 @@ public final class JugglerGodMachineDataSimulator {
                     if(bonus==null)continue;
 
                     int historyGames=(int)s.current;
+                    // A bonus hit on the exact final game still counts as a hit,
+                    // but none of its payout rounds belong to this simulation window.
+                    if(!s.hasBudget()){
+                        s.recordBonusHit(bonus,historyGames);
+                        continue;
+                    }
                     boolean forceHeaven=resolveOrdinaryBonus(s,bonus,historyGames);
 
                     if(!s.hasBudget())continue;
