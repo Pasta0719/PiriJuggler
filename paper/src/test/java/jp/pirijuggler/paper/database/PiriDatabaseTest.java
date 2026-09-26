@@ -146,10 +146,12 @@ class PiriDatabaseTest {
         int id = create(0); String old = db.state().period(); db.seat(player, id, NOW);
         db.sql("UPDATE player_sessions SET credit=32,held_medals=442"); db.sql("UPDATE machine_period_stats SET total_games=77,today_difference=900");
         db.sql("INSERT INTO player_wallet VALUES(?,100,?)", player.toString(), NOW);
+        db.sql("INSERT INTO metadata(key,value) VALUES(?,?)","SIM_CURSOR:"+old+":"+id,"stale");
         db.shutdown(NOW, 60_000); db = new PiriDatabase(directory.resolve("piri.db")); db.open(1, NOW + 10, config, new SplittableRandom(2), ignored -> {});
         assertEquals(old, db.state().period()); assertEquals(1, count("business_periods")); db.close();
         db = new PiriDatabase(directory.resolve("piri.db")); db.open(2, NOW + 20, config, new SplittableRandom(2), ignored -> {});
         assertNotEquals(old, db.state().period()); assertEquals(2, count("business_periods")); assertEquals(2, count("machine_period_stats"));
+        assertEquals(0, ((Number) scalar("SELECT count(*) FROM metadata WHERE key LIKE 'SIM_CURSOR:%'")).longValue());
         assertEquals(77, db.rows("SELECT total_games FROM machine_period_stats WHERE business_period_id=?", old).getFirst().get("total_games"));
         assertEquals(2, count("graph_points")); assertEquals(1, count("setting_history"));
         Session safe = db.state().session(player); assertEquals(Session.Lifecycle.SUSPENDED_SAFE, safe.lifecycle()); assertFalse(db.state().busy(id));
