@@ -31,7 +31,7 @@ public final class JugglerGodMachineDataSimulator {
         final int godDenominator,godInGodBigStock,guaranteedBigs,continuationPercent,bigPayout,regPayout;
         final String period;
         final long normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm;
-        long total,big,reg,current,difference,max,addedBig,addedReg,clock;
+        long total,big,reg,current,difference,max,addedBig,addedReg,clock,simulatedSpins;
         boolean free;
         String lastBonus;
         Long lastBonusAt;
@@ -61,6 +61,7 @@ public final class JugglerGodMachineDataSimulator {
         void advanceNormalGame(int payout)throws Exception{
             int bet=free?0:FixedGameRules.NORMAL_BET;
             free=false;
+            simulatedSpins=Math.addExact(simulatedSpins,1);
             total=Math.addExact(total,1);
             current=Math.addExact(current,1);
             difference=Math.addExact(difference,(long)payout-bet);
@@ -69,10 +70,12 @@ public final class JugglerGodMachineDataSimulator {
         }
 
         void chargeGuaranteedChainBet(){
+            simulatedSpins=Math.addExact(simulatedSpins,1);
             difference=Math.subtractExact(difference,FixedGameRules.NORMAL_BET);
         }
 
         void advanceContinuationGame()throws Exception{
+            simulatedSpins=Math.addExact(simulatedSpins,1);
             total=Math.addExact(total,1);
             current=Math.addExact(current,1);
             difference=Math.subtractExact(difference,FixedGameRules.NORMAL_BET);
@@ -154,8 +157,8 @@ public final class JugglerGodMachineDataSimulator {
                         n(stats,"today_difference"),n(stats,"today_max_difference"),now);
 
                 long beforeBig=s.big,beforeReg=s.reg;
-                for(long i=0;i<games;i++){
-                    if((i&65535)==0&&Thread.currentThread().isInterrupted())
+                while(s.simulatedSpins<games){
+                    if((s.simulatedSpins&65535)==0&&Thread.currentThread().isInterrupted())
                         throw new java.util.concurrent.CancellationException("Simulator interrupted");
 
                     // GOD is an independent profile draw before the normal/heaven role table.
@@ -200,7 +203,7 @@ public final class JugglerGodMachineDataSimulator {
                 execute(db,"UPDATE machine_period_stats SET total_games=?,big_count=?,reg_count=?,current_games=?,today_difference=?,today_max_difference=?,last_bonus_type=COALESCE(?,last_bonus_type),last_bonus_at=CASE WHEN ? IS NULL THEN last_bonus_at ELSE ? END WHERE machine_id=? AND business_period_id=?",
                         s.total,s.big,s.reg,s.current,s.difference,s.max,s.lastBonus,s.lastBonus,s.lastBonusAt,machineId,period);
                 db.commit();
-                return new MachineDataSimulator.Result(machineId,setting,games,s.big-beforeBig,s.reg-beforeReg,s.difference,s.max,s.current);
+                return new MachineDataSimulator.Result(machineId,setting,s.simulatedSpins,s.big-beforeBig,s.reg-beforeReg,s.difference,s.max,s.current);
             }catch(Exception error){
                 db.rollback();throw error;
             }finally{
@@ -240,6 +243,8 @@ public final class JugglerGodMachineDataSimulator {
         if(!first){
             if(continuation)s.advanceContinuationGame();
             else s.chargeGuaranteedChainBet();
+            // Follow-up GOD BIGs use the ordinary bonus-entry alignment path.
+            s.simulatedSpins=Math.addExact(s.simulatedSpins,1);
         }
         int history=continuation?1:0;
         int cost=first
@@ -252,6 +257,8 @@ public final class JugglerGodMachineDataSimulator {
     }
 
     private static boolean playStockBonus(State s,String type,int history,boolean insideGod,ArrayDeque<String> stock)throws Exception{
+        // Releasing a stocked BIG/REG requires its visible entry-alignment spin.
+        s.simulatedSpins=Math.addExact(s.simulatedSpins,1);
         boolean ordinaryGod=drawBonusRounds(s,type,insideGod,stock);
         s.finishBonus(type,history,s.bonusTotalBet(type));
         return ordinaryGod;
@@ -260,17 +267,26 @@ public final class JugglerGodMachineDataSimulator {
     private static boolean drawBonusRounds(State s,String type,boolean insideGod,ArrayDeque<String> stock)throws Exception{
         int rounds=s.bonusGames(type);
         for(int i=0;i<rounds;i++){
+            s.simulatedSpins=Math.addExact(s.simulatedSpins,1);
             if(s.random.nextInt(s.godDenominator)==0){
                 s.difference=Math.addExact(s.difference,GameRules.payout(InternalRole.GOD));
                 s.max=Math.max(s.max,s.difference);
                 s.godHistory(0);
+                // The acquired GOD is confirmed by its own visible spin after the
+                // parent bonus round has stopped.
+                s.simulatedSpins=Math.addExact(s.simulatedSpins,1);
                 if(!insideGod)return true;
                 for(int n=0;n<s.godInGodBigStock;n++)stock.addLast("BIG");
                 continue;
             }
             InternalRole hit=s.weights.drawJugglerGod(s.setting,s.random,s.bonusScalePpm,s.smallRoleScalePpm);
             String next=GameRules.bonus(hit);
-            if(next!=null)stock.addLast(next);
+            if(next!=null){
+                // BIG/REG acquired during a bonus is visibly confirmed on its own
+                // alignment spin before the parent bonus resumes.
+                s.simulatedSpins=Math.addExact(s.simulatedSpins,1);
+                stock.addLast(next);
+            }
         }
         return false;
     }
