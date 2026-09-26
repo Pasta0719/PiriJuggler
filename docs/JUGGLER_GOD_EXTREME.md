@@ -28,12 +28,12 @@ Profile values:
 
 RTP-fit bonus scales, including 1/16384 GOD, 8 guaranteed BIGs, +10 GOD-in-GOD, 420/168 payouts, 70% heaven loop and 70% small-role scale:
 
-- setting 1: 566259 ppm
-- setting 2: 557664 ppm
-- setting 3: 563702 ppm
-- setting 4: 569053 ppm
-- setting 5: 577396 ppm
-- setting 6: 545547 ppm
+- setting 1: 564190 ppm
+- setting 2: 554200 ppm
+- setting 3: 558800 ppm
+- setting 4: 562600 ppm
+- setting 5: 568500 ppm
+- setting 6: 537600 ppm
 
 ## Commands
 
