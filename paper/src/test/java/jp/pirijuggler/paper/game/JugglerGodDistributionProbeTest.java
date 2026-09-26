@@ -13,11 +13,11 @@ class JugglerGodDistributionProbeTest {
     private static final int EXT_SMALL=700000;
 
     @Test void distributionProbe() throws Exception {
-        String profile=System.getProperty("piri.dist.profile");
+        String profile=value("piri.dist.profile","PIRI_DIST_PROFILE",null);
         if(profile==null)return;
-        int setting=Integer.parseInt(System.getProperty("piri.dist.setting"));
-        int trials=Integer.parseInt(System.getProperty("piri.dist.trials","10000"));
-        long games=Long.parseLong(System.getProperty("piri.dist.games","60000"));
+        int setting=Integer.parseInt(value("piri.dist.setting","PIRI_DIST_SETTING",null));
+        int trials=Integer.parseInt(value("piri.dist.trials","PIRI_DIST_TRIALS","10000"));
+        long games=Long.parseLong(value("piri.dist.games","PIRI_DIST_GAMES","60000"));
         assertTrue(setting>=1&&setting<=6);
         assertTrue(trials>0);
         assertTrue(games>0);
@@ -62,6 +62,12 @@ class JugglerGodDistributionProbeTest {
                 plus5k,100.0*plus5k/trials,plus10k,100.0*plus10k/trials,
                 minus5k,100.0*minus5k/trials,minus10k,100.0*minus10k/trials,
                 totalGod/(double)trials,noGod,100.0*noGod/trials);
+    }
+
+    private static String value(String property,String env,String fallback){
+        String v=System.getProperty(property);
+        if(v==null||v.isBlank())v=System.getenv(env);
+        return v==null||v.isBlank()?fallback:v;
     }
 
     private static long percentile(long[] sorted,double q){
