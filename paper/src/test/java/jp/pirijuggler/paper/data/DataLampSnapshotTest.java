@@ -52,6 +52,28 @@ class DataLampSnapshotTest {
         }
     }
 
+    @Test void godAndBonusHistoryStayInExactEventOrder() throws Exception {
+        try(var c=DriverManager.getConnection("jdbc:sqlite::memory:")){
+            c.createStatement().execute("CREATE TABLE machine_period_stats(machine_id INTEGER,business_period_id TEXT,total_games INTEGER,big_count INTEGER,reg_count INTEGER,current_games INTEGER,today_difference INTEGER,today_max_difference INTEGER)");
+            c.createStatement().execute("CREATE TABLE bonus_history(id INTEGER PRIMARY KEY AUTOINCREMENT,machine_id INTEGER,business_period_id TEXT,bonus_type TEXT,games INTEGER,occurred_at INTEGER)");
+            c.createStatement().execute("CREATE TABLE juggler_god_history(id INTEGER PRIMARY KEY AUTOINCREMENT,machine_id INTEGER,business_period_id TEXT,event_type TEXT,games INTEGER,occurred_at INTEGER)");
+            c.createStatement().execute("CREATE TABLE graph_points(id INTEGER PRIMARY KEY AUTOINCREMENT,machine_id INTEGER,business_period_id TEXT,game INTEGER,difference INTEGER,occurred_at INTEGER)");
+            c.createStatement().execute("INSERT INTO machine_period_stats VALUES(1,'p',50,2,1,0,100,200)");
+            c.createStatement().execute("INSERT INTO juggler_god_history(machine_id,business_period_id,event_type,games,occurred_at) VALUES(1,'p','GOD',42,1000)");
+            c.createStatement().execute("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(1,'p','BIG',0,1000)");
+            c.createStatement().execute("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(1,'p','BIG',0,1001)");
+            c.createStatement().execute("INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(1,'p','REG',8,1002)");
+            var json=DataLampSnapshot.read(c,1,"p");
+            var h=json.getAsJsonArray("history");
+            assertEquals(4,h.size());
+            assertEquals("REG",h.get(0).getAsJsonObject().get("type").getAsString());
+            assertEquals("BIG",h.get(1).getAsJsonObject().get("type").getAsString());
+            assertEquals("GOD",h.get(2).getAsJsonObject().get("type").getAsString());
+            assertEquals("BIG",h.get(3).getAsJsonObject().get("type").getAsString());
+            assertEquals(0,h.get(3).getAsJsonObject().get("games").getAsInt());
+        }
+    }
+
     @Test void noCompletedBonusKeepsPiriChainOffEvenAtZeroGames() throws Exception {
         try(var c=DriverManager.getConnection("jdbc:sqlite::memory:")){
             c.createStatement().execute("CREATE TABLE machine_period_stats(machine_id INTEGER,business_period_id TEXT,total_games INTEGER,big_count INTEGER,reg_count INTEGER,current_games INTEGER,today_difference INTEGER,today_max_difference INTEGER)");
