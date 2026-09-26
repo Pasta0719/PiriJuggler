@@ -186,8 +186,24 @@ class JugglerGodCoreTest extends GameFixture {
                 "GOD_CHAIN",5,false,"BONUS_STOCK_CONFIRM_READY",
                 0,0,"REG","REG",14,false,true);
         assertTrue(JugglerGodGameEngine.isAcquisitionEntryFinish(
-                true,Session.GameState.BONUS_ENTRY_SPINNING_REG,releasing),
-                "REG acquired while releasing stock must still be consumed/confirmed");
+                true,Session.GameState.BONUS_ENTRY_SPINNING_REG,releasing));
+        var confirmed=JugglerGodGameEngine.confirmAcquiredStock(releasing);
+        assertEquals(1,confirmed.additionalRegStock());
+        assertEquals(0,confirmed.additionalBigStock());
+        assertEquals("NONE",confirmed.pendingBonusHit());
+        assertEquals("NONE",confirmed.suspendedBonusType());
+        assertTrue(confirmed.releasingStock());
+    }
+
+    @Test void stockReleaseBigAcquisitionAlsoConsumesPendingHitExactlyOnce() {
+        var releasing=new JugglerGodRuntime(JugglerGodRuntime.Mode.HEAVEN,7,7,0,false,false,
+                "HEAVEN",0,false,"BONUS_STOCK_CONFIRM_READY",
+                2,1,"BIG","REG",42,false,true);
+        var confirmed=JugglerGodGameEngine.confirmAcquiredStock(releasing);
+        assertEquals(3,confirmed.additionalBigStock());
+        assertEquals(1,confirmed.additionalRegStock());
+        assertEquals("NONE",confirmed.pendingBonusHit());
+        assertTrue(confirmed.releasingStock());
     }
 
     @Test void consumingPendingGodCanPreserveInterruptedBonusUntilReplacementDecision() {
