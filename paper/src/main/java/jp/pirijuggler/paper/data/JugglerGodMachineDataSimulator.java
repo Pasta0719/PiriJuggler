@@ -273,7 +273,12 @@ public final class JugglerGodMachineDataSimulator {
         if(!first){
             if(continuation){
                 s.advanceContinuationGame();
-                if(!s.hasBudget())return false;
+                if(!s.hasBudget()){
+                    // The forced 1G continuation BIG itself occurred on the exact
+                    // boundary, even though none of its bonus rounds fit in-window.
+                    s.recordBonusHit("BIG",1);
+                    return false;
+                }
             }else s.chargeGuaranteedChainBet();
         }
         int history=continuation?1:0;
