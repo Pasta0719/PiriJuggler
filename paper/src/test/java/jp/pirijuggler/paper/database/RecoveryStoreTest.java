@@ -156,17 +156,26 @@ class RecoveryStoreTest {
                 NOW,runtime.toJsonString(),player.toString());
 
         Session reseated=db.seat(player,machine,NOW+1);
-        assertEquals(Session.GameState.SEATED_READY,reseated.state());
         JugglerGodRuntime recovered=JugglerGodRuntime.fromJson(reseated.machineState().toString());
         assertEquals(JugglerGodRuntime.Mode.GOD_CHAIN,recovered.mode());
-        assertEquals(3,recovered.guaranteedRemaining());
-        assertTrue(recovered.forceChainBig(),"next guaranteed BIG must survive leave/recovery");
-        assertFalse(recovered.countNextChainGame(),"guaranteed BIG remains a 0G continuation");
+        if(reseated.state()==Session.GameState.SEATED_READY){
+            assertEquals(3,recovered.guaranteedRemaining());
+            assertTrue(recovered.forceChainBig(),"next guaranteed BIG must survive leave/recovery");
+            assertFalse(recovered.countNextChainGame(),"guaranteed BIG remains a 0G continuation");
+        }else{
+            // Recovery draws the unfinished BIG rounds. A bonus hit there must be
+            // released at 0G before consuming the next guaranteed GOD-chain BIG.
+            assertTrue(reseated.state()==Session.GameState.BONUS_PENDING_BIG
+                    ||reseated.state()==Session.GameState.BONUS_PENDING_REG);
+            assertTrue(recovered.releasingStock());
+            assertEquals(4,recovered.guaranteedRemaining());
+            assertEquals("GOD_CHAIN",recovered.bonusOrigin());
+            assertFalse(recovered.countNextChainGame());
+        }
 
         String stored=(String)db.rows("SELECT machine_runtime_json FROM machines WHERE machine_id="+machine).getFirst().get("machine_runtime_json");
         JugglerGodRuntime machineRuntime=JugglerGodRuntime.fromJson(stored);
-        assertTrue(machineRuntime.forceChainBig());
-        assertEquals(3,machineRuntime.guaranteedRemaining());
+        assertEquals(recovered,machineRuntime,"session and machine must agree after recovery");
     }
 
     @Test void jugglerGodGraceExpiryResumesStockBeforeHeavenTransition() throws Exception {
