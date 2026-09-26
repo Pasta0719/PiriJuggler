@@ -226,7 +226,7 @@ public final class JugglerGodGameEngine implements GameEngine {
         // Visible 7 alignment confirms a newly acquired BIG/REG stock, then resumes the suspended bonus.
         boolean acquisitionEntryFinish=legacy.finished()
                 &&(before.state()==Session.GameState.BONUS_ENTRY_SPINNING_BIG||before.state()==Session.GameState.BONUS_ENTRY_SPINNING_REG)
-                &&!runtime.releasingStock()&&Set.of("BIG","REG").contains(runtime.pendingBonusHit());
+                &&Set.of("BIG","REG").contains(runtime.pendingBonusHit());
         if(acquisitionEntryFinish){
             int big=runtime.additionalBigStock()+("BIG".equals(runtime.pendingBonusHit())?1:0);
             int reg=runtime.additionalRegStock()+("REG".equals(runtime.pendingBonusHit())?1:0);
