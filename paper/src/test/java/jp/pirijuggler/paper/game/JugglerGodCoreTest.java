@@ -181,6 +181,15 @@ class JugglerGodCoreTest extends GameFixture {
         assertTrue(interrupted.releasingStock());
     }
 
+    @Test void stockReleaseRegAcquisitionIsStillConfirmedAndCannotLeavePendingRegLatched() {
+        var releasing=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,0,false,false,
+                "GOD_CHAIN",5,false,"BONUS_STOCK_CONFIRM_READY",
+                0,0,"REG","REG",14,false,true);
+        assertTrue(JugglerGodGameEngine.isAcquisitionEntryFinish(
+                true,Session.GameState.BONUS_ENTRY_SPINNING_REG,releasing),
+                "REG acquired while releasing stock must still be consumed/confirmed");
+    }
+
     @Test void consumingPendingGodCanPreserveInterruptedBonusUntilReplacementDecision() {
         var state=JugglerGodRuntime.initial().interrupt("GOD","BIG",210,false,"BONUS_GOD_CONFIRM_READY");
         var consumed=state.consumePendingHit("BONUS_GOD_CONFIRMED");
