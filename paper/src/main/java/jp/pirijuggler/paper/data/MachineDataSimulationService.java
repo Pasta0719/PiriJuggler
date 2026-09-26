@@ -47,6 +47,10 @@ public final class MachineDataSimulationService {
         var machine=state.machine(machineId);
         if(machine==null){sender.sendMessage(Component.text("INVALID_STATE"));return true;}
         if(state.busy(machineId)){sender.sendMessage(Component.text("MACHINE_OCCUPIED"));return true;}
+        if(!supported(machine)){
+            sender.sendMessage(Component.text("SIM_UNSUPPORTED machine="+machineId+" type="+machine.type()));
+            return true;
+        }
 
         int setting=machine.setting();
         String period=state.period();
@@ -71,8 +75,14 @@ public final class MachineDataSimulationService {
     }
 
     private boolean simulateAll(CommandSender sender, jp.pirijuggler.paper.database.PiriDatabase.State state, long games) {
-        List<Machine> machines=state.machines().stream().filter(machine->!machine.deleted()).toList();
-        if(machines.isEmpty()){sender.sendMessage(Component.text("INVALID_STATE (no machines)"));return true;}
+        List<Machine> all=state.machines().stream().filter(machine->!machine.deleted()).toList();
+        if(all.isEmpty()){sender.sendMessage(Component.text("INVALID_STATE (no machines)"));return true;}
+        List<Machine> unsupported=all.stream().filter(machine->!supported(machine)).toList();
+        if(!unsupported.isEmpty()){
+            sender.sendMessage(Component.text("SIM_UNSUPPORTED machines="+unsupported.stream().map(m->m.id()+":"+m.type()).toList()));
+            return true;
+        }
+        List<Machine> machines=all;
         for(Machine machine:machines){
             if(state.busy(machine.id())){
                 sender.sendMessage(Component.text("MACHINE_OCCUPIED id="+machine.id()));
@@ -116,6 +126,13 @@ public final class MachineDataSimulationService {
             sender.sendMessage(Component.text("SIMULATION_ALL_DONE machines="+results.size()+" targetSpinsEach="+games+" actualSpins="+totalSpins+" BIG="+totalBig+" REG="+totalReg+" DIFF_SUM="+signed(totalDifference)));
         });
         return true;
+    }
+
+    private static boolean supported(Machine machine){
+        return switch(machine.type()){
+            case JUGGLER,JUGGLER_GOD,JUGGLER_GOD_EXTREME -> true;
+            case GOD,OKIDOKI,DISC -> false;
+        };
     }
 
     private static String signed(long value){return value>0?"+"+value:Long.toString(value);}
