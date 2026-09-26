@@ -18,7 +18,7 @@ class JugglerGodExtremeRtpProbeTest extends GameFixture {
             Map<String,Object> row=(Map<String,Object>)settings.get(Integer.toString(setting));
             int bonus=((Number)row.get("bonus_scale_ppm")).intValue();
             int small=((Number)row.get("small_role_scale_ppm")).intValue();
-            var result=JugglerGodExtremeSimulator.run(weights,setting,1_000_000L,bonus,small,
+            var result=JugglerGodExtremeSimulator.run(weights,setting,20_000_000L,bonus,small,
                     new SplittableRandom(0x45585452454d4500L+setting));
             System.out.printf("EXTREME_RTP_PROBE setting=%d games=%d target=%.3f observed=%.6f delta=%+.6f god=%d godInGod=%d%n",
                     setting,result.leverGames(),target[setting],result.payoutPercent(),result.payoutPercent()-target[setting],result.god(),result.godInGod());
