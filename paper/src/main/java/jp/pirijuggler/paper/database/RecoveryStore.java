@@ -360,6 +360,7 @@ public final class RecoveryStore {
             Map<String,Object> values,Stats stats,String type,boolean currentBetAlreadyPaid,boolean currentSpinOverlayAlreadyDrawn,
             JugglerGodRuntime runtime,int setting,int machine,long now
     ) throws Exception {
+        String recoveryStockPriority=runtime.additionalBigStock()>0?"BIG":runtime.additionalRegStock()>0?"REG":"NONE";
         long gross=jgBonusGross(type);
         long paid=((Number)values.get("bonus_payout_count")).longValue();
         long remainingGross=gross-paid;
@@ -368,7 +369,10 @@ public final class RecoveryStore {
         long overlayRounds=Math.max(0,rounds-(currentSpinOverlayAlreadyDrawn?1:0));
         runtime=simulateJugglerGodBonusOverlays(runtime,type,overlayRounds,setting,machine,values,stats,now);
         settleJugglerGodRunningBonusEconomy(values,stats,type,currentBetAlreadyPaid,now);
-        return postJugglerGodBonus(runtime,setting,machine);
+        runtime=postJugglerGodBonus(runtime,setting,machine);
+        if(!"NONE".equals(recoveryStockPriority)&&runtime.stockLampOn())
+            runtime=runtime.stock(runtime.additionalBigStock(),runtime.additionalRegStock(),"RECOVERY_STOCK_PRIORITY_"+recoveryStockPriority);
+        return runtime;
     }
 
     private void settleJugglerGodBonusEconomy(Map<String,Object> values,Stats stats,String type,boolean entryBetAlreadyPaid,long now) throws Exception {
