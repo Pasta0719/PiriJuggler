@@ -26,12 +26,13 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
       - name: Run 60k x 10k distribution probe
+        env:
+          PIRI_DIST_PROFILE: ${{ matrix.profile }}
+          PIRI_DIST_SETTING: ${{ matrix.setting }}
+          PIRI_DIST_GAMES: '60000'
+          PIRI_DIST_TRIALS: '10000'
         run: >
           ./gradlew :paper:test
           --tests jp.pirijuggler.paper.game.JugglerGodDistributionProbeTest
           -Dpiri.specRoot=$GITHUB_WORKSPACE
-          -Dpiri.dist.profile=${{ matrix.profile }}
-          -Dpiri.dist.setting=${{ matrix.setting }}
-          -Dpiri.dist.games=60000
-          -Dpiri.dist.trials=10000
           --info
