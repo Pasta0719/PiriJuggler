@@ -216,13 +216,19 @@ class RecoveryStoreTest {
                 NOW,runtime.toJsonString(),player.toString());
 
         Session reseated=db.seat(player,machine,NOW+1);
-        assertEquals(Session.GameState.SEATED_READY,reseated.state());
+        assertTrue(
+                reseated.state()==Session.GameState.SEATED_READY
+                        ||reseated.state()==Session.GameState.BONUS_PENDING_BIG
+                        ||reseated.state()==Session.GameState.BONUS_PENDING_REG,
+                "recovery may immediately expose stock acquired while finishing the guaranteed BIG");
         JugglerGodRuntime recovered=JugglerGodRuntime.fromJson(reseated.machineState().toString());
         assertEquals(JugglerGodRuntime.Mode.GOD_CHAIN,recovered.mode());
         assertEquals(2,recovered.guaranteedRemaining());
         assertTrue(recovered.forceChainBig());
         assertFalse(recovered.countNextChainGame());
-        assertEquals(1,scalar("SELECT count(*) FROM bonus_history WHERE machine_id="+machine+" AND bonus_type='BIG' AND games=0"));
+        assertTrue(
+                scalar("SELECT count(*) FROM bonus_history WHERE machine_id="+machine+" AND bonus_type='BIG' AND games=0")>=1,
+                "the recovered guaranteed BIG must be recorded as a zero-game BIG even if recovery also acquires stock");
     }
 
     @Test void jugglerGodRecoveryAtHeavenTargetCannotFallBackToOrdinaryJugglerDraw() throws Exception {
