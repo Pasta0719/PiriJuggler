@@ -30,21 +30,26 @@ public final class MachineDataSimulator {
                 if(rows.isEmpty())throw new IllegalArgumentException("Missing machine stats");
                 Map<String,Object> s=rows.getFirst();
                 long total=n(s,"total_games"),big=n(s,"big_count"),reg=n(s,"reg_count"),current=n(s,"current_games"),difference=n(s,"today_difference"),max=n(s,"today_max_difference");
-                long addedBig=0,addedReg=0;
+                long addedBig=0,addedReg=0,simulatedSpins=0;
                 boolean free=false;
                 String lastBonus=null;Long lastBonusAt=null;
-                for(long i=0;i<games;i++){
+                while(simulatedSpins<games){
                     int bet=free?0:FixedGameRules.NORMAL_BET;
                     InternalRole role=weights.draw(setting,random);
                     total=Math.addExact(total,1);current=Math.addExact(current,1);
                     difference=Math.addExact(difference,(long)GameRules.payout(role)-bet);
                     max=Math.max(max,difference);
-                    long at=now+i;
+                    simulatedSpins=Math.addExact(simulatedSpins,1);
+                    long at=now+simulatedSpins;
                     execute(db,"INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,?,?,?)",machineId,period,total,difference,at);
                     String bonus=GameRules.bonus(role);
                     if(bonus!=null){
                         if(bonus.equals("BIG")){big=Math.addExact(big,1);addedBig++;}else{reg=Math.addExact(reg,1);addedReg++;}
                         execute(db,"INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,?,?,?)",machineId,period,bonus,current,at);
+                        // Physical lever count: one bonus-entry alignment spin plus the
+                        // payout rounds themselves. /piri sim uses this wall-clock spin
+                        // budget rather than counting only ordinary games.
+                        simulatedSpins=Math.addExact(simulatedSpins,1L+GameRules.bonusGames(bonus));
                         difference=Math.addExact(difference,(long)GameRules.bonusGross(bonus)-GameRules.bonusTotalBet(bonus));
                         max=Math.max(max,difference);
                         current=0;
@@ -56,7 +61,7 @@ public final class MachineDataSimulator {
                 execute(db,"UPDATE machine_period_stats SET total_games=?,big_count=?,reg_count=?,current_games=?,today_difference=?,today_max_difference=?,last_bonus_type=COALESCE(?,last_bonus_type),last_bonus_at=CASE WHEN ? IS NULL THEN last_bonus_at ELSE ? END WHERE machine_id=? AND business_period_id=?",
                         total,big,reg,current,difference,max,lastBonus,lastBonus,lastBonusAt,machineId,period);
                 db.commit();
-                return new Result(machineId,setting,games,addedBig,addedReg,difference,max,current);
+                return new Result(machineId,setting,simulatedSpins,addedBig,addedReg,difference,max,current);
             }catch(Exception error){db.rollback();throw error;}
             finally{db.setAutoCommit(true);}
         }
