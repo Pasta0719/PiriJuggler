@@ -46,15 +46,16 @@ public final class MachineDataSimulator {
                     if(bonus!=null){
                         if(bonus.equals("BIG")){big=Math.addExact(big,1);addedBig++;}else{reg=Math.addExact(reg,1);addedReg++;}
                         execute(db,"INSERT INTO bonus_history(machine_id,business_period_id,bonus_type,games,occurred_at) VALUES(?,?,?,?,?)",machineId,period,bonus,current,at);
-                        // Physical lever count: one bonus-entry alignment spin plus the
-                        // payout rounds themselves. /piri sim uses this wall-clock spin
-                        // budget rather than counting only ordinary games.
-                        simulatedSpins=Math.addExact(simulatedSpins,1L+GameRules.bonusGames(bonus));
-                        difference=Math.addExact(difference,(long)GameRules.bonusGross(bonus)-GameRules.bonusTotalBet(bonus));
+                        int bonusRounds=GameRules.bonusGames(bonus);
+                        long playable=Math.min((long)bonusRounds,games-simulatedSpins);
+                        simulatedSpins=Math.addExact(simulatedSpins,playable);
+                        difference=Math.addExact(difference,Math.multiplyExact(playable,12L));
                         max=Math.max(max,difference);
-                        current=0;
-                        execute(db,"INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,?,?,?)",machineId,period,total,difference,at);
-                        lastBonus=bonus;lastBonusAt=at;
+                        if(playable==bonusRounds){
+                            current=0;
+                            execute(db,"INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,?,?,?)",machineId,period,total,difference,at);
+                            lastBonus=bonus;lastBonusAt=at;
+                        }
                     }
                     free=role==InternalRole.REPLAY;
                 }
