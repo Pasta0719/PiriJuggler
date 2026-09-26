@@ -48,7 +48,7 @@ juggler_god_extreme:
     '2': {bonus_scale_ppm: 554200, small_role_scale_ppm: 700000, god_continuation_percent: 78}
     '3': {bonus_scale_ppm: 558800, small_role_scale_ppm: 700000, god_continuation_percent: 80}
     '4': {bonus_scale_ppm: 562600, small_role_scale_ppm: 700000, god_continuation_percent: 82}
-    '5': {bonus_scale_ppm: 568500, small_role_scale_ppm: 700000, god_continuation_percent: 85}
+    '5': {bonus_scale_ppm: 571106, small_role_scale_ppm: 700000, god_continuation_percent: 85}
     '6': {bonus_scale_ppm: 537600, small_role_scale_ppm: 700000, god_continuation_percent: 90}
 
 premium:
