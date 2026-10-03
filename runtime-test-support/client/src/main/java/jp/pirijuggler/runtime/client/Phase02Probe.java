@@ -33,7 +33,25 @@ public final class Phase02Probe {
     public static void received(Envelope packet,boolean compatible){allowed=compatible;JsonObject entry=new JsonObject();entry.addProperty("type",packet.packetType().name());entry.add("payload",packet.payload());packets.add(entry);LoggerFactory.getLogger("PiriRuntimeAcceptance").info("PIRI_PHASE02_PACKET {}",entry);if(packet.packetType()==PacketType.SPIN_START){motionSpin=packet.payload().get("spinId").getAsString();motionAt=System.nanoTime();motionTrace=new JsonArray();}}
     public static void tick(MinecraftClient client){
         if(client.player!=null)client.mouse.unlockCursor();
-        if(phaseTap!=null&&slotView(client)!=null){var view=slotView(client);double phase=view.phase(phaseTap.get("reel").getAsInt()),desired=phaseTap.get("phase").getAsDouble();if(view.canSend(switch(phaseTap.get("reel").getAsInt()){case 0->PacketType.STOP_LEFT;case 1->PacketType.STOP_CENTER;case 2->PacketType.STOP_RIGHT;default->throw new IllegalArgumentException("reel");})&&phase>=desired&&phase<desired+.18){int key=phaseTap.get("key").getAsInt();client.keyboard.onKey(client.getWindow().getHandle(),key,0,GLFW.GLFW_PRESS,0);client.keyboard.onKey(client.getWindow().getHandle(),key,0,GLFW.GLFW_RELEASE,0);phaseTap=null;}else if(System.nanoTime()-phaseTapAt>30_000_000_000L){failure="Timed key did not reach requested visible phase";phaseTap=null;}}
+        if(phaseTap!=null&&slotView(client)!=null){
+            var view=slotView(client);int reel=phaseTap.get("reel").getAsInt();
+            double phase=view.phase(reel),desired=phaseTap.get("phase").getAsDouble();
+            boolean skill=System.getProperty("piri.runtime.scenario","").startsWith("skill02");
+            double lower=skill?desired+.35:desired,upper=skill?desired+.85:desired+.18;
+            PacketType stop=switch(reel){case 0->PacketType.STOP_LEFT;case 1->PacketType.STOP_CENTER;case 2->PacketType.STOP_RIGHT;default->throw new IllegalArgumentException("reel");};
+            if(view.canSend(stop)&&phase>=lower&&phase<upper){
+                int key=phaseTap.get("key").getAsInt();
+                if(skill){
+                    // Exercise the real slot screen handler at the observed phase.
+                    // Keyboard.onKey queues a callback and can sample a later symbol.
+                    client.currentScreen.keyPressed(key,0,0);client.currentScreen.keyReleased(key,0,0);
+                }else{
+                    client.keyboard.onKey(client.getWindow().getHandle(),key,0,GLFW.GLFW_PRESS,0);
+                    client.keyboard.onKey(client.getWindow().getHandle(),key,0,GLFW.GLFW_RELEASE,0);
+                }
+                phaseTap=null;
+            }else if(System.nanoTime()-phaseTapAt>30_000_000_000L){failure="Timed key did not reach requested visible phase";phaseTap=null;}
+        }
         if(motionSpin!=null&&slotView(client)!=null){double elapsed=(System.nanoTime()-motionAt)/1e9;if(elapsed<=1.5){var view=slotView(client);JsonObject sample=new JsonObject();sample.addProperty("elapsed",elapsed);JsonArray phases=new JsonArray();for(int i=0;i<3;i++)phases.add(view.phase(i));sample.add("phases",phases);motionTrace.add(sample);}}
         if(++ticks%5!=0)return;
         try{Path instruction=output().resolveSibling("command-"+(completed+1)+".json");if(Files.exists(instruction)){JsonObject command=JsonParser.parseString(Files.readString(instruction)).getAsJsonObject();long id=command.get("id").getAsLong();if(id>completed&&client.player!=null&&client.world!=null&&client.interactionManager!=null){String kind=command.get("kind").getAsString();switch(kind){
