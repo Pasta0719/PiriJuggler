@@ -159,3 +159,7 @@ BIG20開始→最終G成功→3G継続→23G終了、REG8G終了、途中チャ�
 全体CI: https://github.com/Pasta0719/PiriJuggler/actions/runs/37123297201。実機CI: https://github.com/Pasta0719/PiriJuggler/actions/runs/37123294908。
 実行: run-skill-stop-phase03-runtime.bat。証拠: runtime-evidence/SKILL_STOP_PHASE_03/REPORT.md。
 Phase04機械割、Phase05 PNG/音/残G表示は別受入。
+
+
+### SKILL STOP Phase04 result — 2026-10-03
+PASS / COMPLETE。実制御2,222,640履歴、実整数重みの攻略解析、24条件60万完了ボーナス独立抽選、root test/package/helper build、実Paper/Fabric回帰202/202 PASS。証拠: runtime-evidence/SKILL_STOP_PHASE_04/REPORT.md。PNG/音/残G画面はPhase05。

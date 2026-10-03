@@ -1,6 +1,10 @@
 # 新規セッションへの引き継ぎ
 
-## 最新追記 — SKILL STOP Phase03 / 2026-10-03
+## 最新追記 — SKILL STOP Phase04 / 2026-10-03
+Phase04 COMPLETE。実制御2,222,640履歴・整数重み・投入払出別解析・独立60万完了ボーナスサイクル・全体CI・実機202/202 PASS。証拠: runtime-evidence/SKILL_STOP_PHASE_04/REPORT.md。
+現在地: skill-stop-phases/SKILL_STOP_PHASE_04_IMPLEMENTATION.md。PR #4、次はPhase05（PNG/音/残G表示）。検証source84d8e0efd9e45548339821d7f3e3954d40957eb6。Phase05未着手。
+
+## Phase03完了時の追記 — 2026-10-03
 Phase03 COMPLETE。BIG20/REG8、チャレンジBIG1/15・REG1/9、成功+3G、残G終了、離席/idle/再起動保存を既存Paper JARへ接続。
 全体CI・実Paper/Fabric受入202/202 PASS。実行対象source `fa81e18a5e4c52c7e2a0144b2324f10bf29fa3ae`。
 現在地: IMPLEMENTATION_STATUS.md冒頭、skill-stop-phases/SKILL_STOP_PHASE_03_IMPLEMENTATION.md。
