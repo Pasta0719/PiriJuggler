@@ -6,6 +6,7 @@ import jp.pirijuggler.paper.game.PremiumPolicy;
 import jp.pirijuggler.paper.game.RoleWeights;
 import jp.pirijuggler.paper.game.GameEngines;
 import jp.pirijuggler.paper.game.GameEngine;
+import jp.pirijuggler.paper.database.PiriDatabase;
 import jp.pirijuggler.paper.game.JugglerGameEngine;
 import jp.pirijuggler.paper.game.JugglerGodGameEngine;
 import jp.pirijuggler.paper.machine.Machine;
@@ -53,12 +54,56 @@ public final class DevFundCommand implements CommandExecutor {
         if (args.length >= 1 && args[0].equalsIgnoreCase("fund")) return fund(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("force")) return force(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("heaven")) return heaven(sender,args);
+        if (args.length >= 1 && args[0].equalsIgnoreCase("skillreset")) return skillReset(sender,args);
         if (args.length == 1 && args[0].equalsIgnoreCase("clear")) {
             if (pendingForce == null) sender.sendMessage("NO_TEST_FORCE_PENDING");
             else restoreForce("TEST_FORCE_CLEARED");
             return true;
         }
-        sender.sendMessage("Usage: /piritest fund [player] | /piritest force <god|big|reg|A|B|C|D|E|F> [player] | /piritest heaven <1-32> [player] | /piritest clear");
+        sender.sendMessage("Usage: /piritest fund [player] | /piritest force <god|big|reg|A|B|C|D|E|F> [player] | /piritest heaven <1-32> [player] | /piritest skillreset [player] | /piritest clear");
+        return true;
+    }
+
+    /**
+     * Runtime-acceptance-only hard reset for SKILL_STOP scenario isolation.
+     * This helper JAR is never distributed. Production deliberately preserves unfinished
+     * SKILL_STOP rights, so final acceptance must not weaken production recovery semantics.
+     */
+    private boolean skillReset(CommandSender sender,String[] args) {
+        if(args.length<1||args.length>2){sender.sendMessage("Usage: /piritest skillreset [player]");return true;}
+        Player target=args.length==2?Bukkit.getPlayerExact(args[1]):sender instanceof Player player?player:null;
+        if(target==null){sender.sendMessage("PLAYER_REQUIRED");return true;}
+        var production=production(sender);if(production==null)return true;
+        var service=production.machines();
+        Session session=service.snapshot().session(target.getUniqueId());
+        if(session==null){sender.sendMessage("TEST_SKILL_RESET_NO_SESSION");return true;}
+        Machine machine=service.snapshot().machine(session.machine());
+        if(machine==null||machine.type()!=jp.pirijuggler.paper.machine.MachineType.SKILL_STOP){
+            sender.sendMessage("TEST_SKILL_RESET_REQUIRES_SKILL_STOP");return true;
+        }
+        if(pendingForce!=null)restoreForce("TEST_FORCE_CLEARED_FOR_SKILL_RESET");
+        try{
+            Field dbField=service.getClass().getDeclaredField("database");dbField.setAccessible(true);
+            PiriDatabase database=(PiriDatabase)dbField.get(service);
+            Field stateField=service.getClass().getDeclaredField("state");stateField.setAccessible(true);
+            Field gamesField=service.getClass().getDeclaredField("games");gamesField.setAccessible(true);
+            GameEngines engines=(GameEngines)gamesField.get(service);
+            UUID owner=target.getUniqueId();UUID oldSession=session.id();int machineId=session.machine();
+            production.executors().database(()->{
+                database.sql("DELETE FROM player_sessions WHERE player_uuid=?",owner.toString());
+                return database.state();
+            },(fresh,error)->{
+                if(error!=null){sender.sendMessage("TEST_SKILL_RESET_FAILED "+error);return;}
+                try{
+                    stateField.set(service,fresh);
+                    engines.require(machine.type()).forget(oldSession);
+                    sender.sendMessage("TEST_SKILL_RESET machine="+machineId);
+                    if(!sender.equals(target))target.sendMessage("TEST_SKILL_RESET machine="+machineId);
+                }catch(ReflectiveOperationException resetError){
+                    sender.sendMessage("TEST_SKILL_RESET_FAILED "+resetError);
+                }
+            });
+        }catch(ReflectiveOperationException error){sender.sendMessage("TEST_SKILL_RESET_FAILED "+error);}
         return true;
     }
 
