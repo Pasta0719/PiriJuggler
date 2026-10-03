@@ -1,0 +1,217 @@
+{
+  "scope": "SPEC_ONLY_RESEARCH_MODEL",
+  "proposedWeights": [
+    {
+      "setting": 1,
+      "denominator": 1000000000,
+      "weights": {
+        "replay": 137023842,
+        "grape": 166599213,
+        "bell": 915525,
+        "cherry": 26532274,
+        "piero": 686643,
+        "big": 1873855,
+        "reg": 1087641,
+        "cherry_big": 632770,
+        "cherry_reg": 517720,
+        "piero_big": 81852,
+        "piero_reg": 88673,
+        "ONE_A": 34701,
+        "ONE_B": 34701,
+        "ONE_CD": 34701,
+        "ONE_E": 34701,
+        "ONE_F": 34701,
+        "ONE_H": 34701,
+        "miss": 663751786
+      },
+      "estimatedRoundedRTP": 98.50001013392388,
+      "roundingCaveat": "aggregate approximation: exact one allocation rounding slightly changes 90/10 split"
+    },
+    {
+      "setting": 2,
+      "denominator": 1000000000,
+      "weights": {
+        "replay": 137023842,
+        "grape": 166783634,
+        "bell": 915525,
+        "cherry": 26476121,
+        "piero": 686643,
+        "big": 1937783,
+        "reg": 1180994,
+        "cherry_big": 630088,
+        "cherry_reg": 558758,
+        "piero_big": 85014,
+        "piero_reg": 85014,
+        "ONE_A": 35885,
+        "ONE_B": 35885,
+        "ONE_CD": 35885,
+        "ONE_E": 35885,
+        "ONE_F": 35885,
+        "ONE_H": 35885,
+        "miss": 663421274
+      },
+      "estimatedRoundedRTP": 100.0000124251611,
+      "roundingCaveat": "aggregate approximation: exact one allocation rounding slightly changes 90/10 split"
+    },
+    {
+      "setting": 3,
+      "denominator": 1000000000,
+      "weights": {
+        "replay": 137023842,
+        "grape": 167751292,
+        "bell": 915525,
+        "cherry": 26391892,
+        "piero": 686643,
+        "big": 1972257,
+        "reg": 1344271,
+        "cherry_big": 642984,
+        "cherry_reg": 617770,
+        "piero_big": 89074,
+        "piero_reg": 82222,
+        "ONE_A": 36523,
+        "ONE_B": 36523,
+        "ONE_CD": 36523,
+        "ONE_E": 36523,
+        "ONE_F": 36523,
+        "ONE_H": 36523,
+        "miss": 662263090
+      },
+      "estimatedRoundedRTP": 101.99997942481724,
+      "roundingCaveat": "aggregate approximation: exact one allocation rounding slightly changes 90/10 split"
+    },
+    {
+      "setting": 4,
+      "denominator": 1000000000,
+      "weights": {
+        "replay": 137023842,
+        "grape": 168647497,
+        "bell": 915525,
+        "cherry": 26307662,
+        "piero": 686643,
+        "big": 2070863,
+        "reg": 1568798,
+        "cherry_big": 642583,
+        "cherry_reg": 696131,
+        "piero_big": 93543,
+        "piero_reg": 79684,
+        "ONE_A": 38349,
+        "ONE_B": 38349,
+        "ONE_CD": 38349,
+        "ONE_E": 38349,
+        "ONE_F": 38349,
+        "ONE_H": 38349,
+        "miss": 661037135
+      },
+      "estimatedRoundedRTP": 104.99997118412627,
+      "roundingCaveat": "aggregate approximation: exact one allocation rounding slightly changes 90/10 split"
+    },
+    {
+      "setting": 5,
+      "denominator": 1000000000,
+      "weights": {
+        "replay": 137023842,
+        "grape": 170413045,
+        "bell": 915525,
+        "cherry": 26223433,
+        "piero": 686643,
+        "big": 2245868,
+        "reg": 1730600,
+        "cherry_big": 649679,
+        "cherry_reg": 794053,
+        "piero_big": 99861,
+        "piero_reg": 78463,
+        "ONE_A": 41590,
+        "ONE_B": 41590,
+        "ONE_CD": 41590,
+        "ONE_E": 41590,
+        "ONE_F": 41590,
+        "ONE_H": 41590,
+        "miss": 658889448
+      },
+      "estimatedRoundedRTP": 108.99998770550576,
+      "roundingCaveat": "aggregate approximation: exact one allocation rounding slightly changes 90/10 split"
+    },
+    {
+      "setting": 6,
+      "denominator": 1000000000,
+      "weights": {
+        "replay": 137023842,
+        "grape": 172701646,
+        "bell": 915525,
+        "cherry": 26111127,
+        "piero": 686643,
+        "big": 2437060,
+        "reg": 1951812,
+        "cherry_big": 623528,
+        "cherry_reg": 861062,
+        "piero_big": 103736,
+        "piero_reg": 69157,
+        "ONE_A": 45131,
+        "ONE_B": 45131,
+        "ONE_CD": 45131,
+        "ONE_E": 45131,
+        "ONE_F": 45131,
+        "ONE_H": 45131,
+        "miss": 656244076
+      },
+      "estimatedRoundedRTP": 113.00002125856432,
+      "roundingCaveat": "aggregate approximation: exact one allocation rounding slightly changes 90/10 split"
+    }
+  ],
+  "simulation": [
+    {
+      "setting": 1,
+      "cycles": 100000,
+      "normalDraws": 22290549,
+      "rtp": 98.43775189394347,
+      "target": 98.5,
+      "half95": 0.26353820035582864,
+      "z": -0.4629548494528451
+    },
+    {
+      "setting": 2,
+      "cycles": 100000,
+      "normalDraws": 21244395,
+      "rtp": 100.09115409694795,
+      "target": 100,
+      "half95": 0.2718610960602506,
+      "z": 0.6571813054795407
+    },
+    {
+      "setting": 3,
+      "cycles": 100000,
+      "normalDraws": 20151917,
+      "rtp": 101.89357527406831,
+      "target": 102,
+      "half95": 0.2824345883568934,
+      "z": -0.7385514077423779
+    },
+    {
+      "setting": 4,
+      "cycles": 100000,
+      "normalDraws": 18706372,
+      "rtp": 104.77026191436153,
+      "target": 105,
+      "half95": 0.300274086177251,
+      "z": -1.4995854407017182
+    },
+    {
+      "setting": 5,
+      "cycles": 100000,
+      "normalDraws": 17098424,
+      "rtp": 108.90766365790913,
+      "target": 109.00000000000001,
+      "half95": 0.3182679330162433,
+      "z": -0.5686379673345554
+    },
+    {
+      "setting": 6,
+      "cycles": 100000,
+      "normalDraws": 15805817,
+      "rtp": 112.92975192902784,
+      "target": 112.99999999999999,
+      "half95": 0.33685811351668554,
+      "z": -0.40873653796850506
+    }
+  ]
+}
