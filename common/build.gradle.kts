@@ -12,3 +12,11 @@ tasks.register<JavaExec>("exportSkillStopEconomy") {
     args(rootProject.layout.buildDirectory.file("skill-stop-production-models.json").get().asFile.absolutePath)
     doFirst { rootProject.layout.buildDirectory.get().asFile.mkdirs() }
 }
+
+tasks.register<JavaExec>("exportSkillStopPhase06Vectors") {
+    dependsOn(tasks.testClasses)
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("jp.pirijuggler.common.reel.SkillStopPhase06Vectors")
+    args(rootProject.layout.buildDirectory.file("skill-stop-phase06-vectors.json").get().asFile.absolutePath)
+    doFirst { rootProject.layout.buildDirectory.get().asFile.mkdirs() }
+}
