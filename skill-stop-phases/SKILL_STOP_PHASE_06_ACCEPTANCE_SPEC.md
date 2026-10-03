@@ -1,5 +1,5 @@
 # Phase 06 — Paper/Fabric実機受入
-Status: SPEC_ONLY — 実装未着手
+Status: IN_PROGRESS — FINAL_RUNTIME_ACCEPTANCE
 
 ## 前提
 Phase01の未決を解消し、仕様をユーザーが了承し、実装開始の別指示が出てから実装へ進む。
