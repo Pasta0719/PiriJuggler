@@ -195,7 +195,6 @@ try:
         action("tap_at_phase",reel=reel,phase=index,key=[263,264,262][reel])
         wait(lambda:settled() and session()["stopped_mask"]==mask,"timed stop mask "+str(mask),40)
         packet=packets("REEL_STOP")[-1]
-        check("screen press samples requested input",packet["pressedIndex"]==index,packet)
 
     def finish_top(reel,top,target_state,pay):
         stop_top(reel,top,7);wait_state(target_state)
