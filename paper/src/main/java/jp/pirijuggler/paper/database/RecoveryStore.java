@@ -89,6 +89,8 @@ public final class RecoveryStore {
      */
     public Session settle(Session before,long now) throws Exception {
         if(before.ready())return before;
+        if("SKILL_STOP".equals(row("SELECT machine_type FROM machines WHERE machine_id=?",before.machine()).get("machine_type")))
+            throw new jp.pirijuggler.paper.machine.DomainException("RECOVERY_REQUIRED");
         String settlementId=settlementTransactionId(before);
         var prior=db.rows("SELECT transaction_id FROM economy_transactions WHERE transaction_id=?",settlementId);
         if(!prior.isEmpty()){

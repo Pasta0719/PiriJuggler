@@ -2,6 +2,11 @@
 
 このファイルは各Phase終了時の現在状態を示す。
 
+## SKILL STOP Phase 03 — 2026-10-03
+Status: IN_PROGRESS — チャレンジ・残りG・保存の結合テストPASS、全体CI/実Minecraft受入を検証中。
+BIG20/REG8から開始、1/15・1/9でチャレンジ抽選、BAR/ベル/ピエロ各1/3。第三停止14枚、残り-1と成功+3の後に終了判定。
+未完了SKILL_STOPはタイムアウト/再起動で自動清算せず台の権利を保存。次Phaseは自動開始しない。
+
 ## SKILL STOP Phase 02 — 2026-10-03
 
 Status: COMPLETE — 停止制御・全体ビルド・実Paper/Fabric受入PASS。既存Paper/Fabric JARへSKILL_STOPを追加。

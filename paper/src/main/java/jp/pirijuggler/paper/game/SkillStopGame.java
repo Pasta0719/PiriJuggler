@@ -18,23 +18,23 @@ public final class SkillStopGame implements GameEngine {
         double[] starts(){return new double[]{left,center,right};}
     }
     private final SkillStopWeights weights;private final RandomStreams random;private final SkillStopControl solver;private final MainThread main;private final PremiumPolicy premium;
-    private final int bigThreshold,regThreshold;
     private final Map<UUID,Motion> motions=new HashMap<>();
 
     public SkillStopGame(RandomStreams random,MainThread main,Map<String,Object> config) {
         this.weights=new SkillStopWeights();this.random=random;this.solver=new SkillStopControl();this.main=main;
-        this.premium=new PremiumPolicy(config);this.bigThreshold=280-14;this.regThreshold=112-14;
+        this.premium=new PremiumPolicy(config);
     }
     @Override public GameTransition plan(Session before,Machine machine,PacketType action,long sequence,long now,long receivedNanos,int ping,Integer pressed) {
         SkillStopRole forced=null;PremiumPolicy.Type forcedPremium=null;
         JsonObject state=machine.runtimeJson()==null?new JsonObject():JsonParser.parseString(machine.runtimeJson()).getAsJsonObject();
-        if(state.has("forceSkillRole")&&(before.state()==Session.GameState.NORMAL_BETTED||before.state()==Session.GameState.REPLAY_READY)) {
+        if(state.has("forceSkillRole")&&(before.state()==Session.GameState.NORMAL_BETTED||before.state()==Session.GameState.REPLAY_READY||before.state()==Session.GameState.BONUS_ENTRY_BETTED_BIG||before.state()==Session.GameState.BONUS_ENTRY_BETTED_REG)) {
             forced=SkillStopRole.valueOf(state.get("forceSkillRole").getAsString());
             if(state.has("forceSkillPremium")&&!"NONE".equals(state.get("forceSkillPremium").getAsString()))forcedPremium=PremiumPolicy.Type.valueOf(state.get("forceSkillPremium").getAsString());
         }
         boolean ordinaryOnly=forced!=null&&state.has("forceSkillPremium")&&"NONE".equals(state.get("forceSkillPremium").getAsString());
-        GameTransition t=plan(before,action,sequence,machine.setting(),now,receivedNanos,ping,pressed,forced,forcedPremium,ordinaryOnly);
-        if(t.lever()&&forced!=null){state.remove("forceSkillRole");state.remove("forceSkillPremium");return new GameTransition(t.transaction(),t.before(),t.after(),t.bet(),t.payout(),t.normalSpins(),t.finished(),t.lever(),t.bonusStarted(),t.bonusEnded(),t.publicDelayMs(),t.packets(),t.afterStart(),t.scheduled(),state.toString());}
+        SkillStopBonus.Target forcedBonus=state.has("forceSkillBonus")?SkillStopBonus.Target.valueOf(state.get("forceSkillBonus").getAsString()):null;
+        GameTransition t=plan(before,action,sequence,machine.setting(),now,receivedNanos,ping,pressed,forced,forcedPremium,ordinaryOnly,forcedBonus);
+        if(t.lever()&&(forced!=null||forcedBonus!=null&&(before.state()==Session.GameState.BIG_BETTED||before.state()==Session.GameState.REG_BETTED))){if(forced!=null){state.remove("forceSkillRole");state.remove("forceSkillPremium");}if(before.state()==Session.GameState.BIG_BETTED||before.state()==Session.GameState.REG_BETTED)state.remove("forceSkillBonus");return new GameTransition(t.transaction(),t.before(),t.after(),t.bet(),t.payout(),t.normalSpins(),t.finished(),t.lever(),t.bonusStarted(),t.bonusEnded(),t.publicDelayMs(),t.packets(),t.afterStart(),t.scheduled(),state.toString());}
         return t;
     }
     public GameTransition plan(Session before,PacketType action,long sequence,int setting,long now,long receivedNanos,int ping) {
@@ -44,9 +44,12 @@ public final class SkillStopGame implements GameEngine {
         return plan(before,action,sequence,setting,now,receivedNanos,ping,clientPressedIndex,null,null);
     }
     public GameTransition plan(Session before,PacketType action,long sequence,int setting,long now,long receivedNanos,int ping,Integer clientPressedIndex,SkillStopRole forcedNormalRole,PremiumPolicy.Type forcedPremium) {
-        return plan(before,action,sequence,setting,now,receivedNanos,ping,clientPressedIndex,forcedNormalRole,forcedPremium,false);
+        return plan(before,action,sequence,setting,now,receivedNanos,ping,clientPressedIndex,forcedNormalRole,forcedPremium,false,null);
     }
-    private GameTransition plan(Session before,PacketType action,long sequence,int setting,long now,long receivedNanos,int ping,Integer clientPressedIndex,SkillStopRole forcedNormalRole,PremiumPolicy.Type forcedPremium,boolean ordinaryOnly) {
+    GameTransition planBonus(Session before,PacketType action,long sequence,int setting,long now,long receivedNanos,int ping,Integer input,SkillStopBonus.Target target) {
+        return plan(before,action,sequence,setting,now,receivedNanos,ping,input,null,null,false,target);
+    }
+    private GameTransition plan(Session before,PacketType action,long sequence,int setting,long now,long receivedNanos,int ping,Integer clientPressedIndex,SkillStopRole forcedNormalRole,PremiumPolicy.Type forcedPremium,boolean ordinaryOnly,SkillStopBonus.Target forcedBonus) {
         main.requireMainThread();
         if(before.lifecycle()!=Session.Lifecycle.ACTIVE)throw new DomainException("SESSION_MISMATCH");
         if(sequence<=before.sequence())throw new DomainException("SEQUENCE_OLD");
@@ -73,13 +76,17 @@ public final class SkillStopGame implements GameEngine {
             else packets.add(ErrorPackets.rejected(sequence,ErrorCode.NOT_ENOUGH_CREDIT));
         } else if(action==PacketType.SPACE_ACTION&&(state==Session.GameState.BONUS_ENTRY_BETTED_BIG||state==Session.GameState.BONUS_ENTRY_BETTED_REG)) {
             String next=state==Session.GameState.BONUS_ENTRY_BETTED_BIG?"BONUS_ENTRY_SPINNING_BIG":"BONUS_ENTRY_SPINNING_REG";
-            beginSpin(values,before,SkillStopWeights.pending(random.gameplay(before.machine())).name(),ReelMotion.Profile.NORMAL,next,before.text("bonus_type"));lever=true;packets.add(accepted(action,sequence));
+            SkillStopRole small=forcedNormalRole==null?SkillStopWeights.pending(random.gameplay(before.machine())):forcedNormalRole;
+            if(small.bonus()!=null||small.oneMedal())throw new IllegalArgumentException("pending small role");
+            beginSpin(values,before,small.name(),ReelMotion.Profile.NORMAL,next,before.text("bonus_type"));lever=true;packets.add(accepted(action,sequence));
         } else if(action==PacketType.SPACE_ACTION&&(state==Session.GameState.BIG_READY||state==Session.GameState.REG_READY)) {
             var result=balance(before).bet(2);putBalance(values,result.balance());
             if(result.accepted()) {bet=2;values.put("game_state",state==Session.GameState.BIG_READY?"BIG_BETTED":"REG_BETTED");values.put("current_bet",2);values.put("pay_display",0);packets.add(accepted(action,sequence));}
             else packets.add(ErrorPackets.rejected(sequence,ErrorCode.NOT_ENOUGH_CREDIT));
         } else if(action==PacketType.SPACE_ACTION&&(state==Session.GameState.BIG_BETTED||state==Session.GameState.REG_BETTED)) {
-            SkillStopRole display=drawBonusDisplay(before.machine());
+            SkillStopBonus bonus=SkillStopBonus.read(before).lever(before.text("bonus_type"),random.gameplay(before.machine()),forcedBonus);
+            saveBonus(values,bonus);
+            SkillStopRole display=bonus.target()==SkillStopBonus.Target.AUTO?drawBonusDisplay(before.machine()):SkillStopRole.MISS;
             beginSpin(values,before,display.name(),ReelMotion.Profile.NORMAL,state==Session.GameState.BIG_BETTED?"BIG_SPINNING":"REG_SPINNING",before.text("bonus_type"));
             lever=true;packets.add(accepted(action,sequence));
         } else if(isSpinning(state)&&Set.of(PacketType.SPACE_ACTION,PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT).contains(action)) {
@@ -103,7 +110,7 @@ public final class SkillStopGame implements GameEngine {
                             SkillStopRole role=SkillStopRole.valueOf(before.text("internal_role"));
                             var outcome=round.outcome();String bonus=role.bonus();
                             payout=outcome.payout();putBalance(values,balance(before).payout(payout));values.put("pay_display",payout);values.put("current_bet",0);
-                            if(outcome.entryBonus()!=null){bonusStarted=outcome.entryBonus();values.put("game_state",bonusStarted+"_READY");values.put("bonus_payout_count",0);values.put("lamp_on",1);values.put("notice_state","ON");JsonObject b=new JsonObject();b.addProperty("bonusType",bonusStarted);scheduled.add(new Scheduled(delay,Envelope.current(PacketType.BONUS_START,b)));}
+                            if(outcome.entryBonus()!=null){bonusStarted=outcome.entryBonus();values.put("game_state",bonusStarted+"_READY");values.put("bonus_payout_count",0);saveBonus(values,new SkillStopBonus(SkillStopBonus.initial(bonusStarted),SkillStopBonus.Target.AUTO));setPendingReplay(values,false);values.put("lamp_on",1);values.put("notice_state","ON");JsonObject b=new JsonObject();b.addProperty("bonusType",bonusStarted);scheduled.add(new Scheduled(delay,Envelope.current(PacketType.BONUS_START,b)));}
                             else{values.put("game_state",bonus!=null?"BONUS_PENDING_"+bonus:outcome.replay()?"REPLAY_READY":"SEATED_READY");values.put("current_bet",outcome.replay()?3:0);values.put("lamp_on",bonus!=null?1:0);values.put("notice_state",bonus!=null?"ON":"NONE");}
                             addFinalNotice(before,bonus,scheduled,delay);clearSpin(values);
                             if(payout>0)scheduled.add(new Scheduled(delay,Envelope.current(PacketType.PAYOUT,new JsonObject())));
@@ -111,16 +118,17 @@ public final class SkillStopGame implements GameEngine {
                         case BONUS_ENTRY_SPINNING_BIG, BONUS_ENTRY_SPINNING_REG -> {
                             var outcome=round.outcome();payout=outcome.payout();putBalance(values,balance(before).payout(payout));values.put("pay_display",payout);values.put("current_bet",0);
                             String type=before.text("bonus_type");
-                            if(outcome.entryBonus()!=null){bonusStarted=type;values.put("game_state",type+"_READY");values.put("bonus_payout_count",0);JsonObject b=new JsonObject();b.addProperty("bonusType",type);scheduled.add(new Scheduled(delay,Envelope.current(PacketType.BONUS_START,b)));}
+                            if(outcome.entryBonus()!=null){bonusStarted=type;values.put("game_state",type+"_READY");values.put("bonus_payout_count",0);saveBonus(values,new SkillStopBonus(SkillStopBonus.initial(type),SkillStopBonus.Target.AUTO));setPendingReplay(values,false);JsonObject b=new JsonObject();b.addProperty("bonusType",type);scheduled.add(new Scheduled(delay,Envelope.current(PacketType.BONUS_START,b)));}
                             else{values.put("game_state","BONUS_PENDING_"+type);setPendingReplay(values,outcome.replay());}
                             clearSpin(values);
                             if(payout>0)scheduled.add(new Scheduled(delay,Envelope.current(PacketType.PAYOUT,new JsonObject())));
                         }
                         case BIG_SPINNING, REG_SPINNING -> {
-                            round.outcome();
+                            var outcome=round.outcome();
+                            SkillStopBonus bonus=SkillStopBonus.read(before).finish(outcome.challengeSuccess());saveBonus(values,bonus);
                             payout=14;putBalance(values,balance(before).payout(14));values.put("pay_display",14);
                             long count=Math.addExact(before.number("bonus_payout_count"),14);values.put("bonus_payout_count",count);values.put("current_bet",0);
-                            boolean big=state==Session.GameState.BIG_SPINNING;boolean end=big?count>bigThreshold:count>regThreshold;
+                            boolean big=state==Session.GameState.BIG_SPINNING;boolean end=bonus.remaining()==0;
                             if(end){bonusEnded=true;values.put("game_state","SEATED_READY");values.put("bonus_payout_count",0);values.put("lamp_on",0);values.put("notice_state","NONE");values.put("bonus_type",null);}
                             else values.put("game_state",big?"BIG_READY":"REG_READY");
                             clearSpin(values);scheduled.add(new Scheduled(delay,Envelope.current(PacketType.PAYOUT,new JsonObject())));
@@ -208,7 +216,7 @@ public final class SkillStopGame implements GameEngine {
         switch(s.state()){
             case NORMAL_SPINNING -> {PremiumPolicy.Type p=premiumType(s);context=SkillStopControl.Context.normal(role,p==null?SkillStopControl.Premium.NONE:SkillStopControl.Premium.valueOf(p.name()));mode="NORMAL";}
             case BONUS_ENTRY_SPINNING_BIG,BONUS_ENTRY_SPINNING_REG -> {context=SkillStopControl.Context.pending(role,s.text("bonus_type"));mode="BONUS_ENTRY";}
-            case BIG_SPINNING,REG_SPINNING -> {context=SkillStopControl.Context.bonusDisplay(role);mode=s.state()==Session.GameState.BIG_SPINNING?"BIG":"REG";}
+            case BIG_SPINNING,REG_SPINNING -> {SkillStopBonus.Target target=SkillStopBonus.read(s).target();context=target==SkillStopBonus.Target.AUTO?SkillStopControl.Context.bonusDisplay(role):SkillStopControl.Context.challenge(target.pattern());mode=s.state()==Session.GameState.BIG_SPINNING?"BIG":"REG";}
             default -> throw new IllegalArgumentException("not spinning");
         }
         return new SkillStopRound(solver,context,history(s),new ReelRound.Identity(s.player(),s.id(),s.machine(),m.spin),m.profile,mode,m.starts(),new StopTriplet((int)s.number("display_left_stop"),(int)s.number("display_center_stop"),(int)s.number("display_right_stop")),s.sequence(),main);
@@ -217,6 +225,7 @@ public final class SkillStopGame implements GameEngine {
     private static int[] array(JsonObject state,String name){JsonArray a=state.getAsJsonArray(name);int[] out=new int[a.size()];for(int i=0;i<out.length;i++)out[i]=a.get(i).getAsInt();return out;}
     private static JsonObject runtime(Map<String,Object> values){Object raw=values.get("machine_state_json");return raw instanceof String text&&!text.isBlank()?JsonParser.parseString(text).getAsJsonObject():new JsonObject();}
     private static void saveHistory(Map<String,Object> values,SkillStopHistory history){JsonObject state=runtime(values);for(var item:Map.of("skillInputs",history.inputs(),"skillStops",history.stops(),"skillOrder",history.order()).entrySet()){JsonArray a=new JsonArray();for(int n:item.getValue())a.add(n);state.add(item.getKey(),a);}values.put("machine_state_json",state.toString());}
+    private static void saveBonus(Map<String,Object> values,SkillStopBonus bonus){JsonObject state=runtime(values);bonus.write(state);values.put("machine_state_json",state.toString());}
     private static void setPendingReplay(Map<String,Object> values,boolean replay){JsonObject state=runtime(values);state.addProperty("skillPendingReplay",replay);values.put("machine_state_json",state.toString());}
     private static boolean pendingReplay(Session s){JsonObject state=s.machineState();return state!=null&&state.has("skillPendingReplay")&&state.get("skillPendingReplay").getAsBoolean();}
     private static double phase(Session s,String name){return ((Number)s.snapshot().get("phase_"+name)).doubleValue();}

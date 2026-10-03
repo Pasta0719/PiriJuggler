@@ -1,5 +1,5 @@
 # Phase 03 — 当選権利・残りG・再遊技・保存
-Status: SPEC_ONLY — 実装未着手
+Status: IN_PROGRESS — 残りG・チャレンジ・保存を実装中
 
 状態表はSKILL_STOP_STATE_AND_PHASE_PLAN.md。BIG20G、REG8Gから開始し、残りGで終了を管理する。
 
