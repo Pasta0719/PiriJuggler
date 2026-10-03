@@ -480,7 +480,7 @@ const normalBackup=function normalBackup(rec,scale,R,V){
  add("MISS",1-rec.replay-rec.grape-rec.bell-rec.cherry-rec.piero-scale*totalBonus);
  for(const [name,key]of[["REG","reg"],["CREG","cherry_reg"],["PREG","piero_reg"]])add(name,scale*rec[key]);
  for(const m of models.filter(x=>x.type==="BIG"&&!x.F&&!x.B)){
-  const gross=scale*(m.one?rec.big*.1/6:m.small==="MISS"?rec.big*.9:m.small==="C"?rec.cherry_big:rec.piero_big);
+  const gross=scale*(m.one?(rec.oneEach??rec.big*.1/6):m.small==="MISS"?(rec.standaloneBigGross??rec.big*.9):m.small==="C"?rec.cherry_big:rec.piero_big);
   const premiumEach=m.small==="C"?.05/6:.01;
   add(m.name,gross*.95);add(m.name,gross*premiumEach,true);add("F"+(m.one?m.name:m.small),gross*premiumEach,true);
   add(m.name,gross*(m.small==="C"?.025:.03),true,early);
@@ -574,3 +574,17 @@ if(process.argv.includes("--simulate")){
  }
  console.log(JSON.stringify({seed:123456789,random:"xorshift32, continuous sequence across settings",simulation},null,2));
 }
+
+const proposedWeights=[{"setting":1,"weights":{"replay":137023842,"grape":166599213,"bell":915525,"cherry":26532274,"piero":686643,"big":1873855,"reg":1087641,"cherry_big":632770,"cherry_reg":517720,"piero_big":81852,"piero_reg":88673,"ONE_A":34701,"ONE_B":34701,"ONE_CD":34701,"ONE_E":34701,"ONE_F":34701,"ONE_H":34701,"miss":663751786}},{"setting":2,"weights":{"replay":137023842,"grape":166783634,"bell":915525,"cherry":26476121,"piero":686643,"big":1937783,"reg":1180994,"cherry_big":630088,"cherry_reg":558758,"piero_big":85014,"piero_reg":85014,"ONE_A":35885,"ONE_B":35885,"ONE_CD":35885,"ONE_E":35885,"ONE_F":35885,"ONE_H":35885,"miss":663421274}},{"setting":3,"weights":{"replay":137023842,"grape":167751292,"bell":915525,"cherry":26391892,"piero":686643,"big":1972257,"reg":1344271,"cherry_big":642984,"cherry_reg":617770,"piero_big":89074,"piero_reg":82222,"ONE_A":36523,"ONE_B":36523,"ONE_CD":36523,"ONE_E":36523,"ONE_F":36523,"ONE_H":36523,"miss":662263090}},{"setting":4,"weights":{"replay":137023842,"grape":168647497,"bell":915525,"cherry":26307662,"piero":686643,"big":2070863,"reg":1568798,"cherry_big":642583,"cherry_reg":696131,"piero_big":93543,"piero_reg":79684,"ONE_A":38349,"ONE_B":38349,"ONE_CD":38349,"ONE_E":38349,"ONE_F":38349,"ONE_H":38349,"miss":661037135}},{"setting":5,"weights":{"replay":137023842,"grape":170413045,"bell":915525,"cherry":26223433,"piero":686643,"big":2245868,"reg":1730600,"cherry_big":649679,"cherry_reg":794053,"piero_big":99861,"piero_reg":78463,"ONE_A":41590,"ONE_B":41590,"ONE_CD":41590,"ONE_E":41590,"ONE_F":41590,"ONE_H":41590,"miss":658889448}},{"setting":6,"weights":{"replay":137023842,"grape":172701646,"bell":915525,"cherry":26111127,"piero":686643,"big":2437060,"reg":1951812,"cherry_big":623528,"cherry_reg":861062,"piero_big":103736,"piero_reg":69157,"ONE_A":45131,"ONE_B":45131,"ONE_CD":45131,"ONE_E":45131,"ONE_F":45131,"ONE_H":45131,"miss":656244076}}];
+const rounded=[];
+for(const item of proposedWeights){
+ const rec={...records[item.setting-1]},w=item.weights;
+ for(const k of ["reg","cherry_big","cherry_reg","piero_big","piero_reg"])rec[k]=w[k]/1e9;
+ rec.big=(w.big+6*w.ONE_A)/1e9;rec.oneEach=w.ONE_A/1e9;rec.standaloneBigGross=w.big/1e9;
+ const R=fits[item.setting-1].ratio,d=.0001,V=r=>(.8162353515625-.9*r)/.79603271484375;
+ const x=normalBackup(rec,1,R,V(R)),y=normalBackup(rec,1,R+d,V(R+d));
+ const root=R-x.value*d/(y.value-x.value),z=normalBackup(rec,1,root,V(root));
+ if(Math.abs(z.value)>1e-11||Math.abs(100*(root-R))>.00003)throw Error("rounded verification failed");
+ rounded.push({setting:item.setting,rtp:100*root,residual:z.value});
+}
+console.log(JSON.stringify({rounded},null,2));
