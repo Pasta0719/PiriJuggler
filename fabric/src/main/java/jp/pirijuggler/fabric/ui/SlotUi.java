@@ -23,7 +23,7 @@ public final class SlotUi {
             reset();awaitingInitialPublicState=true;outbound=sender;view=new SlotViewState(System::nanoTime);input=new SlotInput(session,envelope->{
                 int pressed=view.localInput(envelope.packetType());
                 if(pressed>=0){
-                    envelope.payload().addProperty("pressedIndex",pressed);
+                    envelope=SlotInput.withPressedIndex(envelope,pressed);
                     if(isJugglerGod(view.machineType())&&view.godFreeze()){
                         int ordinal=Math.max(1,Math.min(3,view.godStoppedCount()));
                         PiriSounds.queue(special("juggler_god_god_stop_"+ordinal,sound("stop")),1,0);

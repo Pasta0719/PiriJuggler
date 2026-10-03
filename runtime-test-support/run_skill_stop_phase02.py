@@ -191,7 +191,7 @@ try:
         action("capture",label=target_state+"-"+str(pay))
 
     # A real MISS spin warms the client's first key/class initialization paths.
-    # Subsequent precise presses still pass through the screen and real protocol.
+    # Subsequent precise presses use real Keyboard.onKey and the production protocol.
     forced_spin("MISS")
     for key,mask in [(264,2),(263,3)]:
         tap(key);wait(lambda:settled() and session()["stopped_mask"]==mask,"initial MISS stop")

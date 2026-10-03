@@ -43,14 +43,8 @@ public final class Phase02Probe {
                 int key=phaseTap.get("key").getAsInt();
                 JsonObject edge=new JsonObject();edge.addProperty("kind","timed_key_edge");edge.addProperty("reel",reel);edge.addProperty("desired",desired);edge.addProperty("observedPhase",phase);edge.addProperty("beforeKeyPhase",view.phase(reel));
                 long edgeAt=System.nanoTime();
-                if(skill){
-                    // Exercise the real slot screen handler at the observed phase.
-                    // Keyboard.onKey queues a callback and can sample a later symbol.
-                    client.currentScreen.keyPressed(key,0,0);client.currentScreen.keyReleased(key,0,0);
-                }else{
-                    client.keyboard.onKey(client.getWindow().getHandle(),key,0,GLFW.GLFW_PRESS,0);
-                    client.keyboard.onKey(client.getWindow().getHandle(),key,0,GLFW.GLFW_RELEASE,0);
-                }
+                client.keyboard.onKey(client.getWindow().getHandle(),key,0,GLFW.GLFW_PRESS,0);
+                client.keyboard.onKey(client.getWindow().getHandle(),key,0,GLFW.GLFW_RELEASE,0);
                 edge.addProperty("elapsedMicros",(System.nanoTime()-edgeAt)/1000);edge.addProperty("afterKeyPhase",view.phase(reel));actions.add(edge);
                 phaseTap=null;
             }else if(System.nanoTime()-phaseTapAt>30_000_000_000L){failure="Timed key did not reach requested visible phase";phaseTap=null;}

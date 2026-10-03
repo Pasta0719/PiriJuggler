@@ -29,5 +29,11 @@ public final class SlotInput {
         sender.accept(Envelope.current(action,body));if(action==PacketType.CLOSE_REQUEST)closeAt=time.getAsLong();return true;
     }
     public boolean closing(){return closeAt!=null;}
+    /** Envelope payloads are defensive copies; return the actual packet to transmit. */
+    public static Envelope withPressedIndex(Envelope envelope,int pressedIndex){
+        if(pressedIndex<0||pressedIndex>=21)throw new IllegalArgumentException("pressedIndex");
+        JsonObject body=envelope.payload();body.addProperty("pressedIndex",pressedIndex);
+        return new Envelope(envelope.protocol(),envelope.packetType(),body);
+    }
     public boolean closeExpired(){return closeAt!=null&&time.getAsLong()-closeAt>=2_000_000_000L;}
 }
