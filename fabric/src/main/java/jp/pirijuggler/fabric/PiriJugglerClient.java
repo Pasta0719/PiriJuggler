@@ -40,6 +40,11 @@ public final class PiriJugglerClient implements ClientModInitializer {
                 if (HANDSHAKE.canUseSlot()) {
                     if (RemoteMachineRegistry.isRemote(envelope.packetType())) {
                         REMOTE.receive(envelope);
+                        Integer success=REMOTE.pollSkillSuccessSound();
+                        if(success!=null){
+                            var machine=REMOTE.view(success);
+                            if(machine!=null)jp.pirijuggler.fabric.ui.PiriSounds.playAt("notice",machine.x()+.5,machine.y()+.5,machine.z()+.5);
+                        }
                         return;
                     }
                     var outbound = (java.util.function.Consumer<jp.pirijuggler.common.protocol.Envelope>) packet -> ClientPlayNetworking.send(new PiriPayload(EnvelopeCodec.encode(packet)));

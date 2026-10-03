@@ -1,5 +1,5 @@
 # Phase 05 — 表示・音・告知
-Status: SPEC_ONLY — 実装未着手
+Status: COMPLETE — IMPLEMENTED_AND_RUNTIME_VERIFIED
 
 ## チャレンジ
 レバー時にBAR/ベル/ピエロ各1/3で対象決定し、同じレバーでCHANCE下へ対応する既存PNGを表示。

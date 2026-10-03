@@ -15,6 +15,7 @@ public final class SlotLayout {
     public static final Rect DATA_LEFT=new Rect(18,325,275,430);
     public static final Rect DATA_RIGHT=new Rect(1645,325,257,430);
     public static final Rect CABINET=new Rect(290,205,1340,835), LAMP=new Rect(350,390,300,170), REELS=new Rect(670,300,900,390), STATUS=new Rect(670,710,900,95);
+    public static final Rect SKILL_CHALLENGE=new Rect(410,580,180,140);
     public static final List<Control> CONTROLS=List.of(
         new Control("BET",new Rect(440,860,150,100),PacketType.SPACE_ACTION),
         new Control("LEVER",new Rect(300,780,130,260),PacketType.SPACE_ACTION),

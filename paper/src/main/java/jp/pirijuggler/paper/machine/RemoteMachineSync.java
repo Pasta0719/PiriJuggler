@@ -132,6 +132,7 @@ public final class RemoteMachineSync {
                 copyString(source, body, "animation");
                 copyObject(source, body, "startPhase");
                 copyBoolean(source, body, "godFreeze");
+                copySkill(source,body);
                 PiriDatabase.State state = stateSupplier.get();
                 Session current = state == null ? null : state.sessions().stream()
                         .filter(s -> s.machine() == machineId && s.lifecycle() == Session.Lifecycle.ACTIVE)
@@ -159,6 +160,11 @@ public final class RemoteMachineSync {
                 copyString(source, body, "lamp");
                 copyString(source, body, "pattern");
                 broadcast(machineId, PacketType.REMOTE_MACHINE_NOTICE, body);
+                if(source.has("skillChallengeSuccess")&&source.get("skillChallengeSuccess").getAsBoolean()){
+                    JsonObject sound=base(machineId);copyString(source,sound,"spinId");
+                    sound.addProperty("skillChallengeSuccess",true);sound.addProperty("sound","NOTICE");
+                    broadcast(machineId,PacketType.REMOTE_MACHINE_SOUND,sound);
+                }
             }
             case BONUS_START -> {
                 JsonObject body = base(machineId);
@@ -262,6 +268,7 @@ public final class RemoteMachineSync {
             body.addProperty("pay", publicState.get("pay").getAsLong());
             body.addProperty("bonusCount", publicState.get("bonusCount").getAsLong());
             body.addProperty("bonusMode", publicBonusMode(gameState));
+            copySkill(publicState,body);
             body.addProperty("godFreeze", publicState.has("godFreeze")&&publicState.get("godFreeze").getAsBoolean());
             body.addProperty("godPresentationStartMs", publicState.has("godPresentationStartMs")
                     ?publicState.get("godPresentationStartMs").getAsLong():0L);
@@ -291,6 +298,12 @@ public final class RemoteMachineSync {
         long value = body.get(key).getAsLong();
         if (value < 0) throw new IllegalArgumentException(key);
         return value;
+    }
+
+    private static void copySkill(JsonObject source,JsonObject target){
+        if(source.has("skillRemaining")){
+            jp.pirijuggler.common.protocol.SkillStopPresentation.read(source).write(target);
+        }
     }
 
     private static double number(Session session, String key, double fallback) {

@@ -5,6 +5,17 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 class SlotViewStateTest {
+    @Test void skillLeverRestoresTargetAndCompletedStateClearsItWithoutReplayingSuccess(){
+        var clock=new AtomicLong();var view=open(clock);
+        view.receive(packet(PacketType.OPEN_MACHINE,"{\"sessionId\":\""+ID+"\",\"machineId\":1,\"machineType\":\"SKILL_STOP\"}"));
+        var spin=start().payload();spin.addProperty("skillRemaining",1);spin.addProperty("skillChallenge","BAR");
+        view.receive(Envelope.current(PacketType.SPIN_START,spin));assertEquals("symbols/bar.png",view.skillChallengeTexture());assertEquals(1,view.skillRemaining());
+        spin.addProperty("animation","RESUME_NORMAL");view.receive(Envelope.current(PacketType.SPIN_START,spin));assertEquals("BAR",view.skillChallenge());
+        var success=new JsonObject();success.addProperty("spinId",SPIN);
+        assertTrue(view.acceptSkillSuccess(success));assertFalse(view.acceptSkillSuccess(success));
+        var ready=JsonParser.parseString("{\"sessionId\":\""+ID+"\",\"machineId\":1,\"gameState\":\"BIG_READY\",\"lampOn\":true,\"displayStops\":{\"left\":1,\"center\":1,\"right\":1},\"skillRemaining\":3,\"skillChallenge\":\"AUTO\"}").getAsJsonObject();
+        view.receive(Envelope.current(PacketType.PUBLIC_STATE,ready));assertNull(view.skillChallengeTexture());assertEquals(3,view.skillRemaining());assertFalse(view.acceptSkillSuccess(success));
+    }
     @Test void fractionalStopsEndExactlyAtEveryServerIndexIncludingZero(){
         for(int target=0;target<21;target++)for(int step=1;step<210;step++){
             var time=new AtomicLong();var view=open(time);var b=start().payload();b.getAsJsonObject("startPhase").addProperty("left",step/10.0);view.receive(Envelope.current(PacketType.SPIN_START,b));

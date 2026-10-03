@@ -25,13 +25,17 @@ public final class SlotViewState {
     private UUID session,spin;private int machine;private String machineType="JUGGLER";private long spinAt,noticeAt,nextGameAt;private String animation="NORMAL";private int stopEnableAfterMs;
     private long godFreezeAt=Long.MIN_VALUE,godImpactAt=Long.MIN_VALUE,godPresentationAt=Long.MIN_VALUE,godPresentationStartEpochMs=0;
     private boolean spinning,notice,blink,godFreeze;private final boolean[] godRevealed=new boolean[3];private final double[] godPresentationStart={0,0,0};private final long[] godRevealAt={Long.MIN_VALUE,Long.MIN_VALUE,Long.MIN_VALUE};private JsonObject state,dataLamp,stopHints=new JsonObject();private String error="",godNav="";
+    private SkillStopPresentation skill=SkillStopPresentation.EMPTY;
+    private final SkillStopPresentation.NoticeGate skillNotices=new SkillStopPresentation.NoticeGate();
     public SlotViewState(LongSupplier nanos){this(nanos,System::currentTimeMillis);}
     SlotViewState(LongSupplier nanos,LongSupplier millis){time=Objects.requireNonNull(nanos);wallTimeMs=Objects.requireNonNull(millis);}
     public void receive(Envelope envelope) {
         JsonObject b=envelope.payload();long now=time.getAsLong();
+        if(envelope.packetType()==PacketType.OPEN_MACHINE){skill=SkillStopPresentation.EMPTY;skillNotices.clear();}
         switch(envelope.packetType()) {
             case OPEN_MACHINE -> {session=UUID.fromString(b.get("sessionId").getAsString());machine=b.get("machineId").getAsInt();machineType=b.has("machineType")?b.get("machineType").getAsString():"JUGGLER";spin=null;state=null;dataLamp=null;stopHints=new JsonObject();error="";godNav="";spinning=false;notice=false;blink=false;godFreeze=false;godFreezeAt=Long.MIN_VALUE;godImpactAt=Long.MIN_VALUE;godPresentationAt=Long.MIN_VALUE;godPresentationStartEpochMs=0;Arrays.fill(godPresentationStart,0);Arrays.fill(godRevealed,false);Arrays.fill(godRevealAt,Long.MIN_VALUE);nextGameAt=0;Arrays.fill(stops,null);Arrays.fill(presses,null);Arrays.fill(rest,0);}
             case PUBLIC_STATE -> {if(matches(b)) {
+                if("SKILL_STOP".equals(machineType))skill=SkillStopPresentation.read(b);
                 state=b.deepCopy();if(b.has("machineType"))machineType=b.get("machineType").getAsString();notice=b.get("lampOn").getAsBoolean();error="";
                 var display=b.getAsJsonObject("displayStops");
                 for(int i=0;i<3;i++){rest[i]=display.get(new String[]{"left","center","right"}[i]).getAsDouble();if(spin==null)starts[i]=rest[i];}
@@ -71,6 +75,7 @@ public final class SlotViewState {
                 }
             }}
             case SPIN_START -> {if(matches(b)) {
+                if("SKILL_STOP".equals(machineType))skill=SkillStopPresentation.read(b);
                 spin=UUID.fromString(b.get("spinId").getAsString());animation=b.get("animation").getAsString();spinAt=now;spinning=true;
                 boolean resumed="RESUME_NORMAL".equals(animation);
                 godFreeze=b.has("godFreeze")&&b.get("godFreeze").getAsBoolean();
@@ -147,6 +152,10 @@ public final class SlotViewState {
     public long nextGameRemainingNanos(){return Math.max(0,nextGameAt-time.getAsLong());}
     public boolean matches(JsonObject b){return session!=null&&b.has("sessionId")&&b.has("machineId")&&session.toString().equals(b.get("sessionId").getAsString())&&machine==b.get("machineId").getAsInt();}
     public boolean matchesSpin(JsonObject b){return spin!=null&&b.has("spinId")&&spin.toString().equals(b.get("spinId").getAsString());}
+    public int skillRemaining(){return skill.remaining();}
+    public String skillChallengeTexture(){return "SKILL_STOP".equals(machineType)?skill.target().texture():null;}
+    public String skillChallenge(){return skill.target().name();}
+    public boolean acceptSkillSuccess(JsonObject body){return "SKILL_STOP".equals(machineType)&&matchesSpin(body)&&skillNotices.accept(body.get("spinId").getAsString());}
     public static double wrap(double value){return ReelMotion.wrap(value);}
     public static double distance(String animation,double seconds){return ReelMotion.delta(ReelMotion.Profile.valueOf(animation),seconds);}
     private double machineWrap(double value){return "GOD".equals(machineType)?GodReelStrip.wrap(value):ReelMotion.wrap(value);}

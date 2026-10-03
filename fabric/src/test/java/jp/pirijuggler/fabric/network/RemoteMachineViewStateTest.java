@@ -12,6 +12,18 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RemoteMachineViewStateTest {
+    @Test void skillTargetAndGamesSurviveSnapshotAndSuccessSoundIsOnceOnly(){
+        var registry=new RemoteMachineRegistry();var snap=snapshot(7);snap.addProperty("machineType","SKILL_STOP");
+        snap.addProperty("gameState","BIG_SPINNING");snap.addProperty("bonusMode","BIG");snap.addProperty("skillRemaining",1);snap.addProperty("skillChallenge","PIERO");
+        registry.receive(Envelope.current(PacketType.REMOTE_MACHINE_SNAPSHOT,snap));
+        assertNotNull(registry.view(7));assertEquals("symbols/piero.png",registry.view(7).skillChallengeTexture());assertEquals(1,registry.view(7).skillRemaining());
+        var sound=id(7);sound.addProperty("spinId",UUID.randomUUID().toString());sound.addProperty("skillChallengeSuccess",true);sound.addProperty("sound","NOTICE");
+        registry.receive(Envelope.current(PacketType.REMOTE_MACHINE_SOUND,sound));assertEquals(7,registry.pollSkillSuccessSound());assertNull(registry.pollSkillSuccessSound());
+        snap.addProperty("skillRemaining",3);snap.addProperty("skillChallenge","AUTO");registry.receive(Envelope.current(PacketType.REMOTE_MACHINE_SNAPSHOT,snap));
+        assertNull(registry.view(7).skillChallengeTexture());assertEquals(3,registry.view(7).skillRemaining());
+        registry.receive(Envelope.current(PacketType.REMOTE_MACHINE_SOUND,sound));assertNull(registry.pollSkillSuccessSound());
+        snap.addProperty("skillChallenge","UNKNOWN");registry.receive(Envelope.current(PacketType.REMOTE_MACHINE_SNAPSHOT,snap));assertNull(registry.view(7));
+    }
     @Test void snapshotSpinAndStopsProduceTypedPublicView() {
         AtomicLong now = new AtomicLong(1_000_000_000L);
         RemoteMachineRegistry registry = new RemoteMachineRegistry(now::get);

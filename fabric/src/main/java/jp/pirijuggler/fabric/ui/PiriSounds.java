@@ -54,6 +54,11 @@ public final class PiriSounds {
         ONE_SHOTS.add(sound);
         MinecraftClient.getInstance().getSoundManager().play(sound);
     }
+    public static void playAt(String name,double x,double y,double z){
+        if(!available(name))return;
+        SoundInstance sound=new PositionedSoundInstance(EVENTS.get(name),SoundCategory.MASTER,1,1,SoundInstance.createRandom(),x,y,z);
+        ONE_SHOTS.add(sound);MinecraftClient.getInstance().getSoundManager().play(sound);
+    }
     public static void startLoop(String name){
         if(!name.equals("big_bgm")&&!name.equals("reg_bgm")&&!name.equals("juggler_god_big_bgm")&&!name.equals("juggler_god_reg_bgm")&&!name.equals("juggler_god_god_big_bgm"))throw new IllegalArgumentException(name);if(name.equals(loopName)&&loop!=null)return;stopLoop();
         if(!available(name))return;loopName=name;loop=new LoopSound(EVENTS.get(name));MinecraftClient.getInstance().getSoundManager().play(loop);

@@ -2,6 +2,11 @@
 
 このファイルは各Phase終了時の現在状態を示す。
 
+## SKILL STOP Phase 05 — 2026-10-03
+Status: COMPLETE — チャレンジ画像/成功音/残Gの操作画面・観覧同期を実装・実機検証完了。
+既存BAR/ベル/ピエロPNGをCHANCE下へ表示、第三停止で消灯、成功時notice音1回、残Gを操作画面/観覧画面へ同期。ESC復帰・再起動・第二Fabric観覧・重複通知再送も検証。
+通常build CI PASS: Actions run 37127664141。Phase05実Paper/Fabric runtime PASS: Actions run 37127643241。詳細: skill-stop-phases/SKILL_STOP_PHASE_05_IMPLEMENTATION.md。次はPhase06最終総合受入。
+
 ## SKILL STOP Phase 04 — 2026-10-03
 Status: COMPLETE — 実制御2,222,640履歴・機械割解析・独立60万完了ボーナス・全体CI・実機202/202 PASS。
 実JAR整数重みで設定1〜6の98.5/100/102/105/109/113%を誤差0.00003ポイント未満で確認。全役確率・観測停止による攻略操作表・成功率別IN/OUTを保存。

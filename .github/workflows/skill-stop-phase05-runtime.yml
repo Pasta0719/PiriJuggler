@@ -1,0 +1,72 @@
+name: SKILL STOP Phase 05 real runtime
+
+concurrency:
+  group: skill-stop-phase05-real-runtime
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, skill-stop-phase05 ]
+    paths:
+      - 'paper/**'
+      - 'fabric/**'
+      - 'common/**'
+      - 'runtime-test-support/**'
+      - 'run-skill-stop-phase05-runtime.bat'
+      - '.github/workflows/skill-stop-phase05-runtime.yml'
+      - 'skill-stop-phases/SKILL_STOP_PHASE_05_PRESENTATION_SPEC.md'
+
+jobs:
+  skill-stop-phase05:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare headless OpenGL display
+        run: |
+          if ! command -v Xvfb >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
+          fi
+          chmod +x gradlew
+      - name: Build production runtime jars
+        run: |
+          ./gradlew --parallel --build-cache \
+            :common:test :paper:test :fabric:test :common:jar :paper:jar :fabric:remapJar --console=plain
+      - name: Build runtime helper jars
+        run: |
+          ./gradlew --parallel --build-cache \
+            -PruntimeAcceptance=true -PruntimeScenario=skill05-main -PruntimeEvidencePhase=SKILL_STOP_PHASE_05 \
+            :runtime-test-paper:jar :runtime-test-client:remapJar --console=plain
+      - name: Cache verified Paper 1.21 build 130
+        uses: actions/cache@v4
+        with:
+          path: runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar
+          key: paper-1.21-build-130-ab9bb1afc3cea6978a0c03ce8448aa654fe8a9c4dddf341e7cbda1b0edaa73f5
+      - name: Ensure verified Paper 1.21 build 130
+        shell: pwsh
+        run: ./runtime-test-support/ensure-paper-1.21-130.ps1
+      - name: Real Paper + Fabric SKILL STOP Phase 05 acceptance
+        run: xvfb-run -a -s "-screen 0 1280x720x24" python runtime-test-support/run_skill_stop_phase05.py
+      - name: Upload SKILL STOP Phase 05 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-stop-phase05-runtime-evidence
+          path: |
+            runtime-evidence/SKILL_STOP_PHASE_05/result.json
+            runtime-evidence/SKILL_STOP_PHASE_05/attempts/**
+            common/build/test-results/**
+            paper/build/test-results/**
+            fabric/build/test-results/**
+            paper/build/libs/piri-juggler-paper-1.0.0.jar
+            fabric/build/libs/piri-juggler-fabric-1.0.0.jar

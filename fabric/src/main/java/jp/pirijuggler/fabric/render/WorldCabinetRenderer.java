@@ -159,6 +159,14 @@ public final class WorldCabinetRenderer {
             rect(consumers,lamp,basis,camera,350,390,300,170,.0025,0xffffffff,0,0,1,1);
         }
 
+        if(state.skillChallengeTexture()!=null){
+            var box=jp.pirijuggler.fabric.ui.SlotLayout.SKILL_CHALLENGE;
+            var size=JugglerGodAssets.textureSize(state.machineType(),state.skillChallengeTexture());
+            double fit=Math.min(box.w()/(double)size.width(),box.h()/(double)size.height());
+            double w=size.width()*fit,h=size.height()*fit;
+            rect(consumers,JugglerGodAssets.texture(state.machineType(),state.skillChallengeTexture()),basis,camera,
+                    box.x()+(box.w()-w)/2,box.y()+(box.h()-h)/2,w,h,.0025,0xffffffff,0,0,1,1);
+        }
         // Exact status panel: (670,710,900,95), but only public remote fields.
         rect(consumers,WHITE,basis,camera,670,710,900,95,.0012,UiConstants.color("DISPLAY_BG"),0,0,1,1);
         text(consumers,client.textRenderer,basis,camera,690,725,"CREDIT",2.0f,UiConstants.color("TEXT_MAIN"));
@@ -170,7 +178,7 @@ public final class WorldCabinetRenderer {
             textCentered(consumers,client.textRenderer,basis,camera,1050,816,"REPLAY",2.0f,UiConstants.color("TEXT_MAIN"));
         if(!"NONE".equals(state.bonusMode()))
             textCentered(consumers,client.textRenderer,basis,camera,1090,816,
-                    "COUNT "+state.bonusCount(),2.0f,UiConstants.color("TEXT_MAIN"));
+                    "SKILL_STOP".equals(state.machineType())?"残り "+state.skillRemaining()+"G":"COUNT "+state.bonusCount(),2.0f,UiConstants.color("TEXT_MAIN"));
 
         // Match visible cabinet controls from the real SlotScreen. Decorative only in world view.
         control(consumers,basis,camera,440,860,150,100,"BET",client.textRenderer);
