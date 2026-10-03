@@ -529,7 +529,7 @@ const normalBackup=function normalBackup(rec,scale,R,V){
   }
   return best;
  }
- const main=optimize(pool), knownEarly=optimize(early);
+ store("pools",{pool,early});const main=optimize(pool), knownEarly=optimize(early);
  return {setting:rec.setting,scale,R,main,early:knownEarly,value:main.value+knownEarly.value-3*R,mass:pool.concat(early).reduce((s,x)=>s+x.w,0)};
 };
 const report=[];
@@ -537,8 +537,40 @@ for(const fit of fits){
  const R=fit.ratio;
  const V=(.8162353515625-.9*R)/.79603271484375;
  const pending=[0,.5,1].map(q=>pendingBackup(q,R,V));
- const normal=normalBackup(records[fit.setting-1],fit.scale,R,V);
+ const normal=normalBackup(records[fit.setting-1],fit.scale,R,V);store("pools-"+fit.setting,load("pools"));
  if(Math.max(...pending.map(x=>Math.abs(x.improvement)))>1e-11||Math.abs(normal.value)>1e-11||Math.abs(normal.mass-1)>1e-12)throw Error("Economy check failed for setting "+fit.setting);
  report.push({setting:fit.setting,target:R,pendingResidual:Math.max(...pending.map(x=>Math.abs(x.improvement))),normalResidual:normal.value,normal,successRates:[{"setting":1,"values":[{"success":0,"bigGames":20,"regGames":8,"rtp":89.36820091446185},{"success":0.5,"bigGames":22.22222222222222,"regGames":9.6,"rtp":93.32806022386906},{"success":0.8,"bigGames":23.80952380952381,"regGames":10.909090909090908,"rtp":96.24819409336779},{"success":1,"bigGames":25,"regGames":11.999999999999998,"rtp":98.49999999999999}]},{"setting":2,"values":[{"success":0,"bigGames":20,"regGames":8,"rtp":90.52311000685971},{"success":0.5,"bigGames":22.22222222222222,"regGames":9.6,"rtp":94.62942370248172},{"success":0.8,"bigGames":23.80952380952381,"regGames":10.909090909090908,"rtp":97.66061708286854},{"success":1,"bigGames":25,"regGames":11.999999999999998,"rtp":100}]},{"setting":3,"values":[{"success":0,"bigGames":20,"regGames":8,"rtp":92.07361955184915},{"success":0.5,"bigGames":22.22222222222222,"regGames":9.6,"rtp":96.36714698747193},{"success":0.8,"bigGames":23.80952380952381,"regGames":10.909090909090908,"rtp":99.54381164716624},{"success":1,"bigGames":25,"regGames":11.999999999999998,"rtp":102.00000000000001}]},{"setting":4,"values":[{"success":0,"bigGames":20,"regGames":8,"rtp":94.39555021939637},{"success":0.5,"bigGames":22.22222222222222,"regGames":9.6,"rtp":98.97459983309844},{"success":0.8,"bigGames":23.80952380952381,"regGames":10.909090909090908,"rtp":102.37000729348634},{"success":1,"bigGames":25,"regGames":11.999999999999998,"rtp":105}]},{"setting":5,"values":[{"success":0,"bigGames":20,"regGames":8,"rtp":97.6320584698451},{"success":0.5,"bigGames":22.22222222222222,"regGames":9.6,"rtp":102.54004526017954},{"success":0.8,"bigGames":23.80952380952381,"regGames":10.909090909090908,"rtp":106.18004523895077},{"success":1,"bigGames":25,"regGames":11.999999999999998,"rtp":108.99999999999999}]},{"setting":6,"values":[{"success":0,"bigGames":20,"regGames":8,"rtp":100.88905585782861},{"success":0.5,"bigGames":22.22222222222222,"regGames":9.6,"rtp":106.1161054841088},{"success":0.8,"bigGames":23.80952380952381,"regGames":10.909090909090908,"rtp":109.99437407516875},{"success":1,"bigGames":25,"regGames":11.999999999999998,"rtp":112.99999999999997}]}][fit.setting-1]});
 }
 console.log(JSON.stringify({scope:"specification research controller; not game implementation",normalModels:load("normalModels").length,normalHistories:load("normalModels").length*9261,pendingModels:models.length,pendingHistories:models.length*9261,report},null,2));
+
+if(process.argv.includes("--simulate")){
+ let rngstate=123456789;const rand=()=>{rngstate^=rngstate<<13;rngstate^=rngstate>>>17;rngstate^=rngstate<<5;return(rngstate>>>0)/4294967296;};
+ const simulation=[];
+ for(const fit of fits){
+  const op=report[fit.setting-1].normal,pools=load("pools-"+fit.setting),all=load("normalModels");let cdf=0;const states=[];
+  for(const [flag,pool]of[[false,pools.pool],[true,pools.early]])for(const x of pool){
+   const pol=flag?op.early:op.main,m=all.find(y=>y.name===x.name&&y.order===pol.order),a=pol.input-1,fstop=m.first[a];
+   const pp=pol.policy.find(y=>y.observed===fstop+1),m2=all.find(y=>y.name===x.name&&y.order===pp.order),b=pp.input-1,sstop=m2.second[a][b],c=pp.third.find(y=>y.observed===sstop+1).input-1,code=m2.third[a][b][c];
+   cdf+=x.w;states.push({...x,flag,type:m.type,code,key:[flag,fstop,sstop,code].join("/"),cdf});
+  }
+  for(const x of states){const group=states.filter(y=>!y.known&&y.type&&!(y.code&256)&&y.key===x.key);const B=group.filter(y=>y.type==="BIG").reduce((s,y)=>s+y.w,0),T=group.reduce((s,y)=>s+y.w,0);x.q=x.known?(x.type==="BIG"?1:0):T?B/T:0;}
+  const R=fit.ratio,V=(.8162353515625-.9*R)/.79603271484375,knownpol={BIG:pendingBackup(1,R,V),REG:pendingBackup(0,R,V)};
+  let IN=0,OUT=0,N=0,S=0,S2=0;const cycles=100000;
+  for(let cycle=0;cycle<cycles;cycle++){
+   let cin=0,cout=0,free=false,state;
+   do{const u=rand();state=states.find(x=>u<x.cdf)||states[states.length-1];cin+=free?0:3;cout+=state.code&31;free=!!(state.code&128);N++;}while(!state.type);
+   let q=state.q,entry=!!(state.code&256);free=false;
+   while(!entry){
+    cin+=free?0:1;let u=rand(),sum=0,si=5;for(let i=0;i<probs.length;i++){sum+=probs[i];if(u<sum){si=i;break;}}
+    const typeTry=q>=.5?"BIG":"REG",p=knownpol[typeTry],m=models.find(x=>x.type===state.type&&x.si===si&&x.order===p.order),a=p.input-1,fs=m.first[a],pp=p.policy.find(y=>y.observed===fs+1),m2=models.find(x=>x.type===state.type&&x.si===si&&x.order===pp.order),b=pp.input-1,ss=m2.second[a][b],c=pp.third.find(y=>y.observed===ss+1).input-1,code=m2.third[a][b][c];
+    cout+=code&31;free=!!(code&128);entry=!!(code&256);if(!entry&&fs===19)q=state.type==="BIG"?1:0;
+   }
+   let rem=state.type==="BIG"?20:8,chance=state.type==="BIG"?1/15:1/9;
+   while(rem>0){cin+=2;cout+=14;rem--;if(rand()<chance)rem+=3;}
+   IN+=cin;OUT+=cout;const d=cout-R*cin;S+=d;S2+=d*d;
+  }
+  const sd=Math.sqrt((S2-S*S/cycles)/(cycles-1)),se=sd/Math.sqrt(cycles),meanIN=IN/cycles;
+  simulation.push({setting:fit.setting,cycles,normalDraws:N,rtp:100*OUT/IN,target:100*R,half95:100*1.96*se/meanIN,z:(S/cycles)/se});
+ }
+ console.log(JSON.stringify({seed:123456789,random:"xorshift32, continuous sequence across settings",simulation},null,2));
+}
