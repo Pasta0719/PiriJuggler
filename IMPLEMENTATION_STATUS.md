@@ -2,6 +2,11 @@
 
 このファイルは各Phase終了時の現在状態を示す。
 
+## SKILL STOP Phase 04 — 2026-10-03
+Status: COMPLETE — 実制御2,222,640履歴・機械割解析・独立60万完了ボーナス・全体CI・実機202/202 PASS。
+実JAR整数重みで設定1〜6の98.5/100/102/105/109/113%を誤差0.00003ポイント未満で確認。全役確率・観測停止による攻略操作表・成功率別IN/OUTを保存。
+証拠: runtime-evidence/SKILL_STOP_PHASE_04/REPORT.md。詳細: skill-stop-phases/SKILL_STOP_PHASE_04_IMPLEMENTATION.md。Phase05未着手。
+
 ## SKILL STOP Phase 03 — 2026-10-03
 Status: COMPLETE — 全体CI・実Minecraft受入202/202 PASS。
 BIG20/REG8から開始、1/15・1/9でチャレンジ抽選、BAR/ベル/ピエロ各1/3。第三停止14枚、残り-1と成功+3の後に終了判定。追加Gでも抽選。

@@ -1,5 +1,5 @@
 # Phase 04 — 攻略手順と設定別確率
-Status: SPEC_ONLY — RESEARCH_MODEL_FITTED
+Status: COMPLETE — PRODUCTION_ECONOMY_VERIFIED
 
 目標設定1〜6は98.5/100/102/105/109/113%。
 BIGチャレンジ1/15、REG1/9、指定図柄各1/3、成功3G、追加Gも再抽選。
@@ -30,5 +30,5 @@ SKILL_STOP_ECONOMY_RESEARCH.mdの固定手順値は参考。最適性の証明�
 シミュレーションは解析式と独立に照合し、試行条件・末尾ボーナスの扱い・誤差を明示。
 研究制御に対する設定別確率案・攻略比較・成功率別計算・独立抽選集計を完了。
 仕様値はSKILL_STOP_PROBABILITY_CANDIDATES.md、証拠はSKILL_STOP_FULL_STRATEGY_AUDIT.md。
-整数重みはresearch/proposed-setting-weights.json。ゲーム実装にはまだ適用しない。
+整数重みはresearch/proposed-setting-weights.jsonと既存JARのskill-stop-weights.json。実制御を使うPhase04解析をresearch/production/economy-analysis.jsonへ保存。
 旧BIG1/290.09等を再掲載しない。
