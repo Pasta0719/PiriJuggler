@@ -227,7 +227,7 @@ try:
     saved=session().copy()
     action("close");wait(lambda:not session(),"partial challenge close")
     # Restart both real processes with the same world/SQLite, then reconnect.
-    action("exit");client_proc.wait(timeout=60)
+    action("exit");client_proc.wait(timeout=60);client_proc=None
     server.stdin.write("stop\n");server.stdin.flush();server.wait(timeout=60)
     for instruction in OUT.glob("command-*.json"):instruction.unlink()
     server_result.unlink(missing_ok=True);client_result.unlink(missing_ok=True);cache.clear();seq=0

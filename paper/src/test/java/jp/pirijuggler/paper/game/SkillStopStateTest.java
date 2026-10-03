@@ -80,7 +80,7 @@ class SkillStopStateTest extends GameFixture {
         s=top(g,s,2,19);assertEquals(3,SkillStopBonus.read(s).remaining());assertEquals(assets+14,s.number("credit")+s.number("held_medals"));
     }
     @Test void expiryIdleAndDirectReseatKeepPendingRightsInsteadOfAutoSettlement() throws Exception {
-        var g=game();Session s=forced(g,seatSkill(),SkillStopRole.ONE_CD);s=top(g,s,1,20);s=top(g,s,2,2);s=top(g,s,0,1);
+        var g=game();Session s=forced(g,seatSkill(),SkillStopRole.ONE_A);s=top(g,s,1,20);s=top(g,s,2,2);s=top(g,s,0,1);
         assertEquals(Session.GameState.BONUS_PENDING_BIG,s.state());assertEquals(0,s.number("pay_display"));String saved=s.text("machine_state_json");
         db.disconnect(s.player(),NOW,1,g.capture(s,NANO));db.expire(NOW+2);s=db.state().session(s.player());assertEquals(saved,s.text("machine_state_json"));assertEquals(Session.GameState.BONUS_PENDING_BIG,s.state());
         s=db.seat(s.player(),s.machine(),NOW+3);assertEquals(List.of(s.player()),db.maintain(NOW+1000,1));s=db.state().session(s.player());assertEquals(Session.GameState.BONUS_PENDING_BIG,s.state());assertEquals(Long.MAX_VALUE,s.number("lock_expires_at"));
