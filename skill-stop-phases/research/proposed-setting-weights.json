@@ -23,9 +23,7 @@
         "ONE_F": 34701,
         "ONE_H": 34701,
         "miss": 663751786
-      },
-      "estimatedRoundedRTP": 98.50001013392388,
-      "roundingCaveat": "aggregate approximation: exact one allocation rounding slightly changes 90/10 split"
+      }
     },
     {
       "setting": 2,
@@ -49,9 +47,7 @@
         "ONE_F": 35885,
         "ONE_H": 35885,
         "miss": 663421274
-      },
-      "estimatedRoundedRTP": 100.0000124251611,
-      "roundingCaveat": "aggregate approximation: exact one allocation rounding slightly changes 90/10 split"
+      }
     },
     {
       "setting": 3,
@@ -75,9 +71,7 @@
         "ONE_F": 36523,
         "ONE_H": 36523,
         "miss": 662263090
-      },
-      "estimatedRoundedRTP": 101.99997942481724,
-      "roundingCaveat": "aggregate approximation: exact one allocation rounding slightly changes 90/10 split"
+      }
     },
     {
       "setting": 4,
@@ -101,9 +95,7 @@
         "ONE_F": 38349,
         "ONE_H": 38349,
         "miss": 661037135
-      },
-      "estimatedRoundedRTP": 104.99997118412627,
-      "roundingCaveat": "aggregate approximation: exact one allocation rounding slightly changes 90/10 split"
+      }
     },
     {
       "setting": 5,
@@ -127,9 +119,7 @@
         "ONE_F": 41590,
         "ONE_H": 41590,
         "miss": 658889448
-      },
-      "estimatedRoundedRTP": 108.99998770550576,
-      "roundingCaveat": "aggregate approximation: exact one allocation rounding slightly changes 90/10 split"
+      }
     },
     {
       "setting": 6,
@@ -153,9 +143,7 @@
         "ONE_F": 45131,
         "ONE_H": 45131,
         "miss": 656244076
-      },
-      "estimatedRoundedRTP": 113.00002125856432,
-      "roundingCaveat": "aggregate approximation: exact one allocation rounding slightly changes 90/10 split"
+      }
     }
   ],
   "simulation": [
@@ -212,6 +200,38 @@
       "target": 112.99999999999999,
       "half95": 0.33685811351668554,
       "z": -0.40873653796850506
+    }
+  ],
+  "exactRoundedModelResults": [
+    {
+      "setting": 1,
+      "roundedRTP": 98.50001013275926,
+      "residual": -4.440892098500626e-16
+    },
+    {
+      "setting": 2,
+      "roundedRTP": 100.00001243329257,
+      "residual": -8.881784197001252e-16
+    },
+    {
+      "setting": 3,
+      "roundedRTP": 101.99997940744623,
+      "residual": 4.440892098500626e-16
+    },
+    {
+      "setting": 4,
+      "roundedRTP": 104.99997116453459,
+      "residual": -4.440892098500626e-16
+    },
+    {
+      "setting": 5,
+      "roundedRTP": 108.99998769634267,
+      "residual": -4.440892098500626e-16
+    },
+    {
+      "setting": 6,
+      "roundedRTP": 113.00002127450412,
+      "residual": -8.881784197001252e-16
     }
   ]
 }
