@@ -252,7 +252,7 @@ try:
     stop_top(0,3,1);stop_top(1,7,3);finish_top(2,19,"BIG_READY",14)
     check("added game draws; wrong target stays but fails",bonus_state()["skillRemaining"]==2 and assets()==before+12 and session()["display_left_stop"]==19 and session()["display_center_stop"]==15 and session()["display_right_stop"]==3)
     failed_bonus("BIG",2);failed_bonus("BIG",1)
-    check("BIG ends by remaining games after twenty-three payouts",bonus_state()["skillRemaining"]==0 and session()["bonus_type"] is None)
+    check("BIG ends by remaining games after twenty-three payouts",bonus_state()["skillRemaining"]==0 and session().get("bonus_type") is None)
 
     enter("REG")
     for remaining in range(8,0,-1):failed_bonus("REG",remaining)
@@ -267,7 +267,7 @@ try:
         check("only actual prior replay makes pending bet free",assets()==before-(1 if i==0 else 0))
         tap(32);wait(lambda:settled() and session()["game_state"]=="BONUS_ENTRY_SPINNING_BIG" and cli().get("stopEnabled"),"pending replay spin")
         stop_top(1,20,2);stop_top(0,2,3);finish_top(2,3,"BONUS_PENDING_BIG",0)
-        check("replay retains BIG and next free flag",bonus_state()["skillPendingReplay"] and session()["bonus_type"]=="BIG")
+        check("replay retains BIG and next free flag",bonus_state()["skillPendingReplay"] and session().get("bonus_type")=="BIG")
     check("internal role is private on every public state",all("internalRole" not in p and "premiumType" not in p for p in packets("PUBLIC_STATE")))
     progress("ACCEPTANCE_COMPLETE",**snapshot())
     manifest["passed"]=True
