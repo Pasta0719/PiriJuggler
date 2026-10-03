@@ -1,5 +1,5 @@
 # Phase 04 — 攻略手順と設定別確率
-Status: SPEC_ONLY — FINAL_RTP_NOT_FITTED
+Status: SPEC_ONLY — RESEARCH_MODEL_FITTED
 
 目標設定1〜6は98.5/100/102/105/109/113%。
 BIGチャレンジ1/15、REG1/9、指定図柄各1/3、成功3G、追加Gも再抽選。
@@ -28,4 +28,7 @@ SKILL_STOP_ECONOMY_RESEARCH.mdの固定手順値は参考。最適性の証明�
 設定別通常役確率、BIG内訳、REG内訳、合算、攻略手順、投入/払出内訳、理論機械割を一組で保存。
 成功率0/50/80/100%を別々に計算。完全攻略値を標準プレイの値として説明しない。
 シミュレーションは解析式と独立に照合し、試行条件・末尾ボーナスの扱い・誤差を明示。
-最終確率はまだ未確定。旧BIG1/290.09等を再掲載しない。
+研究制御に対する設定別確率案・攻略比較・成功率別計算・独立抽選集計を完了。
+仕様値はSKILL_STOP_PROBABILITY_CANDIDATES.md、証拠はSKILL_STOP_FULL_STRATEGY_AUDIT.md。
+整数重みはresearch/proposed-setting-weights.json。ゲーム実装にはまだ適用しない。
+旧BIG1/290.09等を再掲載しない。
