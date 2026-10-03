@@ -171,7 +171,7 @@ public final class MachineService implements Listener, CommandExecutor {
                 JsonObject next=machine.runtimeJson()==null?new JsonObject():com.google.gson.JsonParser.parseString(machine.runtimeJson()).getAsJsonObject();
                 if(args[2].equalsIgnoreCase("clear")){next.remove("forceSkillRole");next.remove("forceSkillPremium");}
                 else{var role=jp.pirijuggler.common.reel.SkillStopRole.valueOf(args[2].toUpperCase(Locale.ROOT));next.addProperty("forceSkillRole",role.name());next.remove("forceSkillPremium");
-                    if(args.length==4){var premium=jp.pirijuggler.common.reel.SkillStopControl.Premium.valueOf(args[3].toUpperCase(Locale.ROOT));jp.pirijuggler.common.reel.SkillStopControl.Context.normal(role,premium);if(premium!=jp.pirijuggler.common.reel.SkillStopControl.Premium.NONE)next.addProperty("forceSkillPremium",premium.name());}}
+                    if(args.length==4){var premium=jp.pirijuggler.common.reel.SkillStopControl.Premium.valueOf(args[3].toUpperCase(Locale.ROOT));jp.pirijuggler.common.reel.SkillStopControl.Context.normal(role,premium);next.addProperty("forceSkillPremium",premium.name());}}
                 submit(sender,null,id,()->{database.setMachineRuntimeJson(id,next.toString(),System.currentTimeMillis());return id;},done->{tell(sender,"SKILL_ROLE_READY id="+done);remote.machineChanged(done);});return true;
             }
             if (args.length==3 && (args[0].equalsIgnoreCase("jugglergodrole") || args[0].equalsIgnoreCase("jgrole"))) {

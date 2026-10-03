@@ -30,9 +30,10 @@ public final class SkillStopGame implements GameEngine {
         JsonObject state=machine.runtimeJson()==null?new JsonObject():JsonParser.parseString(machine.runtimeJson()).getAsJsonObject();
         if(state.has("forceSkillRole")&&(before.state()==Session.GameState.NORMAL_BETTED||before.state()==Session.GameState.REPLAY_READY)) {
             forced=SkillStopRole.valueOf(state.get("forceSkillRole").getAsString());
-            if(state.has("forceSkillPremium"))forcedPremium=PremiumPolicy.Type.valueOf(state.get("forceSkillPremium").getAsString());
+            if(state.has("forceSkillPremium")&&!"NONE".equals(state.get("forceSkillPremium").getAsString()))forcedPremium=PremiumPolicy.Type.valueOf(state.get("forceSkillPremium").getAsString());
         }
-        GameTransition t=plan(before,action,sequence,machine.setting(),now,receivedNanos,ping,pressed,forced,forcedPremium);
+        boolean ordinaryOnly=forced!=null&&state.has("forceSkillPremium")&&"NONE".equals(state.get("forceSkillPremium").getAsString());
+        GameTransition t=plan(before,action,sequence,machine.setting(),now,receivedNanos,ping,pressed,forced,forcedPremium,ordinaryOnly);
         if(t.lever()&&forced!=null){state.remove("forceSkillRole");state.remove("forceSkillPremium");return new GameTransition(t.transaction(),t.before(),t.after(),t.bet(),t.payout(),t.normalSpins(),t.finished(),t.lever(),t.bonusStarted(),t.bonusEnded(),t.publicDelayMs(),t.packets(),t.afterStart(),t.scheduled(),state.toString());}
         return t;
     }
@@ -43,6 +44,9 @@ public final class SkillStopGame implements GameEngine {
         return plan(before,action,sequence,setting,now,receivedNanos,ping,clientPressedIndex,null,null);
     }
     public GameTransition plan(Session before,PacketType action,long sequence,int setting,long now,long receivedNanos,int ping,Integer clientPressedIndex,SkillStopRole forcedNormalRole,PremiumPolicy.Type forcedPremium) {
+        return plan(before,action,sequence,setting,now,receivedNanos,ping,clientPressedIndex,forcedNormalRole,forcedPremium,false);
+    }
+    private GameTransition plan(Session before,PacketType action,long sequence,int setting,long now,long receivedNanos,int ping,Integer clientPressedIndex,SkillStopRole forcedNormalRole,PremiumPolicy.Type forcedPremium,boolean ordinaryOnly) {
         main.requireMainThread();
         if(before.lifecycle()!=Session.Lifecycle.ACTIVE)throw new DomainException("SESSION_MISMATCH");
         if(sequence<=before.sequence())throw new DomainException("SEQUENCE_OLD");
@@ -57,7 +61,7 @@ public final class SkillStopGame implements GameEngine {
             else packets.add(ErrorPackets.rejected(sequence,ErrorCode.NOT_ENOUGH_CREDIT));
         } else if(action==PacketType.SPACE_ACTION&&(state==Session.GameState.NORMAL_BETTED||state==Session.GameState.REPLAY_READY)) {
             SkillStopRole role=forcedNormalRole==null?weights.draw(setting,random.gameplay(before.machine())):forcedNormalRole;
-            PremiumPolicy.Type p=forcedPremium!=null?forcedPremium:drawPremium(role,before.machine());
+            PremiumPolicy.Type p=ordinaryOnly?null:forcedPremium!=null?forcedPremium:drawPremium(role,before.machine());
             ReelMotion.Profile profile=p==PremiumPolicy.Type.A?ReelMotion.Profile.REVERSE_500MS:ReelMotion.Profile.NORMAL;
             beginSpin(values,before,role.name(),profile,stateForNormalSpin(),role.bonus());
             values.put("premium_type",p==null?null:p.name());

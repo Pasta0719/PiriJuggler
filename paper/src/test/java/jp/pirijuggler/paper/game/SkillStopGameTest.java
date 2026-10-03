@@ -52,4 +52,14 @@ class SkillStopGameTest extends GameFixture {
         var g=skill();Session s=draw(g,seat(50,1000),SkillStopRole.BIG,null);s=top(g,s,Reel.CENTER,20);String history=s.text("machine_state_json");
         g.forget(s.id());assertTrue(g.resume(s,START).isPresent());s=top(g,s,Reel.LEFT,10);s=top(g,s,Reel.RIGHT,20);assertEquals(Session.GameState.BIG_READY,s.state());assertTrue(history.contains("skillInputs"));
     }
+    @Test void databaseReseatPreservesPartialSkillStopHistory() throws Exception {
+        var g=skill();Session s=seat(50,1000);
+        db.sql("UPDATE machines SET machine_type='SKILL_STOP' WHERE machine_id=?",s.machine());
+        s=draw(g,s,SkillStopRole.BIG,null);s=top(g,s,Reel.CENTER,20);
+        String saved=s.text("machine_state_json");
+        db.sql("UPDATE player_sessions SET lifecycle='SUSPENDED_GRACE',lock_expires_at=? WHERE session_id=?",NOW+60_000,s.id().toString());
+        g.forget(s.id());s=db.seat(s.player(),s.machine(),NOW+1);
+        assertEquals(saved,s.text("machine_state_json"));assertTrue(g.resume(s,START).isPresent());
+        s=top(g,s,Reel.LEFT,10);s=top(g,s,Reel.RIGHT,20);assertEquals(Session.GameState.BIG_READY,s.state());
+    }
 }

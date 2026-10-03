@@ -168,7 +168,7 @@ try:
 
     def forced_spin(role):
         action("close");wait(lambda:not session() or session().get("lifecycle")!="ACTIVE","force role close")
-        command("piri skillrole 1 "+role,"SKILL_ROLE_READY id=1")
+        command("piri skillrole 1 "+role+" NONE","SKILL_ROLE_READY id=1")
         click(0);wait_state("SEATED_READY")
         tap(32);wait_state("NORMAL_BETTED")
         before=len(packets("SPIN_START"));tap(32)
@@ -227,6 +227,10 @@ finally:
         try: server.stdin.write("stop\n");server.stdin.flush();server.wait(timeout=60)
         except Exception: server.terminate()
     for h in handles:h.close()
+    screenshots=EVIDENCE/"work"/"client-skill02-main"/"screenshots"
+    if screenshots.exists():
+        for screenshot in screenshots.glob("skill02-*.png"):
+            shutil.copy2(screenshot,OUT/screenshot.name)
     manifest["finishedAt"]=datetime.datetime.now(datetime.timezone.utc).isoformat()
     save(OUT/"result.json",manifest);save(EVIDENCE/"result.json",manifest)
 
