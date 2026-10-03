@@ -71,3 +71,11 @@ PIERO-BAR-PIERO
 このhotfixはGitHub上のsourceとunit-test/self-testへ反映した時点では、ユーザーPCでの `gradlew test` / `build` / 実Minecraft runtime acceptanceをまだ再実行していない。
 
 したがって、Phase05までの過去の144 tests PASSやruntime evidenceを、このhotfix後buildのPASS根拠として流用しない。ローカルへpull後に再検証し、PASS後だけ新しい証跡として記録する。
+
+
+## 2026-10-03 — 停止入力位置の送信修正と回帰結果
+既存SlotUiはEnvelope.payload()のコピーにpressedIndexを追記しており、送信に残らなかった。
+SlotInput.withPressedIndexで新しいEnvelopeを生成し、押した位置を実送信する。プロトコル変更なし。
+実EnvelopeCodecの送受信テスト4/4と全root test/package/runtime-helper CI PASS（https://github.com/Pasta0719/PiriJuggler/actions/runs/37120918659）。
+実SKILL_STOPクライアントでも12指定入力すべてが送信pressedIndexと一致、実停止15件の4コマ上限を確認（https://github.com/Pasta0719/PiriJuggler/actions/runs/37120916132）。
+証拠: runtime-evidence/SKILL_STOP_PHASE_02/REPORT.md。他の既存機種の全実機シナリオを再実施したとの意味ではない。

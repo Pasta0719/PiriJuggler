@@ -1,5 +1,5 @@
 # SKILL STOP Phase 02 implementation
-Status: IN_PROGRESS — GitHub push許可済み、Fabric/実機受入未完了
+Status: COMPLETE — 停止制御・全体ビルド・実Minecraft受入PASS
 Updated: 2026-10-03
 
 ユーザー承認: Phase02を完了し、現行mod/pluginと同じJARの更新として実装する。
@@ -18,18 +18,19 @@ SKILL_STOPはMachineTypeとGameEngineRegistryへ追加し、既存台のリー�
 - Fabric: 既存SlotScreenと実物筐体renderへ機種別の配列を追加。既存PNGを使用。
 
 ## 検証済み
-- 共通42テスト、Paper279テスト: failures/errors=0。
-- 実装した停止制御79条件×6押し順×21³=4,389,714履歴PASS。
-- 法則停止、4コマ上限、第三入力行き詰まり、未成立役、BAR、誤種ボーナス、Fテンパイ、正しい入賞のビタ、払い出しを検査。
-- Paper結合6テスト: 8/4/10枚、6種類1枚役のBIGビタ入賞、1枚取得後持越し、REG誤種否定、F、再開履歴。
-- :common:test :paper:test :paper:jar build PASS (Java21/Gradle8.14.3)。
+- 共通・Paper・Fabricのroot test / packagePiriJars、runtime helpersのビルドPASS。
+- 停止制御79条件×6押し順×21³=4,389,714履歴PASS。研究コードとは別に実装を全入力列挙。
+- Paper結合7テスト: 8/4/10枚、6種類1枚役BIGビタ、1枚取得後持越し、REG誤種否定、F、履歴復元、実SQLite grace再着席。
+- Fabric入力4テスト: 実際のEnvelopeCodecで押した位置が送信されること、元Envelopeの不変性を検証。
+- 実Paper/Fabric受入33/33 PASS: 実キー入力、4コマ滑り、G/C/P払出8/4/10、ONE_CDからBIG入賞、画面/DB停止一致、内部役非公開。
+- 全体Windows CI: https://github.com/Pasta0719/PiriJuggler/actions/runs/37120918659
+- 実Minecraft CI: https://github.com/Pasta0719/PiriJuggler/actions/runs/37120916132
+- 検証対象ソース: `78911f2a6983896a87a3c6710473cabe541856fe`。証拠: `runtime-evidence/SKILL_STOP_PHASE_02/REPORT.md` と `result.json`、上記CI artifact。
 
-## 未検証 / 完了条件
-- Fabric compile/test/remapJarと実Minecraft受入は未完了。
-- ローカルFabricビルドはLoom CurrentPlatform.isUnixDomainSocketsSupportedでOperation not permitted。
-- 実機runner: runtime-test-support/run_skill_stop_phase02.py。
-- 専用CI: .github/workflows/skill-stop-phase02-runtime.yml。通常CI環境で変更を検証する。
-- 実際のPaper+FabricでG/C/P払い出し、入力滑り、1枚役からBIGビタ入賞、画面停止一致、内部役非公開を確認する。
+## 実機検証で修正した結合不具合
+`Envelope.payload()`はコピーを返すため、既存SlotUiのコピーへの追記ではpressedIndexが送信されなかった。
+変更したbodyから新しいEnvelopeを作り、実際に押した位置を保持する。既存プロトコルは同じ。
+SKILL_STOP再着席時はmachine_state_jsonを保持し、入力履歴を復元する。
 
 ## 後続Phaseとの境界
 本Phaseは停止制御と入賞判定。チャレンジ抽選/成功+3G/残りG管理の接続はPhase03。
@@ -38,14 +39,9 @@ Phase03/04/05まで完成する前の一般利用向け完成版とは扱わな�
 
 ## 操作
 - /piri machine create SKILL_STOP または /piri machine type <id> SKILL_STOP。
-- 管理者の検証用 /piri skillrole <id> <ROLE|clear> [A|B|C|D|E|F] は空席時の次通常レバーだけに作用する。
+- 管理者の検証用 /piri skillrole <id> <ROLE|clear> [NONE|A|B|C|D|E|F] は空席時の次通常レバーだけに作用する。
 - 既存製品JAR名 piri-juggler-paper-1.0.0.jar / piri-juggler-fabric-1.0.0.jar を維持。
 
-## 現在のブロック
-2026-10-03: 実装はローカルGit 1d2b825に保存済み。skill-stop-phase02ブランチへのpushは自動承認審査で拒否。
-理由: 実装の承認だけではこのGitHubリモートへのソース送信が明示的に承認されていないと判定された。
-リモートにブランチは作成されていないことをread-onlyで確認済み。専用CIは未実行。
-ユーザーのpush許可後に検証用ブランチを送信し、Fabric buildと実Minecraft受入を実行する。
-Phase02 COMPLETE、main反映、完成版JAR提供はまだ行わない。
-
-2026-10-03 20:21 JST: ユーザーが指定リモートへのpushを許可。承認待ちは解消。CLIにGitHub認証がないため接続済みGitHub APIで検証ブランチへ送信する。
+## 完了記録
+2026-10-03: 指定GitHubへの送信承認後に検証ブランチ/PRを作成。全体CIと実機CI PASSを確認してCOMPLETEへ更新。
+Phase03以降は開始しない。

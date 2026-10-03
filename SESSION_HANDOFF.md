@@ -1,5 +1,10 @@
 # 新規セッションへの引き継ぎ
 
+## 最新追記 — 2026-10-03
+SKILL STOP Phase02 COMPLETE。既存Paper/Fabric JARへ追加し、全入力4,389,714履歴・全体CI・実Minecraft受入PASS。
+現在地はIMPLEMENTATION_STATUS.md冒頭とskill-stop-phases/SKILL_STOP_PHASE_02_IMPLEMENTATION.md、証拠はruntime-evidence/SKILL_STOP_PHASE_02/REPORT.md。
+次のSKILL STOP作業はPhase03（残G・チャレンジ抽選/+3G・保存）。このrunでは開始していない。以下の古いPhase現在地は当時の履歴。
+
 確認日: 2026-09-14（Phase05 BAR確定目対応完了後）。この文書は現在の実装と承認済み変更の案内であり、製品仕様の正は [SPEC.md](SPEC.md)。会話履歴・旧作業用コピーがなくても、このリポジトリから再開できる。
 
 ## 現在地と読む順序

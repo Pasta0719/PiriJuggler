@@ -1,0 +1,153 @@
+{
+  "startedAt": "2026-10-03T11:52:39.392835+00:00",
+  "finishedAt": "2026-10-03T11:55:01.393671+00:00",
+  "run": "20261003T115239Z",
+  "passed": true,
+  "buildHashes": {
+    "common": "bb6b5d49312034bd41912430692bf53b36a53c21d77e03cd809fad89f761be2d",
+    "paper": "e2251197086251dd524f8017b06833da6c267927112b548cd2dd85782ac6cb6c",
+    "fabric": "57720cb715f2413f14a2a362a9291940d2798c0de94601c179d737b1503839d1"
+  },
+  "helperHashes": {
+    "paper": "29f9e62914e919af87b8426108fc1d21191777d5d45f4dedb4b9615deb3184be",
+    "client": "9f2f1fa11eb55f1ceef59582bd6309b7b335c4b9c0c59e13fc762e28ca7e3260"
+  },
+  "sourceCommit": "78911f2a6983896a87a3c6710473cabe541856fe",
+  "workflowRun": "https://github.com/Pasta0719/PiriJuggler/actions/runs/37120916132",
+  "artifactId": 11272634774,
+  "fullEvidence": "GitHub Actions artifact skill-stop-phase02-runtime-evidence contains original result, packets, logs, test reports and four screenshots",
+  "assertions": [
+    {
+      "name": "SKILL_STOP opens the existing slot screen",
+      "passed": true
+    },
+    {
+      "name": "server drew MISS",
+      "passed": true
+    },
+    {
+      "name": "initial MISS has no payout",
+      "passed": true
+    },
+    {
+      "name": "server drew GRAPE",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "middle seven upper input pulls grape upper in four symbols",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "actual payout 8",
+      "passed": true
+    },
+    {
+      "name": "public packets keep internal draw private",
+      "passed": true
+    },
+    {
+      "name": "server drew CHERRY",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "ordinary middle cherry slips to lower",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "actual payout 4",
+      "passed": true
+    },
+    {
+      "name": "public packets keep internal draw private",
+      "passed": true
+    },
+    {
+      "name": "server drew PIERO",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "middle seven upper input pulls piero upper in four symbols",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "actual payout 10",
+      "passed": true
+    },
+    {
+      "name": "public packets keep internal draw private",
+      "passed": true
+    },
+    {
+      "name": "server drew ONE_CD",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "actual payout 0",
+      "passed": true
+    },
+    {
+      "name": "public packets keep internal draw private",
+      "passed": true
+    },
+    {
+      "name": "one-medal draw protects correct bonus bit entry",
+      "passed": true
+    },
+    {
+      "name": "real stop packets carry bounded slips",
+      "passed": true
+    },
+    {
+      "name": "normal bet uses three medals",
+      "passed": true
+    }
+  ]
+}
