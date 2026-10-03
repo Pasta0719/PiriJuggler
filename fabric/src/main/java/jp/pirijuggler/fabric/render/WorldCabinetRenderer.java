@@ -118,7 +118,7 @@ public final class WorldCabinetRenderer {
             int middle=(int)Math.floor(phase);
             double fraction=phase-middle;
             for(int row=-2;row<=2;row++){
-                String symbol=UiConstants.symbol(reel,middle+row);
+                String symbol=UiConstants.symbol(state.machineType(),reel,middle+row);
                 boolean wide=symbol.equals("seven")||symbol.equals("bar");
                 boolean godMachine=isJugglerGod(state.machineType());
                 boolean godLarge=symbol.equals("seven")||symbol.equals("grape")||symbol.equals("replay");

@@ -224,6 +224,11 @@ class RecoveryStoreTest {
         db.sql("UPDATE player_sessions SET game_state='NORMAL_BETTED',lifecycle='SUSPENDED_GRACE',lock_expires_at=?,credit=47,current_bet=3,machine_state_json=?,last_client_sequence=41 WHERE player_uuid=?",
                 NOW,runtime.toJsonString(),player.toString());
 
+        // Recovery can acquire random GOD stock; use a fixed private recovery
+        // stream when asserting an exact remaining guarantee count.
+        Session suspended=db.state().session(player);
+        var deterministicRecovery=new RecoveryStore(db,config,new StopSolver(new StopCatalogue()),123L);
+        db.transaction(()->{deterministicRecovery.settle(suspended,NOW+1);return null;});
         Session reseated=db.seat(player,machine,NOW+1);
         assertTrue(
                 reseated.state()==Session.GameState.SEATED_READY

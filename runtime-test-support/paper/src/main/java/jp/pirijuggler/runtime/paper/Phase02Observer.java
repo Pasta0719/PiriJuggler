@@ -31,7 +31,7 @@ public final class Phase02Observer implements Listener {
             button.setAttachedFace(FaceAttachable.AttachedFace.WALL); button.setFacing(org.bukkit.block.BlockFace.SOUTH);
             world.getBlockAt(x,66,0).setBlockData(button,false);
         }
-        if (java.util.Set.of("phase12","god02").contains(System.getProperty("piri.runtime.phase", ""))) {
+        if (java.util.Set.of("phase12","god02","skill02").contains(System.getProperty("piri.runtime.phase", ""))) {
             // Deterministic test platform: keep the automated client at y=65 so its
             // raytrace cannot fall into generated terrain and hit gravel/stone.
             for (int x=-22;x<=23;x++) for (int z=-3;z<=3;z++)
@@ -52,7 +52,7 @@ public final class Phase02Observer implements Listener {
             world.getBlockAt(22,66,0).setBlockData(spare,false);
         }
         Bukkit.getPluginManager().registerEvents(this,plugin);
-        if (java.util.Set.of("phase03","phase05").contains(System.getProperty("piri.runtime.phase", ""))) {
+        if (java.util.Set.of("phase03","phase05","skill02").contains(System.getProperty("piri.runtime.phase", ""))) {
             Bukkit.getMessenger().registerOutgoingPluginChannel(plugin,Protocol.CHANNEL);
             Bukkit.getMessenger().registerIncomingPluginChannel(plugin,Protocol.CHANNEL,(channel,player,bytes)->{
                 var packet=EnvelopeCodec.decode(bytes);var record=new JsonObject();record.addProperty("type",packet.packetType().name());record.add("payload",packet.payload());record.addProperty("player",player.getName());inbound.add(record);

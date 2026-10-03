@@ -2,6 +2,17 @@
 
 このファイルは各Phase終了時の現在状態を示す。
 
+## SKILL STOP Phase 02 — 2026-10-03
+
+Status: COMPLETE — 停止制御・全体ビルド・実Paper/Fabric受入PASS。既存Paper/Fabric JARへSKILL_STOPを追加。
+共通停止制御、専用配列、入力履歴、通常/持越し/プレミア/1枚役/チャレンジ制御、Paper入賞判定と保存、Fabric表示を実装。
+停止制御79条件×6押し順×21³=4,389,714履歴PASS。root test/packagePiriJarsとruntime helpers PASS。
+実Minecraft受入33/33 PASS。押した位置の送信漏れとSKILL_STOP再着席時の履歴消失を修正。
+検証対象: 78911f2a6983896a87a3c6710473cabe541856fe。証拠: runtime-evidence/SKILL_STOP_PHASE_02/REPORT.md。
+残りG・チャレンジ抽選/追加Gの状態管理はPhase03未着手、機械割の実装値検証はPhase04、表示/音の追加はPhase05。
+旧GOD/NEXTと既存Phase表の状態はこの作業で変更しない。
+詳細: [SKILL_STOP_PHASE_02_IMPLEMENTATION.md](skill-stop-phases/SKILL_STOP_PHASE_02_IMPLEMENTATION.md)。
+
 ## Current status — 2026-09-20
 
 PiriJuggler Phase01–12 はすべて COMPLETE。

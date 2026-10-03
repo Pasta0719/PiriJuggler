@@ -1,5 +1,5 @@
 # Phase 02 — 配列・入力・停止制御の実装契約
-Status: SPEC_ONLY — 実装未着手
+Status: COMPLETE — 全入力停止制御・Paper/Fabricビルド・実Minecraft受入PASS
 
 採用配列はSKILL_STOP_REEL_STOP_CONTRACT.md。入力番号と既存回転の対応はSKILL_STOP_INPUT_TIMING_CONTRACT.md。
 通常役・持越し・追加1枚役・プレミア・ボーナス通常G・チャレンジを別の制御条件として扱い、同じ禁止判定を無条件に流用しない。
@@ -30,3 +30,6 @@ A〜EでもチェリーBIGは中20→21、ピエロBIGは中20→3。Fの第二7
 第二では実際に選ばれたリールと入力を使い、全第三入力の安全性・ビタ入賞保護・成立1枚役・最小滑りの順に選択。
 通常28条件の1,555,848履歴と持越し72モデルの666,792履歴で停止候補なし0件。
 詳細・再実行コードはSKILL_STOP_FULL_STRATEGY_AUDIT.md。実装済みの検査ではない。
+
+## 実装受入完了 — 2026-10-03
+実装の4,389,714履歴検証と実機33/33 PASS。証拠はSKILL_STOP_PHASE_02_IMPLEMENTATION.mdとruntime-evidence/SKILL_STOP_PHASE_02/REPORT.md。

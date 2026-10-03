@@ -28,4 +28,17 @@ class SlotInputTest {
         s.receive(packet(PacketType.PUBLIC_STATE,"{\"sessionId\":\"00000000-0000-0000-0000-000000000001\",\"machineId\":12,\"expectedNextClientSequence\":9}"),true);assertEquals(10,s.takeSequence());
         s.receive(packet(PacketType.OPEN_MACHINE,"{\"sessionId\":\"00000000-0000-0000-0000-000000000002\",\"machineId\":12,\"expectedNextClientSequence\":50}"),true);assertEquals(50,s.takeSequence());
     }
+    @Test void localPressedIndexSurvivesActualWireEncodingWithoutMutatingOriginal(){
+        var sent=new ArrayList<Envelope>();
+        var input=new SlotInput(session(),envelope->sent.add(SlotInput.withPressedIndex(envelope,2)),()->0L);
+        assertTrue(input.key(264,PacketType.STOP_CENTER));
+        var received=EnvelopeCodec.decode(EnvelopeCodec.encode(sent.getFirst()));
+        assertEquals(PacketType.STOP_CENTER,received.packetType());
+        assertEquals(2,received.payload().get("pressedIndex").getAsInt());
+        assertEquals(8,received.payload().get("clientSequence").getAsLong());
+        assertEquals(12,received.payload().get("machineId").getAsInt());
+        var original=packet(PacketType.STOP_CENTER,"{\"clientSequence\":9}");
+        var enriched=SlotInput.withPressedIndex(original,20);
+        assertFalse(original.payload().has("pressedIndex"));assertEquals(20,enriched.payload().get("pressedIndex").getAsInt());
+    }
 }

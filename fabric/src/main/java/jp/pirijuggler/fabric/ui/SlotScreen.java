@@ -95,7 +95,7 @@ public final class SlotScreen extends Screen {
     private void drawReelSymbols(DrawContext c,int reel,int x){
         double phase=view.phase(reel);int middle=(int)Math.floor(phase);double fraction=phase-middle;
         for(int row=-2;row<=2;row++){
-            String symbol=UiConstants.symbol(reel,middle+row);
+            String symbol=UiConstants.symbol(view.machineType(),reel,middle+row);
             boolean wide=symbol.equals("seven")||symbol.equals("bar");
             int textureWidth=wide?320:256,textureHeight=256;
             int ordinarySymbolWidth=wide?230:130;
@@ -156,7 +156,7 @@ public final class SlotScreen extends Screen {
     private void drawReelSymbolsDark(DrawContext c,int reel,int x,float brightness){
         double phase=view.phase(reel);int middle=(int)Math.floor(phase);double fraction=phase-middle;
         for(int row=-2;row<=2;row++){
-            String symbol=UiConstants.symbol(reel,middle+row);
+            String symbol=UiConstants.symbol(view.machineType(),reel,middle+row);
             boolean wide=symbol.equals("seven")||symbol.equals("bar");
             int textureWidth=wide?320:256,textureHeight=256;
             boolean godLarge=symbol.equals("seven")||symbol.equals("grape")||symbol.equals("replay");
