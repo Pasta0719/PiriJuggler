@@ -235,10 +235,10 @@ try:
 
     def fresh_ready():
         action("close");wait(lambda:not session() or session().get("lifecycle")!="ACTIVE","fresh close")
-        before=msgcount("RECOVER_CASHOUT")
-        action("command",text="piri recover cashout")
-        wait(lambda:msgcount("RECOVER_CASHOUT")>before,"recover cashout")
-        wait(lambda:not sessions(),"recovery removed prior session")
+        before=msgcount("TEST_SKILL_RESET machine=1")
+        action("command",text="piritest skillreset")
+        wait(lambda:msgcount("TEST_SKILL_RESET machine=1")>before,"test-only skill reset")
+        wait(lambda:not sessions(),"test reset removed prior session")
         click(0);wait_state("SEATED_READY")
         command("piritest fund","TEST_FUNDED")
         action("close");wait(lambda:not session() or session().get("lifecycle")!="ACTIVE","fund refresh close")
