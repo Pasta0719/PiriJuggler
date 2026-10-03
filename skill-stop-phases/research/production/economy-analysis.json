@@ -1,0 +1,2370 @@
+{
+  "scope": "production controller, actual integer weights, observed-stop policies",
+  "histories": 2222640,
+  "settings": [
+    {
+      "setting": 1,
+      "weights": {
+        "replay": 137023842,
+        "grape": 166599213,
+        "bell": 915525,
+        "cherry": 26532274,
+        "piero": 686643,
+        "big": 1873855,
+        "reg": 1087641,
+        "cherry_big": 632770,
+        "cherry_reg": 517720,
+        "piero_big": 81852,
+        "piero_reg": 88673,
+        "ONE_A": 34701,
+        "ONE_B": 34701,
+        "ONE_CD": 34701,
+        "ONE_E": 34701,
+        "ONE_F": 34701,
+        "ONE_H": 34701,
+        "miss": 663751786
+      },
+      "policy": {
+        "setting": 1,
+        "scale": 1,
+        "R": 0.9850001013275925,
+        "main": {
+          "value": 2.9306325404047775,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 20,
+              "input": 9,
+              "third": [
+                {
+                  "observed": 9,
+                  "input": 1
+                },
+                {
+                  "observed": 13,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ]
+        },
+        "early": {
+          "value": 0.02436776357799975,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 20
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ]
+        },
+        "value": -4.440892098500626e-16,
+        "mass": 0.9999999999999994
+      },
+      "pendingPolicy": [
+        {
+          "value": -0.08826865821227613,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 19
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 0,
+          "r": 0.9850001013275925,
+          "candidate": -0.08826865821227615,
+          "improvement": 2.7755575615628914e-17
+        },
+        {
+          "value": -0.1324029873184142,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 19
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 0.5,
+          "r": 0.9850001013275925,
+          "candidate": -0.13240298731841424,
+          "improvement": 2.7755575615628914e-17
+        },
+        {
+          "value": -0.08826865821227613,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 20
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 1,
+          "r": 0.9850001013275925,
+          "candidate": -0.08826865821227615,
+          "improvement": 2.7755575615628914e-17
+        }
+      ],
+      "successRates": [
+        {
+          "success": 0,
+          "input": 2.7348099007735347,
+          "output": 2.444050635050667,
+          "rtp": 89.36820926234664,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4649811099400003,
+            "pendingIN": 0.006909562773534531,
+            "pendingOUT": 0.006266477110665688,
+            "bonusIN": 0.13897186400000003,
+            "bonusOUT": 0.9728030480000007
+          }
+        },
+        {
+          "success": 0.5,
+          "input": 2.7526605117957565,
+          "output": 2.5690049122062195,
+          "rtp": 93.32806937860546,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4649811099400003,
+            "pendingIN": 0.006909562773534531,
+            "pendingOUT": 0.006266477110665688,
+            "bonusIN": 0.15682247502222205,
+            "bonusOUT": 1.0977573251555537
+          }
+        },
+        {
+          "success": 0.8,
+          "input": 2.7659741595440974,
+          "output": 2.662200446444606,
+          "rtp": 96.24820381125339,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4649811099400003,
+            "pendingIN": 0.006909562773534531,
+            "pendingOUT": 0.006266477110665688,
+            "bonusIN": 0.1701361227705627,
+            "bonusOUT": 1.19095285939394
+          }
+        },
+        {
+          "success": 1,
+          "input": 2.776329002773535,
+          "output": 2.734684349050667,
+          "rtp": 98.5000101327593,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4649811099400003,
+            "pendingIN": 0.006909562773534531,
+            "pendingOUT": 0.006266477110665688,
+            "bonusIN": 0.18049096600000017,
+            "bonusOUT": 1.2634367620000009
+          }
+        }
+      ]
+    },
+    {
+      "setting": 2,
+      "weights": {
+        "replay": 137023842,
+        "grape": 166783634,
+        "bell": 915525,
+        "cherry": 26476121,
+        "piero": 686643,
+        "big": 1937783,
+        "reg": 1180994,
+        "cherry_big": 630088,
+        "cherry_reg": 558758,
+        "piero_big": 85014,
+        "piero_reg": 85014,
+        "ONE_A": 35885,
+        "ONE_B": 35885,
+        "ONE_CD": 35885,
+        "ONE_E": 35885,
+        "ONE_F": 35885,
+        "ONE_H": 35885,
+        "miss": 663421274
+      },
+      "policy": {
+        "setting": 2,
+        "scale": 1,
+        "R": 1.0000001243329257,
+        "main": {
+          "value": 2.9750451634582924,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 20,
+              "input": 9,
+              "third": [
+                {
+                  "observed": 9,
+                  "input": 1
+                },
+                {
+                  "observed": 13,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ]
+        },
+        "early": {
+          "value": 0.024955209540484035,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 20
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ]
+        },
+        "value": -8.881784197001252e-16,
+        "mass": 1.0000000000000009
+      },
+      "pendingPolicy": [
+        {
+          "value": -0.10522778621425748,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 19
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 0,
+          "r": 1.0000001243329257,
+          "candidate": -0.10522778621425745,
+          "improvement": -2.7755575615628914e-17
+        },
+        {
+          "value": -0.15784167932138632,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 19
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 0.5,
+          "r": 1.0000001243329257,
+          "candidate": -0.15784167932138618,
+          "improvement": -1.3877787807814457e-16
+        },
+        {
+          "value": -0.10522778621425748,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 20
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 1,
+          "r": 1.0000001243329257,
+          "candidate": -0.10522778621425745,
+          "improvement": -2.7755575615628914e-17
+        }
+      ],
+      "successRates": [
+        {
+          "success": 0,
+          "input": 2.740143681545372,
+          "output": 2.4804635596165916,
+          "rtp": 90.52312024082157,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4663826168999998,
+            "pendingIN": 0.0072911515453724035,
+            "pendingOUT": 0.006612550716591675,
+            "bonusIN": 0.14392405600000002,
+            "bonusOUT": 1.007468392
+          }
+        },
+        {
+          "success": 0.5,
+          "input": 2.7587304660787053,
+          "output": 2.6105710513499245,
+          "rtp": 94.62943493209845,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4663826168999998,
+            "pendingIN": 0.0072911515453724035,
+            "pendingOUT": 0.006612550716591675,
+            "bonusIN": 0.16251084053333342,
+            "bonusOUT": 1.1375758837333327
+          }
+        },
+        {
+          "success": 0.8,
+          "input": 2.772613416194723,
+          "output": 2.707751702162046,
+          "rtp": 97.66062900605534,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4663826168999998,
+            "pendingIN": 0.0072911515453724035,
+            "pendingOUT": 0.006612550716591675,
+            "bonusIN": 0.17639379064935068,
+            "bonusOUT": 1.2347565345454543
+          }
+        },
+        {
+          "success": 1,
+          "input": 2.783423759545372,
+          "output": 2.783424105616592,
+          "rtp": 100.0000124332926,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4663826168999998,
+            "pendingIN": 0.0072911515453724035,
+            "pendingOUT": 0.006612550716591675,
+            "bonusIN": 0.18720413400000002,
+            "bonusOUT": 1.3104289380000005
+          }
+        }
+      ]
+    },
+    {
+      "setting": 3,
+      "weights": {
+        "replay": 137023842,
+        "grape": 167751292,
+        "bell": 915525,
+        "cherry": 26391892,
+        "piero": 686643,
+        "big": 1972257,
+        "reg": 1344271,
+        "cherry_big": 642984,
+        "cherry_reg": 617770,
+        "piero_big": 89074,
+        "piero_reg": 82222,
+        "ONE_A": 36523,
+        "ONE_B": 36523,
+        "ONE_CD": 36523,
+        "ONE_E": 36523,
+        "ONE_F": 36523,
+        "ONE_H": 36523,
+        "miss": 662263090
+      },
+      "policy": {
+        "setting": 3,
+        "scale": 1,
+        "R": 1.0199997940744623,
+        "main": {
+          "value": 3.034648645008479,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 20,
+              "input": 9,
+              "third": [
+                {
+                  "observed": 9,
+                  "input": 1
+                },
+                {
+                  "observed": 13,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ]
+        },
+        "early": {
+          "value": 0.02535073721490829,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 20
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ]
+        },
+        "value": 4.440892098500626e-16,
+        "mass": 1.0000000000000002
+      },
+      "pendingPolicy": [
+        {
+          "value": -0.12783954881112009,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 19
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 0,
+          "r": 1.0199997940744623,
+          "candidate": -0.1278395488111201,
+          "improvement": 2.7755575615628914e-17
+        },
+        {
+          "value": -0.1917593232166803,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 19
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 0.5,
+          "r": 1.0199997940744623,
+          "candidate": -0.19175932321668016,
+          "improvement": -1.3877787807814457e-16
+        },
+        {
+          "value": -0.12783954881112009,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 20
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 1,
+          "r": 1.0199997940744623,
+          "candidate": -0.1278395488111201,
+          "improvement": 2.7755575615628914e-17
+        }
+      ],
+      "successRates": [
+        {
+          "success": 0,
+          "input": 2.7464204239682197,
+          "output": 2.5287282261816193,
+          "rtp": 92.07360257421682,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.474088514620001,
+            "pendingIN": 0.007845621968220081,
+            "pendingOUT": 0.007115415561618441,
+            "bonusIN": 0.1496463279999999,
+            "bonusOUT": 1.0475242960000002
+          }
+        },
+        {
+          "success": 0.5,
+          "input": 2.765955190012664,
+          "output": 2.6654715884927307,
+          "rtp": 96.36712836553677,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.474088514620001,
+            "pendingIN": 0.007845621968220081,
+            "pendingOUT": 0.007115415561618441,
+            "bonusIN": 0.16918109404444404,
+            "bonusOUT": 1.1842676583111114
+          }
+        },
+        {
+          "success": 0.8,
+          "input": 2.7805882454054496,
+          "output": 2.7679029762422265,
+          "rtp": 99.54379188705182,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.474088514620001,
+            "pendingIN": 0.007845621968220081,
+            "pendingOUT": 0.007115415561618441,
+            "bonusIN": 0.1838141494372294,
+            "bonusOUT": 1.2866990460606071
+          }
+        },
+        {
+          "success": 1,
+          "input": 2.7920090579682197,
+          "output": 2.847848664181621,
+          "rtp": 101.99997940744635,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.474088514620001,
+            "pendingIN": 0.007845621968220081,
+            "pendingOUT": 0.007115415561618441,
+            "bonusIN": 0.195234962,
+            "bonusOUT": 1.3666447340000019
+          }
+        }
+      ]
+    },
+    {
+      "setting": 4,
+      "weights": {
+        "replay": 137023842,
+        "grape": 168647497,
+        "bell": 915525,
+        "cherry": 26307662,
+        "piero": 686643,
+        "big": 2070863,
+        "reg": 1568798,
+        "cherry_big": 642583,
+        "cherry_reg": 696131,
+        "piero_big": 93543,
+        "piero_reg": 79684,
+        "ONE_A": 38349,
+        "ONE_B": 38349,
+        "ONE_CD": 38349,
+        "ONE_E": 38349,
+        "ONE_F": 38349,
+        "ONE_H": 38349,
+        "miss": 661037135
+      },
+      "policy": {
+        "setting": 4,
+        "scale": 1,
+        "R": 1.049999711645346,
+        "main": {
+          "value": 3.1237597414131817,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 20,
+              "input": 9,
+              "third": [
+                {
+                  "observed": 9,
+                  "input": 1
+                },
+                {
+                  "observed": 13,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ]
+        },
+        "early": {
+          "value": 0.02623939352285555,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 20
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ]
+        },
+        "value": -4.440892098500626e-16,
+        "mass": 0.9999999999999999
+      },
+      "pendingPolicy": [
+        {
+          "value": -0.16175765960019103,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 19
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 0,
+          "r": 1.049999711645346,
+          "candidate": -0.16175765960019112,
+          "improvement": 8.326672684688674e-17
+        },
+        {
+          "value": -0.24263648940028656,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 19
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 0.5,
+          "r": 1.049999711645346,
+          "candidate": -0.24263648940028668,
+          "improvement": 1.1102230246251565e-16
+        },
+        {
+          "value": -0.16175765960019103,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 20
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 1,
+          "r": 1.049999711645346,
+          "candidate": -0.16175765960019112,
+          "improvement": 8.326672684688674e-17
+        }
+      ],
+      "successRates": [
+        {
+          "success": 0,
+          "input": 2.756486107992944,
+          "output": 2.6019995870807815,
+          "rtp": 94.39552695498082,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4812559270599999,
+            "pendingIN": 0.008560505992944735,
+            "pendingOUT": 0.00776376402078238,
+            "bonusIN": 0.15899712799999982,
+            "bonusOUT": 1.112979895999999
+          }
+        },
+        {
+          "success": 0.5,
+          "input": 2.777487016259611,
+          "output": 2.7490059449474478,
+          "rtp": 98.97457409718092,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4812559270599999,
+            "pendingIN": 0.008560505992944735,
+            "pendingOUT": 0.00776376402078238,
+            "bonusIN": 0.17999803626666655,
+            "bonusOUT": 1.2599862538666655
+          }
+        },
+        {
+          "success": 0.8,
+          "input": 2.793267172720217,
+          "output": 2.8594670401716904,
+          "rtp": 102.36997978918734,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4812559270599999,
+            "pendingIN": 0.008560505992944735,
+            "pendingOUT": 0.00776376402078238,
+            "bonusIN": 0.19577819272727257,
+            "bonusOUT": 1.3704473490909084
+          }
+        },
+        {
+          "success": 1,
+          "input": 2.8056138419929444,
+          "output": 2.9458937250807815,
+          "rtp": 104.99997116453456,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4812559270599999,
+            "pendingIN": 0.008560505992944735,
+            "pendingOUT": 0.00776376402078238,
+            "bonusIN": 0.20812486199999988,
+            "bonusOUT": 1.4568740339999993
+          }
+        }
+      ]
+    },
+    {
+      "setting": 5,
+      "weights": {
+        "replay": 137023842,
+        "grape": 170413045,
+        "bell": 915525,
+        "cherry": 26223433,
+        "piero": 686643,
+        "big": 2245868,
+        "reg": 1730600,
+        "cherry_big": 649679,
+        "cherry_reg": 794053,
+        "piero_big": 99861,
+        "piero_reg": 78463,
+        "ONE_A": 41590,
+        "ONE_B": 41590,
+        "ONE_CD": 41590,
+        "ONE_E": 41590,
+        "ONE_F": 41590,
+        "ONE_H": 41590,
+        "miss": 658889448
+      },
+      "policy": {
+        "setting": 5,
+        "scale": 1,
+        "R": 1.0899998769634267,
+        "main": {
+          "value": 3.2421021226955262,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 20,
+              "input": 9,
+              "third": [
+                {
+                  "observed": 9,
+                  "input": 1
+                },
+                {
+                  "observed": 13,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ]
+        },
+        "early": {
+          "value": 0.027897508194753385,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 20
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ]
+        },
+        "value": -4.440892098500626e-16,
+        "mass": 0.9999999999999994
+      },
+      "pendingPolicy": [
+        {
+          "value": -0.2069821184885912,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 19
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 0,
+          "r": 1.0899998769634267,
+          "candidate": -0.2069821184885912,
+          "improvement": 0
+        },
+        {
+          "value": -0.31047317773288685,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 19
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 0.5,
+          "r": 1.0899998769634267,
+          "candidate": -0.3104731777328868,
+          "improvement": -5.551115123125783e-17
+        },
+        {
+          "value": -0.2069821184885912,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 20
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 1,
+          "r": 1.0899998769634267,
+          "candidate": -0.2069821184885912,
+          "improvement": 0
+        }
+      ],
+      "successRates": [
+        {
+          "success": 0,
+          "input": 2.7696466150131367,
+          "output": 2.7040627117617912,
+          "rtp": 97.63204796973586,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4955207246000002,
+            "pendingIN": 0.009270365013137044,
+            "pendingOUT": 0.008407555161789584,
+            "bonusIN": 0.17144777599999977,
+            "bonusOUT": 1.2001344320000014
+          }
+        },
+        {
+          "success": 0.5,
+          "input": 2.792398577324248,
+          "output": 2.863326447939566,
+          "rtp": 102.54003390458976,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4955207246000002,
+            "pendingIN": 0.009270365013137044,
+            "pendingOUT": 0.008407555161789584,
+            "bonusIN": 0.19419973831111104,
+            "bonusOUT": 1.3593981681777767
+          }
+        },
+        {
+          "success": 0.8,
+          "input": 2.8095154305282883,
+          "output": 2.983144420367849,
+          "rtp": 106.18003332364373,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4955207246000002,
+            "pendingIN": 0.009270365013137044,
+            "pendingOUT": 0.008407555161789584,
+            "bonusIN": 0.2113165915151517,
+            "bonusOUT": 1.4792161406060593
+          }
+        },
+        {
+          "success": 1,
+          "input": 2.8229210230131367,
+          "output": 3.07698356776179,
+          "rtp": 108.99998769634267,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.4955207246000002,
+            "pendingIN": 0.009270365013137044,
+            "pendingOUT": 0.008407555161789584,
+            "bonusIN": 0.22472218399999985,
+            "bonusOUT": 1.5730552880000004
+          }
+        }
+      ]
+    },
+    {
+      "setting": 6,
+      "weights": {
+        "replay": 137023842,
+        "grape": 172701646,
+        "bell": 915525,
+        "cherry": 26111127,
+        "piero": 686643,
+        "big": 2437060,
+        "reg": 1951812,
+        "cherry_big": 623528,
+        "cherry_reg": 861062,
+        "piero_big": 103736,
+        "piero_reg": 69157,
+        "ONE_A": 45131,
+        "ONE_B": 45131,
+        "ONE_CD": 45131,
+        "ONE_E": 45131,
+        "ONE_F": 45131,
+        "ONE_H": 45131,
+        "miss": 656244076
+      },
+      "policy": {
+        "setting": 6,
+        "scale": 1,
+        "R": 1.1300002127450413,
+        "main": {
+          "value": 3.360580765825383,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 20,
+              "input": 9,
+              "third": [
+                {
+                  "observed": 9,
+                  "input": 1
+                },
+                {
+                  "observed": 13,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ]
+        },
+        "early": {
+          "value": 0.029419872409740352,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 20
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ]
+        },
+        "value": -8.881784197001252e-16,
+        "mass": 1.0000000000000004
+      },
+      "pendingPolicy": [
+        {
+          "value": -0.25220677010422166,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 19
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 0,
+          "r": 1.1300002127450413,
+          "candidate": -0.2522067701042216,
+          "improvement": -5.551115123125783e-17
+        },
+        {
+          "value": -0.3783101551563325,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 19
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 0.5,
+          "r": 1.1300002127450413,
+          "candidate": -0.3783101551563324,
+          "improvement": -1.1102230246251565e-16
+        },
+        {
+          "value": -0.25220677010422166,
+          "order": "MLR",
+          "input": 20,
+          "policy": [
+            {
+              "observed": 20,
+              "input": 10,
+              "third": [
+                {
+                  "observed": 10,
+                  "input": 20
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 1,
+              "input": 1,
+              "third": [
+                {
+                  "observed": 1,
+                  "input": 4
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 2,
+              "input": 2,
+              "third": [
+                {
+                  "observed": 2,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 21,
+              "input": 4,
+              "third": [
+                {
+                  "observed": 4,
+                  "input": 1
+                }
+              ],
+              "order": "MLR"
+            },
+            {
+              "observed": 3,
+              "input": 11,
+              "third": [
+                {
+                  "observed": 11,
+                  "input": 3
+                }
+              ],
+              "order": "MLR"
+            }
+          ],
+          "q": 1,
+          "r": 1.1300002127450413,
+          "candidate": -0.2522067701042216,
+          "improvement": -5.551115123125783e-17
+        }
+      ],
+      "successRates": [
+        {
+          "success": 0,
+          "input": 2.7824503653343475,
+          "output": 2.8071883842334584,
+          "rtp": 100.88907314241123,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.5134963001400001,
+            "pendingIN": 0.010004995334347882,
+            "pendingOUT": 0.00907381209345847,
+            "bonusIN": 0.18351689599999998,
+            "bonusOUT": 1.2846182719999997
+          }
+        },
+        {
+          "success": 0.5,
+          "input": 2.806940020089903,
+          "output": 2.978615967522347,
+          "rtp": 106.11612454144802,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.5134963001400001,
+            "pendingIN": 0.010004995334347882,
+            "pendingOUT": 0.00907381209345847,
+            "bonusIN": 0.20800655075555566,
+            "bonusOUT": 1.4560458552888884
+          }
+        },
+        {
+          "success": 0.8,
+          "input": 2.8253908123646507,
+          "output": 3.107771513445581,
+          "rtp": 109.99439439829557,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.5134963001400001,
+            "pendingIN": 0.010004995334347882,
+            "pendingOUT": 0.00907381209345847,
+            "bonusIN": 0.22645734303030335,
+            "bonusOUT": 1.5852014012121225
+          }
+        },
+        {
+          "success": 1,
+          "input": 2.8398577133343474,
+          "output": 3.209039820233458,
+          "rtp": 113.00002127450409,
+          "breakdown": {
+            "normalIN": 2.588928474,
+            "normalOUT": 1.5134963001400001,
+            "pendingIN": 0.010004995334347882,
+            "pendingOUT": 0.00907381209345847,
+            "bonusIN": 0.24092424399999984,
+            "bonusOUT": 1.6864697079999993
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -429,9 +429,27 @@ const buildPending=function buildNormalModels(){
  }
  return {all,failures};
 };
-const models=buildPending().all;
+const productionPath=process.env.SKILL_STOP_PRODUCTION_MODELS;
+const production=productionPath?JSON.parse(require("node:fs").readFileSync(productionPath,"utf8")):null;
+const researchPending=buildPending().all, researchNormal=buildNormal().all;
+if(production){
+ let checked=0;
+ for(const [actual,expected] of [[production.normal,researchNormal],[production.pending,researchPending]]){
+  if(actual.length!==expected.length)throw Error("Production model count differs");
+  for(const model of actual){
+   const reference=expected.find(x=>x.name===model.name&&x.oi===model.oi);
+   if(!reference)throw Error("Missing research model "+model.name);
+   for(const field of ["first","second","third"]){
+    if(JSON.stringify(model[field])!==JSON.stringify(reference[field]))throw Error("Production differs: "+model.name+" order "+model.oi+" "+field);
+   }
+   checked+=9261;
+  }
+ }
+ console.error("Production/research exact decision and outcome comparison PASS: "+checked+" histories");
+}
+const models=production?production.pending:researchPending;
 const probs=[0.7959716796875,0.1,0.1,0.00006103515625,0.00390625,0.00006103515625];
-store("normalModels",buildNormal().all);
+store("normalModels",production?production.normal:researchNormal);
 const pendingBackup=function backup(q,r,V) {
  let best={value:-Infinity};
  for(let oi=0;oi<6;oi+=2){
@@ -541,7 +559,7 @@ for(const fit of fits){
  if(Math.max(...pending.map(x=>Math.abs(x.improvement)))>1e-11||Math.abs(normal.value)>1e-11||Math.abs(normal.mass-1)>1e-12)throw Error("Economy check failed for setting "+fit.setting);
  report.push({setting:fit.setting,target:R,pendingResidual:Math.max(...pending.map(x=>Math.abs(x.improvement))),normalResidual:normal.value,normal,successRates:[{"setting":1,"values":[{"success":0,"bigGames":20,"regGames":8,"rtp":89.36820091446185},{"success":0.5,"bigGames":22.22222222222222,"regGames":9.6,"rtp":93.32806022386906},{"success":0.8,"bigGames":23.80952380952381,"regGames":10.909090909090908,"rtp":96.24819409336779},{"success":1,"bigGames":25,"regGames":11.999999999999998,"rtp":98.49999999999999}]},{"setting":2,"values":[{"success":0,"bigGames":20,"regGames":8,"rtp":90.52311000685971},{"success":0.5,"bigGames":22.22222222222222,"regGames":9.6,"rtp":94.62942370248172},{"success":0.8,"bigGames":23.80952380952381,"regGames":10.909090909090908,"rtp":97.66061708286854},{"success":1,"bigGames":25,"regGames":11.999999999999998,"rtp":100}]},{"setting":3,"values":[{"success":0,"bigGames":20,"regGames":8,"rtp":92.07361955184915},{"success":0.5,"bigGames":22.22222222222222,"regGames":9.6,"rtp":96.36714698747193},{"success":0.8,"bigGames":23.80952380952381,"regGames":10.909090909090908,"rtp":99.54381164716624},{"success":1,"bigGames":25,"regGames":11.999999999999998,"rtp":102.00000000000001}]},{"setting":4,"values":[{"success":0,"bigGames":20,"regGames":8,"rtp":94.39555021939637},{"success":0.5,"bigGames":22.22222222222222,"regGames":9.6,"rtp":98.97459983309844},{"success":0.8,"bigGames":23.80952380952381,"regGames":10.909090909090908,"rtp":102.37000729348634},{"success":1,"bigGames":25,"regGames":11.999999999999998,"rtp":105}]},{"setting":5,"values":[{"success":0,"bigGames":20,"regGames":8,"rtp":97.6320584698451},{"success":0.5,"bigGames":22.22222222222222,"regGames":9.6,"rtp":102.54004526017954},{"success":0.8,"bigGames":23.80952380952381,"regGames":10.909090909090908,"rtp":106.18004523895077},{"success":1,"bigGames":25,"regGames":11.999999999999998,"rtp":108.99999999999999}]},{"setting":6,"values":[{"success":0,"bigGames":20,"regGames":8,"rtp":100.88905585782861},{"success":0.5,"bigGames":22.22222222222222,"regGames":9.6,"rtp":106.1161054841088},{"success":0.8,"bigGames":23.80952380952381,"regGames":10.909090909090908,"rtp":109.99437407516875},{"success":1,"bigGames":25,"regGames":11.999999999999998,"rtp":112.99999999999997}]}][fit.setting-1]});
 }
-console.log(JSON.stringify({scope:"specification research controller; not game implementation",normalModels:load("normalModels").length,normalHistories:load("normalModels").length*9261,pendingModels:models.length,pendingHistories:models.length*9261,report},null,2));
+console.log(JSON.stringify({scope:production?"actual production controller tables":"specification research controller; not game implementation",normalModels:load("normalModels").length,normalHistories:load("normalModels").length*9261,pendingModels:models.length,pendingHistories:models.length*9261,report},null,2));
 
 if(process.argv.includes("--simulate")){
  let rngstate=123456789;const rand=()=>{rngstate^=rngstate<<13;rngstate^=rngstate>>>17;rngstate^=rngstate<<5;return(rngstate>>>0)/4294967296;};
@@ -577,6 +595,11 @@ if(process.argv.includes("--simulate")){
 
 const proposedWeights=[{"setting":1,"weights":{"replay":137023842,"grape":166599213,"bell":915525,"cherry":26532274,"piero":686643,"big":1873855,"reg":1087641,"cherry_big":632770,"cherry_reg":517720,"piero_big":81852,"piero_reg":88673,"ONE_A":34701,"ONE_B":34701,"ONE_CD":34701,"ONE_E":34701,"ONE_F":34701,"ONE_H":34701,"miss":663751786}},{"setting":2,"weights":{"replay":137023842,"grape":166783634,"bell":915525,"cherry":26476121,"piero":686643,"big":1937783,"reg":1180994,"cherry_big":630088,"cherry_reg":558758,"piero_big":85014,"piero_reg":85014,"ONE_A":35885,"ONE_B":35885,"ONE_CD":35885,"ONE_E":35885,"ONE_F":35885,"ONE_H":35885,"miss":663421274}},{"setting":3,"weights":{"replay":137023842,"grape":167751292,"bell":915525,"cherry":26391892,"piero":686643,"big":1972257,"reg":1344271,"cherry_big":642984,"cherry_reg":617770,"piero_big":89074,"piero_reg":82222,"ONE_A":36523,"ONE_B":36523,"ONE_CD":36523,"ONE_E":36523,"ONE_F":36523,"ONE_H":36523,"miss":662263090}},{"setting":4,"weights":{"replay":137023842,"grape":168647497,"bell":915525,"cherry":26307662,"piero":686643,"big":2070863,"reg":1568798,"cherry_big":642583,"cherry_reg":696131,"piero_big":93543,"piero_reg":79684,"ONE_A":38349,"ONE_B":38349,"ONE_CD":38349,"ONE_E":38349,"ONE_F":38349,"ONE_H":38349,"miss":661037135}},{"setting":5,"weights":{"replay":137023842,"grape":170413045,"bell":915525,"cherry":26223433,"piero":686643,"big":2245868,"reg":1730600,"cherry_big":649679,"cherry_reg":794053,"piero_big":99861,"piero_reg":78463,"ONE_A":41590,"ONE_B":41590,"ONE_CD":41590,"ONE_E":41590,"ONE_F":41590,"ONE_H":41590,"miss":658889448}},{"setting":6,"weights":{"replay":137023842,"grape":172701646,"bell":915525,"cherry":26111127,"piero":686643,"big":2437060,"reg":1951812,"cherry_big":623528,"cherry_reg":861062,"piero_big":103736,"piero_reg":69157,"ONE_A":45131,"ONE_B":45131,"ONE_CD":45131,"ONE_E":45131,"ONE_F":45131,"ONE_H":45131,"miss":656244076}}];
 const rounded=[];
+const productionReport=[];
+if(production){
+ const actual=JSON.parse(require("node:fs").readFileSync("paper/src/main/resources/skill-stop-weights.json","utf8")).proposedWeights;
+ for(const row of proposedWeights){ const candidate=actual.find(t=>t.setting===row.setting); if(!candidate||Object.keys(row.weights).some(k=>candidate.weights[k]!==row.weights[k]))throw Error("Production weights differ from verified weights"); }
+}
 for(const item of proposedWeights){
  const rec={...records[item.setting-1]},w=item.weights;
  for(const k of ["reg","cherry_big","cherry_reg","piero_big","piero_reg"])rec[k]=w[k]/1e9;
@@ -586,5 +609,37 @@ for(const item of proposedWeights){
  const root=R-x.value*d/(y.value-x.value),z=normalBackup(rec,1,root,V(root));
  if(Math.abs(z.value)>1e-11||Math.abs(100*(root-R))>.00003)throw Error("rounded verification failed");
  rounded.push({setting:item.setting,rtp:100*root,residual:z.value});
+ const pools=load("pools"),all=load("normalModels"),states=[];
+ for(const [early,pool] of [[false,pools.pool],[true,pools.early]])for(const atom of pool){
+  const pol=early?z.early:z.main,a=pol.input-1,m=all.find(t=>t.name===atom.name&&t.order===pol.order),f=m.first[a];
+  const p2=pol.policy.find(t=>t.observed===f+1),b=p2.input-1,m2=all.find(t=>t.name===atom.name&&t.order===p2.order),second=m2.second[a][b];
+  const c=p2.third.find(t=>t.observed===second+1).input-1,code=m2.third[a][b][c];
+  states.push({...atom,type:m.type,code,key:[early,f,second,code].join("/")});
+ }
+ const rates=[];
+ for(const success of [0,.5,.8,1]){
+  const breakdown={normalIN:3,normalOUT:0,pendingIN:0,pendingOUT:0,bonusIN:0,bonusOUT:0};
+  for(const atom of states){
+   const weight=atom.w;breakdown.normalIN-=weight*((atom.code&128)?3:0);breakdown.normalOUT+=weight*(atom.code&31);
+   if(!atom.type)continue;
+   const games=atom.type==="BIG"?20/(1-success/5):8/(1-success/3);
+   breakdown.bonusIN+=weight*games*2;breakdown.bonusOUT+=weight*games*14;
+   if(atom.code&256)continue;
+   const group=states.filter(t=>!t.known&&t.type&&!(t.code&256)&&t.key===atom.key);
+   const mass=group.reduce((a,t)=>a+t.w,0),big=group.filter(t=>t.type==="BIG").reduce((a,t)=>a+t.w,0);
+   const q=atom.known?1:big/mass,factor=1+Math.min(q,1-q);
+   breakdown.pendingIN+=weight*factor*.9/.79603271484375;
+   breakdown.pendingOUT+=weight*factor*.8162353515625/.79603271484375;
+  }
+  const input=breakdown.normalIN+breakdown.pendingIN+breakdown.bonusIN,output=breakdown.normalOUT+breakdown.pendingOUT+breakdown.bonusOUT;
+  rates.push({success,input,output,rtp:100*output/input,breakdown});
+ }
+ if(Math.abs(rates[3].rtp-100*root)>1e-8)throw Error("Separate IN/OUT verification failed");
+ productionReport.push({setting:item.setting,weights:w,policy:z,pendingPolicy:[0,.5,1].map(q=>pendingBackup(q,root,V(root))),successRates:rates});
 }
 console.log(JSON.stringify({rounded},null,2));
+
+if(production){
+ require("node:fs").writeFileSync("build/skill-stop-economy-analysis.json",JSON.stringify({scope:"production controller, actual integer weights, observed-stop policies",histories:2222640,settings:productionReport},null,2));
+ console.error("Actual integer weights and separate IN/OUT PASS; executable observable policies saved");
+}

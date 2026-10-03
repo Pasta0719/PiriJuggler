@@ -2,6 +2,9 @@
 
 このファイルは各Phase終了時の現在状態を示す。
 
+## SKILL STOP Phase 04 — 2026-10-03
+Status: IN_PROGRESS。実制御の全停止履歴を機械割解析へ接続し、研究モデルとの差分と完全攻略値を検証中。
+
 ## SKILL STOP Phase 03 — 2026-10-03
 Status: COMPLETE — 全体CI・実Minecraft受入202/202 PASS。
 BIG20/REG8から開始、1/15・1/9でチャレンジ抽選、BAR/ベル/ピエロ各1/3。第三停止14枚、残り-1と成功+3の後に終了判定。追加Gでも抽選。
