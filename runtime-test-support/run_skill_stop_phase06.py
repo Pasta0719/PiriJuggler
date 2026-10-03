@@ -292,16 +292,17 @@ try:
     check("different bonus is rejected",session().get("bonus_type")=="REG" and session()["game_state"]!="BIG_READY",session())
     fresh_ready()
 
-    # Six one-medal roles: actual recover, miss and BIG-priority inputs.
-    for role,group in vectors["oneMedal"].items():
-        for mode,target in (("recover","BONUS_PENDING_BIG"),("miss","BONUS_PENDING_BIG"),("big","BIG_READY")):
-            forced_spin(role)
-            v=group[mode]
-            stop_vector(v,target,v["payout"])
-            if mode=="recover": check(role+" one-medal recovered",session()["pay_display"]==1,session())
-            elif mode=="miss": check(role+" one-medal miss pays zero",session()["pay_display"]==0,session())
-            else: check(role+" BIG priority enters BIG",session().get("bonus_type")=="BIG" and session()["game_state"]=="BIG_READY",session())
-            fresh_ready()
+    # Representative real-client one-medal path. Exhaustive ONE_A/B/CD/E/F/H
+    # decision/outcome coverage is already proven by the production-model exhaustive verifier.
+    role="ONE_H";group=vectors["oneMedal"][role]
+    for mode,target in (("recover","BONUS_PENDING_BIG"),("miss","BONUS_PENDING_BIG"),("big","BIG_READY")):
+        forced_spin(role)
+        v=group[mode]
+        stop_vector(v,target,v["payout"])
+        if mode=="recover": check(role+" one-medal recovered",session()["pay_display"]==1,session())
+        elif mode=="miss": check(role+" one-medal miss pays zero",session()["pay_display"]==0,session())
+        else: check(role+" BIG priority enters BIG",session().get("bonus_type")=="BIG" and session()["game_state"]=="BIG_READY",session())
+        fresh_ready()
 
     # Carried BIG + replay: actual lower bonus-bit entry vector (CENTER, LEFT, RIGHT).
     forced_spin("BIG","F")
