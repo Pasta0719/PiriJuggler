@@ -132,6 +132,11 @@ public final class SkillStopGame implements GameEngine {
                             if(end){bonusEnded=true;values.put("game_state","SEATED_READY");values.put("bonus_payout_count",0);values.put("lamp_on",0);values.put("notice_state","NONE");values.put("bonus_type",null);}
                             else values.put("game_state",big?"BIG_READY":"REG_READY");
                             clearSpin(values);scheduled.add(new Scheduled(delay,Envelope.current(PacketType.PAYOUT,new JsonObject())));
+                            if(outcome.challengeSuccess()){
+                                JsonObject success=notice(before,"ON","NOTICE","STEADY").payload();
+                                success.addProperty("skillChallengeSuccess",true);
+                                scheduled.add(new Scheduled(delay,Envelope.current(PacketType.NOTICE,success)));
+                            }
                             if(end){JsonObject b=new JsonObject();b.addProperty("bonusType",big?"BIG":"REG");scheduled.add(new Scheduled(delay,Envelope.current(PacketType.BONUS_END,b)));}
                         }
                         default -> throw new IllegalStateException("Unexpected spinning state "+state);
@@ -160,7 +165,13 @@ public final class SkillStopGame implements GameEngine {
     }
     private Envelope start(Session saved,long now,ReelMotion.Profile profile) {
         Motion motion=new Motion(UUID.fromString(saved.text("spin_id")),phase(saved,"left"),phase(saved,"center"),phase(saved,"right"),profile,now);
-        motions.put(saved.id(),motion);return round(saved,motion).begin(now);
+        motions.put(saved.id(),motion);
+        Envelope start=round(saved,motion).begin(now);JsonObject body=start.payload();
+        JsonObject publicState=saved.publicState();
+        if(publicState.has("skillRemaining")){
+            body.add("skillRemaining",publicState.get("skillRemaining"));body.add("skillChallenge",publicState.get("skillChallenge"));
+        }
+        return Envelope.current(start.packetType(),body);
     }
     public Session capture(Session saved,long now) {
         main.requireMainThread();Motion motion=motions.get(saved.id());

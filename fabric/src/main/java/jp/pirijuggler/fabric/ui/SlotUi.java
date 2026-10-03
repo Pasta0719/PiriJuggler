@@ -52,7 +52,8 @@ public final class SlotUi {
         if(view==null)return;
         switch(packet.packetType()) {
             case NOTICE -> {
-                if(view.matchesSpin(b))switch(b.get("sound").getAsString()){
+                boolean success=b.has("skillChallengeSuccess")&&b.get("skillChallengeSuccess").getAsBoolean();
+                if(view.matchesSpin(b)&&(!success||view.acceptSkillSuccess(b)))switch(b.get("sound").getAsString()){
                     case "NOTICE"->PiriSounds.queue(sound("notice"),1,0);
                     case "NOTICE_STRONG"->PiriSounds.queue(sound("notice_strong"),1,0);
                     case "NOTICE_X5"->PiriSounds.queue(sound("notice"),5,100_000_000);

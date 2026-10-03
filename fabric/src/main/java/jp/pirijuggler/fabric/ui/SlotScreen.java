@@ -77,6 +77,10 @@ public final class SlotScreen extends Screen {
         }
         if(godMachine)textureFitActual(c,name,lamp.x(),lamp.y(),lamp.w(),lamp.h(),1,1);
         else texture(c,name,lamp.x(),lamp.y(),lamp.w(),lamp.h(),512,256,1);
+        if(view.skillChallengeTexture()!=null){
+            var challenge=SlotLayout.SKILL_CHALLENGE;
+            textureFitActual(c,view.skillChallengeTexture(),challenge.x(),challenge.y(),challenge.w(),challenge.h(),1,1);
+        }
         if(isJugglerGod(view.machineType())){
             int stockOn=view.stockLampOn()?color("DISPLAY_GREEN"):color("BUTTON_METAL_DARK");
             rounded(c,1390,835,150,58,14,stockOn);
@@ -87,7 +91,7 @@ public final class SlotScreen extends Screen {
         String[] labels={"CREDIT","BET","PAY","MEDALS"},fields={"credit","bet","pay","heldMedals"};
         for(int n=0;n<4;n++){int x=690+n*198;text(c,labels[n],x,725,2,false);text(c,view.value(fields[n]),x,758,3,false);}
         String state=view.value("gameState");if(state.equals("REPLAY_READY"))text(c,"REPLAY",1050,816,2,true);
-        if(state.startsWith("BIG_")||state.startsWith("REG_"))text(c,"COUNT "+view.value("bonusCount"),1090,816,2,true);
+        if(state.startsWith("BIG_")||state.startsWith("REG_"))text(c,"SKILL_STOP".equals(view.machineType())?"残り "+view.skillRemaining()+"G":"COUNT "+view.value("bonusCount"),1090,816,2,true);
         for(var control:SlotLayout.CONTROLS)drawControl(c,control,v.logicalX(mouseX),v.logicalY(mouseY));
         String message=input.closing()?"離席処理中…":errorText();if(!message.isEmpty())text(c,message,1040,990,2,true);
         c.getMatrices().pop();

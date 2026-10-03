@@ -2,6 +2,7 @@ package jp.pirijuggler.fabric.network;
 
 import com.google.gson.JsonObject;
 import jp.pirijuggler.common.reel.ReelMotion;
+import jp.pirijuggler.common.protocol.SkillStopPresentation;
 
 import java.util.Locale;
 import java.util.Set;
@@ -41,6 +42,7 @@ public final class RemoteMachineViewState {
     private UUID spinId;
     private ReelMotion.Profile profile = ReelMotion.Profile.NORMAL;
     private long spinAt;
+    private SkillStopPresentation skill=SkillStopPresentation.EMPTY;
 
     private RemoteMachineViewState(int machineId) {
         this.machineId = machineId;
@@ -56,6 +58,7 @@ public final class RemoteMachineViewState {
         state.z = body.get("z").getAsInt();
         state.facing = body.get("facing").getAsString();
         state.machineType = body.has("machineType") ? body.get("machineType").getAsString() : "JUGGLER";
+        if("SKILL_STOP".equals(state.machineType))state.skill=SkillStopPresentation.read(body);
         state.enabled = body.get("enabled").getAsBoolean();
         state.occupied = body.get("occupied").getAsBoolean();
         state.gameState = body.get("gameState").getAsString();
@@ -106,6 +109,7 @@ public final class RemoteMachineViewState {
     }
 
     void applySpin(JsonObject body, long now) {
+        if("SKILL_STOP".equals(machineType))skill=SkillStopPresentation.read(body);
         spinId = UUID.fromString(body.get("spinId").getAsString());
         profile = ReelMotion.Profile.valueOf(body.get("animation").getAsString());
         JsonObject phase = body.getAsJsonObject("startPhase");
@@ -219,6 +223,9 @@ public final class RemoteMachineViewState {
     public long credit() { return credit; }
     public long pay() { return pay; }
     public long bonusCount() { return bonusCount; }
+    public int skillRemaining(){return skill.remaining();}
+    public String skillChallenge(){return skill.target().name();}
+    public String skillChallengeTexture(){return "SKILL_STOP".equals(machineType)?skill.target().texture():null;}
     public long totalGames() { return totalGames; }
     public long bigCount() { return bigCount; }
     public long regCount() { return regCount; }

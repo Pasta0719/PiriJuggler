@@ -3,6 +3,7 @@ package jp.pirijuggler.fabric.network;
 import com.google.gson.JsonObject;
 import jp.pirijuggler.common.protocol.Envelope;
 import jp.pirijuggler.common.protocol.PacketType;
+import jp.pirijuggler.common.protocol.SkillStopPresentation;
 import jp.pirijuggler.common.reel.ReelMotion;
 
 import java.util.*;
@@ -24,6 +25,8 @@ public final class RemoteMachineRegistry {
     );
     private final Map<Integer, JsonObject> machines = new HashMap<>();
     private final Map<Integer, RemoteMachineViewState> views = new HashMap<>();
+    private final Map<Integer,SkillStopPresentation.NoticeGate> skillNotices=new HashMap<>();
+    private Integer skillSuccessSound;
     private final LongSupplier time,wallTimeMs;
 
     public RemoteMachineRegistry() {
@@ -70,6 +73,7 @@ public final class RemoteMachineRegistry {
                     current.addProperty("spinId", body.get("spinId").getAsString());
                     current.addProperty("animation", body.get("animation").getAsString());
                     current.add("startPhase", phase.deepCopy());
+                    if("SKILL_STOP".equals(current.get("machineType").getAsString()))SkillStopPresentation.read(body).write(current);
                     if(body.has("godFreeze")){
                         requireBoolean(body,"godFreeze");
                         current.addProperty("godFreeze",body.get("godFreeze").getAsBoolean());
@@ -154,9 +158,17 @@ public final class RemoteMachineRegistry {
                 case REMOTE_MACHINE_REMOVE -> {
                     machines.remove(machineId);
                     views.remove(machineId);
+                    skillNotices.remove(machineId);
                 }
                 case REMOTE_MACHINE_SOUND -> {
-                    // Reserved for Phase14. Validate the identity only and do not play audio yet.
+                    // Only the explicitly public SKILL_STOP challenge success is audible here.
+                    if(!body.has("skillChallengeSuccess"))break;
+                    requireBoolean(body,"skillChallengeSuccess");requireString(body,"sound");requireString(body,"spinId");
+                    UUID.fromString(body.get("spinId").getAsString());
+                    RemoteMachineViewState view=views.get(machineId);
+                    if(!body.get("skillChallengeSuccess").getAsBoolean()||!"NOTICE".equals(body.get("sound").getAsString())||view==null||!"SKILL_STOP".equals(view.machineType()))break;
+                    if(view.spinId()!=null&&!view.spinId().toString().equals(body.get("spinId").getAsString()))break;
+                    if(skillNotices.computeIfAbsent(machineId,k->new SkillStopPresentation.NoticeGate()).accept(body.get("spinId").getAsString()))skillSuccessSound=machineId;
                 }
                 default -> { }
             }
@@ -187,10 +199,12 @@ public final class RemoteMachineRegistry {
     public RemoteMachineViewState view(int machineId) {
         return views.get(machineId);
     }
+    public Integer pollSkillSuccessSound(){Integer value=skillSuccessSound;skillSuccessSound=null;return value;}
 
     public void reset() {
         machines.clear();
         views.clear();
+        skillNotices.clear();skillSuccessSound=null;
     }
 
     private void applySnapshot(int machineId, JsonObject body) {
@@ -202,8 +216,9 @@ public final class RemoteMachineRegistry {
             throw new IllegalArgumentException("facing");
         if (!body.has("machineType")) body.addProperty("machineType", "JUGGLER");
         requireString(body, "machineType");
-        if (!Set.of("JUGGLER","JUGGLER_GOD","JUGGLER_GOD_EXTREME","OKIDOKI","GOD","DISC").contains(body.get("machineType").getAsString()))
+        if (!Set.of("JUGGLER","JUGGLER_GOD","JUGGLER_GOD_EXTREME","OKIDOKI","GOD","DISC","SKILL_STOP").contains(body.get("machineType").getAsString()))
             throw new IllegalArgumentException("machineType");
+        if("SKILL_STOP".equals(body.get("machineType").getAsString()))SkillStopPresentation.read(body);
         requireBoolean(body, "enabled"); requireBoolean(body, "occupied");
         requireString(body, "gameState");
         if(body.has("godFreeze"))requireBoolean(body,"godFreeze");

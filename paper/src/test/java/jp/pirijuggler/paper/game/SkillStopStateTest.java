@@ -103,4 +103,25 @@ class SkillStopStateTest extends GameFixture {
             for(int k=1;k<=3;k++)assertEquals(trials/(3.0*denominator),counts[k],trials/(3.0*denominator)*.08);
         }
     }
+    @Test void challengeLeverPublishesFixedTargetAndSuccessOnlySchedulesOneNotice() throws Exception {
+        var g=game();Session s=entry(g,seatSkill(),"BIG");
+        for(var target:List.of(SkillStopBonus.Target.BAR,SkillStopBonus.Target.BELL,SkillStopBonus.Target.PIERO)){
+            s=lever(g,s,target);
+            var start=g.resume(s,NANO).orElseThrow().payload();
+            assertEquals(target.name(),start.get("skillChallenge").getAsString());assertEquals(SkillStopBonus.read(s).remaining(),start.get("skillRemaining").getAsInt());
+            int[] tops=switch(target){case BAR->new int[]{3,7,19};case BELL->new int[]{9,19,1};case PIERO->new int[]{11,3,3};default->throw new AssertionError();};
+            s=top(g,s,0,tops[0]);s=top(g,s,1,tops[1]);
+            var transition=g.plan(s,PacketType.STOP_RIGHT,s.sequence()+1,1,NOW,NANO+1_000_000_000L,0,SkillStopReels.stopIndex(tops[2]));
+            var notices=g.scheduled(transition).stream().filter(p->p.packet().packetType()==PacketType.NOTICE).toList();
+            assertEquals(1,notices.size());assertEquals(transition.publicDelayMs(),notices.getFirst().delayMs());
+            assertTrue(notices.getFirst().packet().payload().get("skillChallengeSuccess").getAsBoolean());
+            assertEquals("NOTICE",notices.getFirst().packet().payload().get("sound").getAsString());
+            s=apply(g,transition);assertEquals("AUTO",s.publicState().get("skillChallenge").getAsString());
+            var retry=g.plan(s,PacketType.STOP_RIGHT,s.sequence()+1,1,NOW,NANO,0,0);
+            assertTrue(g.scheduled(retry).stream().noneMatch(p->p.packet().packetType()==PacketType.NOTICE));
+        }
+        s=lever(g,s,SkillStopBonus.Target.BELL);s=top(g,s,0,3);s=top(g,s,1,7);
+        var wrong=g.plan(s,PacketType.STOP_RIGHT,s.sequence()+1,1,NOW,NANO+1_000_000_000L,0,SkillStopReels.stopIndex(19));
+        assertTrue(g.scheduled(wrong).stream().noneMatch(p->p.packet().packetType()==PacketType.NOTICE));assertEquals(14,wrong.payout());
+    }
 }
