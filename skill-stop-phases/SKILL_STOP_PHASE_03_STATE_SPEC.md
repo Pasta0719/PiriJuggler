@@ -1,5 +1,5 @@
 # Phase 03 — 当選権利・残りG・再遊技・保存
-Status: IN_PROGRESS — 残りG・チャレンジ・保存を実装中
+Status: COMPLETE — 状態管理・保存・実Minecraft受入PASS
 
 状態表はSKILL_STOP_STATE_AND_PHASE_PLAN.md。BIG20G、REG8Gから開始し、残りGで終了を管理する。
 
@@ -31,3 +31,11 @@ Status: IN_PROGRESS — 残りG・チャレンジ・保存を実装中
 通常時の小役取りこぼし・4コマ制御を、通常ボーナスの既存自動揃いへ一律に流用しない。
 左角チェリーには幾何学上最大8コマの移動が必要な入力があるが、これを新しいユーザー指定の滑り上限とは扱わない。
 チャレンジは別制御で、指定外を蹴らず、777/77BARだけ回避し14枚払出。
+
+## 保存実装の運用 — 2026-10-03
+未完了SKILL_STOPはgrace/idle/再起動で自動清算せず、本人用の台権利とsnapshotを保持する。
+通常の回復清算で目押しチャレンジを自動処理せず、遊技完了後に清算する。他機種は従来の回復規則を維持。
+実装/検証の現在地: SKILL_STOP_PHASE_03_IMPLEMENTATION.md。
+
+## 受入完了 — 2026-10-03
+実Paper/Fabricで202/202 PASS、全体ビルド/テストPASS。証拠はruntime-evidence/SKILL_STOP_PHASE_03/REPORT.md。

@@ -79,3 +79,11 @@ SlotInput.withPressedIndexで新しいEnvelopeを生成し、押した位置を�
 実EnvelopeCodecの送受信テスト4/4と全root test/package/runtime-helper CI PASS（https://github.com/Pasta0719/PiriJuggler/actions/runs/37120918659）。
 実SKILL_STOPクライアントでも12指定入力すべてが送信pressedIndexと一致、実停止15件の4コマ上限を確認（https://github.com/Pasta0719/PiriJuggler/actions/runs/37120916132）。
 証拠: runtime-evidence/SKILL_STOP_PHASE_02/REPORT.md。他の既存機種の全実機シナリオを再実施したとの意味ではない。
+
+
+## 2026-10-03 — SKILL STOP Phase03保存の機種限定対応
+SKILL_STOP未完了状態だけはgrace/idle/起動時の自動清算を避け、固定済みチャレンジ・残りG・当選権利・停止履歴・無料再遊技と台ロックを保持する。
+回復清算も未完了SKILL_STOPにはRECOVERY_REQUIREDを返す。他機種の清算/設定/役確率/停止制御は変更しない。
+既存GameStoreの原子トランザクションとreceiptで14枚/追加3Gを一度だけ確定。
+全root test/package/runtime helper CI PASS（https://github.com/Pasta0719/PiriJuggler/actions/runs/37123297201）、実Paper/Fabric202/202 PASS（https://github.com/Pasta0719/PiriJuggler/actions/runs/37123294908）。
+証拠: runtime-evidence/SKILL_STOP_PHASE_03/REPORT.md。他機種の全実機シナリオ再実施を意味しない。
