@@ -190,6 +190,14 @@ try:
         check("public packets keep internal draw private",all("internalRole" not in p and "premiumType" not in p for p in packets("PUBLIC_STATE")))
         action("capture",label=target_state+"-"+str(pay))
 
+    # A real MISS spin warms the client's first key/class initialization paths.
+    # Subsequent precise presses still pass through the screen and real protocol.
+    forced_spin("MISS")
+    for key,mask in [(264,2),(263,3)]:
+        tap(key);wait(lambda:settled() and session()["stopped_mask"]==mask,"initial MISS stop")
+    tap(262);wait_state("SEATED_READY")
+    check("initial MISS has no payout",session()["pay_display"]==0,session())
+
     forced_spin("GRAPE")
     stop_top(1,20,2)
     check("middle seven upper input pulls grape upper in four symbols",session()["display_center_stop"]==20,session())
@@ -209,7 +217,7 @@ try:
     stop_top(1,20,2);stop_top(0,10,3);finish_top(2,20,"BIG_READY",0)
     check("one-medal draw protects correct bonus bit entry",session()["bonus_type"]=="BIG" and session()["lamp_on"]==1,session())
     stop_packets=packets("REEL_STOP")
-    check("real stop packets carry bounded slips",len(stop_packets)==12 and all(0<=p["slip"]<=4 for p in stop_packets),stop_packets)
+    check("real stop packets carry bounded slips",len(stop_packets)==15 and all(0<=p["slip"]<=4 for p in stop_packets),stop_packets)
     check("normal bet uses three medals",all(p.get("mode")=="NORMAL" for p in packets("SPIN_START")),packets("SPIN_START"))
     progress("ACCEPTANCE_COMPLETE",**snapshot())
     manifest["passed"]=True

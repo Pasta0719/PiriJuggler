@@ -52,7 +52,7 @@ public final class Phase02Observer implements Listener {
             world.getBlockAt(22,66,0).setBlockData(spare,false);
         }
         Bukkit.getPluginManager().registerEvents(this,plugin);
-        if (java.util.Set.of("phase03","phase05").contains(System.getProperty("piri.runtime.phase", ""))) {
+        if (java.util.Set.of("phase03","phase05","skill02").contains(System.getProperty("piri.runtime.phase", ""))) {
             Bukkit.getMessenger().registerOutgoingPluginChannel(plugin,Protocol.CHANNEL);
             Bukkit.getMessenger().registerIncomingPluginChannel(plugin,Protocol.CHANNEL,(channel,player,bytes)->{
                 var packet=EnvelopeCodec.decode(bytes);var record=new JsonObject();record.addProperty("type",packet.packetType().name());record.add("payload",packet.payload());record.addProperty("player",player.getName());inbound.add(record);
