@@ -13,5 +13,6 @@ public enum MachineType {
     JUGGLER_GOD_EXTREME,
     OKIDOKI,
     GOD,
-    DISC
+    DISC,
+    SKILL_STOP
 }

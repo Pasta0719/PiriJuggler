@@ -1,5 +1,5 @@
 # Phase 02 — 配列・入力・停止制御の実装契約
-Status: SPEC_ONLY — 実装未着手
+Status: IN_PROGRESS — 停止制御・Paper結合テストPASS、Fabric/実Minecraft受入待ち
 
 採用配列はSKILL_STOP_REEL_STOP_CONTRACT.md。入力番号と既存回転の対応はSKILL_STOP_INPUT_TIMING_CONTRACT.md。
 通常役・持越し・追加1枚役・プレミア・ボーナス通常G・チャレンジを別の制御条件として扱い、同じ禁止判定を無条件に流用しない。

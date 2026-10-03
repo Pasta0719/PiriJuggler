@@ -2,6 +2,17 @@
 
 このファイルは各Phase終了時の現在状態を示す。
 
+## SKILL STOP Phase 02 — 2026-10-03
+
+Status: IN_PROGRESS — GitHub push許可済み、CI実機受入待ち。ユーザーの依頼により既存Paper/Fabric JARへSKILL_STOP機種を追加中。
+共通停止制御、専用配列、入力履歴、通常/持越し/プレミア/1枚役/チャレンジ制御、Paper入賞判定と保存、Fabric表示を追加。
+共通42件・Paper279件の321テストPASS。停止制御は全プレミアを含む79条件×6押し順×21³入力=4,389,714履歴PASS。
+Paperの既存名JARビルドPASS。Fabricビルドは実行環境のUnix domain socket制限でLoom初期化が停止。
+専用実機runner/workflowを追加し、CIでFabricビルドと実Paper/Fabric受入を検証する。受入PASS前にCOMPLETEにしない。
+残りG・チャレンジ抽選/追加Gの完全な状態管理はPhase03、機械割の実装値検証はPhase04、表示/音の追加はPhase05。
+旧GOD/NEXTと既存Phase表の状態はこの作業で変更しない。
+詳細: [SKILL_STOP_PHASE_02_IMPLEMENTATION.md](skill-stop-phases/SKILL_STOP_PHASE_02_IMPLEMENTATION.md)。
+
 ## Current status — 2026-09-20
 
 PiriJuggler Phase01–12 はすべて COMPLETE。

@@ -78,7 +78,8 @@ public final class MachineService implements Listener, CommandExecutor {
         games=new GameEngines().register(MachineType.JUGGLER,new JugglerGameEngine(jugglerGame))
                 .register(MachineType.JUGGLER_GOD,new JugglerGodGameEngine(jugglerGodGame,random,weights,config))
                 .register(MachineType.JUGGLER_GOD_EXTREME,new JugglerGodGameEngine(jugglerGodExtremeGame,random,weights,config,"juggler_god_extreme"))
-                .register(MachineType.GOD,new jp.pirijuggler.paper.game.god.GodGameEngine(random));
+                .register(MachineType.GOD,new jp.pirijuggler.paper.game.god.GodGameEngine(random))
+                .register(MachineType.SKILL_STOP,new SkillStopGame(random,new PaperMainThread(plugin),config));
         remote=new RemoteMachineSync(plugin,()->state,plugin::canUseSlot,(saved,nowNanos)->engine(saved.machine()).capture(saved,nowNanos));
         var gameConfig=jp.pirijuggler.paper.database.StartupProfile.map(config.get("game"));
         graceMs = ((Number) gameConfig.get("disconnect_grace_seconds")).longValue() * 1000;
@@ -164,6 +165,15 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length==3 && args[0].equalsIgnoreCase("godrole")) {
                 commandGodRole(sender,Integer.parseInt(args[1]),args[2]); return true;
             }
+            if ((args.length==3||args.length==4)&&args[0].equalsIgnoreCase("skillrole")) {
+                int id=Integer.parseInt(args[1]);Machine machine=state.machine(id);
+                if(machine==null||machine.type()!=MachineType.SKILL_STOP||busy(id))throw new DomainException("INVALID_STATE");
+                JsonObject next=machine.runtimeJson()==null?new JsonObject():com.google.gson.JsonParser.parseString(machine.runtimeJson()).getAsJsonObject();
+                if(args[2].equalsIgnoreCase("clear")){next.remove("forceSkillRole");next.remove("forceSkillPremium");}
+                else{var role=jp.pirijuggler.common.reel.SkillStopRole.valueOf(args[2].toUpperCase(Locale.ROOT));next.addProperty("forceSkillRole",role.name());next.remove("forceSkillPremium");
+                    if(args.length==4){var premium=jp.pirijuggler.common.reel.SkillStopControl.Premium.valueOf(args[3].toUpperCase(Locale.ROOT));jp.pirijuggler.common.reel.SkillStopControl.Context.normal(role,premium);if(premium!=jp.pirijuggler.common.reel.SkillStopControl.Premium.NONE)next.addProperty("forceSkillPremium",premium.name());}}
+                submit(sender,null,id,()->{database.setMachineRuntimeJson(id,next.toString(),System.currentTimeMillis());return id;},done->{tell(sender,"SKILL_ROLE_READY id="+done);remote.machineChanged(done);});return true;
+            }
             if (args.length==3 && (args[0].equalsIgnoreCase("jugglergodrole") || args[0].equalsIgnoreCase("jgrole"))) {
                 commandJugglerGodRole(sender,Integer.parseInt(args[1]),args[2]); return true;
             }
@@ -209,7 +219,7 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length >= 2 && args[0].equalsIgnoreCase("event")) {
                 commandEvent(sender,args); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|JUGGLER_GOD_EXTREME|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri jgrole <id> <MISS|REPLAY|GRAPE|CHERRY|BELL|PIERO|BIG|REG|CHERRY_BIG|CHERRY_REG|PIERO_BIG|PIERO_REG|GOD|clear>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|JUGGLER_GOD_EXTREME|SKILL_STOP|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri jgrole <id> <MISS|REPLAY|GRAPE|CHERRY|BELL|PIERO|BIG|REG|CHERRY_BIG|CHERRY_REG|PIERO_BIG|PIERO_REG|GOD|clear>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
