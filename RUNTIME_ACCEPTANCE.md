@@ -151,3 +151,11 @@ Evidence: `runtime-evidence/PHASE_12/REPORT.md`.
 PASS / COMPLETE。実Paper/Fabric、既存SlotScreenのキー入力と送信pressedIndex、4コマ滑り、G/C/P8/4/10枚、ONE_CDのBIGビタ、画面/DB整合、内部役秘匿33/33 PASS。
 実行: run-skill-stop-phase02-runtime.bat または専用workflow。証拠: runtime-evidence/SKILL_STOP_PHASE_02/REPORT.md。
 Phase03追加G/抽選/完全な保存、Phase05表示/音はこの受入範囲外。
+
+
+### SKILL STOP Phase03 result — 2026-10-03
+PASS / COMPLETE。実Paper/Fabricで202/202 PASS。
+BIG20開始→最終G成功→3G継続→23G終了、REG8G終了、途中チャレンジのPaper/Client再起動・復元、追加Gの対象抽選/指定外BAR失敗/14枚、持越し連続リプレイ無料を確認。
+全体CI: https://github.com/Pasta0719/PiriJuggler/actions/runs/37123297201。実機CI: https://github.com/Pasta0719/PiriJuggler/actions/runs/37123294908。
+実行: run-skill-stop-phase03-runtime.bat。証拠: runtime-evidence/SKILL_STOP_PHASE_03/REPORT.md。
+Phase04機械割、Phase05 PNG/音/残G表示は別受入。

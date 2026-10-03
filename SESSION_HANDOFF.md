@@ -1,6 +1,15 @@
 # 新規セッションへの引き継ぎ
 
-## 最新追記 — 2026-10-03
+## 最新追記 — SKILL STOP Phase03 / 2026-10-03
+Phase03 COMPLETE。BIG20/REG8、チャレンジBIG1/15・REG1/9、成功+3G、残G終了、離席/idle/再起動保存を既存Paper JARへ接続。
+全体CI・実Paper/Fabric受入202/202 PASS。実行対象source `fa81e18a5e4c52c7e2a0144b2324f10bf29fa3ae`。
+現在地: IMPLEMENTATION_STATUS.md冒頭、skill-stop-phases/SKILL_STOP_PHASE_03_IMPLEMENTATION.md。
+証拠: runtime-evidence/SKILL_STOP_PHASE_03/REPORT.md。次はPhase04の機械割検証/調整。Phase05のPNG/音/残G表示は後続で、本runでは未着手。
+未完了SKILL_STOPは自動清算せず台権利を保持し、本人が復帰して続きを遊ぶ。既存他機種の回復は変更していない。
+以下は各時点の履歴で、現在地として再採用しない。
+
+
+## Phase02完了時の追記 — 2026-10-03
 SKILL STOP Phase02 COMPLETE。既存Paper/Fabric JARへ追加し、全入力4,389,714履歴・全体CI・実Minecraft受入PASS。
 現在地はIMPLEMENTATION_STATUS.md冒頭とskill-stop-phases/SKILL_STOP_PHASE_02_IMPLEMENTATION.md、証拠はruntime-evidence/SKILL_STOP_PHASE_02/REPORT.md。
 次のSKILL STOP作業はPhase03（残G・チャレンジ抽選/+3G・保存）。このrunでは開始していない。以下の古いPhase現在地は当時の履歴。

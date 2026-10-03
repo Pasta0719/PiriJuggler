@@ -2,6 +2,15 @@
 
 このファイルは各Phase終了時の現在状態を示す。
 
+## SKILL STOP Phase 03 — 2026-10-03
+Status: COMPLETE — 全体CI・実Minecraft受入202/202 PASS。
+BIG20/REG8から開始、1/15・1/9でチャレンジ抽選、BAR/ベル/ピエロ各1/3。第三停止14枚、残り-1と成功+3の後に終了判定。追加Gでも抽選。
+未完了SKILL_STOPはタイムアウト/再起動で自動清算せず台の権利・固定抽選・入力/停止履歴・無料再遊技を保存。
+実機でBIG23G、最終G成功、途中停止からPaper/Client再起動・復元、指定外失敗、REG8G終了、連続リプレイ無料を確認。
+共通/Paper/Fabric実行373件PASS（Paperのopt-in1件skip）。root test/package/runtime helper build PASS。
+検証対象: `fa81e18a5e4c52c7e2a0144b2324f10bf29fa3ae`。証拠: runtime-evidence/SKILL_STOP_PHASE_03/REPORT.md。
+詳細: skill-stop-phases/SKILL_STOP_PHASE_03_IMPLEMENTATION.md。Phase04以降未着手。機械割・PNG/音の完成版検証はまだ行っていない。
+
 ## SKILL STOP Phase 02 — 2026-10-03
 
 Status: COMPLETE — 停止制御・全体ビルド・実Paper/Fabric受入PASS。既存Paper/Fabric JARへSKILL_STOPを追加。
@@ -9,7 +18,7 @@ Status: COMPLETE — 停止制御・全体ビルド・実Paper/Fabric受入PASS�
 停止制御79条件×6押し順×21³=4,389,714履歴PASS。root test/packagePiriJarsとruntime helpers PASS。
 実Minecraft受入33/33 PASS。押した位置の送信漏れとSKILL_STOP再着席時の履歴消失を修正。
 検証対象: 78911f2a6983896a87a3c6710473cabe541856fe。証拠: runtime-evidence/SKILL_STOP_PHASE_02/REPORT.md。
-残りG・チャレンジ抽選/追加Gの状態管理はPhase03未着手、機械割の実装値検証はPhase04、表示/音の追加はPhase05。
+残りG・チャレンジ抽選/追加Gの状態管理は冒頭のPhase03完了記録を参照。機械割の実装値検証はPhase04、表示/音の追加はPhase05。
 旧GOD/NEXTと既存Phase表の状態はこの作業で変更しない。
 詳細: [SKILL_STOP_PHASE_02_IMPLEMENTATION.md](skill-stop-phases/SKILL_STOP_PHASE_02_IMPLEMENTATION.md)。
 

@@ -70,6 +70,11 @@ public record Session(Map<String, Object> snapshot) {
         stops.addProperty("right", number("display_right_stop")); json.add("displayStops", stops);
         json.addProperty("stoppedMask", number("stopped_mask"));
         JsonObject ms=machineState();
+        if(ms!=null&&ms.has("skillRemaining")){
+            json.addProperty("skillRemaining",ms.get("skillRemaining").getAsInt());
+            boolean spinning=state()==GameState.BIG_SPINNING||state()==GameState.REG_SPINNING;
+            json.addProperty("skillChallenge",spinning&&ms.has("skillChallenge")?ms.get("skillChallenge").getAsString():"AUTO");
+        }
         if(ms!=null&&ms.has("godFreeze"))json.addProperty("godFreeze",ms.get("godFreeze").getAsBoolean());
         if(ms!=null&&ms.has("jgMode")){
             json.addProperty("godPresentationStartMs",ms.has("godPresentationStartMs")?ms.get("godPresentationStartMs").getAsLong():0L);

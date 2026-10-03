@@ -165,9 +165,17 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length==3 && args[0].equalsIgnoreCase("godrole")) {
                 commandGodRole(sender,Integer.parseInt(args[1]),args[2]); return true;
             }
+            if(args.length==3&&args[0].equalsIgnoreCase("skillbonus")){
+                int id=Integer.parseInt(args[1]);Machine machine=state.machine(id);
+                if(machine==null||machine.type()!=MachineType.SKILL_STOP||state.sessions().stream().anyMatch(s->s.machine()==id&&s.lifecycle()==Session.Lifecycle.ACTIVE))throw new DomainException("INVALID_STATE");
+                JsonObject next=machine.runtimeJson()==null?new JsonObject():com.google.gson.JsonParser.parseString(machine.runtimeJson()).getAsJsonObject();
+                if(args[2].equalsIgnoreCase("clear"))next.remove("forceSkillBonus");
+                else next.addProperty("forceSkillBonus",jp.pirijuggler.paper.game.SkillStopBonus.Target.valueOf(args[2].toUpperCase(Locale.ROOT)).name());
+                submit(sender,null,id,()->{database.setMachineRuntimeJson(id,next.toString(),System.currentTimeMillis());return id;},done->{tell(sender,"SKILL_BONUS_READY id="+done);remote.machineChanged(done);});return true;
+            }
             if ((args.length==3||args.length==4)&&args[0].equalsIgnoreCase("skillrole")) {
                 int id=Integer.parseInt(args[1]);Machine machine=state.machine(id);
-                if(machine==null||machine.type()!=MachineType.SKILL_STOP||busy(id))throw new DomainException("INVALID_STATE");
+                if(machine==null||machine.type()!=MachineType.SKILL_STOP||state.sessions().stream().anyMatch(s->s.machine()==id&&s.lifecycle()==Session.Lifecycle.ACTIVE))throw new DomainException("INVALID_STATE");
                 JsonObject next=machine.runtimeJson()==null?new JsonObject():com.google.gson.JsonParser.parseString(machine.runtimeJson()).getAsJsonObject();
                 if(args[2].equalsIgnoreCase("clear")){next.remove("forceSkillRole");next.remove("forceSkillPremium");}
                 else{var role=jp.pirijuggler.common.reel.SkillStopRole.valueOf(args[2].toUpperCase(Locale.ROOT));next.addProperty("forceSkillRole",role.name());next.remove("forceSkillPremium");

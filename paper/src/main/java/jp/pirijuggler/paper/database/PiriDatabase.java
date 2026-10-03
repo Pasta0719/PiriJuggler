@@ -67,9 +67,10 @@ public final class PiriDatabase implements AutoCloseable {
                 } else {
                     RecoveryStore recovery=recovery();
                     for (Session session : sessions()) if (session.ownsLock()) {
-                        if(!session.ready()) recovery.settle(session,now);
+                        if(!session.ready()&&!preserveSkill(session)) recovery.settle(session,now);
                     }
-                    sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE lifecycle IN ('ACTIVE','SUSPENDED_GRACE')");
+                    sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE lifecycle IN ('ACTIVE','SUSPENDED_GRACE') AND session_id NOT IN (SELECT s.session_id FROM player_sessions s JOIN machines m ON s.machine_id=m.machine_id WHERE m.machine_type='SKILL_STOP' AND s.game_state<>'SEATED_READY')");
+                    sql("UPDATE player_sessions SET lifecycle='SUSPENDED_GRACE',lock_expires_at=? WHERE session_id IN (SELECT s.session_id FROM player_sessions s JOIN machines m ON s.machine_id=m.machine_id WHERE m.machine_type='SKILL_STOP' AND s.game_state<>'SEATED_READY')",Long.MAX_VALUE);
                     var day = Instant.ofEpochMilli(now).atZone(ZoneId.of("Asia/Tokyo")).toLocalDate();
                     var resolved = StartupProfile.resolve(config, day, metadata("next_start_profile"));
                     period = UUID.randomUUID().toString(); profile = resolved.name();
@@ -153,8 +154,9 @@ public final class PiriDatabase implements AutoCloseable {
             sql("DELETE FROM metadata WHERE key=?", "SIM_CURSOR:"+period+":"+id);
 
             if (existing != null && existing.lifecycle() == Session.Lifecycle.SUSPENDED_GRACE && existing.number("lock_expires_at") <= now) {
-                if(!existing.ready()) recovery().settle(existing,now);
-                sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE player_uuid=?", player.toString());
+                if(preserveSkill(existing))sql("UPDATE player_sessions SET lock_expires_at=? WHERE player_uuid=?",Long.MAX_VALUE,player.toString());
+                else if(!existing.ready()) recovery().settle(existing,now);
+                if(!preserveSkill(existing))sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE player_uuid=?", player.toString());
                 existing = session(player);
             }
             if (existing != null && existing.lifecycle() == Session.Lifecycle.SUSPENDED_SAFE)
@@ -231,6 +233,7 @@ public final class PiriDatabase implements AutoCloseable {
         transaction(() -> {
             RecoveryStore recovery=recovery();
             for (Session session : sessions()) if (session.lifecycle() == Session.Lifecycle.SUSPENDED_GRACE && session.number("lock_expires_at") <= now) {
+                if(preserveSkill(session)){sql("UPDATE player_sessions SET lock_expires_at=? WHERE session_id=?",Long.MAX_VALUE,session.id().toString());continue;}
                 if(!session.ready()) recovery.settle(session,now);
                 sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE session_id=?", session.id().toString());
             }
@@ -246,6 +249,7 @@ public final class PiriDatabase implements AutoCloseable {
                 boolean grace=session.lifecycle()==Session.Lifecycle.SUSPENDED_GRACE&&session.number("lock_expires_at")<=now;
                 boolean idle=session.lifecycle()==Session.Lifecycle.ACTIVE&&now-session.number("last_activity")>=idleMs;
                 if(!grace&&!idle)continue;
+                if(preserveSkill(session)){sql("UPDATE player_sessions SET lifecycle='SUSPENDED_GRACE',lock_expires_at=?,last_activity=? WHERE session_id=?",Long.MAX_VALUE,now,session.id().toString());if(idle)idled.add(session.player());continue;}
                 if(!session.ready())recovery.settle(session,now);
                 sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL,last_activity=? WHERE session_id=?",now,session.id().toString());
                 if(idle)idled.add(session.player());
@@ -325,6 +329,7 @@ public final class PiriDatabase implements AutoCloseable {
     private boolean tableExists(String name) throws SQLException { return !rows("SELECT name FROM sqlite_master WHERE type='table' AND name=?", name).isEmpty(); }
     private String metadata(String key) throws SQLException { var rows = rows("SELECT value FROM metadata WHERE key=?", key); return rows.isEmpty() ? null : (String) rows.getFirst().get("value"); }
     private void metadata(String key, String value) throws SQLException { sql("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", key, value); }
+    private boolean preserveSkill(Session session) throws SQLException {return !session.ready()&&requireMachine(session.machine()).type()==MachineType.SKILL_STOP;}
     private RecoveryStore recovery(){if(recoveryConfig==null||recoverySolver==null)throw new IllegalStateException("Recovery not configured");return new RecoveryStore(this,recoveryConfig,recoverySolver);}
     public int sql(String sql, Object... values) throws SQLException {
         checkThread(); try (PreparedStatement statement = connection.prepareStatement(sql)) {

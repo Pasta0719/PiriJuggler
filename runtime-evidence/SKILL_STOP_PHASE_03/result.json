@@ -1,0 +1,830 @@
+{
+  "startedAt": "2026-10-03T12:37:45.396923+00:00",
+  "finishedAt": "2026-10-03T12:45:51.171191+00:00",
+  "run": "20261003T123745Z",
+  "passed": true,
+  "buildHashes": {
+    "common": "bb6b5d49312034bd41912430692bf53b36a53c21d77e03cd809fad89f761be2d",
+    "paper": "eedf5569d3a0848e955bbfc2aefd98a3e9f349a4ea63fa11bd26a63a3cb94b2a",
+    "fabric": "57720cb715f2413f14a2a362a9291940d2798c0de94601c179d737b1503839d1"
+  },
+  "helperHashes": {
+    "paper": "7f597d5ddfbf8bc13fba53a0387aa4a2e78d0da7baaeef693107db0f9bf8a7e8",
+    "client": "d32a4e126896e47870547e51ffc3295ffb5041cd30f59d7d20d2d30554729fab"
+  },
+  "sourceCommit": "fa81e18a5e4c52c7e2a0144b2324f10bf29fa3ae",
+  "workflowRun": "https://github.com/Pasta0719/PiriJuggler/actions/runs/37123294908",
+  "fullBuildRun": "https://github.com/Pasta0719/PiriJuggler/actions/runs/37123297201",
+  "artifactId": 11274163409,
+  "fullEvidence": "Original result, packets, logs, JUnit reports and four screenshots are in the skill-stop-phase03-runtime-evidence Actions artifact",
+  "assertions": [
+    {
+      "name": "SKILL_STOP opens the existing slot screen",
+      "passed": true
+    },
+    {
+      "name": "server drew MISS",
+      "passed": true
+    },
+    {
+      "name": "initial MISS has no payout",
+      "passed": true
+    },
+    {
+      "name": "server drew BIG",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "actual payout 0",
+      "passed": true
+    },
+    {
+      "name": "public packets keep internal draw private",
+      "passed": true
+    },
+    {
+      "name": "entry starts full games without consuming one",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "last-game target fixed at lever",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "real server restart preserves final-game target and partial input",
+      "passed": true
+    },
+    {
+      "name": "partial final challenge survives reseat",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "actual payout 14",
+      "passed": true
+    },
+    {
+      "name": "public packets keep internal draw private",
+      "passed": true
+    },
+    {
+      "name": "final-game success adds three before end",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "actual payout 14",
+      "passed": true
+    },
+    {
+      "name": "public packets keep internal draw private",
+      "passed": true
+    },
+    {
+      "name": "added game draws; wrong target stays but fails",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "BIG ends by remaining games after twenty-three payouts",
+      "passed": true
+    },
+    {
+      "name": "server drew REG",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "actual payout 0",
+      "passed": true
+    },
+    {
+      "name": "public packets keep internal draw private",
+      "passed": true
+    },
+    {
+      "name": "entry starts full games without consuming one",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "public remaining and fixed challenge agree",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "bonus fail pays fourteen and decrements once",
+      "passed": true
+    },
+    {
+      "name": "all-failure REG ends after eight payouts",
+      "passed": true
+    },
+    {
+      "name": "server drew BIG",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "actual payout 0",
+      "passed": true
+    },
+    {
+      "name": "public packets keep internal draw private",
+      "passed": true
+    },
+    {
+      "name": "only actual prior replay makes pending bet free",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "actual payout 0",
+      "passed": true
+    },
+    {
+      "name": "public packets keep internal draw private",
+      "passed": true
+    },
+    {
+      "name": "replay retains BIG and next free flag",
+      "passed": true
+    },
+    {
+      "name": "only actual prior replay makes pending bet free",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "screen press samples requested input",
+      "passed": true
+    },
+    {
+      "name": "actual payout 0",
+      "passed": true
+    },
+    {
+      "name": "public packets keep internal draw private",
+      "passed": true
+    },
+    {
+      "name": "replay retains BIG and next free flag",
+      "passed": true
+    },
+    {
+      "name": "internal role is private on every public state",
+      "passed": true
+    }
+  ]
+}
