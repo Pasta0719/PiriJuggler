@@ -18,9 +18,9 @@ val phase = providers.gradleProperty("runtimeEvidencePhase").orElse(if (scenario
 require(phase in setOf("PHASE_01", "PHASE_02", "PHASE_02_PHASE01_REGRESSION", "PHASE_03", "PHASE_03_PHASE01_REGRESSION", "PHASE_04", "PHASE_04_PHASE01_REGRESSION", "PHASE_05", "PHASE_05_PHASE01_REGRESSION", "PHASE_05_REEL_REGRESSION", "PHASE_05_BAR_BIG", "PHASE_05_BAR_REG", "PHASE_12", "GOD_PHASE_02", "NEXT_PHASE_02", "NEXT_PHASE_04", "NEXT_PHASE_05", "SKILL_STOP_PHASE_02", "SKILL_STOP_PHASE_03", "SKILL_STOP_PHASE_05"))
 val runtimeRun = providers.gradleProperty("runtimeRun").orElse("current").get()
 require(runtimeRun.matches(Regex("[a-zA-Z0-9_-]+")))
-val evidenceDirectory = rootProject.file(if (phase == "SKILL_STOP_PHASE_05" || phase == "SKILL_STOP_PHASE_03" || phase == "SKILL_STOP_PHASE_02" || phase == "GOD_PHASE_02" || phase == "NEXT_PHASE_02" || phase == "NEXT_PHASE_04" || phase == "NEXT_PHASE_05") "runtime-evidence/$phase/attempts/$runtimeRun" else if (phase == "PHASE_02" || phase == "PHASE_03" || phase == "PHASE_12" || (phase == "PHASE_04" || phase == "PHASE_05_REEL_REGRESSION") || (phase == "PHASE_05" || phase.startsWith("PHASE_05_BAR_"))) "runtime-evidence/$phase/attempts/$runtimeRun/$scenario" else "runtime-evidence/$phase/$scenario")
+val evidenceDirectory = rootProject.file(if (phase == "SKILL_STOP_PHASE_06" || phase == "SKILL_STOP_PHASE_05" || phase == "SKILL_STOP_PHASE_03" || phase == "SKILL_STOP_PHASE_02" || phase == "GOD_PHASE_02" || phase == "NEXT_PHASE_02" || phase == "NEXT_PHASE_04" || phase == "NEXT_PHASE_05") "runtime-evidence/$phase/attempts/$runtimeRun" else if (phase == "PHASE_02" || phase == "PHASE_03" || phase == "PHASE_12" || (phase == "PHASE_04" || phase == "PHASE_05_REEL_REGRESSION") || (phase == "PHASE_05" || phase.startsWith("PHASE_05_BAR_"))) "runtime-evidence/$phase/attempts/$runtimeRun/$scenario" else "runtime-evidence/$phase/$scenario")
 val player = when {
-    scenario == "skill05-spectator" -> "PiriRuntimeTest2"
+    scenario == "skill06-spectator" || scenario == "skill05-spectator" -> "PiriRuntimeTest2"
     scenario == "phase02-other" || scenario == "phase12-spectator" -> "PiriRuntimeTest2"
     phase == "PHASE_12" && scenario == "mismatch" -> "PiriRuntimeMismatch"
     else -> "PiriRuntimeTest"
