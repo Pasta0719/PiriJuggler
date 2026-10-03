@@ -38,10 +38,13 @@ jobs:
             sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
           fi
           chmod +x gradlew
-      - name: Build production jars, vectors and runtime helpers
+      - name: Build production jars and vectors
         run: |
           ./gradlew --parallel --build-cache \
-            packagePiriJars :common:exportSkillStopPhase06Vectors \
+            packagePiriJars :common:exportSkillStopPhase06Vectors --console=plain
+      - name: Build runtime helpers
+        run: |
+          ./gradlew --parallel --build-cache \
             -PruntimeAcceptance=true -PruntimeScenario=skill06-main -PruntimeEvidencePhase=SKILL_STOP_PHASE_06 \
             :runtime-test-paper:jar :runtime-test-client:remapJar --console=plain
       - name: Cache verified Paper 1.21 build 130
