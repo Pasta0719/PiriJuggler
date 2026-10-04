@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.random.RandomGenerator;
 
 /** DB-thread-only Phase10 administration operations. */
 public final class AdminStore {
@@ -83,6 +85,25 @@ public final class AdminStore {
         db.sql("UPDATE player_sessions SET machine_state_json=? WHERE machine_id=? AND lifecycle='SUSPENDED_SAFE'", JugglerGodRuntime.initial().toJsonString(), machineId);
         db.sql("DELETE FROM graph_points WHERE machine_id=? AND business_period_id=?", machineId, period);
         db.sql("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,0,0,?)", machineId, period, now);
+    }
+
+    public Map<Integer,Integer> rerollSettings(PiriDatabase.State state, String profile, RandomGenerator rng, Consumer<String> warning, long now) throws Exception {
+        Object definition=profiles().get(profile);
+        if(definition==null)throw new DomainException("INVALID_STATE");
+        StartupProfile selected=new StartupProfile(profile,"MANUAL_REROLL",StartupProfile.map(definition));
+        Map<Integer,Integer> allocation=selected.allocate(state.machines(),rng,warning);
+        db.transaction(()->{
+            for(var entry:allocation.entrySet()){
+                Machine machine=requireMachine(state,entry.getKey());
+                int setting=entry.getValue();
+                if(machine.setting()==setting)continue;
+                db.sql("UPDATE machines SET setting=?,updated_at=? WHERE machine_id=? AND deleted=0",setting,now,machine.id());
+                db.sql("INSERT INTO setting_history(machine_id,business_period_id,changed_at,old_setting,new_setting,reason,actor_uuid,profile_name) VALUES(?,?,?,?,?,?,?,?)",
+                        machine.id(),state.period(),now,machine.setting(),setting,"REROLL",null,profile);
+            }
+            return null;
+        });
+        return allocation;
     }
 
     public void setNextProfile(String profile) throws Exception {
