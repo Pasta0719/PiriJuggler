@@ -244,7 +244,7 @@ try:
     click(0);wait_state("BIG_SPINNING")
     check("partial final challenge survives reseat",session()["spin_id"]==saved["spin_id"] and session()["machine_state_json"]==saved["machine_state_json"] and session()["stopped_mask"]==3)
     finish_top(2,19,"BIG_READY",14)
-    check("final-game success adds two before end",bonus_state()["skillRemaining"]==1 and assets()==before+12)
+    check("final-game success adds two before end",bonus_state()["skillRemaining"]==2 and assets()==before+12)
     # Force another target on an added game and deliberately align the wrong BAR.
     action("close");wait(lambda:not session(),"added force close")
     command("piri skillbonus 1 BELL","SKILL_BONUS_READY id=1");click(0);wait_state("BIG_READY")
