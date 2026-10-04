@@ -32,6 +32,11 @@ class SkillStopMachineDataSimulatorTest {
     private String cursor() throws Exception {
         return (String)db.rows("SELECT value FROM metadata WHERE key=?","SIM_CURSOR:"+period+":"+machineId).getFirst().get("value");
     }
+    @Test void skillPercentBoundsAreValidated() throws Exception {
+        assertThrows(IllegalArgumentException.class,()->SkillStopMachineDataSimulator.run(directory.resolve("piri.db"),new SkillStopWeights(),machineId,1,1,period,new SplittableRandom(1),NOW+1,-1));
+        assertThrows(IllegalArgumentException.class,()->SkillStopMachineDataSimulator.run(directory.resolve("piri.db"),new SkillStopWeights(),machineId,1,1,period,new SplittableRandom(1),NOW+1,101));
+    }
+
     @Test void pendingAndBonusContinuationSurviveSeparateCommands() throws Exception {
         db.sql("INSERT INTO metadata(key,value) VALUES(?,?)",
             "SIM_CURSOR:"+period+":"+machineId,
