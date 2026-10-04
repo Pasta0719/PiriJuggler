@@ -29,7 +29,9 @@ public final class SkillStopControl {
     private static final int[][] LINES = {{-1,-1,-1},{0,0,0},{1,1,1},{-1,0,1},{1,0,-1}};
     private static final Symbol[][] PATTERNS = {{REPLAY,REPLAY,REPLAY},{GRAPE,GRAPE,GRAPE},{BELL,BELL,BELL},{PIERO,PIERO,PIERO},
             {SEVEN,SEVEN,SEVEN},{SEVEN,SEVEN,BAR},{BAR,BAR,BAR},{SEVEN,CHERRY,BAR},{BELL,SEVEN,BELL},
-            {GRAPE,GRAPE,PIERO},{PIERO,GRAPE,PIERO},{PIERO,PIERO,SEVEN},{PIERO,BAR,PIERO}};
+            {GRAPE,GRAPE,PIERO},{PIERO,GRAPE,PIERO},{PIERO,PIERO,SEVEN},{PIERO,BAR,PIERO},
+            {SEVEN,BAR,SEVEN},{BAR,SEVEN,SEVEN},{SEVEN,BAR,BAR},{BAR,SEVEN,BAR},{BAR,BAR,SEVEN}};
+    private static final int REACH_MASK = (1<<4)|(1<<5)|(1<<6)|(1<<13)|(1<<14)|(1<<15)|(1<<16)|(1<<17);
     private static final int[] PATTERN_MASK = new int[9261];
     private static final boolean[] LEFT_MIDDLE_CHERRY = new boolean[21], LEFT_CORNER_CHERRY = new boolean[21];
     static {
@@ -174,10 +176,12 @@ public final class SkillStopControl {
     }
     private static boolean legal(Context c, int[] t, boolean leftBit, boolean entry) {
         int mask=patterns(t);
-        if(c.mode()==Mode.CHALLENGE)return (mask&48)==0;
+        if(c.mode()==Mode.CHALLENGE)return (mask&REACH_MASK)==0;
         if(LEFT_MIDDLE_CHERRY[t[0]]&&!(c.premium()==Premium.B&&leftBit))return false;
         if(LEFT_CORNER_CHERRY[t[0]]&&!c.role().cherry())return false;
-        if((mask&~(c.role().pattern()|(entry?bonusBit(c):0)))!=0)return false;
+        int allowed=c.role().pattern();
+        if(c.bonus()!=null)allowed|=REACH_MASK;
+        if((mask&~allowed)!=0)return false;
         // A drawn role may be missed when no legal four-symbol slip reaches its payline.
         return true;
     }
