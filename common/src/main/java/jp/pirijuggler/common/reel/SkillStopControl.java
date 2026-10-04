@@ -31,7 +31,10 @@ public final class SkillStopControl {
             {SEVEN,SEVEN,SEVEN},{SEVEN,SEVEN,BAR},{BAR,BAR,BAR},{SEVEN,CHERRY,BAR},{BELL,SEVEN,BELL},
             {GRAPE,GRAPE,PIERO},{PIERO,GRAPE,PIERO},{PIERO,PIERO,SEVEN},{PIERO,BAR,PIERO},
             {SEVEN,BAR,SEVEN},{BAR,SEVEN,SEVEN},{SEVEN,BAR,BAR},{BAR,SEVEN,BAR},{BAR,BAR,SEVEN}};
-    private static final int REACH_MASK = (1<<4)|(1<<5)|(1<<6)|(1<<13)|(1<<14)|(1<<15)|(1<<16)|(1<<17);
+    private static final int BIG_ENTRY_MASK = 1<<4;
+    private static final int REG_ENTRY_MASK = 1<<5;
+    private static final int REACH_ONLY_MASK = (1<<6)|(1<<13)|(1<<14)|(1<<15)|(1<<16)|(1<<17);
+    private static final int REACH_MASK = BIG_ENTRY_MASK|REG_ENTRY_MASK|REACH_ONLY_MASK;
     private static final int[] PATTERN_MASK = new int[9261];
     private static final boolean[] LEFT_MIDDLE_CHERRY = new boolean[21], LEFT_CORNER_CHERRY = new boolean[21];
     static {
@@ -180,7 +183,9 @@ public final class SkillStopControl {
         if(LEFT_MIDDLE_CHERRY[t[0]]&&!(c.premium()==Premium.B&&leftBit))return false;
         if(LEFT_CORNER_CHERRY[t[0]]&&!c.role().cherry())return false;
         int allowed=c.role().pattern();
-        if(c.bonus()!=null)allowed|=REACH_MASK;
+        if(c.bonus()!=null)allowed|=REACH_ONLY_MASK;
+        if("BIG".equals(c.bonus()) && entry)allowed|=BIG_ENTRY_MASK;
+        if("REG".equals(c.bonus()) && entry)allowed|=REG_ENTRY_MASK;
         if((mask&~allowed)!=0)return false;
         // A drawn role may be missed when no legal four-symbol slip reaches its payline.
         return true;
