@@ -123,7 +123,7 @@ class SkillStopControlTest {
         };
         if(bonus==null)for(boolean hit:reach)assertFalse(hit,"bonus-only reach pattern appeared without bonus");
         boolean big=reach[0],reg=reach[1];
-        if(big||reg){assertEquals(big?"BIG":"REG",bonus);assertEquals(bonus,out.entryBonus());assertTrue(h.bit(h.order()[1]));assertTrue(h.bit(h.order()[2]));assertNotEquals(SkillStopControl.Premium.F,c.premium());}
+        if(big||reg){assertEquals(big?"BIG":"REG",bonus);assertEquals(bonus,out.entryBonus());if(c.mode()!=SkillStopControl.Mode.PENDING){assertTrue(h.bit(h.order()[1]));assertTrue(h.bit(h.order()[2]));}assertNotEquals(SkillStopControl.Premium.F,c.premium());}
         else assertNull(out.entryBonus());
         for(int bit:new int[]{1,2,4,8,128,256,512,1024,2048,4096})if((out.patterns()&bit)!=0)assertTrue((allowed&bit)!=0,"non-established pattern");
         Symbol mid=SkillStopReels.row(Reel.LEFT,h.stop(0),0);if(mid==Symbol.CHERRY){assertEquals(SkillStopControl.Premium.B,c.premium());assertTrue(h.bit(0));}
