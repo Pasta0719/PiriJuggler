@@ -74,7 +74,20 @@ class SkillStopControlTest {
         }
         if(c.role().oneMedal()&&(out.patterns()&c.role().pattern())!=0)expectedPayout++;
         assertEquals(expectedPayout,out.payout(),"visible five-line payout must match");
-        if(c.mode()==SkillStopControl.Mode.NORMAL&&c.role()==SkillStopRole.REPLAY)assertTrue(replay,"REPLAY draw must produce a visible five-line replay");
+        if(c.mode()==SkillStopControl.Mode.NORMAL){
+            switch(c.role()){
+                case REPLAY -> assertTrue(replay,"REPLAY draw must produce a visible five-line replay");
+                case GRAPE -> assertTrue(grape,"GRAPE draw must produce a visible five-line grape");
+                case BELL -> assertTrue(bell,"BELL draw must produce a visible five-line bell");
+                case PIERO -> assertTrue(piero,"PIERO draw must produce a visible five-line piero");
+                case CHERRY -> assertTrue(
+                    SkillStopReels.row(Reel.LEFT,h.stop(0),-1)==Symbol.CHERRY||
+                    SkillStopReels.row(Reel.LEFT,h.stop(0),0)==Symbol.CHERRY||
+                    SkillStopReels.row(Reel.LEFT,h.stop(0),1)==Symbol.CHERRY,
+                    "CHERRY draw must show visible left-reel cherry");
+                default -> {}
+            }
+        }
         assertFalse(line(h,"BAR","BAR","BAR"));
         boolean big=line(h,"7","7","7"),reg=line(h,"7","7","BAR");
         if(big||reg){assertEquals(big?"BIG":"REG",bonus);assertEquals(bonus,out.entryBonus());assertTrue(h.bit(h.order()[1]));assertTrue(h.bit(h.order()[2]));assertNotEquals(SkillStopControl.Premium.F,c.premium());}
