@@ -14,11 +14,14 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.random.RandomGenerator;
 
 /** Admin-only synthetic play that advances the real current-period machine data. */
 public final class SkillStopMachineDataSimulator {
+    private record Plan(int left,int center,int right){}
+    private static final Map<SkillStopControl.Context,Plan> BEST_PLANS=new HashMap<>();
 
 
     private static final class Cursor {
@@ -64,7 +67,12 @@ public final class SkillStopMachineDataSimulator {
     }
 
     public static MachineDataSimulator.Result run(Path databaseFile,SkillStopWeights weights,int machineId,int setting,long games,String period,RandomGenerator random,long now) throws Exception {
+        return run(databaseFile,weights,machineId,setting,games,period,random,now,80);
+    }
+
+    public static MachineDataSimulator.Result run(Path databaseFile,SkillStopWeights weights,int machineId,int setting,long games,String period,RandomGenerator random,long now,int skillPercent) throws Exception {
         if(databaseFile==null||weights==null||random==null||period==null||period.isBlank())throw new IllegalArgumentException("simulation args");
+        if(skillPercent<0||skillPercent>100)throw new IllegalArgumentException("skillPercent");
         if(machineId<1||setting<1||setting>6||games<1||games>100_000L)throw new IllegalArgumentException("simulation bounds");
         Class.forName("org.sqlite.JDBC");
         try(Connection db=DriverManager.getConnection("jdbc:sqlite:"+databaseFile.toAbsolutePath())){
@@ -92,8 +100,9 @@ public final class SkillStopMachineDataSimulator {
                         if(challenge){
                             var h=SkillStopHistory.empty();
                             var context=SkillStopControl.Context.challenge(pattern);
+                            Plan plan=skilledThisGame(skillPercent,random)?bestPlan(control,context):null;
                             for(Reel reel:Reel.values()){
-                                int press=random.nextInt(21);
+                                int press=plan==null?random.nextInt(21):press(plan,reel);
                                 var choice=control.choose(context,h,reel,press);
                                 h=h.append(reel,press,choice.stopIndex());
                             }
@@ -122,8 +131,9 @@ public final class SkillStopMachineDataSimulator {
                         total++;current++;cursor.bonusHistoryGames++;
                     }
                     var history=SkillStopHistory.empty();
+                    Plan plan=skilledThisGame(skillPercent,random)?bestPlan(control,context):null;
                     for(Reel reel:Reel.values()){
-                        int press=random.nextInt(21);
+                        int press=plan==null?random.nextInt(21):press(plan,reel);
                         var choice=control.choose(context,history,reel,press);
                         history=history.append(reel,press,choice.stopIndex());
                     }
@@ -156,6 +166,41 @@ public final class SkillStopMachineDataSimulator {
             }catch(Exception error){db.rollback();throw error;}
             finally{db.setAutoCommit(true);}
         }
+    }
+
+    private static boolean skilledThisGame(int skillPercent,RandomGenerator random){
+        return skillPercent>=100||skillPercent>0&&random.nextInt(100)<skillPercent;
+    }
+    private static int press(Plan plan,Reel reel){
+        return switch(reel){case LEFT->plan.left();case CENTER->plan.center();case RIGHT->plan.right();};
+    }
+    private static Plan bestPlan(SkillStopControl control,SkillStopControl.Context context){
+        synchronized(BEST_PLANS){
+            Plan cached=BEST_PLANS.get(context);
+            if(cached!=null)return cached;
+            Plan best=null;long bestScore=Long.MIN_VALUE;
+            for(int l=0;l<21;l++)for(int c=0;c<21;c++)for(int r=0;r<21;r++){
+                int[] presses={l,c,r};var h=SkillStopHistory.empty();
+                try{
+                    for(Reel reel:Reel.values()){
+                        int p=presses[reel.ordinal()];
+                        var choice=control.choose(context,h,reel,p);
+                        h=h.append(reel,p,choice.stopIndex());
+                    }
+                    var out=control.outcome(context,h);
+                    long score=score(context,out);
+                    if(score>bestScore){bestScore=score;best=new Plan(l,c,r);}
+                }catch(RuntimeException ignored){}
+            }
+            if(best==null)throw new IllegalStateException("No playable skill-stop plan for "+context);
+            BEST_PLANS.put(context,best);return best;
+        }
+    }
+    private static long score(SkillStopControl.Context context,SkillStopControl.Outcome out){
+        long score=(long)out.payout()*1_000L+(out.replay()?500L:0L);
+        if(context.mode()==SkillStopControl.Mode.PENDING&&out.entryBonus()!=null)score+=1_000_000L;
+        if(context.mode()==SkillStopControl.Mode.CHALLENGE&&out.challengeSuccess())score+=1_000_000L;
+        return score;
     }
 
     private static String cursorKey(String period,int machineId){return "SIM_CURSOR:"+period+":"+machineId;}
