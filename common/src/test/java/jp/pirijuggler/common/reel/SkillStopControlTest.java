@@ -86,8 +86,9 @@ class SkillStopControlTest {
     }
 
     private static void recordFailure(List<String> failures,SkillStopControl.Context context,Reel[] order,int a,int b,int c,String stage,Throwable e){
-        if(failures.size()>=200)return;
-        failures.add(stage+" context="+context+" order="+Arrays.toString(order)+" inputs=["+a+","+b+","+c+"] "+e.getClass().getSimpleName()+": "+String.valueOf(e.getMessage()));
+        String message=stage+" context="+context+" order="+Arrays.toString(order)+" inputs=["+a+","+b+","+c+"] "+e.getClass().getSimpleName()+": "+String.valueOf(e.getMessage());
+        System.err.println("SKILL_STOP_FAILURE "+message);
+        if(failures.size()<200)failures.add(message);
     }
     private static void independentCheck(SkillStopControl.Context c,SkillStopHistory h,SkillStopControl.Outcome out){
         int allowed=c.role().pattern();String bonus=c.bonus();
