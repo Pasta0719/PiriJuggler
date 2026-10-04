@@ -107,7 +107,7 @@ public final class SkillStopControl {
     }
     /** Public stop laws override generic bonus retention in pending and premium games. */
     public static int forcedFirst(Context c, Reel reel, int pressed) {
-        if(c.mode()==Mode.CHALLENGE||c.mode()==Mode.BONUS_AUTO||c.mode()==Mode.PENDING)return -1;
+        if(c.mode()==Mode.CHALLENGE||c.mode()==Mode.BONUS_AUTO)return -1;
         int top=SkillStopReels.topNumber(pressed);
         if(reel==Reel.CENTER&&(top==20||top==21)) {
             int t=c.role()==SkillStopRole.GRAPE?2:c.role()==SkillStopRole.PIERO||c.role()==SkillStopRole.PIERO_BIG||c.role()==SkillStopRole.PIERO_REG?3:
