@@ -92,7 +92,12 @@ class SkillStopControlTest {
     }
     private static void independentCheck(SkillStopControl.Context c,SkillStopHistory h,SkillStopControl.Outcome out){
         int allowed=c.role().pattern();String bonus=c.bonus();
-        if(c.mode()==SkillStopControl.Mode.CHALLENGE){assertEquals(14,out.payout());assertFalse(line(h,"7","7","7"));assertFalse(line(h,"7","7","BAR"));return;}
+        if(c.mode()==SkillStopControl.Mode.CHALLENGE){
+            assertEquals(14,out.payout());
+            for(String[] p:new String[][]{{"7","7","7"},{"7","7","BAR"},{"7","BAR","7"},{"BAR","7","7"},{"7","BAR","BAR"},{"BAR","7","BAR"},{"BAR","BAR","7"},{"BAR","BAR","BAR"}})
+                assertFalse(line(h,p[0],p[1],p[2]),"challenge must kick bonus reach patterns");
+            return;
+        }
         // Independent five-line scan: never trust the controller's cached pattern mask alone.
         boolean replay=line(h,"R","R","R");
         boolean grape=line(h,"G","G","G");
@@ -112,8 +117,12 @@ class SkillStopControlTest {
         }
         if(c.role().oneMedal()&&(out.patterns()&c.role().pattern())!=0)expectedPayout++;
         assertEquals(expectedPayout,out.payout(),"visible five-line payout must match");
-        assertFalse(line(h,"BAR","BAR","BAR"));
-        boolean big=line(h,"7","7","7"),reg=line(h,"7","7","BAR");
+        boolean[] reach={
+            line(h,"7","7","7"),line(h,"7","7","BAR"),line(h,"7","BAR","7"),line(h,"BAR","7","7"),
+            line(h,"7","BAR","BAR"),line(h,"BAR","7","BAR"),line(h,"BAR","BAR","7"),line(h,"BAR","BAR","BAR")
+        };
+        if(bonus==null)for(boolean hit:reach)assertFalse(hit,"bonus-only reach pattern appeared without bonus");
+        boolean big=reach[0],reg=reach[1];
         if(big||reg){assertEquals(big?"BIG":"REG",bonus);assertEquals(bonus,out.entryBonus());assertTrue(h.bit(h.order()[1]));assertTrue(h.bit(h.order()[2]));assertNotEquals(SkillStopControl.Premium.F,c.premium());}
         else assertNull(out.entryBonus());
         for(int bit:new int[]{1,2,4,8,128,256,512,1024,2048,4096})if((out.patterns()&bit)!=0)assertTrue((allowed&bit)!=0,"non-established pattern");
