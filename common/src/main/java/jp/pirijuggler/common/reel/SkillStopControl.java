@@ -179,7 +179,7 @@ public final class SkillStopControl {
     }
     private static boolean legal(Context c, int[] t, boolean leftBit, boolean entry) {
         int mask=patterns(t);
-        if(c.mode()==Mode.CHALLENGE)return (mask&REACH_MASK)==0;
+        if(c.mode()==Mode.CHALLENGE)return (mask&(BIG_ENTRY_MASK|REG_ENTRY_MASK|((c.challengePattern()==64)?0:REACH_ONLY_MASK)))==0;
         if(LEFT_MIDDLE_CHERRY[t[0]]&&!(c.premium()==Premium.B&&leftBit))return false;
         if(LEFT_CORNER_CHERRY[t[0]]&&!c.role().cherry())return false;
         int allowed=c.role().pattern();
