@@ -15,7 +15,11 @@ class Phase06GameTest extends GameFixture {
         return new NormalGame(forced(role),new RandomStreams(7),SOLVER,main,cfg);
     }
     private Session stopAll(NormalGame game,Session s,long nano) throws Exception {
-        for(var type:List.of(PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT))s=action(game,s,type,nano+1_000_000_000L);return s;
+        for(var type:List.of(PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT)){
+            var t=game.plan(s,type,s.sequence()+1,1,NOW+s.sequence()+1,nano+1_000_000_000L,0,6);
+            s=store.commit(t);game.committed(t,nano+1_000_000_000L);
+        }
+        return s;
     }
     private Session enterBonus(NormalGame game,Session s,String type,long nano) throws Exception {
         s=spin(game,s,nano);assertEquals(Session.GameState.valueOf("BONUS_PENDING_"+type),s.state());
