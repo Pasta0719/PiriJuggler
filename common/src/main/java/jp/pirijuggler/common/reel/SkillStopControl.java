@@ -125,7 +125,7 @@ public final class SkillStopControl {
                 int target=Math.floorMod(p-d,21);
                 if(!leftPartial(c,reel,target,d==0))continue;
                 SkillStopHistory next=h.append(reel,p,target);
-                if(c.premium()==Premium.F&&sevenTenpai(next)!=0)continue;
+                if((c.premium()==Premium.F || c.bonus()==null)&&sevenTenpai(next)!=0)continue;
                 Reel last=Arrays.stream(Reel.values()).filter(r->(next.mask()&r.bit())==0).findFirst().orElseThrow();
                 int[] finalChoices=lastOrNull(c,next,last);if(finalChoices==null)continue;
                 if(pick<0)pick=target;
