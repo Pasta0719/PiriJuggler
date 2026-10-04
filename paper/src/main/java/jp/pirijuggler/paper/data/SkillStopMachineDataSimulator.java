@@ -184,5 +184,5 @@ public final class SkillStopMachineDataSimulator {
         }
     }
     private static long n(Map<String,Object> row,String key){return ((Number)row.get(key)).longValue();}
-    private MachineDataSimulator(){}
+    private SkillStopMachineDataSimulator(){}
 }
