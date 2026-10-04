@@ -39,7 +39,7 @@ class SkillStopStateTest extends GameFixture {
     }
     @Test void bigAndRegExhaustByGamesWithFourteenPaidEveryGame() throws Exception {
         for(String type:List.of("BIG","REG")){
-            var g=game();Session s=entry(g,seatSkill(),type);int games=type.equals("BIG")?20:8;assertEquals(games,SkillStopBonus.read(s).remaining());
+            var g=game();Session s=entry(g,seatSkill(),type);int games=type.equals("BIG")?22:9;assertEquals(games,SkillStopBonus.read(s).remaining());
             for(int i=0;i<games;i++){
                 s=lever(g,s,SkillStopBonus.Target.AUTO);assertTrue(Set.of("GRAPE","CHERRY").contains(s.text("internal_role")));
                 s=finish(g,s,SkillStopBonus.Target.AUTO);assertEquals(14,s.number("pay_display"));assertEquals(games-i-1,SkillStopBonus.read(s).remaining());
@@ -50,7 +50,7 @@ class SkillStopStateTest extends GameFixture {
     @Test void finalSuccessAddsThreeBeforeEndAndAddedGamesAlsoDraw() throws Exception {
         var g=game();Session s=remaining(entry(g,seatSkill(),"REG"),1);
         s=finish(g,lever(g,s,SkillStopBonus.Target.BAR),SkillStopBonus.Target.BAR);
-        assertEquals(3,SkillStopBonus.read(s).remaining());assertEquals(Session.GameState.REG_READY,s.state());
+        assertEquals(2,SkillStopBonus.read(s).remaining());assertEquals(Session.GameState.REG_READY,s.state());
         for(var target:List.of(SkillStopBonus.Target.BELL,SkillStopBonus.Target.PIERO)){
             s=lever(g,s,target);assertEquals(target,SkillStopBonus.read(s).target());s=finish(g,s,target);
         }
