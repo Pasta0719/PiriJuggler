@@ -19,7 +19,7 @@ import java.util.random.RandomGenerator;
 
 /** Admin-only synthetic play that advances the real current-period machine data. */
 public final class SkillStopMachineDataSimulator {
-    public record Result(int machineId,int setting,long games,long big,long reg,long difference,long maxDifference,long currentGames) {}
+
 
     private static final class Cursor {
         boolean freeReplay;
@@ -63,7 +63,7 @@ public final class SkillStopMachineDataSimulator {
         }
     }
 
-    public static Result run(Path databaseFile,SkillStopWeights weights,int machineId,int setting,long games,String period,RandomGenerator random,long now) throws Exception {
+    public static MachineDataSimulator.Result run(Path databaseFile,SkillStopWeights weights,int machineId,int setting,long games,String period,RandomGenerator random,long now) throws Exception {
         if(databaseFile==null||weights==null||random==null||period==null||period.isBlank())throw new IllegalArgumentException("simulation args");
         if(machineId<1||setting<1||setting>6||games<1||games>100_000L)throw new IllegalArgumentException("simulation bounds");
         Class.forName("org.sqlite.JDBC");
@@ -152,7 +152,7 @@ public final class SkillStopMachineDataSimulator {
                         total,big,reg,current,difference,max,lastBonus,lastBonus,lastBonusAt,machineId,period);
                 putMetadata(db,cursorKey,cursor.json());
                 db.commit();
-                return new Result(machineId,setting,simulatedSpins,addedBig,addedReg,difference,max,current);
+                return new MachineDataSimulator.Result(machineId,setting,simulatedSpins,addedBig,addedReg,difference,max,current);
             }catch(Exception error){db.rollback();throw error;}
             finally{db.setAutoCommit(true);}
         }
