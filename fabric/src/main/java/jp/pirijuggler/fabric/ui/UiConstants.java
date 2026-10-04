@@ -14,11 +14,6 @@ public final class UiConstants {
             case "CABINET_BG" -> 0xff111015;
             case "CABINET_EDGE" -> 0xffa68139;
             case "CABINET_EDGE_LIGHT" -> 0xffd9b76b;
-            case "REEL_SEPARATOR" -> 0xffa68139;
-            case "REEL_BG" -> 0xff1c1017;
-            case "DISPLAY_BG" -> 0xff200e15;
-            case "DISPLAY_GREEN" -> 0xffd9b76b;
-            case "BUTTON_RED" -> 0xff852332;
             default -> color(key);
         };
     }
