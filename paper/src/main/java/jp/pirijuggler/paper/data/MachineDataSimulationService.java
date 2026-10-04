@@ -33,16 +33,20 @@ public final class MachineDataSimulationService {
     public boolean handle(CommandSender sender,String[] args) {
         if(args.length==0||!args[0].equalsIgnoreCase("sim"))return false;
         if(!sender.isOp()){sender.sendMessage(Component.text("NOT_OP"));return true;}
-        if(args.length!=3){sender.sendMessage(Component.text("Usage: /piri sim <machineId|all> <games>"));return true;}
+        if(args.length!=3&&args.length!=4){sender.sendMessage(Component.text("Usage: /piri sim <machineId|all> <games> [skillPercent]"));return true;}
 
         final long games;
         try{games=Long.parseLong(args[2]);}
         catch(NumberFormatException error){sender.sendMessage(Component.text("INVALID_STATE"));return true;}
         if(games<1||games>100_000L){sender.sendMessage(Component.text("INVALID_STATE (games: 1..100000)"));return true;}
+        final int skillPercent;
+        try{skillPercent=args.length==4?Integer.parseInt(args[3]):80;}
+        catch(NumberFormatException error){sender.sendMessage(Component.text("INVALID_STATE (skillPercent: 0..100)"));return true;}
+        if(skillPercent<0||skillPercent>100){sender.sendMessage(Component.text("INVALID_STATE (skillPercent: 0..100)"));return true;}
         if(running){sender.sendMessage(Component.text("BUSY"));return true;}
 
         var state=plugin.machines().snapshot();
-        if(args[1].equalsIgnoreCase("all"))return simulateAll(sender,state,games);
+        if(args[1].equalsIgnoreCase("all"))return simulateAll(sender,state,games,skillPercent);
 
         final int machineId;
         try{machineId=Integer.parseInt(args[1]);}
@@ -60,12 +64,12 @@ public final class MachineDataSimulationService {
         var dbFile=plugin.getDataFolder().toPath().resolve("piri.db");
         var random=new SplittableRandom(new SecureRandom().nextLong());
         running=true;
-        sender.sendMessage(Component.text("SIMULATION_STARTED machine="+machineId+" setting="+setting+" targetSpins="+games));
+        sender.sendMessage(Component.text("SIMULATION_STARTED machine="+machineId+" setting="+setting+" targetSpins="+games+(machine.type()==jp.pirijuggler.paper.machine.MachineType.SKILL_STOP?" skill="+skillPercent+"%":"")));
         plugin.executors().database(
                 ()->(machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD||machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD_EXTREME)
                         ?JugglerGodMachineDataSimulator.run(dbFile,weights,config,machineId,setting,games,period,random,System.currentTimeMillis())
                         :machine.type()==jp.pirijuggler.paper.machine.MachineType.SKILL_STOP
-                        ?SkillStopMachineDataSimulator.run(dbFile,skillWeights,machineId,setting,games,period,random,System.currentTimeMillis())
+                        ?SkillStopMachineDataSimulator.run(dbFile,skillWeights,machineId,setting,games,period,random,System.currentTimeMillis(),skillPercent)
                         :MachineDataSimulator.run(dbFile,weights,machineId,setting,games,period,random,System.currentTimeMillis()),
                 (result,error)->{
                     running=false;
@@ -79,7 +83,7 @@ public final class MachineDataSimulationService {
         return true;
     }
 
-    private boolean simulateAll(CommandSender sender, jp.pirijuggler.paper.database.PiriDatabase.State state, long games) {
+    private boolean simulateAll(CommandSender sender, jp.pirijuggler.paper.database.PiriDatabase.State state, long games, int skillPercent) {
         List<Machine> all=state.machines().stream().filter(machine->!machine.deleted()).toList();
         if(all.isEmpty()){sender.sendMessage(Component.text("INVALID_STATE (no machines)"));return true;}
         List<Machine> unsupported=all.stream().filter(machine->!supported(machine)).toList();
@@ -99,7 +103,7 @@ public final class MachineDataSimulationService {
         var dbFile=plugin.getDataFolder().toPath().resolve("piri.db");
         final long seed=new SecureRandom().nextLong();
         running=true;
-        sender.sendMessage(Component.text("SIMULATION_ALL_STARTED machines="+machines.size()+" targetSpinsEach="+games));
+        sender.sendMessage(Component.text("SIMULATION_ALL_STARTED machines="+machines.size()+" targetSpinsEach="+games+" skill="+skillPercent+"%"));
 
         plugin.executors().database(()->{
             List<MachineDataSimulator.Result> results=new ArrayList<>(machines.size());
@@ -111,7 +115,7 @@ public final class MachineDataSimulationService {
                 results.add((machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD||machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD_EXTREME)
                         ?JugglerGodMachineDataSimulator.run(dbFile,weights,config,machine.id(),machine.setting(),games,period,random,now+(long)i*games)
                         :machine.type()==jp.pirijuggler.paper.machine.MachineType.SKILL_STOP
-                        ?SkillStopMachineDataSimulator.run(dbFile,skillWeights,machine.id(),machine.setting(),games,period,random,now+(long)i*games)
+                        ?SkillStopMachineDataSimulator.run(dbFile,skillWeights,machine.id(),machine.setting(),games,period,random,now+(long)i*games,skillPercent)
                         :MachineDataSimulator.run(dbFile,weights,machine.id(),machine.setting(),games,period,random,now+(long)i*games));
             }
             return results;
