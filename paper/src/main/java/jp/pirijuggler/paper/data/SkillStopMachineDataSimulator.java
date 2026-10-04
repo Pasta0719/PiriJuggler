@@ -43,7 +43,7 @@ public final class SkillStopMachineDataSimulator {
                 c.pending=j.has("pending")&&j.get("pending").getAsBoolean();
                 c.pendingReplay=j.has("pendingReplay")&&j.get("pendingReplay").getAsBoolean();
                 c.bonusHistoryGames=j.has("bonusHistoryGames")?j.get("bonusHistoryGames").getAsInt():0;
-                if(c.bonusRemaining<=0){c.activeBonus="NONE";c.bonusRemaining=0;c.entryCharged=false;}
+                if(c.bonusRemaining<=0&&!c.pending){c.activeBonus="NONE";c.bonusRemaining=0;c.entryCharged=false;}
             }catch(RuntimeException ignored){}
             return c;
         }
@@ -85,7 +85,7 @@ public final class SkillStopMachineDataSimulator {
                 SkillStopControl control=new SkillStopControl();
                 while(simulatedSpins<games){
                     if(cursor.bonusRemaining>0 && !cursor.pending){
-                        if(!cursor.entryCharged){difference-=2;cursor.entryCharged=true;}
+                        difference-=2; // Every bonus spin has its own two-medal wager.
                         boolean challenge=random.nextInt("BIG".equals(cursor.activeBonus)?15:9)==0;
                         int pattern=challenge?new int[]{64,4,8}[random.nextInt(3)]:0;
                         boolean success=false;
