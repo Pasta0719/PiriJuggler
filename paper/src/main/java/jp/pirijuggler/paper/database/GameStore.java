@@ -78,15 +78,11 @@ public final class GameStore {
                     db.sql("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,?,?,?)",before.machine(),period,total,difference,after.number("last_activity"));
             }
 
-            // The machine row is the settled cabinet/runtime snapshot. BET/lever actions that
-            // leave both the visible stops and runtime JSON unchanged do not need to rewrite it.
-            boolean stopsChanged=before.number("display_left_stop")!=after.number("display_left_stop")
-                    ||before.number("display_center_stop")!=after.number("display_center_stop")
-                    ||before.number("display_right_stop")!=after.number("display_right_stop");
+            // Preserve the existing durable machine-row semantics exactly.
             if(action.machineRuntimeJson()!=null)
                 db.sql("UPDATE machines SET last_left_stop=?,last_center_stop=?,last_right_stop=?,machine_runtime_json=?,updated_at=? WHERE machine_id=?",
                         after.number("display_left_stop"),after.number("display_center_stop"),after.number("display_right_stop"),action.machineRuntimeJson(),after.number("last_activity"),before.machine());
-            else if(stopsChanged)
+            else
                 db.sql("UPDATE machines SET last_left_stop=?,last_center_stop=?,last_right_stop=?,updated_at=? WHERE machine_id=?",
                         after.number("display_left_stop"),after.number("display_center_stop"),after.number("display_right_stop"),after.number("last_activity"),before.machine());
 
