@@ -47,14 +47,14 @@ class SkillStopStateTest extends GameFixture {
             }
         }
     }
-    @Test void finalSuccessAddsThreeBeforeEndAndAddedGamesAlsoDraw() throws Exception {
+    @Test void finalSuccessAddsTwoBeforeEndAndAddedGamesAlsoDraw() throws Exception {
         var g=game();Session s=remaining(entry(g,seatSkill(),"REG"),1);
         s=finish(g,lever(g,s,SkillStopBonus.Target.BAR),SkillStopBonus.Target.BAR);
         assertEquals(2,SkillStopBonus.read(s).remaining());assertEquals(Session.GameState.REG_READY,s.state());
         for(var target:List.of(SkillStopBonus.Target.BELL,SkillStopBonus.Target.PIERO)){
             s=lever(g,s,target);assertEquals(target,SkillStopBonus.read(s).target());s=finish(g,s,target);
         }
-        assertEquals(7,SkillStopBonus.read(s).remaining());assertEquals(42,s.number("bonus_payout_count"));
+        assertEquals(4,SkillStopBonus.read(s).remaining());assertEquals(42,s.number("bonus_payout_count"));
     }
     @Test void wrongTargetIsNotKickedButFailsAndPaysFourteen() throws Exception {
         var g=game();Session s=remaining(entry(g,seatSkill(),"BIG"),1);
@@ -66,9 +66,9 @@ class SkillStopStateTest extends GameFixture {
         var g=game();Session s=remaining(entry(g,seatSkill(),"BIG"),1);s=lever(g,s,SkillStopBonus.Target.PIERO);s=top(g,s,0,11);s=top(g,s,1,3);
         var t=g.plan(s,PacketType.STOP_RIGHT,s.sequence()+1,1,NOW,NANO+1_000_000_000L,0,SkillStopReels.stopIndex(3));
         var after=apply(g,t);long assets=after.number("credit")+after.number("held_medals");
-        assertEquals(after.sequence(),store.commit(t).sequence());assertEquals(assets,db.state().session(s.player()).number("credit")+db.state().session(s.player()).number("held_medals"));assertEquals(3,SkillStopBonus.read(after).remaining());
+        assertEquals(after.sequence(),store.commit(t).sequence());assertEquals(assets,db.state().session(s.player()).number("credit")+db.state().session(s.player()).number("held_medals"));assertEquals(2,SkillStopBonus.read(after).remaining());
         final Session old=s;assertThrows(DomainException.class,()->store.commit(g.plan(old,PacketType.STOP_RIGHT,old.sequence()+1,1,NOW,NANO+1_000_000_000L,0,SkillStopReels.stopIndex(3))));
-        var rejected=g.plan(after,PacketType.STOP_RIGHT,after.sequence()+1,1,NOW,NANO,0,0);assertFalse(rejected.finished());assertEquals(0,rejected.payout());assertEquals(3,SkillStopBonus.read(apply(g,rejected)).remaining());
+        var rejected=g.plan(after,PacketType.STOP_RIGHT,after.sequence()+1,1,NOW,NANO,0,0);assertFalse(rejected.finished());assertEquals(0,rejected.payout());assertEquals(2,SkillStopBonus.read(apply(g,rejected)).remaining());
     }
     @Test void restartPreservesFixedTargetPartialStopsRemainingAndMachineLock() throws Exception {
         var g=game();Session s=remaining(entry(g,seatSkill(),"BIG"),1);s=lever(g,s,SkillStopBonus.Target.BAR);s=top(g,s,0,3);s=top(g,s,1,7);
@@ -77,7 +77,7 @@ class SkillStopStateTest extends GameFixture {
         s=db.state().session(owner);assertEquals(Session.Lifecycle.SUSPENDED_GRACE,s.lifecycle());assertEquals(Long.MAX_VALUE,s.number("lock_expires_at"));assertEquals(saved,s.text("machine_state_json"));assertEquals(period,s.text("source_business_period_id"));
         assertThrows(DomainException.class,()->db.seat(UUID.randomUUID(),machine,NOW+501));
         s=db.seat(owner,machine,NOW+501);g=game();assertTrue(g.resume(s,NANO).isPresent());assertEquals(spin,s.text("spin_id"));
-        s=top(g,s,2,19);assertEquals(3,SkillStopBonus.read(s).remaining());assertEquals(assets+14,s.number("credit")+s.number("held_medals"));
+        s=top(g,s,2,19);assertEquals(2,SkillStopBonus.read(s).remaining());assertEquals(assets+14,s.number("credit")+s.number("held_medals"));
     }
     @Test void expiryIdleAndDirectReseatKeepPendingRightsInsteadOfAutoSettlement() throws Exception {
         var g=game();Session s=forced(g,seatSkill(),SkillStopRole.ONE_A);s=top(g,s,1,20);s=top(g,s,2,2);s=top(g,s,0,1);
