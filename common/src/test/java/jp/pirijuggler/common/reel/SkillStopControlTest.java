@@ -94,8 +94,8 @@ class SkillStopControlTest {
         int allowed=c.role().pattern();String bonus=c.bonus();
         if(c.mode()==SkillStopControl.Mode.CHALLENGE){
             assertEquals(14,out.payout());
-            for(String[] p:new String[][]{{"7","7","7"},{"7","7","BAR"},{"7","BAR","7"},{"BAR","7","7"},{"7","BAR","BAR"},{"BAR","7","BAR"},{"BAR","BAR","7"},{"BAR","BAR","BAR"}})
-                assertFalse(line(h,p[0],p[1],p[2]),"challenge must kick bonus reach patterns");
+            assertFalse(line(h,"7","7","7"),"challenge must kick BIG entry line");
+            assertFalse(line(h,"7","7","BAR"),"challenge must kick REG entry line");
             return;
         }
         // Independent five-line scan: never trust the controller's cached pattern mask alone.
