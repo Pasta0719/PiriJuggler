@@ -176,7 +176,17 @@ public final class SkillStopControl {
         if(c.mode()==Mode.CHALLENGE)return (mask&48)==0;
         if(LEFT_MIDDLE_CHERRY[t[0]]&&!(c.premium()==Premium.B&&leftBit))return false;
         if(LEFT_CORNER_CHERRY[t[0]]&&!c.role().cherry())return false;
-        return (mask&~(c.role().pattern()|(entry?bonusBit(c):0)))==0;
+        if((mask&~(c.role().pattern()|(entry?bonusBit(c):0)))!=0)return false;
+        // A drawn standalone small role must actually appear on a visible payline.
+        // Do not force this during pending bonus entry or premium overlap games.
+        if(c.mode()==Mode.NORMAL && c.bonus()==null){
+            if(c.role()==SkillStopRole.REPLAY && (mask&1)==0)return false;
+            if(c.role()==SkillStopRole.GRAPE && (mask&2)==0)return false;
+            if(c.role()==SkillStopRole.BELL && (mask&4)==0)return false;
+            if(c.role()==SkillStopRole.PIERO && (mask&8)==0)return false;
+            if(c.role()==SkillStopRole.CHERRY && !LEFT_MIDDLE_CHERRY[t[0]] && !LEFT_CORNER_CHERRY[t[0]])return false;
+        }
+        return true;
     }
     private static boolean leftPartial(Context c, Reel reel, int target, boolean bit) {
         return c.mode()==Mode.CHALLENGE||reel!=Reel.LEFT||
