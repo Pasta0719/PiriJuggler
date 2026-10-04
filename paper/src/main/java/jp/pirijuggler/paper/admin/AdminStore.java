@@ -10,6 +10,7 @@ import jp.pirijuggler.paper.machine.Machine;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -100,6 +101,38 @@ public final class AdminStore {
                 db.sql("UPDATE machines SET setting=?,updated_at=? WHERE machine_id=? AND deleted=0",setting,now,machine.id());
                 db.sql("INSERT INTO setting_history(machine_id,business_period_id,changed_at,old_setting,new_setting,reason,actor_uuid,profile_name) VALUES(?,?,?,?,?,?,?,?)",
                         machine.id(),state.period(),now,machine.setting(),setting,"REROLL",null,profile);
+            }
+            return null;
+        });
+        return allocation;
+    }
+
+    public Map<Integer,Integer> rerollSettings(PiriDatabase.State state, int[] distribution, RandomGenerator rng, Consumer<String> warning, long now) throws Exception {
+        if(distribution==null||distribution.length!=6)throw new DomainException("INVALID_STATE");
+        int total=0;
+        Map<String,Object> weights=new LinkedHashMap<>();
+        for(int i=0;i<6;i++){
+            if(distribution[i]<0)throw new DomainException("INVALID_STATE");
+            total+=distribution[i];
+            weights.put(Integer.toString(i+1),distribution[i]);
+        }
+        if(total!=100)throw new DomainException("INVALID_STATE");
+        Map<String,Object> pattern=new LinkedHashMap<>();pattern.put("type","NONE");
+        Map<String,Object> definition=new LinkedHashMap<>();
+        definition.put("distribution",weights);
+        definition.put("min_setting_6",0);
+        definition.put("min_setting_5_plus",0);
+        definition.put("pattern",pattern);
+        StartupProfile selected=new StartupProfile("custom","MANUAL_REROLL",definition);
+        Map<Integer,Integer> allocation=selected.allocate(state.machines(),rng,warning);
+        db.transaction(()->{
+            for(var entry:allocation.entrySet()){
+                Machine machine=requireMachine(state,entry.getKey());
+                int setting=entry.getValue();
+                if(machine.setting()==setting)continue;
+                db.sql("UPDATE machines SET setting=?,updated_at=? WHERE machine_id=? AND deleted=0",setting,now,machine.id());
+                db.sql("INSERT INTO setting_history(machine_id,business_period_id,changed_at,old_setting,new_setting,reason,actor_uuid,profile_name) VALUES(?,?,?,?,?,?,?,?)",
+                        machine.id(),state.period(),now,machine.setting(),setting,"REROLL",null,"custom");
             }
             return null;
         });
