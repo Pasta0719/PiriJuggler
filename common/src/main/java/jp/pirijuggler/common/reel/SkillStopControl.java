@@ -146,18 +146,19 @@ public final class SkillStopControl {
         int[] cached=cache.get(key);if(cached!=null)return cached[0]<0?null:cached;
         int[] answer=new int[21]; int[] tops=h.stops(); boolean entry=entryEligible(c,h);
         for(int p=0;p<21;p++) {
-            int pick=-1,onePick=-1;
+            int pick=-1,onePick=-1,rolePick=-1;
             for(int d=0;d<=4;d++) {
                 int target=Math.floorMod(p-d,21);tops[reel.ordinal()]=target;
                 boolean leftBit=reel==Reel.LEFT?d==0:h.bit(0);
                 if(!legal(c,tops,leftBit,entry&&d==0))continue;
                 if(pick<0)pick=target;
                 int mask=patterns(tops);
+                if(rolePick<0 && (mask&c.role().pattern()&15)!=0)rolePick=target;
                 if(d==0&&entry&&(mask&bonusBit(c))!=0){pick=target;onePick=target;break;}
                 if(c.role().oneMedal()&&onePick<0&&(mask&c.role().pattern())!=0)onePick=target;
             }
             if(pick<0){cache.put(key,new int[]{-1});return null;}
-            answer[p]=onePick>=0?onePick:pick;
+            answer[p]=onePick>=0?onePick:rolePick>=0?rolePick:pick;
         }
         cache.put(key,answer);return answer;
     }
@@ -177,15 +178,7 @@ public final class SkillStopControl {
         if(LEFT_MIDDLE_CHERRY[t[0]]&&!(c.premium()==Premium.B&&leftBit))return false;
         if(LEFT_CORNER_CHERRY[t[0]]&&!c.role().cherry())return false;
         if((mask&~(c.role().pattern()|(entry?bonusBit(c):0)))!=0)return false;
-        // A drawn standalone small role must actually appear on a visible payline.
-        // Do not force this during pending bonus entry or premium overlap games.
-        if(c.mode()==Mode.NORMAL && c.bonus()==null){
-            if(c.role()==SkillStopRole.REPLAY && (mask&1)==0)return false;
-            if(c.role()==SkillStopRole.GRAPE && (mask&2)==0)return false;
-            if(c.role()==SkillStopRole.BELL && (mask&4)==0)return false;
-            if(c.role()==SkillStopRole.PIERO && (mask&8)==0)return false;
-            if(c.role()==SkillStopRole.CHERRY && !LEFT_MIDDLE_CHERRY[t[0]] && !LEFT_CORNER_CHERRY[t[0]])return false;
-        }
+        // A drawn role may be missed when no legal four-symbol slip reaches its payline.
         return true;
     }
     private static boolean leftPartial(Context c, Reel reel, int target, boolean bit) {
