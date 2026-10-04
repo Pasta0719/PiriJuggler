@@ -25,6 +25,11 @@ subprojects {
         useJUnitPlatform()
         systemProperty("piri.specRoot", rootProject.projectDir.absolutePath)
         inputs.files(rootProject.file("SPEC.md"), rootProject.file("docs/spec-lock.json"))
+        testLogging {
+            showStandardStreams = true
+            events("failed")
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        }
     }
     tasks.withType<AbstractArchiveTask>().configureEach {
         isPreserveFileTimestamps = false

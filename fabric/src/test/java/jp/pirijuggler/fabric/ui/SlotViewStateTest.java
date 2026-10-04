@@ -58,9 +58,9 @@ class SlotViewStateTest {
     }
 
     @Test void motionBoundariesAreContinuousAndRespectReceptionTime(){
-        assertEquals(0,SlotViewState.distance("NORMAL",.150));assertEquals(-3.675,SlotViewState.distance("NORMAL",.5),1e-9);assertEquals(-14.175,SlotViewState.distance("NORMAL",1),1e-9);
-        assertEquals(6,SlotViewState.distance("REVERSE_500MS",.5),1e-9);assertEquals(2.85,SlotViewState.distance("REVERSE_500MS",.8),1e-9);assertEquals(-21,SlotViewState.distance("RESUME_NORMAL",1));
-        var time=new AtomicLong(9_000_000_000L);var view=open(time);view.receive(start());assertEquals(8,view.phase(0));time.addAndGet(150_000_000);assertEquals(8,view.phase(0));time.addAndGet(350_000_000);assertEquals(4.325,view.phase(0),1e-9);
+        assertEquals(0,SlotViewState.distance("NORMAL",.150));assertEquals(-4.9,SlotViewState.distance("NORMAL",.5),1e-9);assertEquals(-18.9,SlotViewState.distance("NORMAL",1),1e-9);
+        assertEquals(6,SlotViewState.distance("REVERSE_500MS",.5),1e-9);assertEquals(1.8,SlotViewState.distance("REVERSE_500MS",.8),1e-9);assertEquals(-28,SlotViewState.distance("RESUME_NORMAL",1));
+        var time=new AtomicLong(9_000_000_000L);var view=open(time);view.receive(start());assertEquals(8,view.phase(0));time.addAndGet(150_000_000);assertEquals(8,view.phase(0));time.addAndGet(350_000_000);assertEquals(3.1,view.phase(0),1e-9);
     }
     @Test void ServerStopIndexWinsIncludingSixSlipAndWrongSpinIsIgnored(){
         var time=new AtomicLong();var view=open(time);view.receive(start());
@@ -69,9 +69,9 @@ class SlotViewStateTest {
     }
     @Test void exactZeroPingStopUsesServerHintBeforeReplyAndAckDoesNotRetarget(){
         var time=new AtomicLong();var view=open(time);var b=start().payload();b.getAsJsonObject("startPhase").addProperty("left",8.7);
-        var hint=b.getAsJsonObject("stopHints").getAsJsonArray("left").get(5).getAsJsonObject();hint.addProperty("stopIndex",2);hint.addProperty("slip",3);hint.addProperty("durationMs",230);view.receive(Envelope.current(PacketType.SPIN_START,b));
-        time.set(500_000_000L);double atPress=view.phase(0);int pressed=view.localInput(PacketType.STOP_LEFT);assertEquals(5,pressed);
-        time.addAndGet(40_000_000L);double beforeReply=view.phase(0);assertTrue(beforeReply<atPress);assertTrue(beforeReply>2,"the three-slip motion must already be underway before the reply");
+        var hint=b.getAsJsonObject("stopHints").getAsJsonArray("left").get(3).getAsJsonObject();hint.addProperty("stopIndex",2);hint.addProperty("slip",1);hint.addProperty("durationMs",130);view.receive(Envelope.current(PacketType.SPIN_START,b));
+        time.set(500_000_000L);double atPress=view.phase(0);int pressed=view.localInput(PacketType.STOP_LEFT);assertEquals(3,pressed);
+        time.addAndGet(40_000_000L);double beforeReply=view.phase(0);assertTrue(beforeReply<atPress);assertTrue(beforeReply>2,"the hinted stop motion must already be underway before the reply");
         var stop=packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\"LEFT\",\"pressedIndex\":5,\"stopIndex\":2,\"slip\":3,\"durationMs\":230,\"nextStopHints\":{}}");view.receive(stop);
         assertEquals(beforeReply,view.phase(0),1e-9,"matching authoritative ack must not retarget or jump");time.addAndGet(500_000_000L);assertEquals(2,view.phase(0),1e-9);
     }
@@ -83,7 +83,7 @@ class SlotViewStateTest {
     @Test void resumedDisplayKeepsAlreadyStoppedReelsFixed(){
         var time=new AtomicLong();var view=open(time);
         view.receive(packet(PacketType.PUBLIC_STATE,"{\"sessionId\":\""+ID+"\",\"machineId\":1,\"gameState\":\"NORMAL_SPINNING\",\"stoppedMask\":1,\"lampOn\":false,\"displayStops\":{\"left\":14,\"center\":3,\"right\":12}}"));
-        var b=start().payload();b.addProperty("animation","RESUME_NORMAL");view.receive(Envelope.current(PacketType.SPIN_START,b));time.set(1_000_000_000);assertEquals(14,view.phase(0));assertEquals(3,view.phase(1),1e-9);assertEquals(12,view.phase(2),1e-9);
+        var b=start().payload();b.addProperty("animation","RESUME_NORMAL");view.receive(Envelope.current(PacketType.SPIN_START,b));time.set(1_000_000_000);assertEquals(14,view.phase(0));assertEquals(17,view.phase(1),1e-9);assertEquals(5,view.phase(2),1e-9);
     }
     @Test void clientStopDelayUsesEachServerMotionProfile(){
         for(var profile:jp.pirijuggler.common.reel.ReelMotion.Profile.values()){

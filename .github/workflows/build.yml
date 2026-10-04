@@ -17,6 +17,9 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: gradle
+      - name: Fast skill-stop diagnostics
+        shell: cmd
+        run: gradlew.bat :common:test --tests jp.pirijuggler.common.reel.SkillStopControlTest.firstStopContracts --tests jp.pirijuggler.common.reel.SkillStopControlTest.exhaustiveInputHistories --console=plain --info
       - name: Production build and tests
         shell: cmd
         run: gradlew.bat test packagePiriJars --console=plain
