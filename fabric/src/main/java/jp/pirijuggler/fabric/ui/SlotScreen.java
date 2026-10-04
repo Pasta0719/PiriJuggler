@@ -52,18 +52,18 @@ public final class SlotScreen extends Screen {
         c.getMatrices().push();c.getMatrices().translate(v.x(),v.y(),0);c.getMatrices().scale((float)v.scale(),(float)v.scale(),1);
 
         if(isJugglerGod(view.machineType()))godCabinetPanel(c,SlotLayout.CABINET);
-        else panel(c,SlotLayout.CABINET,color("CABINET_BG"));
-        panel(c,SlotLayout.DATA,color("DISPLAY_BG"));
+        else panel(c,SlotLayout.CABINET,UiConstants.machineColor(view.machineType(),"CABINET_BG"));
+        panel(c,SlotLayout.DATA,UiConstants.machineColor(view.machineType(),"DISPLAY_BG"));
         panel(c,SlotLayout.DATA_LEFT,color("DISPLAY_BG"));
         panel(c,SlotLayout.DATA_RIGHT,color("DISPLAY_BG"));
         data(c,v.logicalX(mouseX),v.logicalY(mouseY));
-        c.fill(670,300,1570,690,view.godFreeze()&&godMs>=35?0xff111111:color("REEL_SEPARATOR"));
+        c.fill(670,300,1570,690,view.godFreeze()&&godMs>=35?0xff111111:UiConstants.machineColor(view.machineType(),"REEL_SEPARATOR"));
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;
             var clip=v.clip(new SlotLayout.Rect(x,300,270,390));c.enableScissor(clip.x(),clip.y(),clip.x()+clip.w(),clip.y()+clip.h());
             if(view.godFreeze()&&godMs>=35)drawGodReelWindow(c,reel,x,godMs);
             else{
-                int reelBg=isJugglerGod(view.machineType())?color("JUGGLER_GOD_REEL_BG"):color("REEL_BG");
+                int reelBg=isJugglerGod(view.machineType())?color("JUGGLER_GOD_REEL_BG"):UiConstants.machineColor(view.machineType(),"REEL_BG");
                 c.fill(x,300,x+270,690,reelBg);
                 drawReelSymbols(c,reel,x);
             }
