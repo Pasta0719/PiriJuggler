@@ -33,7 +33,7 @@ public final class SkillStopControl {
             {SEVEN,BAR,SEVEN},{BAR,SEVEN,SEVEN},{SEVEN,BAR,BAR},{BAR,SEVEN,BAR},{BAR,BAR,SEVEN}};
     private static final int BIG_ENTRY_MASK = 1<<4;
     private static final int REG_ENTRY_MASK = 1<<5;
-    private static final int REACH_ONLY_MASK = (1<<6)|(1<<13)|(1<<14)|(1<<15)|(1<<16)|(1<<17);
+    private static final int REACH_ONLY_MASK = (1<<13)|(1<<14)|(1<<15)|(1<<16)|(1<<17);
     private static final int REACH_MASK = BIG_ENTRY_MASK|REG_ENTRY_MASK|REACH_ONLY_MASK;
     private static final int[] PATTERN_MASK = new int[9261];
     private static final boolean[] LEFT_MIDDLE_CHERRY = new boolean[21], LEFT_CORNER_CHERRY = new boolean[21];
@@ -85,7 +85,7 @@ public final class SkillStopControl {
         if(choices==null){
             int[] answer=new int[21];
             for(int p=0;p<21;p++) {
-                int forced=forcedFirst(c,reel,p),pick=-1,onePick=-1;
+                int forced=forcedFirst(c,reel,p),pick=-1,onePick=-1,entryPick=-1;
                 for(int d=0;d<=4;d++) {
                     int target=Math.floorMod(p-d,21);
                     if(forced>=0&&target!=forced)continue;
@@ -94,11 +94,12 @@ public final class SkillStopControl {
                     for(Reel other:Reel.values())if(other!=reel&&second(c,next,other)==null){safe=false;break;}
                     if(!safe)continue;
                     if(pick<0)pick=target;
+                    if(c.mode()==Mode.PENDING&&entryPick<0&&entryPartial(c,next))entryPick=target;
                     if(c.role().oneMedal()&&onePick<0&&onePossible(c,next))onePick=target;
                     if(d==0&&c.role().oneMedal()&&showsSeven(reel,p)){pick=target;onePick=target;break;}
                 }
                 if(pick<0)throw new IllegalStateException("No first stop: "+c+" "+reel+" "+p);
-                answer[p]=onePick>=0?onePick:pick;
+                answer[p]=entryPick>=0?entryPick:onePick>=0?onePick:pick;
             }
             choices=answer;cache.put(key,answer);
         }
@@ -125,7 +126,7 @@ public final class SkillStopControl {
         int[] cached=cache.get(key);if(cached!=null)return cached[0]<0?null:cached;
         int[] answer=new int[21];
         for(int p=0;p<21;p++) {
-            int pick=-1,onePick=-1;
+            int pick=-1,onePick=-1,entryPick=-1;
             for(int d=0;d<=4;d++) {
                 int target=Math.floorMod(p-d,21);
                 if(!leftPartial(c,reel,target,d==0))continue;
@@ -134,11 +135,12 @@ public final class SkillStopControl {
                 Reel last=Arrays.stream(Reel.values()).filter(r->(next.mask()&r.bit())==0).findFirst().orElseThrow();
                 int[] finalChoices=lastOrNull(c,next,last);if(finalChoices==null)continue;
                 if(pick<0)pick=target;
+                if(c.mode()==Mode.PENDING&&entryPick<0&&entryPartial(c,next))entryPick=target;
                 if(c.role().oneMedal()&&onePick<0&&onePossible(c,next))onePick=target;
-                if(d==0&&entryEligible(c,next)&&sevenTenpai(next)!=0){pick=target;onePick=target;break;}
+                if(d==0&&c.mode()!=Mode.PENDING&&entryEligible(c,next)&&sevenTenpai(next)!=0){pick=target;onePick=target;break;}
             }
             if(pick<0){cache.put(key,new int[]{-1});return null;}
-            answer[p]=onePick>=0?onePick:pick;
+            answer[p]=entryPick>=0?entryPick:onePick>=0?onePick:pick;
         }
         cache.put(key,answer);return answer;
     }
@@ -159,7 +161,7 @@ public final class SkillStopControl {
                 if(pick<0)pick=target;
                 int mask=patterns(tops);
                 if(rolePick<0 && (mask&c.role().pattern()&15)!=0)rolePick=target;
-                if(d==0&&entry&&(mask&bonusBit(c))!=0){pick=target;onePick=target;break;}
+                if(entry&&(mask&bonusBit(c))!=0&&(c.mode()==Mode.PENDING||d==0)){pick=target;onePick=target;break;}
                 if(c.role().oneMedal()&&onePick<0&&(mask&c.role().pattern())!=0)onePick=target;
             }
             if(pick<0){cache.put(key,new int[]{-1});return null;}
@@ -196,10 +198,23 @@ public final class SkillStopControl {
     }
     private static boolean entryEligible(Context c, SkillStopHistory h) {
         if(c.bonus()==null||c.premium()==Premium.F||h.count()==0)return false;
+        if(c.mode()==Mode.PENDING)return true;
         int first=h.first();
         if(!h.bit(first)&&forcedFirst(c,Reel.values()[first],h.input(first))!=h.stop(first))return false;
         for(int r:h.order())if(r!=first&&!h.bit(r))return false;
         return true;
+    }
+    private static boolean entryPartial(Context c, SkillStopHistory h) {
+        if(c.mode()!=Mode.PENDING||c.bonus()==null)return false;
+        for(int[] line:LINES){
+            boolean match=true;
+            for(int r:h.order()){
+                Symbol wanted="REG".equals(c.bonus())&&r==Reel.RIGHT.ordinal()?BAR:SEVEN;
+                if(SkillStopReels.row(Reel.values()[r],h.stop(r),line[r])!=wanted){match=false;break;}
+            }
+            if(match)return true;
+        }
+        return false;
     }
     private static int bonusBit(Context c) { return "BIG".equals(c.bonus())?16:"REG".equals(c.bonus())?32:0; }
     private static int patterns(int[] t) { return PATTERN_MASK[t[0]*441+t[1]*21+t[2]]; }
