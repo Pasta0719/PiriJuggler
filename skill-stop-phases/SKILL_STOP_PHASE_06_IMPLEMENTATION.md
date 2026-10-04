@@ -1,5 +1,5 @@
 # SKILL STOP Phase06 — 最終総合受入
-Status: IN_PROGRESS — FINAL_RUNTIME_ACCEPTANCE
+Status: COMPLETE — FINAL_RUNTIME_ACCEPTANCE PASS (GitHub Actions run 37132184760; validated commit 6f460301157e6da06f00d178f69d87d6b86ae163)
 
 Phase01〜05のproduction実装を変更せず、最終受入専用の実機シナリオと証拠生成を追加する。
 
@@ -26,4 +26,4 @@ Phase04と同じproduction controller export + `verify-economy.cjs` をPhase06 s
 - Windows: `run-skill-stop-phase06-runtime.bat`
 - 実機ランナー: `runtime-test-support/run_skill_stop_phase06.py`
 
-CI/runtime PASS後に本書・仕様・IMPLEMENTATION_STATUSをCOMPLETEへ更新し、mainへマージする。
+最終受入CI/runtime PASS。GitHub Actions run 37132184760 の成功を確認し、本書と IMPLEMENTATION_STATUS.md を COMPLETE に更新。
