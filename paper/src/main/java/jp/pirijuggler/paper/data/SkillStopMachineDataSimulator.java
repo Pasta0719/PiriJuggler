@@ -108,7 +108,7 @@ public final class SkillStopMachineDataSimulator {
                             }
                             success=control.outcome(context,h).challengeSuccess();
                         }
-                        cursor.bonusRemaining= Math.addExact(cursor.bonusRemaining-1,success?3:0);
+                        cursor.bonusRemaining= Math.addExact(cursor.bonusRemaining-1,success?2:0);
                         difference+=14;max=Math.max(max,difference);simulatedSpins++;
                         if(cursor.bonusRemaining==0){
                             cursor.activeBonus="NONE";cursor.entryCharged=false;current=0;
