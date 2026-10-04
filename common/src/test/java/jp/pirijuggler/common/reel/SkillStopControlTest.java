@@ -55,6 +55,26 @@ class SkillStopControlTest {
     private static void independentCheck(SkillStopControl.Context c,SkillStopHistory h,SkillStopControl.Outcome out){
         int allowed=c.role().pattern();String bonus=c.bonus();
         if(c.mode()==SkillStopControl.Mode.CHALLENGE){assertEquals(14,out.payout());assertFalse(line(h,"7","7","7"));assertFalse(line(h,"7","7","BAR"));return;}
+        // Independent five-line scan: never trust the controller's cached pattern mask alone.
+        boolean replay=line(h,"R","R","R");
+        boolean grape=line(h,"G","G","G");
+        boolean bell=line(h,"B","B","B");
+        boolean piero=line(h,"P","P","P");
+        assertEquals(replay,out.replay(),"replay flag must match visible five-line replay");
+        assertEquals(replay,(out.patterns()&1)!=0,"replay bit must match visible five-line replay");
+        assertEquals(grape,(out.patterns()&2)!=0,"grape bit must match visible five-line grape");
+        assertEquals(bell,(out.patterns()&4)!=0,"bell bit must match visible five-line bell");
+        assertEquals(piero,(out.patterns()&8)!=0,"piero bit must match visible five-line piero");
+        int expectedPayout=grape?8:bell?14:piero?10:0;
+        if(c.role().cherry()){
+            Symbol leftMiddle=SkillStopReels.row(Reel.LEFT,h.stop(0),0);
+            Symbol leftTop=SkillStopReels.row(Reel.LEFT,h.stop(0),-1);
+            Symbol leftBottom=SkillStopReels.row(Reel.LEFT,h.stop(0),1);
+            if(leftMiddle==Symbol.CHERRY||leftTop==Symbol.CHERRY||leftBottom==Symbol.CHERRY)expectedPayout+=4;
+        }
+        if(c.role().oneMedal()&&(out.patterns()&c.role().pattern())!=0)expectedPayout++;
+        assertEquals(expectedPayout,out.payout(),"visible five-line payout must match");
+        if(c.role()==SkillStopRole.REPLAY)assertTrue(replay,"REPLAY draw must produce a visible five-line replay");
         assertFalse(line(h,"BAR","BAR","BAR"));
         boolean big=line(h,"7","7","7"),reg=line(h,"7","7","BAR");
         if(big||reg){assertEquals(big?"BIG":"REG",bonus);assertEquals(bonus,out.entryBonus());assertTrue(h.bit(h.order()[1]));assertTrue(h.bit(h.order()[2]));assertNotEquals(SkillStopControl.Premium.F,c.premium());}
