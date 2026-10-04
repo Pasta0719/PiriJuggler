@@ -162,7 +162,7 @@ public final class WorldCabinetRenderer {
         if(state.skillChallengeTexture()!=null){
             var box=jp.pirijuggler.fabric.ui.SlotLayout.SKILL_CHALLENGE;
             var size=JugglerGodAssets.textureSize(state.machineType(),state.skillChallengeTexture());
-            double fit=Math.min(box.w()/(double)size.width(),box.h()/(double)size.height());
+            double fit=Math.min(1.0,Math.min(box.w()/(double)size.width(),box.h()/(double)size.height()));
             double w=size.width()*fit,h=size.height()*fit;
             rect(consumers,JugglerGodAssets.texture(state.machineType(),state.skillChallengeTexture()),basis,camera,
                     box.x()+(box.w()-w)/2,box.y()+(box.h()-h)/2,w,h,.0025,0xffffffff,0,0,1,1);
