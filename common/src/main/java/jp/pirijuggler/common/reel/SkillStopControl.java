@@ -29,7 +29,12 @@ public final class SkillStopControl {
     private static final int[][] LINES = {{-1,-1,-1},{0,0,0},{1,1,1},{-1,0,1},{1,0,-1}};
     private static final Symbol[][] PATTERNS = {{REPLAY,REPLAY,REPLAY},{GRAPE,GRAPE,GRAPE},{BELL,BELL,BELL},{PIERO,PIERO,PIERO},
             {SEVEN,SEVEN,SEVEN},{SEVEN,SEVEN,BAR},{BAR,BAR,BAR},{SEVEN,CHERRY,BAR},{BELL,SEVEN,BELL},
-            {GRAPE,GRAPE,PIERO},{PIERO,GRAPE,PIERO},{PIERO,PIERO,SEVEN},{PIERO,BAR,PIERO}};
+            {GRAPE,GRAPE,PIERO},{PIERO,GRAPE,PIERO},{PIERO,PIERO,SEVEN},{PIERO,BAR,PIERO},
+            {SEVEN,BAR,SEVEN},{BAR,SEVEN,SEVEN},{SEVEN,BAR,BAR},{BAR,SEVEN,BAR},{BAR,BAR,SEVEN}};
+    private static final int BIG_ENTRY_MASK = 1<<4;
+    private static final int REG_ENTRY_MASK = 1<<5;
+    private static final int REACH_ONLY_MASK = (1<<6)|(1<<13)|(1<<14)|(1<<15)|(1<<16)|(1<<17);
+    private static final int REACH_MASK = BIG_ENTRY_MASK|REG_ENTRY_MASK|REACH_ONLY_MASK;
     private static final int[] PATTERN_MASK = new int[9261];
     private static final boolean[] LEFT_MIDDLE_CHERRY = new boolean[21], LEFT_CORNER_CHERRY = new boolean[21];
     static {
@@ -146,18 +151,19 @@ public final class SkillStopControl {
         int[] cached=cache.get(key);if(cached!=null)return cached[0]<0?null:cached;
         int[] answer=new int[21]; int[] tops=h.stops(); boolean entry=entryEligible(c,h);
         for(int p=0;p<21;p++) {
-            int pick=-1,onePick=-1;
+            int pick=-1,onePick=-1,rolePick=-1;
             for(int d=0;d<=4;d++) {
                 int target=Math.floorMod(p-d,21);tops[reel.ordinal()]=target;
                 boolean leftBit=reel==Reel.LEFT?d==0:h.bit(0);
                 if(!legal(c,tops,leftBit,entry&&d==0))continue;
                 if(pick<0)pick=target;
                 int mask=patterns(tops);
+                if(rolePick<0 && (mask&c.role().pattern()&15)!=0)rolePick=target;
                 if(d==0&&entry&&(mask&bonusBit(c))!=0){pick=target;onePick=target;break;}
                 if(c.role().oneMedal()&&onePick<0&&(mask&c.role().pattern())!=0)onePick=target;
             }
             if(pick<0){cache.put(key,new int[]{-1});return null;}
-            answer[p]=onePick>=0?onePick:pick;
+            answer[p]=onePick>=0?onePick:rolePick>=0?rolePick:pick;
         }
         cache.put(key,answer);return answer;
     }
@@ -173,10 +179,16 @@ public final class SkillStopControl {
     }
     private static boolean legal(Context c, int[] t, boolean leftBit, boolean entry) {
         int mask=patterns(t);
-        if(c.mode()==Mode.CHALLENGE)return (mask&48)==0;
+        if(c.mode()==Mode.CHALLENGE)return (mask&REACH_MASK)==0;
         if(LEFT_MIDDLE_CHERRY[t[0]]&&!(c.premium()==Premium.B&&leftBit))return false;
         if(LEFT_CORNER_CHERRY[t[0]]&&!c.role().cherry())return false;
-        return (mask&~(c.role().pattern()|(entry?bonusBit(c):0)))==0;
+        int allowed=c.role().pattern();
+        if(c.bonus()!=null)allowed|=REACH_ONLY_MASK;
+        if("BIG".equals(c.bonus()) && entry)allowed|=BIG_ENTRY_MASK;
+        if("REG".equals(c.bonus()) && entry)allowed|=REG_ENTRY_MASK;
+        if((mask&~allowed)!=0)return false;
+        // A drawn role may be missed when no legal four-symbol slip reaches its payline.
+        return true;
     }
     private static boolean leftPartial(Context c, Reel reel, int target, boolean bit) {
         return c.mode()==Mode.CHALLENGE||reel!=Reel.LEFT||

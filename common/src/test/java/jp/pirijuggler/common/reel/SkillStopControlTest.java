@@ -42,21 +42,87 @@ class SkillStopControlTest {
         contexts.add(SkillStopControl.Context.normal(SkillStopRole.CHERRY_BIG,SkillStopControl.Premium.B));
         for(String bonus:List.of("BIG","REG"))for(SkillStopRole small:List.of(SkillStopRole.MISS,SkillStopRole.REPLAY,SkillStopRole.GRAPE,SkillStopRole.BELL,SkillStopRole.CHERRY,SkillStopRole.PIERO))contexts.add(SkillStopControl.Context.pending(small,bonus));
         for(int target:new int[]{4,8,64})contexts.add(SkillStopControl.Context.challenge(target));
+
         long histories=0;
-        for(var context:contexts){var control=new SkillStopControl();for(Reel[] order:ORDERS)for(int a=0;a<21;a++){
-            var h1=stop(control,context,SkillStopHistory.empty(),order[0],a);
-            for(int b=0;b<21;b++){var h2=stop(control,context,h1,order[1],b);
-                if(context.premium()==SkillStopControl.Premium.F)assertEquals(0,SkillStopControl.sevenTenpai(h2));
-                for(int c=0;c<21;c++){var h3=stop(control,context,h2,order[2],c);var out=control.outcome(context,h3);independentCheck(context,h3,out);histories++;}
+        Set<SkillStopRole> visiblyWon=EnumSet.noneOf(SkillStopRole.class);
+        List<String> failures=new ArrayList<>();
+
+        for(var context:contexts){
+            var control=new SkillStopControl();
+            for(Reel[] order:ORDERS)for(int a0=0;a0<21;a0++){
+                SkillStopHistory h1;
+                try{h1=stop(control,context,SkillStopHistory.empty(),order[0],a0);}
+                catch(Throwable e){recordFailure(failures,context,order,a0,-1,-1,"first",e);continue;}
+
+                for(int b0=0;b0<21;b0++){
+                    SkillStopHistory h2;
+                    try{
+                        h2=stop(control,context,h1,order[1],b0);
+                        if(context.premium()==SkillStopControl.Premium.F)assertEquals(0,SkillStopControl.sevenTenpai(h2));
+                    }catch(Throwable e){recordFailure(failures,context,order,a0,b0,-1,"second",e);continue;}
+
+                    for(int c0=0;c0<21;c0++){
+                        try{
+                            var h3=stop(control,context,h2,order[2],c0);
+                            var out=control.outcome(context,h3);
+                            independentCheck(context,h3,out);
+                            if(context.mode()==SkillStopControl.Mode.NORMAL&&context.bonus()==null){
+                                int roleBit=context.role().pattern()&15;
+                                if(roleBit!=0&&(out.patterns()&roleBit)!=0)visiblyWon.add(context.role());
+                                if(context.role()==SkillStopRole.CHERRY&&(SkillStopReels.row(Reel.LEFT,h3.stop(0),-1)==Symbol.CHERRY||SkillStopReels.row(Reel.LEFT,h3.stop(0),0)==Symbol.CHERRY||SkillStopReels.row(Reel.LEFT,h3.stop(0),1)==Symbol.CHERRY))visiblyWon.add(SkillStopRole.CHERRY);
+                            }
+                            histories++;
+                        }catch(Throwable e){recordFailure(failures,context,order,a0,b0,c0,"third/outcome",e);}
+                    }
+                }
             }
-        }System.out.println("SKILL_STOP_CONTEXT_PASS "+context);}
-        assertEquals(contexts.size()*6L*21*21*21,histories);System.out.println("SKILL_STOP_HISTORIES_PASS "+histories);
+        }
+
+        for(var role:List.of(SkillStopRole.REPLAY,SkillStopRole.GRAPE,SkillStopRole.BELL,SkillStopRole.PIERO,SkillStopRole.CHERRY))
+            if(!visiblyWon.contains(role))failures.add("No reachable visible win for "+role);
+        if(!failures.isEmpty())fail("SKILL_STOP_FAILURES ("+failures.size()+")\n"+String.join("\n",failures));
+        assertEquals(contexts.size()*6L*21*21*21,histories);
+        System.out.println("SKILL_STOP_HISTORIES_PASS "+histories);
+    }
+
+    private static void recordFailure(List<String> failures,SkillStopControl.Context context,Reel[] order,int a,int b,int c,String stage,Throwable e){
+        String message=stage+" context="+context+" order="+Arrays.toString(order)+" inputs=["+a+","+b+","+c+"] "+e.getClass().getSimpleName()+": "+String.valueOf(e.getMessage());
+        System.err.println("SKILL_STOP_FAILURE "+message);
+        if(failures.size()<200)failures.add(message);
     }
     private static void independentCheck(SkillStopControl.Context c,SkillStopHistory h,SkillStopControl.Outcome out){
         int allowed=c.role().pattern();String bonus=c.bonus();
-        if(c.mode()==SkillStopControl.Mode.CHALLENGE){assertEquals(14,out.payout());assertFalse(line(h,"7","7","7"));assertFalse(line(h,"7","7","BAR"));return;}
-        assertFalse(line(h,"BAR","BAR","BAR"));
-        boolean big=line(h,"7","7","7"),reg=line(h,"7","7","BAR");
+        if(c.mode()==SkillStopControl.Mode.CHALLENGE){
+            assertEquals(14,out.payout());
+            for(String[] p:new String[][]{{"7","7","7"},{"7","7","BAR"},{"7","BAR","7"},{"BAR","7","7"},{"7","BAR","BAR"},{"BAR","7","BAR"},{"BAR","BAR","7"},{"BAR","BAR","BAR"}})
+                assertFalse(line(h,p[0],p[1],p[2]),"challenge must kick bonus reach patterns");
+            return;
+        }
+        // Independent five-line scan: never trust the controller's cached pattern mask alone.
+        boolean replay=line(h,"R","R","R");
+        boolean grape=line(h,"G","G","G");
+        boolean bell=line(h,"B","B","B");
+        boolean piero=line(h,"P","P","P");
+        assertEquals(replay,out.replay(),"replay flag must match visible five-line replay");
+        assertEquals(replay,(out.patterns()&1)!=0,"replay bit must match visible five-line replay");
+        assertEquals(grape,(out.patterns()&2)!=0,"grape bit must match visible five-line grape");
+        assertEquals(bell,(out.patterns()&4)!=0,"bell bit must match visible five-line bell");
+        assertEquals(piero,(out.patterns()&8)!=0,"piero bit must match visible five-line piero");
+        int expectedPayout=grape?8:bell?14:piero?10:0;
+        if(c.role().cherry()){
+            Symbol leftMiddle=SkillStopReels.row(Reel.LEFT,h.stop(0),0);
+            Symbol leftTop=SkillStopReels.row(Reel.LEFT,h.stop(0),-1);
+            Symbol leftBottom=SkillStopReels.row(Reel.LEFT,h.stop(0),1);
+            if(leftMiddle==Symbol.CHERRY||leftTop==Symbol.CHERRY||leftBottom==Symbol.CHERRY)expectedPayout+=4;
+        }
+        if(c.role().oneMedal()&&(out.patterns()&c.role().pattern())!=0)expectedPayout++;
+        assertEquals(expectedPayout,out.payout(),"visible five-line payout must match");
+        boolean[] reach={
+            line(h,"7","7","7"),line(h,"7","7","BAR"),line(h,"7","BAR","7"),line(h,"BAR","7","7"),
+            line(h,"7","BAR","BAR"),line(h,"BAR","7","BAR"),line(h,"BAR","BAR","7"),line(h,"BAR","BAR","BAR")
+        };
+        if(bonus==null)for(boolean hit:reach)assertFalse(hit,"bonus-only reach pattern appeared without bonus");
+        boolean big=reach[0],reg=reach[1];
         if(big||reg){assertEquals(big?"BIG":"REG",bonus);assertEquals(bonus,out.entryBonus());assertTrue(h.bit(h.order()[1]));assertTrue(h.bit(h.order()[2]));assertNotEquals(SkillStopControl.Premium.F,c.premium());}
         else assertNull(out.entryBonus());
         for(int bit:new int[]{1,2,4,8,128,256,512,1024,2048,4096})if((out.patterns()&bit)!=0)assertTrue((allowed&bit)!=0,"non-established pattern");

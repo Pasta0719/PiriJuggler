@@ -62,8 +62,8 @@ public final class WorldCabinetRenderer {
 
         // Compact public data lamp above the cabinet.
         double dataY=CabinetPlacement.HEIGHT/2.0+.125;
-        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH,.20,.0010,UiConstants.color("CABINET_EDGE"),0,0,1,1);
-        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH-.015,.185,.0016,UiConstants.color("DISPLAY_BG"),0,0,1,1);
+        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH,.20,.0010,UiConstants.machineColor(state.machineType(),"CABINET_EDGE"),0,0,1,1);
+        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH-.015,.185,.0016,UiConstants.machineColor(state.machineType(),"DISPLAY_BG"),0,0,1,1);
         quad(consumers,WHITE,basis,camera,.11,dataY,.006,.165,.0020,UiConstants.color("BUTTON_METAL_DARK"),0,0,1,1);
 
         localText(consumers,client.textRenderer,basis,camera,-.45,dataY+.055,"BIG",.00245f,UiConstants.color("DISPLAY_BIG"),false);
@@ -73,7 +73,7 @@ public final class WorldCabinetRenderer {
 
         long bonusTotal=state.bigCount()+state.regCount();
         String combined=bonusTotal==0?"1/---":String.format(Locale.ROOT,"1/%.1f",state.totalGames()/(double)bonusTotal);
-        localText(consumers,client.textRenderer,basis,camera,.31,dataY+.050,"合算",.00205f,UiConstants.color("DISPLAY_GREEN"),true);
+        localText(consumers,client.textRenderer,basis,camera,.31,dataY+.050,"合算",.00205f,UiConstants.machineColor(state.machineType(),"DISPLAY_GREEN"),true);
         localText(consumers,client.textRenderer,basis,camera,.31,dataY-.018,combined,.00285f,UiConstants.color("DISPLAY_WHITE"),true);
 
         // Cabinet face. JUGGLER_GOD uses layered gold bands instead of a flat color.
@@ -98,19 +98,19 @@ public final class WorldCabinetRenderer {
                     UiConstants.color("JUGGLER_GOD_GOLD_HIGHLIGHT"),0,0,1,1);
         }else{
             quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.015,CabinetPlacement.HEIGHT-.015,.0006,
-                    UiConstants.color("CABINET_BG"),0,0,1,1);
+                    UiConstants.machineColor(state.machineType(),"CABINET_BG"),0,0,1,1);
         }
 
         // SlotScreen reel separator: (670,300)-(1570,690), mapped inside CABINET.
         boolean godBlackout=state.godFreeze();
         rect(consumers,WHITE,basis,camera,670,300,900,390,.0010,
-                godBlackout?0xff111111:UiConstants.color("REEL_SEPARATOR"),0,0,1,1);
+                godBlackout?0xff111111:UiConstants.machineColor(state.machineType(),"REEL_SEPARATOR"),0,0,1,1);
 
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;
             int reelBg=isJugglerGod(state.machineType())
                     ?UiConstants.color("JUGGLER_GOD_REEL_BG")
-                    :UiConstants.color("REEL_BG");
+                    :UiConstants.machineColor(state.machineType(),"REEL_BG");
             rect(consumers,WHITE,basis,camera,x,300,270,390,.0015,
                     godBlackout?0xff141414:reelBg,0,0,1,1);
 
@@ -162,7 +162,7 @@ public final class WorldCabinetRenderer {
         if(state.skillChallengeTexture()!=null){
             var box=jp.pirijuggler.fabric.ui.SlotLayout.SKILL_CHALLENGE;
             var size=JugglerGodAssets.textureSize(state.machineType(),state.skillChallengeTexture());
-            double fit=Math.min(box.w()/(double)size.width(),box.h()/(double)size.height());
+            double fit=Math.min(1.0,Math.min(box.w()/(double)size.width(),box.h()/(double)size.height()));
             double w=size.width()*fit,h=size.height()*fit;
             rect(consumers,JugglerGodAssets.texture(state.machineType(),state.skillChallengeTexture()),basis,camera,
                     box.x()+(box.w()-w)/2,box.y()+(box.h()-h)/2,w,h,.0025,0xffffffff,0,0,1,1);
@@ -181,16 +181,16 @@ public final class WorldCabinetRenderer {
                     "SKILL_STOP".equals(state.machineType())?"残り "+state.skillRemaining()+"G":"COUNT "+state.bonusCount(),2.0f,UiConstants.color("TEXT_MAIN"));
 
         // Match visible cabinet controls from the real SlotScreen. Decorative only in world view.
-        control(consumers,basis,camera,440,860,150,100,"BET",client.textRenderer);
+        control(consumers,basis,camera,440,860,150,100,"BET",client.textRenderer,state.machineType());
         stopButton(consumers,basis,camera,720,865,180,110,"LEFT",client.textRenderer);
         stopButton(consumers,basis,camera,990,865,180,110,"CENTER",client.textRenderer);
         stopButton(consumers,basis,camera,1260,865,180,110,"RIGHT",client.textRenderer);
     }
 
     private static void control(VertexConsumerProvider c,CabinetPlacement.Basis b,Vec3d cam,
-                                double x,double y,double w,double h,String label,TextRenderer tr){
+                                double x,double y,double w,double h,String label,TextRenderer tr,String machineType){
         rect(c,WHITE,b,cam,x,y,w,h,.0012,UiConstants.color("BUTTON_METAL_DARK"),0,0,1,1);
-        insetRect(c,b,cam,x,y,w,h,5,.0020,UiConstants.color("BUTTON_RED"));
+        insetRect(c,b,cam,x,y,w,h,5,.0020,UiConstants.machineColor(machineType,"BUTTON_RED"));
         textCentered(c,tr,b,cam,x+w/2,y+h/2-9,label,2.0f,UiConstants.color("TEXT_MAIN"));
     }
 

@@ -52,18 +52,18 @@ public final class SlotScreen extends Screen {
         c.getMatrices().push();c.getMatrices().translate(v.x(),v.y(),0);c.getMatrices().scale((float)v.scale(),(float)v.scale(),1);
 
         if(isJugglerGod(view.machineType()))godCabinetPanel(c,SlotLayout.CABINET);
-        else panel(c,SlotLayout.CABINET,color("CABINET_BG"));
-        panel(c,SlotLayout.DATA,color("DISPLAY_BG"));
+        else panel(c,SlotLayout.CABINET,UiConstants.machineColor(view.machineType(),"CABINET_BG"));
+        panel(c,SlotLayout.DATA,UiConstants.machineColor(view.machineType(),"DISPLAY_BG"));
         panel(c,SlotLayout.DATA_LEFT,color("DISPLAY_BG"));
         panel(c,SlotLayout.DATA_RIGHT,color("DISPLAY_BG"));
         data(c,v.logicalX(mouseX),v.logicalY(mouseY));
-        c.fill(670,300,1570,690,view.godFreeze()&&godMs>=35?0xff111111:color("REEL_SEPARATOR"));
+        c.fill(670,300,1570,690,view.godFreeze()&&godMs>=35?0xff111111:UiConstants.machineColor(view.machineType(),"REEL_SEPARATOR"));
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;
             var clip=v.clip(new SlotLayout.Rect(x,300,270,390));c.enableScissor(clip.x(),clip.y(),clip.x()+clip.w(),clip.y()+clip.h());
             if(view.godFreeze()&&godMs>=35)drawGodReelWindow(c,reel,x,godMs);
             else{
-                int reelBg=isJugglerGod(view.machineType())?color("JUGGLER_GOD_REEL_BG"):color("REEL_BG");
+                int reelBg=isJugglerGod(view.machineType())?color("JUGGLER_GOD_REEL_BG"):UiConstants.machineColor(view.machineType(),"REEL_BG");
                 c.fill(x,300,x+270,690,reelBg);
                 drawReelSymbols(c,reel,x);
             }
@@ -79,7 +79,7 @@ public final class SlotScreen extends Screen {
         else texture(c,name,lamp.x(),lamp.y(),lamp.w(),lamp.h(),512,256,1);
         if(view.skillChallengeTexture()!=null){
             var challenge=SlotLayout.SKILL_CHALLENGE;
-            textureFitActual(c,view.skillChallengeTexture(),challenge.x(),challenge.y(),challenge.w(),challenge.h(),1,1);
+            textureFitActualNoUpscale(c,view.skillChallengeTexture(),challenge.x(),challenge.y(),challenge.w(),challenge.h());
         }
         if(isJugglerGod(view.machineType())){
             int stockOn=view.stockLampOn()?color("DISPLAY_GREEN"):color("BUTTON_METAL_DARK");
@@ -310,6 +310,13 @@ public final class SlotScreen extends Screen {
         double w=size.width()*scale,h=size.height()*scale;
         double dx=x+(boxW-w)/2.0,dy=y+(boxH-h)/2.0;
         textureTintExact(c,path,dx,dy,w,h,size.width(),size.height(),alpha,brightness);
+    }
+    /** Avoid enlarging a low-resolution challenge sprite beyond its native pixels. */
+    private void textureFitActualNoUpscale(DrawContext c,String path,double x,double y,int boxW,int boxH){
+        var size=JugglerGodAssets.textureSize(view.machineType(),path);
+        double scale=Math.min(1.0,Math.min(boxW/(double)size.width(),boxH/(double)size.height()));
+        double w=size.width()*scale,h=size.height()*scale;
+        textureTintExact(c,path,x+(boxW-w)/2.0,y+(boxH-h)/2.0,w,h,size.width(),size.height(),1,1);
     }
     private void textureTintExact(DrawContext c,String path,double x,double y,double w,double h,int tw,int th,float alpha,float brightness){
         Identifier id=JugglerGodAssets.texture(view.machineType(),path);client.getTextureManager().bindTexture(id);client.getTextureManager().getTexture(id).setFilter(true,false);

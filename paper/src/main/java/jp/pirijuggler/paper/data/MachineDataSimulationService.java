@@ -2,6 +2,7 @@ package jp.pirijuggler.paper.data;
 
 import jp.pirijuggler.paper.PiriJugglerPlugin;
 import jp.pirijuggler.paper.game.RoleWeights;
+import jp.pirijuggler.paper.game.SkillStopWeights;
 import jp.pirijuggler.paper.machine.Machine;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
@@ -18,6 +19,7 @@ import java.util.SplittableRandom;
 public final class MachineDataSimulationService {
     private final PiriJugglerPlugin plugin;
     private final RoleWeights weights;
+    private final SkillStopWeights skillWeights;
     private final Map<String,Object> config;
     private boolean running;
 
@@ -25,6 +27,7 @@ public final class MachineDataSimulationService {
         this.plugin=plugin;
         this.config=config;
         this.weights=new RoleWeights(config);
+        this.skillWeights=new SkillStopWeights();
     }
 
     public boolean handle(CommandSender sender,String[] args) {
@@ -61,6 +64,8 @@ public final class MachineDataSimulationService {
         plugin.executors().database(
                 ()->(machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD||machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD_EXTREME)
                         ?JugglerGodMachineDataSimulator.run(dbFile,weights,config,machineId,setting,games,period,random,System.currentTimeMillis())
+                        :machine.type()==jp.pirijuggler.paper.machine.MachineType.SKILL_STOP
+                        ?SkillStopMachineDataSimulator.run(dbFile,skillWeights,machineId,setting,games,period,random,System.currentTimeMillis())
                         :MachineDataSimulator.run(dbFile,weights,machineId,setting,games,period,random,System.currentTimeMillis()),
                 (result,error)->{
                     running=false;
@@ -105,6 +110,8 @@ public final class MachineDataSimulationService {
                 var random=masterRandom.split();
                 results.add((machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD||machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD_EXTREME)
                         ?JugglerGodMachineDataSimulator.run(dbFile,weights,config,machine.id(),machine.setting(),games,period,random,now+(long)i*games)
+                        :machine.type()==jp.pirijuggler.paper.machine.MachineType.SKILL_STOP
+                        ?SkillStopMachineDataSimulator.run(dbFile,skillWeights,machine.id(),machine.setting(),games,period,random,now+(long)i*games)
                         :MachineDataSimulator.run(dbFile,weights,machine.id(),machine.setting(),games,period,random,now+(long)i*games));
             }
             return results;
@@ -130,8 +137,8 @@ public final class MachineDataSimulationService {
 
     private static boolean supported(Machine machine){
         return switch(machine.type()){
-            case JUGGLER,JUGGLER_GOD,JUGGLER_GOD_EXTREME -> true;
-            case GOD,OKIDOKI,DISC,SKILL_STOP -> false;
+            case JUGGLER,JUGGLER_GOD,JUGGLER_GOD_EXTREME,SKILL_STOP -> true;
+            case GOD,OKIDOKI,DISC -> false;
         };
     }
 
