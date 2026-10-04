@@ -181,16 +181,16 @@ public final class WorldCabinetRenderer {
                     "SKILL_STOP".equals(state.machineType())?"残り "+state.skillRemaining()+"G":"COUNT "+state.bonusCount(),2.0f,UiConstants.color("TEXT_MAIN"));
 
         // Match visible cabinet controls from the real SlotScreen. Decorative only in world view.
-        control(consumers,basis,camera,440,860,150,100,"BET",client.textRenderer);
+        control(consumers,basis,camera,440,860,150,100,"BET",client.textRenderer,state.machineType());
         stopButton(consumers,basis,camera,720,865,180,110,"LEFT",client.textRenderer);
         stopButton(consumers,basis,camera,990,865,180,110,"CENTER",client.textRenderer);
         stopButton(consumers,basis,camera,1260,865,180,110,"RIGHT",client.textRenderer);
     }
 
     private static void control(VertexConsumerProvider c,CabinetPlacement.Basis b,Vec3d cam,
-                                double x,double y,double w,double h,String label,TextRenderer tr){
+                                double x,double y,double w,double h,String label,TextRenderer tr,String machineType){
         rect(c,WHITE,b,cam,x,y,w,h,.0012,UiConstants.color("BUTTON_METAL_DARK"),0,0,1,1);
-        insetRect(c,b,cam,x,y,w,h,5,.0020,UiConstants.machineColor(state.machineType(),"BUTTON_RED"));
+        insetRect(c,b,cam,x,y,w,h,5,.0020,UiConstants.machineColor(machineType,"BUTTON_RED"));
         textCentered(c,tr,b,cam,x+w/2,y+h/2-9,label,2.0f,UiConstants.color("TEXT_MAIN"));
     }
 
