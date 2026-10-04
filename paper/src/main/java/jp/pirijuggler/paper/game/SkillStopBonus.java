@@ -15,7 +15,7 @@ public record SkillStopBonus(int remaining, Target target) {
     public SkillStopBonus {
         if(remaining<0||target==null)throw new IllegalArgumentException("bonus state");
     }
-    public static int initial(String type){return switch(type){case "BIG"->20;case "REG"->8;default->throw new IllegalArgumentException("bonus type");};}
+    public static int initial(String type){return switch(type){case "BIG"->22;case "REG"->9;default->throw new IllegalArgumentException("bonus type");};}
     public static SkillStopBonus read(Session session){
         JsonObject state=session.machineState();
         if(state!=null&&state.has("skillRemaining"))return new SkillStopBonus(state.get("skillRemaining").getAsInt(),state.has("skillChallenge")?Target.valueOf(state.get("skillChallenge").getAsString()):Target.AUTO);
@@ -31,7 +31,7 @@ public record SkillStopBonus(int remaining, Target target) {
     }
     public SkillStopBonus finish(boolean success){
         if(remaining==0||success&&target==Target.AUTO)throw new IllegalStateException("invalid bonus completion");
-        return new SkillStopBonus(Math.addExact(remaining-1,success?3:0),Target.AUTO);
+        return new SkillStopBonus(Math.addExact(remaining-1,success?2:0),Target.AUTO);
     }
     public void write(JsonObject state){state.addProperty("skillRemaining",remaining);state.addProperty("skillChallenge",target.name());}
 }
