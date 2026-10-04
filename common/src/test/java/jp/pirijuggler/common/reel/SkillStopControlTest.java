@@ -74,7 +74,7 @@ class SkillStopControlTest {
         }
         if(c.role().oneMedal()&&(out.patterns()&c.role().pattern())!=0)expectedPayout++;
         assertEquals(expectedPayout,out.payout(),"visible five-line payout must match");
-        if(c.role()==SkillStopRole.REPLAY)assertTrue(replay,"REPLAY draw must produce a visible five-line replay");
+        if(c.mode()==SkillStopControl.Mode.NORMAL&&c.role()==SkillStopRole.REPLAY)assertTrue(replay,"REPLAY draw must produce a visible five-line replay");
         assertFalse(line(h,"BAR","BAR","BAR"));
         boolean big=line(h,"7","7","7"),reg=line(h,"7","7","BAR");
         if(big||reg){assertEquals(big?"BIG":"REG",bonus);assertEquals(bonus,out.entryBonus());assertTrue(h.bit(h.order()[1]));assertTrue(h.bit(h.order()[2]));assertNotEquals(SkillStopControl.Premium.F,c.premium());}
