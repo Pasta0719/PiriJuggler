@@ -257,7 +257,6 @@ public final class MobileRemoteGateway implements AutoCloseable {
                     }
                     tokenHashes.entrySet().removeIf(e -> e.getValue().equals(pairing.owner()));
                     tokenHashes.put(tokenHash, pairing.owner());
-                    pairingsLoaded = true;
                     JsonObject body = ok();
                     body.addProperty("token", token);
                     body.addProperty("player", playerName(pairing.owner()));
