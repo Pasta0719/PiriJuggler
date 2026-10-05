@@ -44,8 +44,10 @@ public final class PachinkoFixtureCommand implements CommandExecutor {
         Player player=args.length==2?Bukkit.getPlayerExact(args[1]):sender instanceof Player p?p:null;
         if(player==null){sender.sendMessage(Component.text("PLAYER_REQUIRED"));return true;}
         PiriJugglerPlugin production=(PiriJugglerPlugin)Bukkit.getPluginManager().getPlugin("PiriJuggler");
-        if(production==null||production.machines()==null||!production.machines().ready()){sender.sendMessage(Component.text("PACHINKO_FIXTURE_NOT_READY"));return true;}
-        var snapshot=production.machines().snapshot();
+        if(production==null){sender.sendMessage(Component.text("PACHINKO_FIXTURE_NOT_READY"));return true;}
+        MachineService service=production.machines();
+        if(service==null||!service.ready()){sender.sendMessage(Component.text("PACHINKO_FIXTURE_NOT_READY"));return true;}
+        var snapshot=service.snapshot();
         var session=snapshot.session(player.getUniqueId());
         if(session==null){sender.sendMessage(Component.text("PACHINKO_FIXTURE_NO_SESSION"));return true;}
         var machine=snapshot.machine(session.machine());
@@ -58,13 +60,13 @@ public final class PachinkoFixtureCommand implements CommandExecutor {
         catch(IllegalArgumentException invalid){sender.sendMessage(Component.text("PACHINKO_FIXTURE_INVALID_MODE"));return true;}
 
         production.executors().database(()->{
-            PiriDatabase db=(PiriDatabase)databaseField.get(production.machines());
+            PiriDatabase db=(PiriDatabase)databaseField.get(service);
             db.sql("UPDATE player_sessions SET machine_state_json=?,last_activity=? WHERE session_id=?",next.toJsonString(),now,session.id().toString());
             db.sql("UPDATE machines SET machine_runtime_json=?,updated_at=? WHERE machine_id=?",next.toJsonString(),now,session.machine());
             return db.state();
         },(state,error)->{
             if(error!=null){helper.getLogger().warning("Pachinko fixture failed: "+error);sender.sendMessage(Component.text("PACHINKO_FIXTURE_FAIL"));return;}
-            try { stateField.set(production.machines(),state); }
+            try { stateField.set(service,state); }
             catch(IllegalAccessException reflection){throw new IllegalStateException(reflection);}
             sender.sendMessage(Component.text("PACHINKO_FIXTURE_READY machine="+session.machine()+" mode="+mode+" sequence="+next.ballSequenceId()));
         });
