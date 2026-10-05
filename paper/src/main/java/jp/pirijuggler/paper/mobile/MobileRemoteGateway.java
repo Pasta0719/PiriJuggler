@@ -493,7 +493,8 @@ public final class MobileRemoteGateway implements AutoCloseable {
     }
 
     private static final class RemoteNpcService {
-        private final Map<UUID, UUID> entities = new java.util.HashMap<>();
+        private record RemoteNpc(UUID entityId, UUID worldId, int chunkX, int chunkZ) {}
+        private final Map<UUID, RemoteNpc> entities = new java.util.HashMap<>();
 
         void seat(UUID owner, Machine machine) {
             remove(owner);
@@ -512,7 +513,7 @@ public final class MobileRemoteGateway implements AutoCloseable {
                     0.0f);
 
             ArmorStand stand = world.spawn(location, ArmorStand.class, npc -> {
-                npc.setPersistent(false);
+                npc.setPersistent(true);
                 npc.setGravity(false);
                 npc.setInvulnerable(true);
                 npc.setCollidable(false);
@@ -533,15 +534,35 @@ public final class MobileRemoteGateway implements AutoCloseable {
                     npc.getEquipment().setLeggings(new ItemStack(Material.LEATHER_LEGGINGS));
                     npc.getEquipment().setBoots(new ItemStack(Material.LEATHER_BOOTS));
                 }
+                npc.addScoreboardTag("piri_remote");
+                npc.addScoreboardTag("piri_remote_" + owner);
             });
-            entities.put(owner, stand.getUniqueId());
+            entities.put(owner, new RemoteNpc(
+                    stand.getUniqueId(),
+                    world.getUID(),
+                    location.getBlockX() >> 4,
+                    location.getBlockZ() >> 4));
         }
 
         void remove(UUID owner) {
-            UUID id = entities.remove(owner);
-            if (id == null) return;
-            Entity entity = Bukkit.getEntity(id);
-            if (entity != null) entity.remove();
+            RemoteNpc ref = entities.remove(owner);
+            String ownerTag = "piri_remote_" + owner;
+            if (ref != null) {
+                World world = Bukkit.getWorld(ref.worldId());
+                if (world != null) {
+                    var chunk = world.getChunkAt(ref.chunkX(), ref.chunkZ());
+                    Entity entity = Bukkit.getEntity(ref.entityId());
+                    if (entity != null) entity.remove();
+                    for (Entity candidate : chunk.getEntities()) {
+                        if (candidate.getScoreboardTags().contains(ownerTag)) candidate.remove();
+                    }
+                }
+            }
+            for (World world : Bukkit.getWorlds()) {
+                for (Entity candidate : world.getEntities()) {
+                    if (candidate.getScoreboardTags().contains(ownerTag)) candidate.remove();
+                }
+            }
         }
 
         void retain(Set<UUID> activeOwners) {
@@ -620,21 +641,21 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #dataLeft{left:8px;top:262px;width:218px;height:365px}
 #dataRight{left:1374px;top:262px;width:218px;height:365px}
 
-#cabinet{position:absolute;left:235px;top:188px;width:1130px;height:690px;background:#3c0a10;border:6px solid #b68a42;box-shadow:inset 0 0 0 4px #e4c174}
+#cabinet{position:absolute;left:235px;top:188px;width:1130px;height:690px;background:#3C0A10;border:6px solid #B68A42;box-shadow:inset 0 0 0 4px #E4C174}
 #cabinet.godlike{background:linear-gradient(#e9d07a 0%,#c49a3a 25%,#9c6f1d 65%,#65420e 100%);border-color:#b8892f}
 
-#reelBacking{position:absolute;left:555px;top:255px;width:765px;height:330px;background:#8a8175}
-.reelWindow{position:absolute;top:255px;width:230px;height:330px;overflow:hidden;background:#f4f1e8;z-index:4}
+#reelBacking{position:absolute;left:555px;top:255px;width:765px;height:330px;background:#8A8175}
+.reelWindow{position:absolute;top:255px;width:230px;height:330px;overflow:hidden;background:#F4F1E8;z-index:4}
 #reel0{left:555px}#reel1{left:823px}#reel2{left:1090px}
 .reelWindow.godlike{background:#fff}
 .sym{position:absolute;object-fit:contain;pointer-events:none}
 
 #lamp{position:absolute;left:305px;top:360px;width:220px;height:125px;object-fit:contain;z-index:5}
-#skillChallenge{position:absolute;left:330px;top:505px;width:170px;height:110px;display:flex;align-items:center;justify-content:center;z-index:5}
+#skillChallenge{position:absolute;left:342px;top:483px;width:150px;height:117px;display:flex;align-items:center;justify-content:center;z-index:5}
 #skillChallengeImg{display:none;max-width:100%;max-height:100%;object-fit:contain}
-#skillRemaining{position:absolute;left:840px;top:683px;width:190px;text-align:center;font-size:22px;font-weight:900;color:#fff;z-index:6}
+#skillRemaining{position:absolute;left:858px;top:675px;width:190px;text-align:center;font-size:22px;font-weight:900;color:#F6F1E7;z-index:6}
 
-#statusPanel{position:absolute;left:555px;top:605px;width:765px;height:70px;background:#090b0e;border:2px solid #20242a;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 14px;z-index:5}
+#statusPanel{position:absolute;left:555px;top:605px;width:765px;height:70px;background:#090B0E;border:2px solid #20242A;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 14px;z-index:5}
 .statLabel{font-size:15px;color:#b9bcc2}.statValue{font-size:27px;font-weight:900;margin-top:1px}
 
 .machineControl{position:absolute;z-index:8;border-radius:14px;background:#666a72;padding:4px}
@@ -710,8 +731,8 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
  .reelWindow{top:205px;width:96px;height:174px;border-radius:4px}
  #reel0{left:38px}#reel1{left:147px}#reel2{left:256px}
  #lamp{left:24px;top:398px;width:140px;height:78px;object-fit:contain}
- #skillChallenge{left:190px;top:395px;width:120px;height:78px}
- #skillRemaining{left:190px;top:472px;width:120px;font-size:13px}
+ #skillChallenge{left:83px;top:454px;width:92px;height:72px}
+ #skillRemaining{left:214px;top:528px;width:100px;font-size:12px}
 
  #statusPanel{
   left:24px;top:490px;width:342px;height:54px;
@@ -881,7 +902,7 @@ async function api(path,method){
  return j;
 }
 function errorText(e){
- const m={BUSY:"処理中です",INVALID_STATE:"今は操作できません",INVALID_MACHINE:"この台は利用できません",NOT_ENOUGH_CREDIT:"クレジットが足りません",NOT_ENOUGH_VAULT:"所持金が足りません",MACHINE_OCCUPIED:"ほかのプレイヤーが遊技中です",MACHINE_DISABLED:"この台は利用できません",STOP_TOO_EARLY:"まだ停止できません",ALREADY_STOPPED:"停止済みです",SESSION_MISMATCH:"台との接続状態が変わりました",VAULT_ERROR:"所持金処理に失敗しました",ECONOMY_UNAVAILABLE:"貸出を利用できません",AUTH_LOADING:"サーバー起動中です",PLAYER_OFFLINE:"INSERTはMinecraftにログイン中のみ使えます",NOT_ENOUGH_MEDALS:"投入できるメダルがありません"};
+ const m={BUSY:"処理中です",INVALID_STATE:"今は操作できません",INVALID_MACHINE:"この台は利用できません",NOT_ENOUGH_CREDIT:"クレジットが足りません",NOT_ENOUGH_VAULT:"所持金が足りません",MACHINE_OCCUPIED:"ほかのプレイヤーが遊技中です",MACHINE_DISABLED:"この台は利用できません",STOP_TOO_EARLY:"まだ停止できません",ALREADY_STOPPED:"停止済みです",SESSION_MISMATCH:"台との接続状態が変わりました",VAULT_ERROR:"所持金処理に失敗しました",ECONOMY_UNAVAILABLE:"貸出を利用できません",AUTH_LOADING:"サーバー起動中です",NOT_ENOUGH_MEDALS:"投入できるメダルがありません"};
  return m[e.message]||e.message;
 }
 async function pairNow(){
@@ -1026,10 +1047,10 @@ function visualBusy(){
 function applyState(j){
  currentState=j;currentType=j.machineType||currentType;
  if(Number(j.godPresentationStartMs||0)>0)godPresentationUntil=Math.max(godPresentationUntil,Number(j.godPresentationStartMs)+15000);
- $("machineLabel").textContent="MACHINE "+j.machineId;
+ $("machineLabel").textContent="MACHINE "+j.machineId+" · "+machineLabel(currentType);
  $("credit").textContent=j.credit||0;$("bet").textContent=j.bet||0;$("pay").textContent=j.pay||0;$("medals").textContent=j.heldMedals||0;
  const godlike=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME";
- $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);$("skillChallenge").style.display=currentType==="SKILL_STOP"?"flex":"none";$("skillRemaining").style.display=currentType==="SKILL_STOP"?"block":"none";
+ $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);const skillstop=currentType==="SKILL_STOP";$("skillChallenge").style.display=skillstop?"flex":"none";$("skillRemaining").style.display=skillstop?"block":"none";
  $("lamp").src=asset("lamp/piri_chance_"+(j.lampOn?"on":"off")+".png");
  if(currentType==="SKILL_STOP"){
   $("skillRemaining").textContent=(String(j.gameState||"").startsWith("BIG_")||String(j.gameState||"").startsWith("REG_"))&&j.skillRemaining!=null?"残り "+j.skillRemaining+"G":"";
