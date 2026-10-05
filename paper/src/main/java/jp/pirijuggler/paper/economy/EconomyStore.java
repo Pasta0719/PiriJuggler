@@ -202,6 +202,31 @@ public final class EconomyStore {
         });
     }
 
+    /**
+     * Moves only durable mobile wallet medals into the existing crash-safe cashout delivery path.
+     * Active/suspended machine sessions are intentionally untouched so login never cashes out a resumable game.
+     */
+    public RecoveryCashoutPlan preparePendingWalletCashout(UUID player,long now) throws Exception {
+        return db.transaction(() -> {
+            ensureUnlimitedTable();
+            var pendingTx=db.rows("SELECT * FROM cashout_transactions WHERE player_uuid=? AND status='PENDING' ORDER BY created_at LIMIT 1",player.toString());
+            if(!pendingTx.isEmpty()){
+                var row=pendingTx.getFirst();String tx=(String)row.get("transaction_id");
+                return new RecoveryCashoutPlan(tx,((Number)row.get("amount")).longValue(),bundlesFor(tx),false);
+            }
+            long amount=pending(player);
+            if(amount<=0)throw new DomainException("NOT_ENOUGH_MEDALS");
+            if(amount>MedalToken.MAX_AMOUNT)throw new DomainException("MEDAL_AMOUNT_TOO_LARGE");
+            String tx=UUID.randomUUID().toString();
+            db.sql("INSERT INTO cashout_transactions(transaction_id,player_uuid,amount,status,created_at,updated_at) VALUES(?,?,?,'PENDING',?,?)",
+                    tx,player.toString(),amount,now,now);
+            UUID bundle=UUID.randomUUID();
+            insertUnlimitedBundle(bundle,Math.toIntExact(amount),"PENDING_DELIVERY",tx,now);
+            db.sql("DELETE FROM player_wallet WHERE player_uuid=?",player.toString());
+            return new RecoveryCashoutPlan(tx,amount,List.of(new Bundle(bundle,Math.toIntExact(amount))),false);
+        });
+    }
+
     /** Finalizes a recovery delivery; undelivered value returns to player_wallet for retry. */
     public void finishRecoveryCashout(UUID player,String transactionId,Set<UUID> delivered,long now) throws Exception {
         db.transaction(() -> {
