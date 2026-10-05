@@ -581,7 +581,7 @@ public final class MobileRemoteGateway implements AutoCloseable {
 <title>Piri Remote</title>
 <style>
 :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}\ncanvas{background:#090b0e}
 html,body{margin:0;min-height:100%;background:#0b0c10;color:#f6f1e7}
 button,input{font:inherit}
 button{border:0;color:#fff;background:#343944;font-weight:800;cursor:pointer}
@@ -605,7 +605,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 .dataGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .metric{background:#101218;border:1px solid #292d36;border-radius:12px;padding:12px}
 .metric .k{font-size:11px;color:#9da3ae}.metric .v{font-size:22px;font-weight:900;margin-top:4px}
-#preGraph{width:100%;height:180px;background:#090b0e;border-radius:10px;margin-top:12px}
+#preGraph{display:block;width:100%;height:180px;background:#090b0e!important;border-radius:10px;margin-top:12px}
 .histRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:7px 0;border-bottom:1px solid #252932}
 #game{position:fixed;inset:0;background:#000;z-index:30;overflow:hidden;touch-action:manipulation}
 #stageWrap{position:absolute;inset:0;overflow:hidden}
@@ -622,7 +622,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 .reelWindow.godlike{background:#fff}
 .sym{position:absolute;object-fit:contain;pointer-events:none}
 #lamp{position:absolute;left:350px;top:390px;width:300px;height:170px;object-fit:contain;z-index:5}
-#skillChallenge{position:absolute;left:410px;top:580px;width:180px;height:140px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:28px;font-weight:900;color:#fff;z-index:5}
+#skillChallenge{position:absolute;left:410px;top:580px;width:180px;height:140px;display:flex;align-items:center;justify-content:center;z-index:5}\n#skillChallengeImg{display:none;max-width:100%;max-height:100%;object-fit:contain}\n#skillRemaining{position:absolute;left:990px;top:810px;width:200px;text-align:center;font-size:28px;font-weight:900;color:#fff;z-index:6}
 #statusPanel{position:absolute;left:670px;top:710px;width:900px;height:95px;background:#090b0e;border:3px solid #20242a;display:grid;grid-template-columns:repeat(4,1fr);padding:11px 18px;z-index:5}
 .statLabel{font-size:20px;color:#b9bcc2}.statValue{font-size:35px;font-weight:900;margin-top:3px}
 .machineControl{position:absolute;z-index:8;border-radius:18px;background:#666a72;padding:4px}
@@ -709,7 +709,10 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
   left:24px;top:430px;width:155px;height:82px;object-fit:contain;
  }
  #skillChallenge{
-  left:190px;top:430px;width:150px;height:82px;font-size:14px;
+  left:190px;top:430px;width:150px;height:82px;
+ }
+ #skillRemaining{
+  left:190px;top:514px;width:150px;font-size:13px;
  }
 
  #statusPanel{
@@ -796,7 +799,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 <div id="cabinet"></div><div id="reelBacking"></div>
 <div id="reel0" class="reelWindow"></div><div id="reel1" class="reelWindow"></div><div id="reel2" class="reelWindow"></div>
 <img id="lamp" src="/assets/lamp/piri_chance_off.png" alt="">
-<div id="skillChallenge"></div>
+<div id="skillChallenge"><img id="skillChallengeImg" alt=""></div><div id="skillRemaining"></div>
 <div id="statusPanel">
 <div><div class="statLabel">CREDIT</div><div id="credit" class="statValue">0</div></div>
 <div><div class="statLabel">BET</div><div id="bet" class="statValue">0</div></div>
@@ -942,7 +945,7 @@ async function seat(id){
 }
 function resizeStage(){
  if(innerWidth<=700&&innerHeight>=innerWidth){
-  $("stage").style.transform="none";
+  $("stage").style.left="0";$("stage").style.top="0";$("stage").style.transform="none";
   return;
  }
  const sx=innerWidth/1920,sy=innerHeight/1080,s=Math.min(sx,sy);
@@ -983,10 +986,14 @@ function drawReels(now){
  ensureReels();
  for(let r=0;r<3;r++){
   const phase=currentPhase(r,now),middle=Math.floor(phase),frac=phase-middle,box=$("reel"+r),imgs=box.children;
+  const sx=Math.max(.01,box.clientWidth/270),sy=Math.max(.01,box.clientHeight/390);
   for(let row=-2;row<=2;row++){
-   const im=imgs[row+2],sym=symbolAt(r,middle+row),sz=symbolSize(sym),w=sz[0],h=sz[1];
+   const im=imgs[row+2],sym=symbolAt(r,middle+row),sz=symbolSize(sym);
+   const w=sz[0]*sx,h=sz[1]*sx;
    const src=asset("symbols/"+sym+".png");if(im.getAttribute("src")!==src)im.setAttribute("src",src);
-   im.style.width=w+"px";im.style.height=h+"px";im.style.left=((270-w)/2)+"px";im.style.top=(130+(row-frac)*130-(h-130)/2)+"px";
+   im.style.width=w+"px";im.style.height=h+"px";
+   im.style.left=((box.clientWidth-w)/2)+"px";
+   im.style.top=((130+(row-frac)*130)*sy-(h-130*sy)/2)+"px";
   }
  }
 }
@@ -1042,8 +1049,13 @@ function applyState(j){
  $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);
  $("lamp").src=asset("lamp/piri_chance_"+(j.lampOn?"on":"off")+".png");
  if(currentType==="SKILL_STOP"){
-  const rem=j.skillRemaining==null?"":("残り "+j.skillRemaining+"G");const ch=j.skillChallenge&&j.skillChallenge!=="AUTO"?("<br>"+j.skillChallenge):"";$("skillChallenge").innerHTML=rem+ch;
- }else $("skillChallenge").textContent="";
+  $("skillRemaining").textContent=(String(j.gameState||"").startsWith("BIG_")||String(j.gameState||"").startsWith("REG_"))&&j.skillRemaining!=null?"残り "+j.skillRemaining+"G":"";
+  const challenge=j.skillChallenge&&j.skillChallenge!=="AUTO"?String(j.skillChallenge).toLowerCase():"";
+  const challengeImg=$("skillChallengeImg");
+  if(challenge){challengeImg.src=asset("symbols/"+challenge+".png");challengeImg.style.display="block"}else{challengeImg.removeAttribute("src");challengeImg.style.display="none"}
+ }else{
+  $("skillRemaining").textContent="";$("skillChallengeImg").removeAttribute("src");$("skillChallengeImg").style.display="none";
+ }
  if(!String(j.gameState||"").includes("SPINNING")&&!visualBusy())motion=null;
  if(!Number(j.godPresentationStartMs||0)&&Date.now()>=godPresentationUntil)godPresentationUntil=0;
  updateControlState();
