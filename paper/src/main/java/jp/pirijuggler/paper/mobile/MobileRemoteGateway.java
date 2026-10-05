@@ -662,6 +662,99 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 @media(max-width:700px){
  #normal{padding:12px 10px 30px}.machine{grid-template-columns:minmax(0,1fr) auto auto}.normalBtn{padding:8px 10px;font-size:14px}.dataGrid{grid-template-columns:repeat(2,1fr)}
 }
+@media(max-width:700px) and (orientation:portrait){
+ #game{background:#050608}
+ #stageWrap{position:absolute;inset:0;overflow:hidden}
+ #stage{
+  width:100vw;height:100dvh;transform:none!important;background:#050608;
+  display:block;overflow:hidden;
+ }
+ #dataTop{
+  left:10px;top:10px;width:calc(100vw - 20px);height:114px;
+  border-width:1px;border-radius:12px;background:#101218;
+ }
+ #machineLabel{left:22px;top:18px;font-size:16px}
+ #graphLabel,#gameGraph,#dataLeft,#dataRight,#diffTitle,#diffValue,#historyTitle,#gameHistory,#oddsTitle,#bigOdds,#regOdds,#allOdds,#chain{display:none!important}
+ .topMetric{
+  top:48px!important;width:auto!important;text-align:left!important;
+  position:absolute!important;
+ }
+ .topMetric .t{font-size:9px!important;color:#9da3ae}
+ .topMetric .n{font-size:18px!important;margin-top:1px}
+ #currentBox{left:22px!important}
+ #totalBox{left:112px!important}
+ #maxBox{left:202px!important}
+ #bigBox{left:292px!important;top:48px!important}
+ #regBox{left:292px!important;top:78px!important}
+ #bigBox .t,#regBox .t{font-size:9px!important}
+ #bigBox .n,#regBox .n{font-size:15px!important;margin-top:0}
+
+ #cabinet{
+  left:10px;top:136px;width:calc(100vw - 20px);height:440px;
+  border-width:4px;box-shadow:inset 0 0 0 2px #e4c174;border-radius:10px;
+ }
+ #reelBacking{
+  left:24px;top:222px;width:calc(100vw - 48px);height:188px;
+  background:#8a8175;border-radius:8px;
+ }
+ .reelWindow{
+  top:222px;width:29vw;height:188px;border-radius:4px;
+ }
+ #reel0{left:6.5vw}
+ #reel1{left:35.5vw}
+ #reel2{left:64.5vw}
+ .sym{transform:scale(.55);transform-origin:center center}
+
+ #lamp{
+  left:24px;top:430px;width:155px;height:82px;object-fit:contain;
+ }
+ #skillChallenge{
+  left:190px;top:430px;width:150px;height:82px;font-size:14px;
+ }
+
+ #statusPanel{
+  left:24px;top:518px;width:calc(100vw - 48px);height:50px;
+  border-width:1px;border-radius:8px;padding:5px 8px;
+  grid-template-columns:repeat(4,1fr);
+ }
+ .statLabel{font-size:9px}
+ .statValue{font-size:18px;margin-top:0}
+
+ #betBtn{
+  left:18px;top:auto;bottom:122px;width:88px;height:68px;
+ }
+ #leverBtn{
+  left:114px;top:auto;bottom:110px;width:74px;height:100px;
+ }
+ #leverStem{left:31px;top:20px;width:12px;height:55px}
+ #leverKnob{left:16px;top:8px;width:42px;height:42px;border-width:4px}
+ #leverLabel{bottom:2px;font-size:11px}
+ .machineControl>span{font-size:14px}
+
+ .stopBtn{top:auto!important;bottom:18px;width:92px;height:82px}
+ .stopBtn>span{width:64px;height:64px;border-width:4px}
+ .stopText{bottom:-4px;font-size:11px}
+ #leftBtn{left:15vw}
+ #centerBtn{left:39vw}
+ #rightBtn{left:63vw}
+
+ #loanBtn,#insertBtn,#cashBtn{
+  top:auto;height:42px;width:64px;left:auto;
+ }
+ #loanBtn{right:12px;bottom:158px}
+ #insertBtn{right:12px;bottom:110px}
+ #cashBtn{right:12px;bottom:62px}
+
+ #gameMessage{
+  left:110px;top:auto;bottom:98px;width:calc(100vw - 190px);
+  font-size:11px;
+ }
+ #leaveBtn{
+  right:12px;top:12px;padding:8px 10px;font-size:12px;z-index:100;
+ }
+
+ .reelWindow.godlike{background:#fff}
+}
 </style>
 </head>
 <body>
@@ -848,6 +941,10 @@ async function seat(id){
  }catch(e){alert(errorText(e))}
 }
 function resizeStage(){
+ if(innerWidth<=700&&innerHeight>=innerWidth){
+  $("stage").style.transform="none";
+  return;
+ }
  const sx=innerWidth/1920,sy=innerHeight/1080,s=Math.min(sx,sy);
  const x=(innerWidth-1920*s)/2,y=(innerHeight-1080*s)/2;
  $("stage").style.transform="translate("+x+"px,"+y+"px) scale("+s+")";
