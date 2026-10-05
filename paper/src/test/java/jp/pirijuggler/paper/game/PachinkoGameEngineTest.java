@@ -79,4 +79,27 @@ class PachinkoGameEngineTest extends GameFixture {
         assertEquals(PacketType.ACTION_REJECTED,duplicate.packets().getFirst().packetType());
     }
 
+    @Test void validStartCommitsOneDeterministicLeftKurunEventBeforeAnyPayout() throws Exception {
+        int id=db.create(new Machine.Location(UUID.randomUUID(),"world",25,64,0,"NORTH"),MachineType.PACHINKO,NOW);
+        UUID player=UUID.randomUUID();db.seat(player,id,NOW);
+        var loaned=PachinkoBallAccounting.lend(PachinkoRuntime.initial(),NOW);
+        db.sql("UPDATE player_sessions SET machine_state_json=? WHERE player_uuid=?",loaned.toJsonString(),player.toString());
+        var before=db.state().session(player);
+        var alwaysStart=new jp.pirijuggler.paper.game.pachinko.PachinkoRouting(250);
+        var engine=new PachinkoGameEngine(new java.util.Random(11),alwaysStart);
+        var transition=engine.plan(before,db.state().machine(id),PacketType.PACHINKO_FIRE,1,NOW+1,0,0,null);
+        var saved=store.commit(transition);var runtime=PachinkoRuntime.fromJson(saved.machineState().toString());
+        assertEquals(1,runtime.totalFired());assertEquals(1,runtime.totalStarts());
+        assertEquals(PachinkoRuntime.Presentation.LEFT_KURUN,runtime.presentation());
+        assertEquals(0,runtime.currentPayout());assertEquals(0,runtime.cumulativePayout());
+        var event=transition.packets().stream().filter(p->p.packetType()==PacketType.PACHINKO_EVENT).findFirst().orElseThrow();
+        assertEquals(runtime.ballSequenceId(),event.payload().get("ballSequenceId").getAsLong());
+        assertEquals(runtime.initialHitCommitted()?"V":"OUT",event.payload().get("outcome").getAsString());
+        assertEquals(PachinkoGameEngine.presentationSeed(saved.id(),id,runtime.ballSequenceId()),event.payload().get("seed").getAsLong());
+        var resumed=engine.resume(saved,0).orElseThrow();
+        assertEquals(event.payload().get("outcome"),resumed.payload().get("outcome"));
+        assertEquals(event.payload().get("seed"),resumed.payload().get("seed"));
+        assertEquals(event.payload().get("startTime"),resumed.payload().get("startTime"));
+    }
+
 }
