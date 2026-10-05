@@ -28,14 +28,19 @@ import java.util.random.RandomGenerator;
  * BET/LEVER/reel-stop actions.
  */
 public final class PachinkoGameEngine implements GameEngine {
+    @FunctionalInterface public interface RushDecisionStrategy { PachinkoRuntime.RightOutcome decide(RandomGenerator random); }
+    public static final RushDecisionStrategy LOCKED_RUSH_STRATEGY=random -> !rollRushContinuation(random)?PachinkoRuntime.RightOutcome.OUT:(rollRight3000(random)?PachinkoRuntime.RightOutcome.WIN_3000:PachinkoRuntime.RightOutcome.WIN_1500);
     private final RandomGenerator random;
     private final PachinkoRouting routing;
+    private final RushDecisionStrategy rushStrategy;
 
-    public PachinkoGameEngine(){this(new SplittableRandom(),PachinkoRouting.reference());}
-    public PachinkoGameEngine(RandomGenerator random){this(random,PachinkoRouting.reference());}
-    public PachinkoGameEngine(RandomGenerator random,PachinkoRouting routing){
+    public PachinkoGameEngine(){this(new SplittableRandom(),PachinkoRouting.reference(),LOCKED_RUSH_STRATEGY);}
+    public PachinkoGameEngine(RandomGenerator random){this(random,PachinkoRouting.reference(),LOCKED_RUSH_STRATEGY);}
+    public PachinkoGameEngine(RandomGenerator random,PachinkoRouting routing){this(random,routing,LOCKED_RUSH_STRATEGY);}
+    public PachinkoGameEngine(RandomGenerator random,PachinkoRouting routing,RushDecisionStrategy rushStrategy){
         this.random=java.util.Objects.requireNonNull(random);
         this.routing=java.util.Objects.requireNonNull(routing);
+        this.rushStrategy=java.util.Objects.requireNonNull(rushStrategy);
     }
 
     private static final Set<PacketType> PACHINKO_ACTIONS=Set.of(
@@ -128,8 +133,7 @@ public final class PachinkoGameEngine implements GameEngine {
 
 
     private GameTransition startRightKurun(Session before,PachinkoRuntime runtime,long sequence,int machineId,long now){
-        boolean win=rollRushContinuation(random);
-        PachinkoRuntime.RightOutcome outcome=win?(rollRight3000(random)?PachinkoRuntime.RightOutcome.WIN_3000:PachinkoRuntime.RightOutcome.WIN_1500):PachinkoRuntime.RightOutcome.OUT;
+        PachinkoRuntime.RightOutcome outcome=rushStrategy.decide(random);
         PachinkoRuntime pending=new PachinkoRuntime(PachinkoRuntime.Mode.RUSH,runtime.ballsHeld(),runtime.ballsLoaned(),runtime.totalFired(),runtime.totalStarts(),
                 runtime.ballSequenceId()+1,PachinkoRuntime.Presentation.RIGHT_KURUN,runtime.initialHitCommitted(),runtime.initialOutcome(),true,runtime.rushWins(),outcome,0,runtime.cumulativePayout(),now);
         return acceptedRight(before,pending,sequence,machineId);
