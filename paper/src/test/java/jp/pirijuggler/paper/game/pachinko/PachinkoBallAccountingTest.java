@@ -25,4 +25,12 @@ class PachinkoBallAccountingTest {
         assertThrows(IllegalStateException.class,()->PachinkoBallAccounting.fire(initial,1));
         assertThrows(IllegalStateException.class,()->PachinkoBallAccounting.validStart(initial,1));
     }
+    @Test void measuredRotationUsesActualDurableFiredAndStartCounters() {
+        var r=PachinkoRuntime.initial();
+        r=PachinkoBallAccounting.lend(r,1);
+        for(int i=0;i<250;i++){r=PachinkoBallAccounting.fire(r,2+i);if(i<17)r=PachinkoBallAccounting.validStart(r,300+i);}
+        assertEquals(17.0,r.measuredSpinsPer1000Yen(),1e-12);
+        assertEquals(PachinkoSpec.payoutRatePercent(17.0),PachinkoSpec.payoutRatePercent(r.measuredSpinsPer1000Yen()),1e-12);
+    }
+
 }
