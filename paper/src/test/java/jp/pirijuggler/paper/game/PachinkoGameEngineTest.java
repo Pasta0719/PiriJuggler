@@ -160,9 +160,9 @@ class PachinkoGameEngineTest extends GameFixture {
         long wins=0, wins1500=0, wins3000=0;
         long payout=0;
         for(int i=0;i<decisions;i++){
-            if(!PachinkoGameEngine.rollRushContinuation(random))continue;
+            if(random.nextDouble()>=jp.pirijuggler.paper.game.pachinko.PachinkoSpec.RUSH_CONTINUATION_RATE)continue;
             wins++;
-            if(PachinkoGameEngine.rollRight3000(random)){wins3000++;payout+=3000;}
+            if(random.nextDouble()<jp.pirijuggler.paper.game.pachinko.PachinkoSpec.RIGHT_3000_RATE){wins3000++;payout+=3000;}
             else {wins1500++;payout+=1500;}
         }
         assertEquals(0.81,(double)wins/decisions,0.002);
