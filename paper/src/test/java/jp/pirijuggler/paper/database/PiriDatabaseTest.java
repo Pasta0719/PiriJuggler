@@ -32,8 +32,9 @@ class PiriDatabaseTest {
         assertEquals("4", scalar("SELECT value FROM metadata WHERE key='schema_version'"));
         assertEquals("wal", scalar("PRAGMA journal_mode")); assertEquals(1, scalar("PRAGMA foreign_keys"));
         assertEquals(2, scalar("PRAGMA synchronous")); assertEquals(5000, scalar("PRAGMA busy_timeout"));
-        assertEquals(14, ((Number) scalar("SELECT count(*) FROM sqlite_master WHERE type='table' AND name<>'sqlite_sequence'")).intValue());
+        assertEquals(15, ((Number) scalar("SELECT count(*) FROM sqlite_master WHERE type='table' AND name<>'sqlite_sequence'")).intValue());
         assertEquals(1, scalar("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='juggler_god_history'"));
+        assertEquals(1, scalar("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='mobile_pairings'"));
         String spec = Files.readString(Path.of(System.getProperty("piri.specRoot"), "SPEC.md"));
         String schema = Files.readString(Path.of(System.getProperty("piri.specRoot"), "paper/src/main/resources/schema-v4.sql"));
         for (String statement : schema.replace("\r", "").split(";")) if (!statement.isBlank()) assertTrue(spec.replace("\r", "").contains(statement.strip()), statement);
@@ -191,6 +192,24 @@ class PiriDatabaseTest {
         db.sql("INSERT INTO metadata(key,value) VALUES(?,?)",key,"stale");
         db.seat(player,id,NOW+1);
         assertEquals(0,((Number)scalar("SELECT count(*) FROM metadata WHERE key='"+key+"'")).longValue());
+    }
+
+
+    @Test void mobilePairingPersistsAcrossRestartAndRevokes() throws Exception {
+        String hash = "sha256-test-token";
+        db.saveMobilePairing(player, hash, NOW);
+        assertEquals(player, db.mobilePairings().get(hash));
+        assertEquals(player, db.authenticateMobilePairing(hash, NOW + 1));
+
+        db.close();
+        db = new PiriDatabase(directory.resolve("piri.db"));
+        db.open(2, NOW + 2, config, new SplittableRandom(2), ignored -> {});
+        assertEquals(player, db.mobilePairings().get(hash));
+        assertEquals(player, db.authenticateMobilePairing(hash, NOW + 3));
+
+        db.revokeMobilePairing(player);
+        assertTrue(db.mobilePairings().isEmpty());
+        assertNull(db.authenticateMobilePairing(hash, NOW + 4));
     }
 
 }

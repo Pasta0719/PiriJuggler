@@ -4,6 +4,7 @@ import jp.pirijuggler.common.protocol.Protocol;
 import jp.pirijuggler.common.protocol.EnvelopeCodec;
 import jp.pirijuggler.common.protocol.ProtocolException;
 import jp.pirijuggler.paper.machine.MachineService;
+import jp.pirijuggler.paper.mobile.MobileRemoteGateway;
 import jp.pirijuggler.paper.config.ConfigValidation;
 import jp.pirijuggler.paper.network.ServerHandshake;
 import jp.pirijuggler.paper.threading.PaperMainThread;
@@ -35,12 +36,13 @@ import java.util.UUID;
 import jp.pirijuggler.paper.reel.ReelEngine;
 
 public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessageListener, Listener {
-    private static final String BUILD_IDENTITY = "PHASE12_REMOTE_SYNC_20260919_A";
+    private static final String BUILD_IDENTITY = "MOBILE_REMOTE_MVP_20261005_A";
     private PaperMainThread mainThread;
     private TaskExecutors executors;
     private ServerHandshake handshake;
     private boolean configurationValid;
     private MachineService machines;
+    private MobileRemoteGateway mobileRemote;
     private PrizeService prizes;
     private PrizeNpcService prizeNpcs;
     private ProfitService profit;
@@ -90,7 +92,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
                     new MachineDataInteractionService(this);
                     EconomyStartupRecovery.reconcile(this);
                     Objects.requireNonNull(getCommand("piri")).setExecutor((sender, command, label, args) ->
-                            handleBuildIdentity(sender,args) || machineSimulation.handle(sender,args) || publicData.handle(sender, args) || prizes.handle(sender, args) || prizeNpcs.handle(sender, args) || profit.handle(sender, args) || securityDoors.handle(sender,args) || machines.onCommand(sender, command, label, args));
+                            handleBuildIdentity(sender,args) || mobileRemote.handle(sender,args) || machineSimulation.handle(sender,args) || publicData.handle(sender, args) || prizes.handle(sender, args) || prizeNpcs.handle(sender, args) || profit.handle(sender, args) || securityDoors.handle(sender,args) || machines.onCommand(sender, command, label, args));
                 }
             }
         } catch (IOException | RuntimeException exception) {
