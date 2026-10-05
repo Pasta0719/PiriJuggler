@@ -1,0 +1,29 @@
+package jp.pirijuggler.paper.game.pachinko;
+
+import org.junit.jupiter.api.Test;
+import java.util.Random;
+import static org.junit.jupiter.api.Assertions.*;
+
+class PachinkoPhase09Test {
+    @Test void lockedBorderAndReferenceRotationReportExpectedRates(){
+        double border=PachinkoSpec.equivalentBorderSpinsPer1000Yen();
+        assertEquals(14.9039029,border,1e-6);
+        assertEquals(100.0,PachinkoSpec.payoutRatePercent(border),1e-9);
+        assertEquals(115.09,PachinkoSpec.payoutRatePercent(17.0),0.02);
+    }
+    @Test void simulatorUsesProductionProbabilities(){
+        var r=PachinkoSimulator.simulate(1_000_000,17.0,new Random(907319L));
+        assertEquals(.60,(double)r.rushEntries()/r.initialJackpots(),.002);
+        assertEquals(.81,(double)r.rightWins()/(r.rightWins()+r.rushEntries()),.002);
+        assertEquals(.03,(double)r.right3000()/r.rightWins(),.001);
+        assertEquals(PachinkoSpec.payoutRatePercent(17.0),r.observedPayoutRatePercent(),.5);
+        assertEquals(PachinkoSpec.equivalentBorderSpinsPer1000Yen(),r.theoreticalBorder(),1e-12);
+        assertEquals(17.0,r.rotation(),1e-12);
+    }
+    @Test void statisticsRoundTripAndLegacyJsonDefaultsToZero(){
+        var s=new PachinkoStatistics(9,3,6,6,20,19,1);
+        var r=new PachinkoRuntime(PachinkoRuntime.Mode.RUSH,10,250,250,17,4,PachinkoRuntime.Presentation.IDLE,true,PachinkoRuntime.InitialOutcome.RUSH_1500,true,20,PachinkoRuntime.RightOutcome.NONE,1500,33000,s,123);
+        assertEquals(r,PachinkoRuntime.fromJson(r.toJsonString()));
+        assertEquals(PachinkoStatistics.empty(),PachinkoRuntime.fromJson("{}").statistics());
+    }
+}
