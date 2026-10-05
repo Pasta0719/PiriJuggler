@@ -127,7 +127,15 @@ def command(text,expected):
     progress("COMMAND",text=text,expected=expected,**snapshot())
     before=msgcount(expected);action("command",text=text);wait(lambda:msgcount(expected)>before,text+" -> "+expected)
 def click(x):
-    before=len(packets("OPEN_MACHINE"));action("aim",x=x);action("click",x=x);wait(lambda:len(packets("OPEN_MACHINE"))>before,"open machine")
+    for attempt in range(3):
+        before=len(packets("OPEN_MACHINE"))
+        action("aim",x=x);action("click",x=x)
+        try:
+            wait(lambda:len(packets("OPEN_MACHINE"))>before,"open machine",10)
+            return
+        except TimeoutError:
+            if attempt==2: raise
+            progress("OPEN_RETRY",attempt=attempt+2,x=x,**snapshot())
 def tap(key):
     # Runtime acceptance must use distinct physical key edges. A same-tick
     # press+release can be coalesced by Minecraft's keyboard/screen path.
