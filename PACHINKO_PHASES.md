@@ -1,6 +1,6 @@
 # Pachinko implementation phases
 
-Status: specification locked for implementation.
+Status: implementation COMPLETE through Phase 10.
 
 ## Locked baseline specification
 
@@ -139,7 +139,11 @@ Completion criteria:
 - Phase 03: COMPLETE — durable 250-ball loan/fire/start accounting, one-ball start prize, measured rotation from actual counters, routing-only payout-rate sensitivity, fixed 1/319 odds, and 17 reference tuning are covered by production tests; Piri build and Runtime helper build pass at `3e4616b`
 - Phase 04: COMPLETE — server-owned deterministic left-kurun event, synchronized Fabric owner/observer rendering, committed V/OUT reconstruction on reconnect, and seeded 1/319 statistical verification are covered; Piri build and Runtime helper build pass at `3e4616b`
 - Phase 05: COMPLETE — forced and statistical 40:60 allocation, 450 normal / 1500 RUSH mapping, durable idempotent payout, and reconnect duplicate-payout rejection are covered; Piri build and Runtime helper build pass at `3e4616b`
-- Existing SKILL STOP Phase 03/04 runtime workflows remain a separate regression gate; their latest push-run failures are not being relabeled as pachinko failures and must be resolved/re-run before final Phase 10 acceptance
+- Phase 06: COMPLETE — dedicated right-kurun flow, exact 81% continuation, 97:3 right payout allocation, 1545-ball expected right payout, clean RUSH failure and reconnect-safe decisions are covered by production/statistical tests
+- Phase 07: COMPLETE — the selected probability-loop presentation resolves exactly to the locked 81%, while finite-ST and LT-style strategies remain behind the same production abstraction and tests
+- Phase 08: COMPLETE — deterministic owner/observer left/right kurun rendering, snapshot reconstruction, culling/cleanup and multi-machine observation are implemented without per-ball Bukkit entities
+- Phase 09: COMPLETE — durable production counters, measured rotation vs theoretical border UI, production-spec simulator, DB-restart persistence and explicit machine-type-safe statistics reset are implemented and tested
+- Phase 10: COMPLETE — all non-pachinko regression gates passed on production-equivalent `cb4a08da`; commit `e3a0fdf6` changed only `runtime-test-support/run_pachinko_phase10.py`, and its real Paper + two Fabric acceptance passed every required owner/observer, 40:60, 81%, right allocation, reconnect, restart, multi-machine and simultaneous-slot isolation check
 
 # Phase 06 - Right kurun, 81% continuation and payout allocation
 
@@ -218,3 +222,12 @@ Required acceptance:
 - Existing slot machines can run simultaneously with pachinko without shared-state contamination.
 
 The pachinko feature is not considered complete until Phase 10 passes.
+
+
+## Final verification — 2026-10-05
+
+- Production/regression baseline: `cb4a08da42c75798a03c6f19fe1f0c1ea2638600` — Piri build, Runtime helper, SKILL STOP Phase 02/03/04/05, NEXT Phase 02/04/05 all SUCCESS
+- Final Phase 10 acceptance: `e3a0fdf66b63123bc6f0a1ae7f131e734feb5ddd` — only the Phase 10 test runner changed from the production/regression baseline; `Pachinko Phase 10 real runtime` SUCCESS
+- Phase 10 verified real-client acceptance includes player + observer left-kurun identity/outcome, mid-sequence reconstruction, initial 40:60 paths, RUSH/right decisions, forced 1500/3000 production resolution, reconnect across normal/left/initial payout/RUSH/right states, Paper restart persistence, two independent pachinko machines, and simultaneous slot gameplay with no pachinko shared-state contamination
+
+**Pachinko feature status: COMPLETE through Phase 10.**
