@@ -80,7 +80,7 @@ public final class MachineService implements Listener, CommandExecutor {
                 .register(MachineType.JUGGLER_GOD_EXTREME,new JugglerGodGameEngine(jugglerGodExtremeGame,random,weights,config,"juggler_god_extreme"))
                 .register(MachineType.GOD,new jp.pirijuggler.paper.game.god.GodGameEngine(random))
                 .register(MachineType.SKILL_STOP,new SkillStopGame(random,new PaperMainThread(plugin),config))
-                .register(MachineType.PACHINKO,new jp.pirijuggler.paper.game.pachinko.PachinkoGameEngine());
+                .register(MachineType.PACHINKO,new jp.pirijuggler.paper.game.pachinko.PachinkoGameEngine(random));
         remote=new RemoteMachineSync(plugin,()->state,plugin::canUseSlot,(saved,nowNanos)->engine(saved.machine()).capture(saved,nowNanos));
         var gameConfig=jp.pirijuggler.paper.database.StartupProfile.map(config.get("game"));
         graceMs = ((Number) gameConfig.get("disconnect_grace_seconds")).longValue() * 1000;
