@@ -60,7 +60,7 @@ public final class Phase12RemoteProbe {
         return switch (type) {
             case REMOTE_MACHINE_SNAPSHOT, REMOTE_MACHINE_SPIN, REMOTE_MACHINE_STOP,
                     REMOTE_MACHINE_NOTICE, REMOTE_MACHINE_BONUS,
-                    REMOTE_MACHINE_REMOVE, REMOTE_MACHINE_SOUND -> true;
+                    REMOTE_MACHINE_REMOVE, REMOTE_MACHINE_SOUND, PACHINKO_EVENT -> true;
             default -> false;
         };
     }
@@ -106,6 +106,7 @@ public final class Phase12RemoteProbe {
                 + " BONUS=" + count(PacketType.REMOTE_MACHINE_BONUS)
                 + " REMOVE=" + count(PacketType.REMOTE_MACHINE_REMOVE)
                 + " SOUND=" + count(PacketType.REMOTE_MACHINE_SOUND)
+                + " PACHINKO=" + count(PacketType.PACHINKO_EVENT)
                 + " CACHE=" + cached
                 + " SPINNING_CACHE=" + spinningCached
                 + " LAST_MACHINE=" + lastMachineId;
