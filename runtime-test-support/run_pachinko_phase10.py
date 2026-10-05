@@ -165,6 +165,20 @@ def fixture(name,mode):
     before=message_count(name,"PACHINKO_FIXTURE_READY")
     command(name,f"piripachinko {mode}")
     wait(lambda:message_count(name,"PACHINKO_FIXTURE_READY")>before,"fixture "+mode,120)
+    def reflected():
+        s=session_for(name)
+        if not s:return False
+        r=machine_runtime(s.get("machine_id"))
+        return {
+            "normal": lambda: r.get("mode")=="NORMAL" and r.get("presentation")=="IDLE" and r.get("rushActive") is False,
+            "left_v": lambda: r.get("presentation")=="LEFT_KURUN" and r.get("initialHitCommitted") is True,
+            "left_out": lambda: r.get("presentation")=="LEFT_KURUN" and r.get("initialHitCommitted") is False,
+            "rush": lambda: r.get("mode")=="RUSH" and r.get("presentation")=="IDLE" and r.get("rushActive") is True,
+            "right_out": lambda: r.get("presentation")=="RIGHT_KURUN" and r.get("rightOutcome")=="OUT",
+            "right_1500": lambda: r.get("presentation")=="RIGHT_KURUN" and r.get("rightOutcome")=="WIN_1500",
+            "right_3000": lambda: r.get("presentation")=="RIGHT_KURUN" and r.get("rightOutcome")=="WIN_3000",
+        }[mode]()
+    wait(reflected,"fixture reflected "+mode,10)
 
 def send_packet(name,ptype):
     action(name,"packet",type=ptype)
