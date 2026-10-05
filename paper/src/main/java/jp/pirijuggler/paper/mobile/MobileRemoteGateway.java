@@ -742,7 +742,7 @@ const $=function(id){return document.getElementById(id)};
 let token=localStorage.getItem("piriToken")||"";
 let player=localStorage.getItem("piriPlayer")||"";
 let stateTimer=0,dataTimer=0,eventTimer=0,currentState=null,currentData=null,currentType="",busy=false;
-let motion=null,pendingState=null;
+let motion=null,pendingState=null,nextGameAt=0,queuedLeverTimer=0,godPresentationUntil=0;
 
 const fixed=[
 ["grape","replay","grape","seven","piero","grape","replay","grape","cherry","bar","grape","replay","grape","bell","seven","replay","grape","replay","grape","bar","cherry"],
@@ -912,12 +912,14 @@ function localStop(reel,pressed){
   const n=motion.stops.filter(Boolean).length;
   playNamed("juggler_god_god_stop_"+Math.max(1,Math.min(3,n)),machineSound("stop"));
  }else playSound("stop");
+ if(motion.stops.filter(Boolean).length===3)nextGameAt=Math.max(nextGameAt,motion.at+2000);
 }
 function handleEvents(events){
  (events||[]).forEach(function(ev){
   const p=ev.payload||{};
   if(ev.type==="SPIN_START"){
    const freeze=!!p.godFreeze;
+   if(queuedLeverTimer){clearTimeout(queuedLeverTimer);queuedLeverTimer=0}
    if(freeze)stopAllAudio();
    motion={spinId:p.spinId||"",animation:p.animation||"NORMAL",godFreeze:freeze,at:performance.now(),starts:[Number(p.startPhase.left),Number(p.startPhase.center),Number(p.startPhase.right)],stopEnableAfterMs:Number(p.stopEnableAfterMs||0),hints:p.stopHints||{},stops:[null,null,null],spinning:true};
    if(p.animation!=="RESUME_NORMAL")playNamed(freeze?"juggler_god_god_freeze":machineSound("lever"),freeze?"god_freeze":"lever");
@@ -936,6 +938,7 @@ function visualBusy(){
 }
 function applyState(j){
  currentState=j;currentType=j.machineType||currentType;
+ if(Number(j.godPresentationStartMs||0)>0)godPresentationUntil=Math.max(godPresentationUntil,Number(j.godPresentationStartMs)+15000);
  $("machineLabel").textContent="MACHINE "+j.machineId;
  $("credit").textContent=j.credit||0;$("bet").textContent=j.bet||0;$("pay").textContent=j.pay||0;$("medals").textContent=j.heldMedals||0;
  const godlike=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME";
@@ -945,6 +948,7 @@ function applyState(j){
   const rem=j.skillRemaining==null?"":("残り "+j.skillRemaining+"G");const ch=j.skillChallenge&&j.skillChallenge!=="AUTO"?("<br>"+j.skillChallenge):"";$("skillChallenge").innerHTML=rem+ch;
  }else $("skillChallenge").textContent="";
  if(!String(j.gameState||"").includes("SPINNING")&&!visualBusy())motion=null;
+ if(!Number(j.godPresentationStartMs||0)&&Date.now()>=godPresentationUntil)godPresentationUntil=0;
  updateControlState();
 }
 function renderState(j){
@@ -954,7 +958,10 @@ function renderState(j){
 }
 function updateControlState(){
  const spinning=currentState&&String(currentState.gameState||"").includes("SPINNING");
- [["leftBtn",0],["centerBtn",1],["rightBtn",2]].forEach(function(x){$(x[0]).disabled=spinning?!canStop(x[1]):true});
+ const presentation=Date.now()<godPresentationUntil;
+ $("betBtn").disabled=presentation;
+ $("leverBtn").disabled=presentation;
+ [["leftBtn",0],["centerBtn",1],["rightBtn",2]].forEach(function(x){$(x[0]).disabled=presentation||(spinning?!canStop(x[1]):true)});
 }
 async function pollState(){
  try{const j=await api("/api/state");if(!j.seated){stopTimers();show("lobby");loadMachines();return}if(!visualBusy())renderState(j)}catch(e){$("gameMessage").textContent=errorText(e)}
@@ -970,7 +977,6 @@ async function pollEvents(){
     else if(ev.type==="NOTICE"){
      if(p.lamp==="ON"&&currentState){currentState=Object.assign({},currentState,{lampOn:true});$("lamp").src=asset("lamp/piri_chance_on.png")}
      if(p.lamp==="OFF"&&currentState){currentState=Object.assign({},currentState,{lampOn:false});$("lamp").src=asset("lamp/piri_chance_off.png")}
-    }else if(ev.type==="NOTICE"){
      const snd=p.sound||"";
      if(snd==="NOTICE")playSound("notice");
      else if(snd==="NOTICE_STRONG")playSound("notice_strong");
@@ -1014,7 +1020,13 @@ function drawGraph(canvas,graph,total){
 async function doAction(type,reel){
  if(busy||!currentState)return;
  unlockAudio();
+ if(Date.now()<godPresentationUntil)return;
  const beforeState=String(currentState.gameState||"");
+ const leverReady=["NORMAL_BETTED","REPLAY_READY","BONUS_ENTRY_BETTED_BIG","BONUS_ENTRY_BETTED_REG","BIG_BETTED","REG_BETTED"].includes(beforeState);
+ if(type==="SPACE_ACTION"&&!beforeState.includes("SPINNING")&&leverReady&&performance.now()<nextGameAt){
+  if(!queuedLeverTimer)queuedLeverTimer=setTimeout(function(){queuedLeverTimer=0;doAction("SPACE_ACTION",-1)},Math.max(0,nextGameAt-performance.now()));
+  return;
+ }
  let pressed=null;
  if(type.indexOf("STOP_")===0){
   if(!canStop(reel))return;pressed=Math.floor(currentPhase(reel,performance.now()));localStop(reel,pressed);
@@ -1038,7 +1050,7 @@ function startGame(j){
  const gs=String(j.gameState||"");if(gs.startsWith("BIG_"))startLoop(j.godFirstBigAudio?"god_big_bgm":"big_bgm");else if(gs.startsWith("REG_"))startLoop("reg_bgm");
  stateTimer=setInterval(pollState,250);eventTimer=setInterval(pollEvents,100);dataTimer=setInterval(pollData,1500);
 }
-function stopTimers(){if(stateTimer)clearInterval(stateTimer);if(eventTimer)clearInterval(eventTimer);if(dataTimer)clearInterval(dataTimer);stateTimer=0;eventTimer=0;dataTimer=0}
+function stopTimers(){if(stateTimer)clearInterval(stateTimer);if(eventTimer)clearInterval(eventTimer);if(dataTimer)clearInterval(dataTimer);if(queuedLeverTimer)clearTimeout(queuedLeverTimer);stateTimer=0;eventTimer=0;dataTimer=0;queuedLeverTimer=0}
 async function leave(){
  try{await api("/api/leave","POST")}catch(e){$("gameMessage").textContent=errorText(e);return}
  stopTimers();stopAllAudio();motion=null;pendingState=null;currentState=null;show("lobby");loadMachines();
