@@ -1,7 +1,0 @@
-{
-  "required": true,
-  "package": "jp.pirijuggler.runtime.mixin",
-  "compatibilityLevel": "JAVA_21",
-  "client": ["HandshakeObserverMixin", "MouseEventsInvoker", "HudAuditMixin"],
-  "injectors": { "defaultRequire": 1 }
-}
