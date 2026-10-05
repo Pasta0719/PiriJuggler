@@ -131,7 +131,7 @@ public final class MachineDataSimulationService {
     private static boolean supported(Machine machine){
         return switch(machine.type()){
             case JUGGLER,JUGGLER_GOD,JUGGLER_GOD_EXTREME -> true;
-            case GOD,OKIDOKI,DISC,SKILL_STOP -> false;
+            case GOD,OKIDOKI,DISC,SKILL_STOP,PACHINKO -> false;
         };
     }
 
