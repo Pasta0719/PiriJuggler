@@ -1011,6 +1011,138 @@ public final class MachineService implements Listener, CommandExecutor {
                 });
     }
 
+    public void mobileInsert(UUID owner, BiConsumer<JsonObject, String> callback) {
+        main();
+        if (!ready()) { callback.accept(null, "DB_ERROR"); return; }
+        Player player = Bukkit.getPlayer(owner);
+        if (player == null || !player.isOnline()) { callback.accept(null, "PLAYER_OFFLINE"); return; }
+        Session session = state.session(owner);
+        if (session == null || session.lifecycle() != Session.Lifecycle.ACTIVE) { callback.accept(null, "SESSION_MISMATCH"); return; }
+        if (!EconomyStore.allowed(session.state())) { callback.accept(null, "INVALID_STATE"); return; }
+        int machineId = session.machine();
+        long sequence = session.sequence() + 1;
+        if (pendingPlayers.contains(owner) || pendingMachines.contains(machineId)) { callback.accept(null, "BUSY"); return; }
+
+        List<EconomyStore.InsertCandidate> candidates = new ArrayList<>();
+        for (int slot = 0; slot <= 35; slot++) {
+            MedalToken.Value value = MedalToken.read(player.getInventory().getItem(slot));
+            if (value != null) candidates.add(new EconomyStore.InsertCandidate(slot, value.bundleId(), value.amount()));
+        }
+        pendingPlayers.add(owner);
+        pendingMachines.add(machineId);
+        plugin.executors().database(
+                () -> new Saved<>(new EconomyStore(database).prepareInsert(owner, session.id(), machineId, sequence, candidates, System.currentTimeMillis()), database.state()),
+                (prepared, error) -> {
+                    if (prepared != null) state = prepared.state;
+                    if (stopped) { releaseEconomy(owner, machineId); return; }
+                    if (error != null) {
+                        releaseEconomy(owner, machineId);
+                        callback.accept(null, mobileFailureCode(error));
+                        return;
+                    }
+                    EconomyStore.InsertPlan plan = prepared.value;
+                    boolean matches = true;
+                    for (var replacement : plan.replacements()) {
+                        MedalToken.Value current = MedalToken.read(player.getInventory().getItem(replacement.slot()));
+                        if (current == null || !current.bundleId().equals(replacement.oldBundleId())
+                                || current.amount() != replacement.oldAmount()) { matches = false; break; }
+                    }
+                    if (!matches) {
+                        plugin.executors().database(
+                                () -> new Saved<>(new EconomyStore(database).rollbackInsert(owner, session.id(), plan, System.currentTimeMillis()), database.state()),
+                                (rolled, rollbackError) -> {
+                                    if (rolled != null) state = rolled.state;
+                                    releaseEconomy(owner, machineId);
+                                    callback.accept(null, rollbackError == null ? "BUSY" : mobileFailureCode(rollbackError));
+                                });
+                        return;
+                    }
+                    for (var replacement : plan.replacements()) {
+                        player.getInventory().setItem(replacement.slot(),
+                                replacement.newBundleId() == null ? null : MedalToken.create(replacement.newBundleId(), replacement.newAmount()));
+                    }
+                    plugin.executors().database(
+                            () -> {
+                                new EconomyStore(database).markInsertApplied(plan.transactionId(), System.currentTimeMillis());
+                                return new Saved<>(state.session(owner), database.state());
+                            },
+                            (saved, markError) -> {
+                                if (saved != null) state = saved.state;
+                                releaseEconomy(owner, machineId);
+                                if (markError != null) callback.accept(null, mobileFailureCode(markError));
+                                else {
+                                    remote.broadcastSnapshot(machineId);
+                                    callback.accept(mobileState(owner), null);
+                                }
+                            });
+                });
+    }
+
+    public void mobileCashout(UUID owner, BiConsumer<JsonObject, String> callback) {
+        main();
+        if (!ready()) { callback.accept(null, "DB_ERROR"); return; }
+        Session session = state.session(owner);
+        if (session == null || session.lifecycle() != Session.Lifecycle.ACTIVE) { callback.accept(null, "SESSION_MISMATCH"); return; }
+        if (!EconomyStore.allowed(session.state())) { callback.accept(null, "INVALID_STATE"); return; }
+        int machineId = session.machine();
+        long sequence = session.sequence() + 1;
+        if (pendingPlayers.contains(owner) || pendingMachines.contains(machineId)) { callback.accept(null, "BUSY"); return; }
+        pendingPlayers.add(owner);
+        pendingMachines.add(machineId);
+
+        plugin.executors().database(
+                () -> new Saved<>(new EconomyStore(database).prepareCashout(owner, session.id(), machineId, sequence, System.currentTimeMillis()), database.state()),
+                (prepared, error) -> {
+                    if (prepared != null) state = prepared.state;
+                    if (stopped) { releaseEconomy(owner, machineId); return; }
+                    if (error != null) {
+                        releaseEconomy(owner, machineId);
+                        callback.accept(null, mobileFailureCode(error));
+                        return;
+                    }
+                    EconomyStore.CashoutPlan plan = prepared.value;
+                    if (plan.alreadyCompleted()) {
+                        releaseEconomy(owner, machineId);
+                        JsonObject response = mobileState(owner);
+                        response.addProperty("cashoutAmount", plan.amount());
+                        callback.accept(response, null);
+                        return;
+                    }
+
+                    Player online = Bukkit.getPlayer(owner);
+                    Set<UUID> delivered = new HashSet<>();
+                    long deliveredAmount = 0;
+                    if (online != null && online.isOnline()) {
+                        for (var bundle : plan.bundles()) {
+                            int slot = online.getInventory().firstEmpty();
+                            if (slot < 0) break;
+                            online.getInventory().setItem(slot, MedalToken.create(bundle.id(), bundle.amount()));
+                            delivered.add(bundle.id());
+                            deliveredAmount = Math.addExact(deliveredAmount, bundle.amount());
+                        }
+                    }
+                    long deliveredFinal = deliveredAmount;
+                    Set<UUID> deliveredFinalIds = Set.copyOf(delivered);
+                    plugin.executors().database(
+                            () -> new Saved<>(new EconomyStore(database).finishCashout(owner, plan.transactionId(), deliveredFinalIds, System.currentTimeMillis()), database.state()),
+                            (finished, finishError) -> {
+                                if (finished != null) state = finished.state;
+                                releaseEconomy(owner, machineId);
+                                if (finishError != null) {
+                                    if (online != null) removeBundleItems(online, deliveredFinalIds);
+                                    callback.accept(null, mobileFailureCode(finishError));
+                                    return;
+                                }
+                                remote.broadcastSnapshot(machineId);
+                                JsonObject response = mobileState(owner);
+                                response.addProperty("cashoutAmount", plan.amount());
+                                response.addProperty("cashoutDelivered", deliveredFinal);
+                                response.addProperty("cashoutPending", plan.amount() - deliveredFinal);
+                                callback.accept(response, null);
+                            });
+                });
+    }
+
     public JsonObject mobileDrainEvents(UUID owner) {
         main();
         JsonObject result = new JsonObject();
