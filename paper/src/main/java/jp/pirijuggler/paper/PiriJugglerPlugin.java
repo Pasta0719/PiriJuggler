@@ -149,8 +149,7 @@ juggler_god:
     '5': {bonus_scale_ppm: 741839, small_role_scale_ppm: 841000}
     '6': {bonus_scale_ppm: 696323, small_role_scale_ppm: 833500}
 """;
-        Files.writeString(path, original.stripTrailing() + "
-" + block, StandardCharsets.UTF_8);
+        Files.writeString(path, original.stripTrailing() + "\\n" + block, StandardCharsets.UTF_8);
         getLogger().info("Migrated existing config with juggler_god defaults");
     }
 
