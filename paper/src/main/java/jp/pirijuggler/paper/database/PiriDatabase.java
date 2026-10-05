@@ -7,6 +7,7 @@ import jp.pirijuggler.paper.machine.Machine;
 import jp.pirijuggler.paper.machine.MachineType;
 import jp.pirijuggler.paper.game.god.GodMachineRuntime;
 import jp.pirijuggler.paper.game.JugglerGodRuntime;
+import jp.pirijuggler.paper.game.pachinko.PachinkoRuntime;
 import jp.pirijuggler.paper.reel.StopCatalogue;
 import jp.pirijuggler.paper.reel.StopSolver;
 import jp.pirijuggler.paper.session.Session;
@@ -168,6 +169,9 @@ public final class PiriDatabase implements AutoCloseable {
                 case GOD -> GodMachineRuntime.fromJson(machine.runtimeJson()).gameplay().toJsonString();
                 case JUGGLER_GOD, JUGGLER_GOD_EXTREME -> JugglerGodRuntime.fromJson(machine.runtimeJson()).toJsonString();
                 case SKILL_STOP -> existing!=null&&existing.machine()==id?existing.text("machine_state_json"):null;
+                case PACHINKO -> existing!=null&&existing.machine()==id
+                        ? PachinkoRuntime.fromJson(existing.text("machine_state_json")).toJsonString()
+                        : PachinkoRuntime.fromJson(machine.runtimeJson()).toJsonString();
                 default -> null;
             };
 
