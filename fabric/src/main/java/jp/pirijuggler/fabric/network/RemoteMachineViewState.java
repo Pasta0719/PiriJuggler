@@ -43,6 +43,8 @@ public final class RemoteMachineViewState {
     private ReelMotion.Profile profile = ReelMotion.Profile.NORMAL;
     private long spinAt;
     private SkillStopPresentation skill=SkillStopPresentation.EMPTY;
+    private long pachinkoBallSequenceId,pachinkoSeed,pachinkoStartTime;
+    private String pachinkoSide="IDLE",pachinkoOutcome="OUT";
 
     private RemoteMachineViewState(int machineId) {
         this.machineId = machineId;
@@ -88,6 +90,9 @@ public final class RemoteMachineViewState {
         state.bonusCount = body.get("bonusCount").getAsLong();
         state.bonusMode = body.get("bonusMode").getAsString();
         state.spinning = body.get("spinning").getAsBoolean();
+        if("PACHINKO".equals(state.machineType)&&body.has("pachinkoBallSequenceId")){
+            state.pachinkoBallSequenceId=body.get("pachinkoBallSequenceId").getAsLong();state.pachinkoSide=body.has("pachinkoPresentation")?body.get("pachinkoPresentation").getAsString():"IDLE";state.pachinkoOutcome=body.has("pachinkoOutcome")?body.get("pachinkoOutcome").getAsString():"OUT";state.pachinkoStartTime=body.has("pachinkoStartTime")?body.get("pachinkoStartTime").getAsLong():0L;state.pachinkoSeed=body.has("pachinkoSeed")?body.get("pachinkoSeed").getAsLong():0L;
+        }
         if (state.spinning) {
             state.spinId = UUID.fromString(body.get("spinId").getAsString());
             state.profile = ReelMotion.Profile.valueOf(body.get("animation").getAsString());
@@ -159,6 +164,11 @@ public final class RemoteMachineViewState {
         lampOn = "ON".equals(body.get("lamp").getAsString());
         lampBlink = "FAST_BLINK_1S".equals(body.get("pattern").getAsString());
         lampChangedAt = now;
+    }
+
+    void applyPachinko(JsonObject body,long wallNowMs) {
+        long sequence=body.get("ballSequenceId").getAsLong();if(sequence<pachinkoBallSequenceId)return;
+        pachinkoBallSequenceId=sequence;pachinkoSide=body.get("side").getAsString();pachinkoOutcome=body.get("outcome").getAsString();pachinkoStartTime=body.get("startTime").getAsLong();pachinkoSeed=body.has("seed")?body.get("seed").getAsLong():0L;
     }
 
     void applyBonus(JsonObject body) {
@@ -243,6 +253,11 @@ public final class RemoteMachineViewState {
         return stop==null||now>=stop.at+stop.durationNanos;
     }
     public UUID spinId() { return spinId; }
+    public long pachinkoBallSequenceId(){return pachinkoBallSequenceId;}
+    public long pachinkoSeed(){return pachinkoSeed;}
+    public long pachinkoStartTime(){return pachinkoStartTime;}
+    public String pachinkoSide(){return pachinkoSide;}
+    public String pachinkoOutcome(){return pachinkoOutcome;}
 
     public int displayStop(int reel) {
         if (reel < 0 || reel > 2) throw new IllegalArgumentException("reel");
