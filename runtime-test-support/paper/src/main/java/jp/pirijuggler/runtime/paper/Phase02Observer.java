@@ -88,7 +88,8 @@ public final class Phase02Observer implements Listener {
             var state = production.machines().snapshot(); result.addProperty("ready",true); result.addProperty("period",state.period());
             result.add("machines",new Gson().toJsonTree(state.machines())); result.add("sessions",new Gson().toJsonTree(state.sessions().stream().map(s -> s.snapshot()).toList()));
         }
-        int remoteArmorStands=0; for (World observedWorld : Bukkit.getWorlds()) for (org.bukkit.entity.Entity entity : observedWorld.getEntities()) if (entity.getScoreboardTags().contains("piri_remote")) remoteArmorStands++; result.addProperty("remoteArmorStands",remoteArmorStands);\n        result.add("commands",commands); result.add("clicks",clicks);
+        int remoteArmorStands=0; for (World observedWorld : Bukkit.getWorlds()) for (org.bukkit.entity.Entity entity : observedWorld.getEntities()) if (entity.getScoreboardTags().contains("piri_remote")) remoteArmorStands++; result.addProperty("remoteArmorStands",remoteArmorStands);
+        result.add("commands",commands); result.add("clicks",clicks);
         if("phase04".equals(System.getProperty("piri.runtime.phase"))) result.add("phase04",Phase04Harness.snapshot());
         if("phase05".equals(System.getProperty("piri.runtime.phase")))result.add("phase05",Phase05Fixture.snapshot());
         result.add("inbound",inbound);result.add("fixtures",fixtures);result.addProperty("fixtureCompleted",fixtureCompleted);
