@@ -3,6 +3,9 @@ package jp.pirijuggler.paper.data;
 import com.google.gson.JsonObject;
 import jp.pirijuggler.paper.PiriJugglerPlugin;
 import jp.pirijuggler.paper.machine.Machine;
+import jp.pirijuggler.paper.machine.MachineType;
+import jp.pirijuggler.paper.game.pachinko.PachinkoDataText;
+import jp.pirijuggler.paper.game.pachinko.PachinkoRuntime;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -28,6 +31,10 @@ public final class PublicDataCommand {
             try{id=Integer.parseInt(args[1]);}catch(NumberFormatException invalid){tell(sender,"INVALID_MACHINE");return true;}
             Machine machine=plugin.machines().snapshot().machine(id);
             if(machine==null||!machine.enabled()){tell(sender,"INVALID_MACHINE");return true;}
+            if(machine.type()==MachineType.PACHINKO){
+                for(String line:PachinkoDataText.detail(machine.id(),PachinkoRuntime.fromJson(machine.runtimeJson())))tell(sender,line);
+                return true;
+            }
             ids.add(id);
         }else{
             for(Machine machine:plugin.machines().snapshot().machines())if(!machine.deleted()&&machine.enabled())ids.add(machine.id());
