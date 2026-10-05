@@ -129,4 +129,28 @@ class PachinkoGameEngineTest extends GameFixture {
         var restored=PachinkoRuntime.fromJson(after.machineState().toString());assertEquals(held,restored.ballsHeld());assertEquals(cumulative,restored.cumulativePayout());assertTrue(restored.rushActive());
     }
 
+    @Test void forcedRightOutEndsRushAndReconnectCannotGrantAnotherDecision() throws Exception {
+        int id=db.create(new Machine.Location(UUID.randomUUID(),"world",29,64,0,"NORTH"),MachineType.PACHINKO,NOW);UUID player=UUID.randomUUID();db.seat(player,id,NOW);
+        var rush=new PachinkoRuntime(PachinkoRuntime.Mode.RUSH,1500,250,0,0,1,PachinkoRuntime.Presentation.IDLE,true,PachinkoRuntime.InitialOutcome.RUSH_1500,true,0,PachinkoRuntime.RightOutcome.NONE,1500,1500,NOW);
+        db.sql("UPDATE player_sessions SET machine_state_json=? WHERE player_uuid=?",rush.toJsonString(),player.toString());
+        var engine=new PachinkoGameEngine(new java.util.Random(1),jp.pirijuggler.paper.game.pachinko.PachinkoRouting.reference(),r->PachinkoRuntime.RightOutcome.OUT);
+        var started=store.commit(engine.plan(db.state().session(player),db.state().machine(id),PacketType.PACHINKO_FIRE,1,NOW+1,0,0,null));
+        var pending=PachinkoRuntime.fromJson(started.machineState().toString());assertEquals(PachinkoRuntime.Presentation.RIGHT_KURUN,pending.presentation());assertEquals(PachinkoRuntime.RightOutcome.OUT,pending.rightOutcome());
+        assertEquals("OUT",engine.resume(started,0).orElseThrow().payload().get("outcome").getAsString());
+        var ended=store.commit(engine.plan(started,db.state().machine(id),PacketType.PACHINKO_PRESENTATION,2,NOW+2,0,0,null));var finalState=PachinkoRuntime.fromJson(ended.machineState().toString());
+        assertFalse(finalState.rushActive());assertEquals(PachinkoRuntime.Mode.NORMAL,finalState.mode());assertEquals(0,finalState.rushWins());assertEquals(1500,finalState.cumulativePayout());assertTrue(engine.resume(ended,0).isEmpty());
+    }
+
+    @Test void forcedRightWinsPayExactly1500Or3000AndStayInRush() throws Exception {
+        for(var outcome:java.util.List.of(PachinkoRuntime.RightOutcome.WIN_1500,PachinkoRuntime.RightOutcome.WIN_3000)){
+            int id=db.create(new Machine.Location(UUID.randomUUID(),"world",30+outcome.ordinal(),64,0,"NORTH"),MachineType.PACHINKO,NOW);UUID player=UUID.randomUUID();db.seat(player,id,NOW);
+            var rush=new PachinkoRuntime(PachinkoRuntime.Mode.RUSH,1500,250,0,0,1,PachinkoRuntime.Presentation.IDLE,true,PachinkoRuntime.InitialOutcome.RUSH_1500,true,0,PachinkoRuntime.RightOutcome.NONE,1500,1500,NOW);
+            db.sql("UPDATE player_sessions SET machine_state_json=? WHERE player_uuid=?",rush.toJsonString(),player.toString());
+            var engine=new PachinkoGameEngine(new java.util.Random(1),jp.pirijuggler.paper.game.pachinko.PachinkoRouting.reference(),r->outcome);
+            var started=store.commit(engine.plan(db.state().session(player),db.state().machine(id),PacketType.PACHINKO_FIRE,1,NOW+1,0,0,null));
+            var paid=store.commit(engine.plan(started,db.state().machine(id),PacketType.PACHINKO_PRESENTATION,2,NOW+2,0,0,null));var state=PachinkoRuntime.fromJson(paid.machineState().toString());
+            int payout=outcome==PachinkoRuntime.RightOutcome.WIN_3000?3000:1500;assertTrue(state.rushActive());assertEquals(1,state.rushWins());assertEquals(payout,state.currentPayout());assertEquals(1500+payout,state.cumulativePayout());
+        }
+    }
+
 }
