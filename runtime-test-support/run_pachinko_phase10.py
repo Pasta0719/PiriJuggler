@@ -70,6 +70,9 @@ def action(name,kind,**args):
     request={"id":seq,"kind":kind,**args};save(path.with_name(f"command-{seq}.json"),request)
     wait(lambda:client(name).get("completed",0)>=seq,name+" action "+kind,120)
     manifest["commands"].append({"client":name,**request})
+def keytap(name,key):
+    action(name,"key",key=key,action=1)
+    action(name,"key",key=key,action=0)
 def command(name,text,expected=None):
     before=message_count(name,expected) if expected else 0
     action(name,"command",text=text)
@@ -324,11 +327,13 @@ try:
     action("peer","close");wait(lambda:client("peer").get("productionSession") is None,"peer refresh after fund",120)
     click("peer",3)
     wait(lambda:(session_for("peer") or {}).get("credit")==50,"slot funded",120)
-    action("peer","tap",key=32);wait(lambda:(session_for("peer") or {}).get("game_state")=="NORMAL_BETTED","slot bet",30)
-    action("peer","tap",key=32);wait(lambda:(session_for("peer") or {}).get("game_state")=="NORMAL_SPINNING","slot lever",30)
+    keytap("peer",32);wait(lambda:(session_for("peer") or {}).get("game_state")=="NORMAL_BETTED","slot bet",30)
+    keytap("peer",32);wait(lambda:(session_for("peer") or {}).get("game_state")=="NORMAL_SPINNING","slot lever",30)
     wait(lambda:client("peer").get("stopEnabled") is True,"slot stop enabled",10)
     for key,mask in ((263,1),(264,3),(262,7)):
-        action("peer","tap",key=key);wait(lambda:(session_for("peer") or {}).get("stopped_mask")==mask,"slot stop "+str(mask),30)
+        before=len(packets("peer","REEL_STOP"))
+        keytap("peer",key)
+        wait(lambda:(session_for("peer") or {}).get("stopped_mask")==mask and len(packets("peer","REEL_STOP"))>before,"slot stop "+str(mask),30)
     p1_after=json.dumps(machine_runtime(1),sort_keys=True)
     check("slot gameplay runs simultaneously without pachinko shared-state contamination",p1_after==p1_before,{"pachinko1":json.loads(p1_after),"slotState":session_for("peer")})
 
