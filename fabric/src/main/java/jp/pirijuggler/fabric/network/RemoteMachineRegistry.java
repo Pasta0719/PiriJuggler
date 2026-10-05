@@ -21,7 +21,8 @@ public final class RemoteMachineRegistry {
             PacketType.REMOTE_MACHINE_NOTICE,
             PacketType.REMOTE_MACHINE_BONUS,
             PacketType.REMOTE_MACHINE_REMOVE,
-            PacketType.REMOTE_MACHINE_SOUND
+            PacketType.REMOTE_MACHINE_SOUND,
+            PacketType.PACHINKO_EVENT
     );
     private final Map<Integer, JsonObject> machines = new HashMap<>();
     private final Map<Integer, RemoteMachineViewState> views = new HashMap<>();
@@ -155,6 +156,12 @@ public final class RemoteMachineRegistry {
                     RemoteMachineViewState view = views.get(machineId);
                     if (view != null) view.applyBonus(body);
                 }
+                case PACHINKO_EVENT -> {
+                    requireNumber(body,"ballSequenceId");requireString(body,"side");requireString(body,"outcome");requireNumber(body,"startTime");
+                    if(body.has("seed"))requireNumber(body,"seed");
+                    mutate(machineId,current->{current.addProperty("pachinkoPresentation",body.get("side").getAsString());current.addProperty("pachinkoBallSequenceId",body.get("ballSequenceId").getAsLong());current.addProperty("pachinkoOutcome",body.get("outcome").getAsString());current.addProperty("pachinkoStartTime",body.get("startTime").getAsLong());if(body.has("seed"))current.addProperty("pachinkoSeed",body.get("seed").getAsLong());});
+                    RemoteMachineViewState view=views.get(machineId);if(view!=null)view.applyPachinko(body,wallTimeMs.getAsLong());
+                }
                 case REMOTE_MACHINE_REMOVE -> {
                     machines.remove(machineId);
                     views.remove(machineId);
@@ -216,7 +223,7 @@ public final class RemoteMachineRegistry {
             throw new IllegalArgumentException("facing");
         if (!body.has("machineType")) body.addProperty("machineType", "JUGGLER");
         requireString(body, "machineType");
-        if (!Set.of("JUGGLER","JUGGLER_GOD","JUGGLER_GOD_EXTREME","OKIDOKI","GOD","DISC","SKILL_STOP").contains(body.get("machineType").getAsString()))
+        if (!Set.of("JUGGLER","JUGGLER_GOD","JUGGLER_GOD_EXTREME","OKIDOKI","GOD","DISC","SKILL_STOP","PACHINKO").contains(body.get("machineType").getAsString()))
             throw new IllegalArgumentException("machineType");
         if("SKILL_STOP".equals(body.get("machineType").getAsString()))SkillStopPresentation.read(body);
         requireBoolean(body, "enabled"); requireBoolean(body, "occupied");
