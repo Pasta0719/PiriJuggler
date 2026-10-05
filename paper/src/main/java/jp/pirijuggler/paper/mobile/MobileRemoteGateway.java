@@ -278,6 +278,10 @@ public final class MobileRemoteGateway implements AutoCloseable {
                 });
                 return;
             }
+            if (request.method().equals(HttpMethod.GET) && path.equals("/api/events")) {
+                onMain(ctx, done -> done.accept(machines.mobileDrainEvents(owner), null));
+                return;
+            }
             if (request.method().equals(HttpMethod.POST) && path.equals("/api/seat")) {
                 Integer machineId = integer(one(query, "id"));
                 if (machineId == null) {
@@ -727,7 +731,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 const $=function(id){return document.getElementById(id)};
 let token=localStorage.getItem("piriToken")||"";
 let player=localStorage.getItem("piriPlayer")||"";
-let stateTimer=0,dataTimer=0,currentState=null,currentData=null,currentType="",busy=false;
+let stateTimer=0,dataTimer=0,eventTimer=0,currentState=null,currentData=null,currentType="",busy=false;
 let motion=null,pendingState=null;
 
 const fixed=[
@@ -913,6 +917,23 @@ function updateControlState(){
 async function pollState(){
  try{const j=await api("/api/state");if(!j.seated){stopTimers();show("lobby");loadMachines();return}if(!visualBusy())renderState(j)}catch(e){$("gameMessage").textContent=errorText(e)}
 }
+async function pollEvents(){
+ try{
+  const j=await api("/api/events");
+  if(j.events&&j.events.length){
+   handleEvents(j.events);
+   j.events.forEach(function(ev){
+    const p=ev.payload||{};
+    if(ev.type==="PUBLIC_STATE")applyState(Object.assign({},currentState||{},p,{seated:true,machineType:currentType}));
+    else if(ev.type==="NOTICE"){
+     if(p.lamp==="ON"&&currentState){currentState=Object.assign({},currentState,{lampOn:true});$("lamp").src=asset("lamp/piri_chance_on.png")}
+     if(p.lamp==="OFF"&&currentState){currentState=Object.assign({},currentState,{lampOn:false});$("lamp").src=asset("lamp/piri_chance_off.png")}
+    }else if(ev.type==="BONUS_START")$("gameMessage").textContent=(p.bonusType||"BONUS")+" START";
+    else if(ev.type==="BONUS_END")$("gameMessage").textContent=(p.bonusType||"BONUS")+" END";
+   });
+  }
+ }catch(e){}
+}
 async function pollData(){
  if(!currentState||!currentState.machineId)return;
  try{currentData=await api("/api/data?id="+currentState.machineId);renderGameData(currentData)}catch(e){}
@@ -948,9 +969,9 @@ async function doAction(type,reel){
 }
 async function loan(){if(busy)return;busy=true;try{renderState(await api("/api/loan","POST"));$("gameMessage").textContent=""}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
 function startGame(j){
- show("game");currentType=j.machineType||"";renderState(j);pollData();stopTimers();stateTimer=setInterval(pollState,250);dataTimer=setInterval(pollData,1500);
+ show("game");currentType=j.machineType||"";renderState(j);pollData();stopTimers();stateTimer=setInterval(pollState,250);eventTimer=setInterval(pollEvents,100);dataTimer=setInterval(pollData,1500);
 }
-function stopTimers(){if(stateTimer)clearInterval(stateTimer);if(dataTimer)clearInterval(dataTimer);stateTimer=0;dataTimer=0}
+function stopTimers(){if(stateTimer)clearInterval(stateTimer);if(eventTimer)clearInterval(eventTimer);if(dataTimer)clearInterval(dataTimer);stateTimer=0;eventTimer=0;dataTimer=0}
 async function leave(){
  try{await api("/api/leave","POST")}catch(e){$("gameMessage").textContent=errorText(e);return}
  stopTimers();motion=null;pendingState=null;currentState=null;show("lobby");loadMachines();
