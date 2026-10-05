@@ -134,6 +134,22 @@ class RemoteMachineRegistryTest {
         assertEquals(10,view.pachinkoBallSequenceId());assertEquals("LEFT",view.pachinkoSide());assertEquals("OUT",view.pachinkoOutcome());assertEquals(111L,view.pachinkoSeed());
     }
 
+    @Test void rightPachinkoSnapshotReconstructsCommittedOutcomeAndMachinesStayIndependent() {
+        RemoteMachineRegistry registry=new RemoteMachineRegistry();
+        JsonObject left=snapshot(50);left.addProperty("machineType","PACHINKO");left.addProperty("pachinkoPresentation","LEFT_KURUN");left.addProperty("pachinkoBallSequenceId",3);left.addProperty("pachinkoOutcome","OUT");left.addProperty("pachinkoStartTime",1000L);left.addProperty("pachinkoSeed",10L);
+        JsonObject right=snapshot(51);right.addProperty("machineType","PACHINKO");right.addProperty("pachinkoPresentation","RIGHT_KURUN");right.addProperty("pachinkoBallSequenceId",8);right.addProperty("pachinkoOutcome","WIN_3000");right.addProperty("pachinkoStartTime",1200L);right.addProperty("pachinkoSeed",20L);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,left));
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,right));
+        assertEquals("LEFT_KURUN",registry.view(50).pachinkoSide());
+        assertEquals("OUT",registry.view(50).pachinkoOutcome());
+        assertEquals("RIGHT_KURUN",registry.view(51).pachinkoSide());
+        assertEquals("WIN_3000",registry.view(51).pachinkoOutcome());
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_REMOVE,id(50)));
+        assertNull(registry.view(50));
+        assertNotNull(registry.view(51));
+        assertEquals(8,registry.view(51).pachinkoBallSequenceId());
+    }
+
     private static JsonObject snapshot(int id) {
         JsonObject body = id(id);
         body.addProperty("world", UUID.randomUUID().toString());
