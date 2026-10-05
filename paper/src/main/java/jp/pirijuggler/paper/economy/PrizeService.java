@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 
 /** Phase08 prize GUI, medal-to-prize exchange and prize-to-Vault exchange. */
 public final class PrizeService implements Listener {
@@ -468,6 +469,171 @@ public final class PrizeService implements Listener {
                 plugin.getLogger().severe("PIRI_PRIZE_ROLLBACK_FAILED tx=" + plan.transactionId() + " " + failure);
                 Bukkit.getScheduler().runTask(plugin, () -> pending.remove(owner));
             }
+        });
+    }
+
+    /**
+     * Mobile wallet exchange. Uses the same configured prize costs/values as the existing
+     * counter, but keeps the operation virtual so a mobile-only player needs no inventory.
+     */
+    public void mobileExchange(UUID owner, BiConsumer<JsonObject, String> callback) {
+        if (!pending.add(owner)) { callback.accept(null, "BUSY"); return; }
+        if (vault == null) { pending.remove(owner); callback.accept(null, "VAULT_ERROR"); return; }
+        var account = Bukkit.getOfflinePlayer(owner);
+        final double balanceBefore;
+        try { balanceBefore = vault.balance(account); }
+        catch (RuntimeException failure) { pending.remove(owner); callback.accept(null, "VAULT_ERROR"); return; }
+
+        var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            String tx = UUID.randomUUID().toString();
+            int consumed;
+            int remaining;
+            double vaultAmount;
+            try (Connection connection = open(dbPath.toString())) {
+                connection.setAutoCommit(false);
+                try {
+                    ensureNoEconomyReview(connection, owner);
+                    int medals = 0;
+                    try (var q = connection.prepareStatement("SELECT pending_medals FROM player_wallet WHERE player_uuid=?")) {
+                        q.setString(1, owner.toString());
+                        try (var rs = q.executeQuery()) { if (rs.next()) medals = Math.toIntExact(rs.getLong(1)); }
+                    }
+                    int unit = defs.get(PrizeItem.Type.SMALL).medalCost();
+                    if (unit <= 0) throw new IllegalStateException("INVALID_PRIZE_CONFIG");
+                    int units = medals / unit;
+                    if (units <= 0) throw new IllegalStateException("NOT_ENOUGH_MEDALS");
+                    consumed = Math.multiplyExact(units, unit);
+                    remaining = medals - consumed;
+                    vaultAmount = units * defs.get(PrizeItem.Type.SMALL).vaultValue();
+                    long now = System.currentTimeMillis();
+
+                    if (remaining == 0) {
+                        try (var d = connection.prepareStatement("DELETE FROM player_wallet WHERE player_uuid=?")) {
+                            d.setString(1, owner.toString()); d.executeUpdate();
+                        }
+                    } else {
+                        try (var u = connection.prepareStatement("UPDATE player_wallet SET pending_medals=?,updated_at=? WHERE player_uuid=?")) {
+                            u.setInt(1, remaining); u.setLong(2, now); u.setString(3, owner.toString()); u.executeUpdate();
+                        }
+                    }
+
+                    JsonObject snapshot = new JsonObject();
+                    snapshot.addProperty("source", "MOBILE_WALLET");
+                    snapshot.addProperty("medals", consumed);
+                    try (var insert = connection.prepareStatement(
+                            "INSERT INTO economy_transactions(transaction_id,player_uuid,operation,vault_amount,item_snapshot_json,balance_before,status,created_at,updated_at) " +
+                            "VALUES(?,?,'PRIZE_TO_VAULT',?,?,?,'CALL_STARTED',?,?)")) {
+                        insert.setString(1, tx);
+                        insert.setString(2, owner.toString());
+                        insert.setDouble(3, vaultAmount);
+                        insert.setString(4, snapshot.toString());
+                        insert.setDouble(5, balanceBefore);
+                        insert.setLong(6, now);
+                        insert.setLong(7, now);
+                        insert.executeUpdate();
+                    }
+                    connection.commit();
+                } catch (Exception failure) {
+                    connection.rollback();
+                    throw failure;
+                }
+            } catch (Exception failure) {
+                String code = failure.getMessage() == null ? "DB_ERROR" : failure.getMessage();
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    pending.remove(owner);
+                    callback.accept(null, code);
+                });
+                return;
+            }
+
+            final int used = consumed;
+            final int left = remaining;
+            final double amount = vaultAmount;
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                final boolean deposited;
+                try { deposited = vault.deposit(account, amount); }
+                catch (RuntimeException uncertain) {
+                    markMobileExchangeReview(tx, owner, "CALL_EXCEPTION", callback);
+                    return;
+                }
+                if (!deposited) {
+                    rollbackMobileExchange(tx, owner, used, callback);
+                    return;
+                }
+                markMobileExchangeApplied(tx, owner, used, left, amount, callback);
+            });
+        });
+    }
+
+    private void rollbackMobileExchange(String tx, UUID owner, int medals, BiConsumer<JsonObject, String> callback) {
+        var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            String failure = null;
+            try (Connection connection = open(dbPath.toString())) {
+                connection.setAutoCommit(false);
+                try {
+                    long now = System.currentTimeMillis();
+                    try (var wallet = connection.prepareStatement(
+                            "INSERT INTO player_wallet(player_uuid,pending_medals,updated_at) VALUES(?,?,?) " +
+                            "ON CONFLICT(player_uuid) DO UPDATE SET pending_medals=player_wallet.pending_medals+excluded.pending_medals,updated_at=excluded.updated_at")) {
+                        wallet.setString(1, owner.toString()); wallet.setInt(2, medals); wallet.setLong(3, now); wallet.executeUpdate();
+                    }
+                    try (var update = connection.prepareStatement(
+                            "UPDATE economy_transactions SET status='ROLLED_BACK',updated_at=? WHERE transaction_id=? AND status='CALL_STARTED'")) {
+                        update.setLong(1, now); update.setString(2, tx); update.executeUpdate();
+                    }
+                    connection.commit();
+                } catch (Exception error) { connection.rollback(); throw error; }
+            } catch (Exception error) { failure = "DB_ERROR"; }
+            final String result = failure;
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                pending.remove(owner);
+                callback.accept(null, result == null ? "VAULT_ERROR" : result);
+            });
+        });
+    }
+
+    private void markMobileExchangeReview(String tx, UUID owner, String reason, BiConsumer<JsonObject, String> callback) {
+        var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try (Connection connection = open(dbPath.toString());
+                 var update = connection.prepareStatement(
+                         "UPDATE economy_transactions SET status='REVIEW_REQUIRED',updated_at=? WHERE transaction_id=? AND status='CALL_STARTED'")) {
+                update.setLong(1, System.currentTimeMillis()); update.setString(2, tx); update.executeUpdate();
+                plugin.getLogger().severe("PIRI_VAULT_REVIEW_REQUIRED transactionId=" + tx + " operation=MOBILE_PRIZE_TO_VAULT reason=" + reason);
+            } catch (Exception error) {
+                plugin.getLogger().severe("PIRI_VAULT_REVIEW_MARK_FAILED tx=" + tx + " " + error);
+            }
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                pending.remove(owner);
+                callback.accept(null, "VAULT_REVIEW_REQUIRED");
+            });
+        });
+    }
+
+    private void markMobileExchangeApplied(String tx, UUID owner, int medals, int remaining, double amount,
+                                           BiConsumer<JsonObject, String> callback) {
+        var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            String failure = null;
+            try (Connection connection = open(dbPath.toString());
+                 var update = connection.prepareStatement(
+                         "UPDATE economy_transactions SET status='APPLIED',updated_at=? WHERE transaction_id=? AND status='CALL_STARTED'")) {
+                update.setLong(1, System.currentTimeMillis()); update.setString(2, tx);
+                if (update.executeUpdate() != 1) throw new IllegalStateException("JOURNAL_CHANGED");
+            } catch (Exception error) { failure = "DB_ERROR"; }
+            final String result = failure;
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                pending.remove(owner);
+                if (result != null) { callback.accept(null, result); return; }
+                JsonObject body = new JsonObject();
+                body.addProperty("ok", true);
+                body.addProperty("exchangedMedals", medals);
+                body.addProperty("walletMedals", remaining);
+                body.addProperty("vaultAmount", amount);
+                callback.accept(body, null);
+            });
         });
     }
 
