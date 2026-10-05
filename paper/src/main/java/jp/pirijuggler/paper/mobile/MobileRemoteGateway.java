@@ -45,6 +45,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -74,12 +75,15 @@ public final class MobileRemoteGateway implements AutoCloseable {
     private final PiriJugglerPlugin plugin;
     private final MachineService machines;
     private final Map<String, Pairing> pairings = new ConcurrentHashMap<>();
-    private final Map<String, UUID> tokens = new ConcurrentHashMap<>();
+    /** SHA-256(token) -> player UUID. Raw browser tokens are never stored server-side. */
+    private final Map<String, UUID> tokenHashes = new ConcurrentHashMap<>();
     private final RemoteNpcService npcs = new RemoteNpcService();
 
     private Class<?> listenerHolder;
     private Object listenerProxy;
     private volatile boolean closed;
+    private boolean pairingsLoadRequested;
+    private boolean pairingsLoaded;
 
     private record Pairing(UUID owner, long expiresAt) {}
 
@@ -88,10 +92,24 @@ public final class MobileRemoteGateway implements AutoCloseable {
         this.machines = machines;
         installSamePortListener();
         plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
-            if (!closed && machines.ready()) npcs.retain(machines.mobileActiveOwners());
+            if (!closed && machines.ready()) {
+                npcs.retain(machines.mobileActiveOwners());
+                if (!pairingsLoaded && !pairingsLoadRequested) {
+                    pairingsLoadRequested = true;
+                    machines.mobileLoadPairings((loaded, failure) -> {
+                        pairingsLoadRequested = false;
+                        if (failure == null) {
+                            tokenHashes.clear();
+                            tokenHashes.putAll(loaded);
+                            pairingsLoaded = true;
+                            plugin.getLogger().info("PIRI_MOBILE_PAIRINGS_LOADED count=" + loaded.size());
+                        }
+                    });
+                }
+            }
             long now = System.currentTimeMillis();
             pairings.entrySet().removeIf(e -> e.getValue().expiresAt() < now);
-        }, 200L, 200L);
+        }, 1L, 20L);
     }
 
     public boolean handle(CommandSender sender, String[] args) {
@@ -111,17 +129,22 @@ public final class MobileRemoteGateway implements AutoCloseable {
             return true;
         }
         if (args.length == 2 && args[1].equalsIgnoreCase("revoke")) {
-            revoke(player.getUniqueId());
-            player.sendMessage(Component.text("スマホ接続を解除しました。"));
+            UUID owner = player.getUniqueId();
+            revokeLocal(owner);
+            machines.mobileRevokePairing(owner, failure -> {
+                if (!player.isOnline()) return;
+                if (failure == null) player.sendMessage(Component.text("スマホ接続を解除しました。"));
+                else player.sendMessage(Component.text("スマホ接続の解除に失敗しました: " + failure));
+            });
             return true;
         }
         player.sendMessage(Component.text("/piri mobile pair | /piri mobile revoke"));
         return true;
     }
 
-    private void revoke(UUID owner) {
+    private void revokeLocal(UUID owner) {
         pairings.entrySet().removeIf(e -> e.getValue().owner().equals(owner));
-        tokens.entrySet().removeIf(e -> e.getValue().equals(owner));
+        tokenHashes.entrySet().removeIf(e -> e.getValue().equals(owner));
         npcs.remove(owner);
     }
 
@@ -225,18 +248,30 @@ public final class MobileRemoteGateway implements AutoCloseable {
                     json(ctx, HttpResponseStatus.UNAUTHORIZED, error("PAIR_CODE_INVALID"));
                     return;
                 }
-                tokens.entrySet().removeIf(e -> e.getValue().equals(pairing.owner()));
                 String token = token();
-                tokens.put(token, pairing.owner());
-                JsonObject body = ok();
-                body.addProperty("token", token);
-                body.addProperty("player", playerName(pairing.owner()));
-                json(ctx, HttpResponseStatus.OK, body);
+                String tokenHash = hashToken(token);
+                onMain(ctx, done -> machines.mobileSavePairing(pairing.owner(), tokenHash, failure -> {
+                    if (failure != null) {
+                        done.accept(null, failure);
+                        return;
+                    }
+                    tokenHashes.entrySet().removeIf(e -> e.getValue().equals(pairing.owner()));
+                    tokenHashes.put(tokenHash, pairing.owner());
+                    pairingsLoaded = true;
+                    JsonObject body = ok();
+                    body.addProperty("token", token);
+                    body.addProperty("player", playerName(pairing.owner()));
+                    done.accept(body, null);
+                }));
                 return;
             }
 
+            if (!pairingsLoaded) {
+                json(ctx, HttpResponseStatus.SERVICE_UNAVAILABLE, error("AUTH_LOADING"));
+                return;
+            }
             String token = request.headers().get("X-Piri-Token");
-            UUID owner = token == null ? null : tokens.get(token);
+            UUID owner = token == null ? null : tokenHashes.get(hashToken(token));
             if (owner == null) {
                 json(ctx, HttpResponseStatus.UNAUTHORIZED, error("AUTH_REQUIRED"));
                 return;
@@ -297,10 +332,12 @@ public final class MobileRemoteGateway implements AutoCloseable {
                 return;
             }
             if (request.method().equals(HttpMethod.POST) && path.equals("/api/revoke")) {
-                onMain(ctx, done -> {
-                    revoke(owner);
-                    done.accept(ok(), null);
-                });
+                onMain(ctx, done -> machines.mobileRevokePairing(owner, failure -> {
+                    if (failure == null) {
+                        revokeLocal(owner);
+                        done.accept(ok(), null);
+                    } else done.accept(null, failure);
+                }));
                 return;
             }
             json(ctx, HttpResponseStatus.NOT_FOUND, error("NOT_FOUND"));
@@ -384,6 +421,15 @@ public final class MobileRemoteGateway implements AutoCloseable {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
+    private static String hashToken(String token) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
+        } catch (java.security.NoSuchAlgorithmException impossible) {
+            throw new IllegalStateException("SHA-256 unavailable", impossible);
+        }
+    }
+
     private static String playerName(UUID owner) {
         OfflinePlayer player = Bukkit.getOfflinePlayer(owner);
         return player.getName() == null ? owner.toString() : player.getName();
@@ -393,7 +439,7 @@ public final class MobileRemoteGateway implements AutoCloseable {
     public void close() {
         closed = true;
         pairings.clear();
-        tokens.clear();
+        tokenHashes.clear();
         npcs.clear();
         if (listenerHolder != null) {
             try {
@@ -560,7 +606,7 @@ async function api(path,method="GET"){
  if(!r.ok||j.ok===false)throw new Error(j.error||("HTTP "+r.status));
  return j;
 }
-function errorText(e){const m={BUSY:"処理中です",INVALID_STATE:"今は操作できません",NOT_ENOUGH_CREDIT:"クレジットが足りません",NOT_ENOUGH_VAULT:"所持金が足りません",MACHINE_OCCUPIED:"ほかのプレイヤーが遊技中です",MACHINE_DISABLED:"この台は利用できません",STOP_TOO_EARLY:"まだ停止できません",ALREADY_STOPPED:"停止済みです",SESSION_MISMATCH:"台との接続状態が変わりました",VAULT_ERROR:"所持金処理に失敗しました",ECONOMY_UNAVAILABLE:"貸出を利用できません"};return m[e.message]||e.message}
+function errorText(e){const m={BUSY:"処理中です",INVALID_STATE:"今は操作できません",NOT_ENOUGH_CREDIT:"クレジットが足りません",NOT_ENOUGH_VAULT:"所持金が足りません",MACHINE_OCCUPIED:"ほかのプレイヤーが遊技中です",MACHINE_DISABLED:"この台は利用できません",STOP_TOO_EARLY:"まだ停止できません",ALREADY_STOPPED:"停止済みです",SESSION_MISMATCH:"台との接続状態が変わりました",VAULT_ERROR:"所持金処理に失敗しました",ECONOMY_UNAVAILABLE:"貸出を利用できません",AUTH_LOADING:"サーバー起動中です。少しして自動再接続します"};return m[e.message]||e.message}
 async function pairNow(){
  $("pairMsg").textContent="接続中…";
  try{const code=$("code").value.trim();const j=await api("/api/pair?code="+encodeURIComponent(code),"POST");token=j.token;player=j.player||"";localStorage.setItem("piriToken",token);localStorage.setItem("piriPlayer",player);$("player").textContent=player;show("lobby");await loadMachines()}
@@ -593,7 +639,7 @@ $("loan").addEventListener("click",async()=>{try{render(await api("/api/loan","P
 $("leave").addEventListener("click",async()=>{try{await api("/api/leave","POST");clearInterval(timer);show("lobby");loadMachines()}catch(e){$("msg").textContent=errorText(e)}});
 $("back").addEventListener("click",()=>{clearInterval(timer);show("lobby");loadMachines()});
 $("logout").addEventListener("click",async()=>{try{await api("/api/revoke","POST")}catch{} token="";localStorage.removeItem("piriToken");localStorage.removeItem("piriPlayer");show("pair")});
-if(token){$("player").textContent=player;api("/api/state").then(j=>{if(j.seated){startGame()}else{show("lobby");loadMachines()}}).catch(()=>show("pair"))}else show("pair");
+if(token){$("player").textContent=player;api("/api/state").then(j=>{if(j.seated){startGame()}else{show("lobby");loadMachines()}}).catch(e=>{if(e.message==="AUTH_LOADING")setTimeout(()=>location.reload(),1000);else show("pair")})}else show("pair");
 })();
 </script>
 </body>
