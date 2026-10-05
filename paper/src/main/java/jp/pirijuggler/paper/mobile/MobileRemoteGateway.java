@@ -129,7 +129,7 @@ public final class MobileRemoteGateway implements AutoCloseable {
             while (pairings.containsKey(code));
             pairings.put(code, new Pairing(player.getUniqueId(), System.currentTimeMillis() + PAIR_TTL_MS));
             player.sendMessage(Component.text("スマホ接続コード: " + code + "  (5分間有効)"));
-            player.sendMessage(Component.text("Safariで http://piricraft.jpn.gg:10274/ を開いて入力してください。"));
+            player.sendMessage(Component.text("Safariで http://02.jpn.gg:10274/ を開いて入力してください。"));
             return true;
         }
         if (args.length == 2 && args[1].equalsIgnoreCase("revoke")) {
