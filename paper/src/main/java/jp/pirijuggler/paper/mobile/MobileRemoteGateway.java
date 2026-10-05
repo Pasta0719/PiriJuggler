@@ -585,7 +585,8 @@ public final class MobileRemoteGateway implements AutoCloseable {
 <title>Piri Remote</title>
 <style>
 :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}\ncanvas{background:#090b0e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+.graphSurface{display:block;overflow:hidden;background:#090b0e!important}\ncanvas{background:#090b0e}
 html,body{margin:0;min-height:100%;background:#0b0c10;color:#f6f1e7}
 button,input{font:inherit}
 button{border:0;color:#fff;background:#343944;font-weight:800;cursor:pointer}
@@ -613,56 +614,67 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 .histRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:7px 0;border-bottom:1px solid #252932}
 #game{position:fixed;inset:0;background:#000;z-index:30;overflow:hidden;touch-action:manipulation}
 #stageWrap{position:absolute;inset:0;overflow:hidden}
-#stage{position:absolute;width:1920px;height:1080px;transform-origin:0 0;background:#000;color:#f6f1e7;font-family:Arial,sans-serif;user-select:none}
-.panel{position:absolute;background:#090b0e;border:3px solid #20242a}
-#dataTop{left:20px;top:12px;width:1880px;height:270px}
-#dataLeft{left:18px;top:325px;width:275px;height:430px}
-#dataRight{left:1645px;top:325px;width:257px;height:430px}
-#cabinet{position:absolute;left:290px;top:205px;width:1340px;height:835px;background:#3c0a10;border:8px solid #b68a42;box-shadow:inset 0 0 0 5px #e4c174}
+#stage{position:absolute;width:1600px;height:900px;transform-origin:0 0;background:#000;color:#f6f1e7;font-family:Arial,sans-serif;user-select:none}
+.panel{position:absolute;background:#090b0e;border:2px solid #20242a}
+#dataTop{left:8px;top:8px;width:1584px;height:170px}
+#dataLeft{left:8px;top:262px;width:218px;height:365px}
+#dataRight{left:1374px;top:262px;width:218px;height:365px}
+
+#cabinet{position:absolute;left:235px;top:188px;width:1130px;height:690px;background:#3c0a10;border:6px solid #b68a42;box-shadow:inset 0 0 0 4px #e4c174}
 #cabinet.godlike{background:linear-gradient(#e9d07a 0%,#c49a3a 25%,#9c6f1d 65%,#65420e 100%);border-color:#b8892f}
-#reelBacking{position:absolute;left:670px;top:300px;width:900px;height:390px;background:#8a8175}
-.reelWindow{position:absolute;top:300px;width:270px;height:390px;overflow:hidden;background:#f4f1e8;z-index:4}
-#reel0{left:670px}#reel1{left:985px}#reel2{left:1300px}
+
+#reelBacking{position:absolute;left:555px;top:255px;width:765px;height:330px;background:#8a8175}
+.reelWindow{position:absolute;top:255px;width:230px;height:330px;overflow:hidden;background:#f4f1e8;z-index:4}
+#reel0{left:555px}#reel1{left:823px}#reel2{left:1090px}
 .reelWindow.godlike{background:#fff}
 .sym{position:absolute;object-fit:contain;pointer-events:none}
-#lamp{position:absolute;left:350px;top:390px;width:300px;height:170px;object-fit:contain;z-index:5}
-#skillChallenge{position:absolute;left:410px;top:580px;width:180px;height:140px;display:flex;align-items:center;justify-content:center;z-index:5}\n#skillChallengeImg{display:none;max-width:100%;max-height:100%;object-fit:contain}\n#skillRemaining{position:absolute;left:990px;top:810px;width:200px;text-align:center;font-size:28px;font-weight:900;color:#fff;z-index:6}
-#statusPanel{position:absolute;left:670px;top:710px;width:900px;height:95px;background:#090b0e;border:3px solid #20242a;display:grid;grid-template-columns:repeat(4,1fr);padding:11px 18px;z-index:5}
-.statLabel{font-size:20px;color:#b9bcc2}.statValue{font-size:35px;font-weight:900;margin-top:3px}
-.machineControl{position:absolute;z-index:8;border-radius:18px;background:#666a72;padding:4px}
-.machineControl>span{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:14px;background:#c92734;font-size:28px;font-weight:900;text-shadow:2px 2px #190406}
-.machineControl:active>span{background:#8a1720;transform:translateY(3px)}
-#betBtn{left:440px;top:860px;width:150px;height:100px}
-#leverBtn{left:300px;top:780px;width:130px;height:260px;background:transparent;padding:0}
-#leverStem{position:absolute;left:54px;top:35px;width:22px;height:190px;background:#666a72}
-#leverKnob{position:absolute;left:30px;top:27px;width:70px;height:70px;border-radius:50%;background:#c92734;border:6px solid #666a72;transition:transform .09s}
-#leverBtn:active #leverKnob{transform:translateY(18px)}
-#leverLabel{position:absolute;left:0;right:0;bottom:18px;text-align:center;font-size:25px;font-weight:900}
-.stopBtn{width:180px;height:110px;background:transparent;padding:0}
-.stopBtn>span{width:88px;height:88px;border-radius:50%;border:6px solid #b9bcc2;background:#c92734;font-size:0;margin:auto}
+
+#lamp{position:absolute;left:305px;top:360px;width:220px;height:125px;object-fit:contain;z-index:5}
+#skillChallenge{position:absolute;left:330px;top:505px;width:170px;height:110px;display:flex;align-items:center;justify-content:center;z-index:5}
+#skillChallengeImg{display:none;max-width:100%;max-height:100%;object-fit:contain}
+#skillRemaining{position:absolute;left:840px;top:683px;width:190px;text-align:center;font-size:22px;font-weight:900;color:#fff;z-index:6}
+
+#statusPanel{position:absolute;left:555px;top:605px;width:765px;height:70px;background:#090b0e;border:2px solid #20242a;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 14px;z-index:5}
+.statLabel{font-size:15px;color:#b9bcc2}.statValue{font-size:27px;font-weight:900;margin-top:1px}
+
+.machineControl{position:absolute;z-index:8;border-radius:14px;background:#666a72;padding:4px}
+.machineControl>span{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:10px;background:#c92734;font-size:22px;font-weight:900;text-shadow:2px 2px #190406}
+.machineControl:active>span{background:#8a1720;transform:translateY(2px)}
+#betBtn{left:360px;top:724px;width:115px;height:78px}
+#leverBtn{left:250px;top:650px;width:105px;height:215px;background:transparent;padding:0}
+#leverStem{position:absolute;left:43px;top:31px;width:18px;height:150px;background:#666a72}
+#leverKnob{position:absolute;left:25px;top:22px;width:55px;height:55px;border-radius:50%;background:#c92734;border:5px solid #666a72;transition:transform .09s}
+#leverBtn:active #leverKnob{transform:translateY(14px)}
+#leverLabel{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-size:20px;font-weight:900}
+.stopBtn{width:150px;height:95px;background:transparent;padding:0}
+.stopBtn>span{width:72px;height:72px;border-radius:50%;border:5px solid #b9bcc2;background:#c92734;font-size:0;margin:auto}
 .stopBtn>span:after{content:"";display:block}
 .stopBtn:active>span{background:#8a1720}
 .stopBtn:disabled>span{background:#666a72;border-color:#666a72}
-.stopText{position:absolute;left:0;right:0;bottom:-19px;text-align:center;font-size:25px;font-weight:900}
-#leftBtn{left:720px;top:865px}#centerBtn{left:990px;top:865px}#rightBtn{left:1260px;top:865px}
-.sideBtn{left:1664px;width:220px;height:55px}
-#loanBtn{top:750px}#insertBtn{top:812px}#cashBtn{top:874px;height:55px}#exchangeBtn{top:936px;height:55px}
-#gameMessage{position:absolute;left:700px;top:990px;width:820px;text-align:center;font-size:25px;font-weight:800;color:#ffd36b;z-index:10}
+.stopText{position:absolute;left:0;right:0;bottom:-12px;text-align:center;font-size:20px;font-weight:900}
+#leftBtn{left:600px;top:733px}#centerBtn{left:835px;top:733px}#rightBtn{left:1070px;top:733px}
+
+.sideBtn{left:1395px;width:180px;height:46px}
+#loanBtn{top:646px}#insertBtn{top:698px}#cashBtn{top:750px}#exchangeBtn{top:802px}
+#gameMessage{position:absolute;left:550px;top:840px;width:770px;text-align:center;font-size:18px;font-weight:800;color:#ffd36b;z-index:10}
 #leaveBtn{position:fixed;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));z-index:50;background:#5a2525;border-radius:12px;padding:10px 14px;font-size:14px;opacity:.9}
-.dataTitle{position:absolute;font-size:25px;font-weight:900}
-#machineLabel{left:38px;top:26px}
-#graphLabel{left:55px;top:55px}
-#gameGraph{position:absolute;left:55px;top:88px;width:825px;height:146px;background:#090b0e!important}
-.topMetric{position:absolute;top:42px;width:205px;text-align:center}.topMetric .t{font-size:24px;font-weight:900}.topMetric .n{font-size:39px;font-weight:900;margin-top:8px}
-#currentBox{left:958px}#totalBox{left:1268px}#maxBox{left:1578px}
-#bigBox{left:1108px;top:144px;color:#ff4242}#regBox{left:1438px;top:144px;color:#3a78ff}
-#diffTitle{left:42px;top:344px}.sideLarge{position:absolute;left:35px;width:230px;text-align:center;font-size:42px;font-weight:900}
-#diffValue{top:382px}
-#historyTitle{left:42px;top:465px}.historyList{position:absolute;left:42px;top:505px;width:210px;font-size:19px}
-.historyItem{display:flex;justify-content:space-between;height:24px}.big{color:#ff4242}.reg{color:#3a78ff}.god{color:#58e36a}
-#oddsTitle{left:1672px;top:344px}.odds{position:absolute;left:1672px;width:205px;font-size:22px}.odds b{float:right;font-size:28px}
-#bigOdds{top:385px;color:#ff4242}#regOdds{top:455px;color:#3a78ff}#allOdds{top:525px}
-#chain{position:absolute;left:1664px;top:615px;width:220px;height:102px;border:5px solid #58e36a;border-radius:12px;text-align:center;padding-top:13px;font-size:24px;font-weight:900;color:#58e36a}
+
+.dataTitle{position:absolute;font-size:20px;font-weight:900}
+#machineLabel{left:20px;top:18px}
+#graphLabel{left:35px;top:48px}
+#gameGraph{position:absolute;left:35px;top:70px;width:700px;height:88px;background:#090b0e!important}
+
+.topMetric{position:absolute;top:25px;width:180px;text-align:center}.topMetric .t{font-size:18px;font-weight:900}.topMetric .n{font-size:31px;font-weight:900;margin-top:4px}
+#currentBox{left:820px}#totalBox{left:1085px}#maxBox{left:1340px}
+#bigBox{left:970px;top:105px;color:#ff4242}#regBox{left:1240px;top:105px;color:#3a78ff}
+
+#diffTitle{left:24px;top:282px}.sideLarge{position:absolute;left:24px;width:175px;text-align:center;font-size:32px;font-weight:900}
+#diffValue{top:318px}
+#historyTitle{left:24px;top:390px}.historyList{position:absolute;left:24px;top:426px;width:178px;font-size:15px}
+.historyItem{display:flex;justify-content:space-between;height:21px}.big{color:#ff4242}.reg{color:#3a78ff}.god{color:#58e36a}
+#oddsTitle{left:1396px;top:282px}.odds{position:absolute;left:1396px;width:176px;font-size:17px}.odds b{float:right;font-size:21px}
+#bigOdds{top:320px;color:#ff4242}#regOdds{top:374px;color:#3a78ff}#allOdds{top:428px}
+#chain{position:absolute;left:1395px;top:500px;width:180px;height:88px;border:4px solid #58e36a;border-radius:10px;text-align:center;padding-top:12px;font-size:19px;font-weight:900;color:#58e36a}
 @media(max-width:700px){
  #normal{padding:12px 10px 30px}.machine{grid-template-columns:minmax(0,1fr) auto auto}.normalBtn{padding:8px 10px;font-size:14px}.dataGrid{grid-template-columns:repeat(2,1fr)}
 }
@@ -914,14 +926,14 @@ async function seat(id){
  }catch(e){alert(errorText(e))}
 }
 function resizeStage(){
- if(innerWidth<=700&&innerHeight>=innerWidth){
-  const scale=Math.min(innerWidth/390,innerHeight/844),x=(innerWidth-390*scale)/2,y=(innerHeight-844*scale)/2;
-  $("stage").style.left="0";$("stage").style.top="0";$("stage").style.transform="translate("+x+"px,"+y+"px) scale("+scale+")";
-  return;
- }
- const sx=innerWidth/1920,sy=innerHeight/1080,s=Math.min(sx,sy);
- const x=(innerWidth-1920*s)/2,y=(innerHeight-1080*s)/2;
- $("stage").style.transform="translate("+x+"px,"+y+"px) scale("+s+")";
+ const portrait=innerHeight>=innerWidth&&innerWidth<=700;
+ const baseW=portrait?390:1600,baseH=portrait?844:900;
+ const scale=Math.min(innerWidth/baseW,innerHeight/baseH);
+ const x=(innerWidth-baseW*scale)/2,y=(innerHeight-baseH*scale)/2;
+ const stage=$("stage");
+ stage.style.width=baseW+"px";stage.style.height=baseH+"px";
+ stage.style.left="0";stage.style.top="0";
+ stage.style.transform="translate("+x+"px,"+y+"px) scale("+scale+")";
 }
 function delta(profile,e){
  e=Math.max(0,e);
@@ -1017,7 +1029,7 @@ function applyState(j){
  $("machineLabel").textContent="MACHINE "+j.machineId;
  $("credit").textContent=j.credit||0;$("bet").textContent=j.bet||0;$("pay").textContent=j.pay||0;$("medals").textContent=j.heldMedals||0;
  const godlike=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME";
- $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);
+ $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);$("skillChallenge").style.display=currentType==="SKILL_STOP"?"flex":"none";$("skillRemaining").style.display=currentType==="SKILL_STOP"?"block":"none";
  $("lamp").src=asset("lamp/piri_chance_"+(j.lampOn?"on":"off")+".png");
  if(currentType==="SKILL_STOP"){
   $("skillRemaining").textContent=(String(j.gameState||"").startsWith("BIG_")||String(j.gameState||"").startsWith("REG_"))&&j.skillRemaining!=null?"残り "+j.skillRemaining+"G":"";
@@ -1159,7 +1171,7 @@ $("betBtn").onclick=function(){doAction("SPACE_ACTION",-1)};$("leverBtn").onclic
 document.querySelectorAll(".stopBtn").forEach(function(b){b.onclick=function(){doAction(b.dataset.action,Number(b.dataset.reel))}});
 $("loanBtn").onclick=loan;$("insertBtn").onclick=insertMedals;$("cashBtn").onclick=cashout;$("exchangeBtn").onclick=exchangeWallet;$("leaveBtn").onclick=leave;
 $("logout").onclick=async function(){try{await api("/api/revoke","POST")}catch(e){}token="";localStorage.removeItem("piriToken");localStorage.removeItem("piriPlayer");show("pair")};
-window.addEventListener("resize",resizeStage);
+window.addEventListener("resize",resizeStage);window.addEventListener("orientationchange",function(){setTimeout(resizeStage,50)});
 requestAnimationFrame(frame);
 if(token){
  $("player").textContent=player;
