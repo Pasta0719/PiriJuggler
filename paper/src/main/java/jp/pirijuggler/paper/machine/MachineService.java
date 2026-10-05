@@ -998,7 +998,8 @@ public final class MachineService implements Listener, CommandExecutor {
 
     private boolean mobileSupported(MachineType type) {
         return type == MachineType.JUGGLER || type == MachineType.JUGGLER_GOD
-                || type == MachineType.JUGGLER_GOD_EXTREME || type == MachineType.GOD;
+                || type == MachineType.JUGGLER_GOD_EXTREME || type == MachineType.GOD
+                || type == MachineType.SKILL_STOP;
     }
 
     private void addMobileBalance(JsonObject stateJson, UUID owner) {
