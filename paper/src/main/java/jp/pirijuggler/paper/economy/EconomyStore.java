@@ -261,6 +261,30 @@ public final class EconomyStore {
         });
     }
 
+    /** Mobile wallet -> active machine CREDIT, without requiring a live Minecraft inventory. */
+    public Session insertPending(UUID player, UUID sessionId, int machine, long sequence, long now) throws Exception {
+        return db.transaction(() -> {
+            Session session = requireActive(player, sessionId, machine);
+            if (!allowed(session.state())) throw new DomainException("INVALID_STATE");
+            if (sequence <= session.sequence()) throw new DomainException("SEQUENCE_OLD");
+            int credit = Math.toIntExact(session.number("credit"));
+            int need = 50 - credit;
+            if (need <= 0) throw new DomainException("INVALID_STATE");
+            long wallet = pending(player);
+            if (wallet <= 0) throw new DomainException("NOT_ENOUGH_MEDALS");
+            int inserted = Math.toIntExact(Math.min((long) need, wallet));
+            long remain = wallet - inserted;
+            if (remain == 0) db.sql("DELETE FROM player_wallet WHERE player_uuid=?", player.toString());
+            else db.sql("UPDATE player_wallet SET pending_medals=?,updated_at=? WHERE player_uuid=?", remain, now, player.toString());
+            int changed = db.sql("UPDATE player_sessions SET credit=?,last_client_sequence=?,last_activity=? WHERE session_id=? AND last_client_sequence=? AND lifecycle='ACTIVE'",
+                    credit + inserted, sequence, now, sessionId.toString(), session.sequence());
+            if (changed != 1) throw new DomainException("SEQUENCE_OLD");
+            return requireSession(player);
+        });
+    }
+
+    public long pendingMedals(UUID player) throws Exception { return pending(player); }
+
     public boolean validActiveBundle(UUID id, int amount) throws Exception { ensureUnlimitedTable(); try { requireUsableBundle(id, amount); return true; } catch (DomainException invalid) { return false; } }
     private void requireNoEconomyReview(UUID player) throws Exception { if (playerEconomyBlocked(player)) throw new DomainException("VAULT_ERROR"); }
     private void requireUsableBundle(UUID id, int amount) throws Exception {
