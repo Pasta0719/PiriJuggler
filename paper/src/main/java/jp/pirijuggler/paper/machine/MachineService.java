@@ -35,7 +35,7 @@ import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;\nimport java.util.function.Consumer;
 import java.util.logging.Level;
 
 /** All live state and operation reservations are owned by the Paper main thread. */
@@ -772,6 +772,276 @@ public final class MachineService implements Listener, CommandExecutor {
             if (error != null) failure(null, error);
         });
     }
+
+    /** Mobile/Safari support uses the same authoritative sessions and game engines as the Fabric client. */
+    public Machine mobileMachine(int machineId) {
+        main();
+        return state == null ? null : state.machine(machineId);
+    }
+
+    public Set<UUID> mobileActiveOwners() {
+        main();
+        if (!ready()) return Set.of();
+        Set<UUID> owners = new HashSet<>();
+        for (Session session : state.sessions()) {
+            if (session.lifecycle() == Session.Lifecycle.ACTIVE) owners.add(session.player());
+        }
+        return Set.copyOf(owners);
+    }
+
+    public JsonObject mobileMachines(UUID owner) {
+        main();
+        JsonObject result = new JsonObject();
+        result.addProperty("player", Optional.ofNullable(Bukkit.getOfflinePlayer(owner).getName()).orElse(owner.toString()));
+        var list = new com.google.gson.JsonArray();
+        if (!ready()) {
+            result.add("machines", list);
+            return result;
+        }
+        Session own = state.session(owner);
+        for (Machine machine : state.machines()) {
+            if (machine.deleted()) continue;
+            JsonObject item = new JsonObject();
+            boolean owned = own != null && own.machine() == machine.id() && own.ownsLock();
+            item.addProperty("id", machine.id());
+            item.addProperty("type", machine.type().name());
+            item.addProperty("setting", machine.setting());
+            item.addProperty("enabled", machine.enabled());
+            item.addProperty("busy", busy(machine.id()));
+            item.addProperty("owned", owned);
+            item.addProperty("supported", mobileSupported(machine.type()));
+            list.add(item);
+        }
+        result.add("machines", list);
+        return result;
+    }
+
+    public JsonObject mobileState(UUID owner) {
+        main();
+        JsonObject result = new JsonObject();
+        if (!ready()) {
+            result.addProperty("seated", false);
+            return result;
+        }
+        Session session = state.session(owner);
+        if (session == null || session.lifecycle() != Session.Lifecycle.ACTIVE) {
+            result.addProperty("seated", false);
+            if (session != null && session.ownsLock()) result.addProperty("resumeMachineId", session.machine());
+            addMobileBalance(result, owner);
+            return result;
+        }
+        result = session.publicState();
+        Machine machine = state.machine(session.machine());
+        if (machine != null) result.addProperty("machineType", machine.type().name());
+        result.addProperty("seated", true);
+        addMobileBalance(result, owner);
+        return result;
+    }
+
+    public void mobileSeat(UUID owner, int machineId, BiConsumer<JsonObject, String> callback) {
+        main();
+        if (!ready()) { callback.accept(null, "DB_ERROR"); return; }
+        Machine machine = state.machine(machineId);
+        if (machine == null || machine.deleted() || !mobileSupported(machine.type())) { callback.accept(null, "INVALID_STATE"); return; }
+        if (!machine.enabled()) { callback.accept(null, "MACHINE_DISABLED"); return; }
+        Session session = state.session(owner);
+        if (session != null && session.machine() != machineId) { callback.accept(null, "SESSION_MISMATCH"); return; }
+        if (pendingMachines.contains(machineId) || (state.busy(machineId) && (session == null || !session.ownsLock()))) {
+            callback.accept(null, "MACHINE_OCCUPIED"); return;
+        }
+        submitMobile(owner, machineId, () -> database.seat(owner, machineId, System.currentTimeMillis()), (seated, failure) -> {
+            if (failure != null) { callback.accept(null, failure); return; }
+            GameEngine game = engine(seated.machine());
+            game.resume(seated, System.nanoTime());
+            remote.broadcastSnapshot(seated.machine());
+            callback.accept(mobileState(owner), null);
+        });
+    }
+
+    public void mobileAction(UUID owner, PacketType action, Integer pressedIndex, BiConsumer<JsonObject, String> callback) {
+        main();
+        if (!Set.of(PacketType.SPACE_ACTION, PacketType.STOP_LEFT, PacketType.STOP_CENTER, PacketType.STOP_RIGHT).contains(action)) {
+            callback.accept(null, "INVALID_STATE"); return;
+        }
+        if (!ready()) { callback.accept(null, "DB_ERROR"); return; }
+        Session session = state.session(owner);
+        if (session == null || session.lifecycle() != Session.Lifecycle.ACTIVE) { callback.accept(null, "SESSION_MISMATCH"); return; }
+        int machineId = session.machine();
+        Machine machine = state.machine(machineId);
+        if (machine == null || !mobileSupported(machine.type())) { callback.accept(null, "INVALID_STATE"); return; }
+        if (pendingPlayers.contains(owner) || pendingMachines.contains(machineId)) { callback.accept(null, "BUSY"); return; }
+        long sequence = session.sequence() + 1;
+        try {
+            GameEngine game = engine(machineId);
+            GameTransition transition = game.plan(session, machine, action, sequence,
+                    System.currentTimeMillis(), System.nanoTime(), 0, pressedIndex);
+            String rejection = transition.packets().stream()
+                    .filter(packet -> packet.packetType() == PacketType.ACTION_REJECTED)
+                    .map(packet -> packet.payload().has("errorCode") ? packet.payload().get("errorCode").getAsString() : "INVALID_STATE")
+                    .findFirst().orElse(null);
+            submitMobile(owner, machineId, () -> new GameStore(database).commit(transition), (saved, failure) -> {
+                if (failure != null) { callback.accept(null, failure); return; }
+                game.committed(transition, System.nanoTime());
+                remote.broadcastSnapshot(machineId);
+                if (rejection != null) callback.accept(null, rejection);
+                else callback.accept(mobileState(owner), null);
+            });
+        } catch (DomainException failure) {
+            callback.accept(null, failure.getMessage());
+        } catch (ArithmeticException failure) {
+            callback.accept(null, "INVALID_STATE");
+        } catch (RuntimeException failure) {
+            plugin.getLogger().log(Level.WARNING, "Mobile game action failed", failure);
+            callback.accept(null, "DB_ERROR");
+        }
+    }
+
+    public void mobileLoan(UUID owner, BiConsumer<JsonObject, String> callback) {
+        main();
+        if (!ready()) { callback.accept(null, "DB_ERROR"); return; }
+        Session session = state.session(owner);
+        if (session == null || session.lifecycle() != Session.Lifecycle.ACTIVE) { callback.accept(null, "SESSION_MISMATCH"); return; }
+        if (!EconomyStore.allowed(session.state())) { callback.accept(null, "INVALID_STATE"); return; }
+        if (vault == null) { callback.accept(null, "ECONOMY_UNAVAILABLE"); return; }
+        int machineId = session.machine();
+        long sequence = session.sequence() + 1;
+        if (pendingPlayers.contains(owner) || pendingMachines.contains(machineId)) { callback.accept(null, "BUSY"); return; }
+
+        OfflinePlayer account = Bukkit.getOfflinePlayer(owner);
+        final double balance;
+        try { balance = vault.balance(account); }
+        catch (RuntimeException failure) { callback.accept(null, "VAULT_ERROR"); return; }
+        if (balance < loanAmount) { callback.accept(null, "NOT_ENOUGH_VAULT"); return; }
+
+        pendingPlayers.add(owner);
+        pendingMachines.add(machineId);
+        long now = System.currentTimeMillis();
+        plugin.executors().database(
+                () -> new Saved<>(new EconomyStore(database).prepareLoan(owner, session.id(), machineId, sequence, loanMedals, loanAmount, balance, now), database.state()),
+                (prepared, prepareError) -> {
+                    if (prepared != null) state = prepared.state;
+                    if (stopped) { releaseEconomy(owner, machineId); return; }
+                    if (prepareError != null) {
+                        logMobileFailure(prepareError); releaseEconomy(owner, machineId);
+                        callback.accept(null, mobileFailureCode(prepareError)); return;
+                    }
+                    EconomyStore.LoanPlan plan = prepared.value;
+                    if (plan.state() == EconomyStore.JournalState.APPLIED) {
+                        releaseEconomy(owner, machineId);
+                        callback.accept(mobileState(owner), null); return;
+                    }
+                    if (plan.state() != EconomyStore.JournalState.PREPARED) {
+                        releaseEconomy(owner, machineId);
+                        callback.accept(null, "VAULT_ERROR"); return;
+                    }
+                    plugin.executors().database(
+                            () -> { new EconomyStore(database).markLoanCallStarted(plan.transactionId(), System.currentTimeMillis()); return null; },
+                            (unused, markError) -> {
+                                if (markError != null) {
+                                    logMobileFailure(markError); releaseEconomy(owner, machineId);
+                                    callback.accept(null, mobileFailureCode(markError)); return;
+                                }
+                                final boolean withdrawn;
+                                try { withdrawn = vault.withdraw(account, plan.vaultAmount()); }
+                                catch (RuntimeException uncertain) {
+                                    plugin.getLogger().log(Level.SEVERE,
+                                            "Vault call outcome uncertain; transaction left CALL_STARTED: " + plan.transactionId(), uncertain);
+                                    releaseEconomy(owner, machineId);
+                                    callback.accept(null, "VAULT_ERROR"); return;
+                                }
+                                if (!withdrawn) {
+                                    plugin.executors().database(
+                                            () -> { new EconomyStore(database).rollbackLoan(plan.transactionId(), System.currentTimeMillis()); return null; },
+                                            (ignored, rollbackError) -> {
+                                                releaseEconomy(owner, machineId);
+                                                if (rollbackError != null) logMobileFailure(rollbackError);
+                                                callback.accept(null, rollbackError == null ? "VAULT_ERROR" : mobileFailureCode(rollbackError));
+                                            });
+                                    return;
+                                }
+                                plugin.executors().database(
+                                        () -> new Saved<>(new EconomyStore(database).applyLoan(owner, session.id(), machineId, sequence, plan, System.currentTimeMillis()), database.state()),
+                                        (applied, applyError) -> {
+                                            if (applied != null) state = applied.state;
+                                            releaseEconomy(owner, machineId);
+                                            if (applyError != null) {
+                                                plugin.getLogger().log(Level.SEVERE,
+                                                        "Vault withdrawal succeeded but local apply failed; manual review required tx=" + plan.transactionId(), applyError);
+                                                callback.accept(null, "VAULT_ERROR"); return;
+                                            }
+                                            remote.broadcastSnapshot(machineId);
+                                            callback.accept(mobileState(owner), null);
+                                        });
+                            });
+                });
+    }
+
+    public void mobileLeave(UUID owner, BiConsumer<JsonObject, String> callback) {
+        main();
+        if (!ready()) { callback.accept(null, "DB_ERROR"); return; }
+        if (pendingPlayers.contains(owner)) { callback.accept(null, "BUSY"); return; }
+        Session session = state.session(owner);
+        if (session == null) { callback.accept(mobileState(owner), null); return; }
+        int machineId = session.machine();
+        long sequence = session.sequence() + 1;
+        Session motion = engine(machineId).capture(session, System.nanoTime());
+        submitMobile(owner, machineId,
+                () -> database.closeSession(owner, session.id(), machineId, sequence, System.currentTimeMillis(), graceMs, motion),
+                (reason, failure) -> {
+                    if (failure != null) { callback.accept(null, failure); return; }
+                    engine(machineId).forget(session.id());
+                    remote.broadcastSnapshot(machineId);
+                    callback.accept(mobileState(owner), null);
+                });
+    }
+
+    private boolean mobileSupported(MachineType type) {
+        return type == MachineType.JUGGLER || type == MachineType.JUGGLER_GOD
+                || type == MachineType.JUGGLER_GOD_EXTREME || type == MachineType.GOD;
+    }
+
+    private void addMobileBalance(JsonObject stateJson, UUID owner) {
+        if (vault == null) return;
+        try { stateJson.addProperty("vaultBalance", vault.balance(Bukkit.getOfflinePlayer(owner))); }
+        catch (RuntimeException ignored) { }
+    }
+
+    private <T> void submitMobile(UUID player, int machine, Callable<T> operation, BiConsumer<T, String> callback) {
+        main();
+        if ((player != null && pendingPlayers.contains(player)) || (machine != 0 && pendingMachines.contains(machine))) {
+            callback.accept(null, "BUSY"); return;
+        }
+        if (player != null) pendingPlayers.add(player);
+        if (machine != 0) pendingMachines.add(machine);
+        plugin.executors().database(() -> new Saved<>(operation.call(), database.state()), (saved, error) -> {
+            if (saved != null) state = saved.state;
+            try {
+                if (stopped) return;
+                if (error != null) {
+                    logMobileFailure(error);
+                    callback.accept(null, mobileFailureCode(error));
+                } else callback.accept(saved.value, null);
+            } finally {
+                if (player != null) pendingPlayers.remove(player);
+                if (machine != 0) pendingMachines.remove(machine);
+                if (player != null && !stopped) {
+                    Runnable close = deferredClose.remove(player);
+                    if (close != null) close.run();
+                    if (deferredDisconnect.remove(player)) disconnect(player);
+                }
+            }
+        });
+    }
+
+    private String mobileFailureCode(Throwable failure) {
+        return failure instanceof DomainException ? failure.getMessage() : "DB_ERROR";
+    }
+
+    private void logMobileFailure(Throwable failure) {
+        if (!(failure instanceof DomainException))
+            plugin.getLogger().log(Level.SEVERE, "Mobile database operation failed; transaction rolled back", failure);
+    }
+
     private void failure(CommandSender sender, Throwable failure) {
         String code = failure instanceof DomainException ? failure.getMessage() : "DB_ERROR";
         if (!(failure instanceof DomainException)) plugin.getLogger().log(Level.SEVERE, "Database operation failed; transaction rolled back", failure);
