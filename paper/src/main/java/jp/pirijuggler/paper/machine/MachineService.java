@@ -52,6 +52,7 @@ public final class MachineService implements Listener, CommandExecutor {
     private final Set<UUID> pendingPlayers = new HashSet<>();
     private final Set<Integer> pendingMachines = new HashSet<>();
     private final Map<UUID, Runnable> deferredClose = new HashMap<>();
+    private final Map<UUID, ArrayDeque<Envelope>> mobileDelayedEvents = new HashMap<>();
     private final Set<UUID> deferredDisconnect = new HashSet<>();
     private final long graceMs;
     private final long idleMs;
@@ -913,6 +914,8 @@ public final class MachineService implements Listener, CommandExecutor {
                 remote.broadcastSnapshot(machineId);
                 if (rejection != null) callback.accept(null, rejection);
                 else {
+                    for (GameTransition.Scheduled event : game.scheduled(transition))
+                        scheduleMobile(owner, transition.after().id(), machineId, event);
                     JsonObject response = mobileState(owner);
                     response.add("events", mobileEvents(committed));
                     callback.accept(response, null);
@@ -1008,6 +1011,32 @@ public final class MachineService implements Listener, CommandExecutor {
                 });
     }
 
+    public JsonObject mobileDrainEvents(UUID owner) {
+        main();
+        JsonObject result = new JsonObject();
+        result.addProperty("ok", true);
+        ArrayDeque<Envelope> queue = mobileDelayedEvents.get(owner);
+        List<Envelope> drained = new ArrayList<>();
+        if (queue != null) {
+            while (!queue.isEmpty() && drained.size() < 64) drained.add(queue.removeFirst());
+            if (queue.isEmpty()) mobileDelayedEvents.remove(owner);
+        }
+        result.add("events", mobileEvents(drained));
+        return result;
+    }
+
+    private void scheduleMobile(UUID owner, UUID sessionId, int machineId, GameTransition.Scheduled event) {
+        long ticks = Math.max(1, (event.delayMs() + 49) / 50);
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (stopped || state == null) return;
+            Session current = state.session(owner);
+            if (current == null || !current.id().equals(sessionId) || current.machine() != machineId) return;
+            mobileDelayedEvents.computeIfAbsent(owner, ignored -> new ArrayDeque<>()).addLast(event.packet());
+            if (event.packet().packetType() != PacketType.PUBLIC_STATE)
+                remote.publishOwnerPacket(machineId, event.packet());
+        }, ticks);
+    }
+
     public void mobileLeave(UUID owner, BiConsumer<JsonObject, String> callback) {
         main();
         if (!ready()) { callback.accept(null, "DB_ERROR"); return; }
@@ -1022,6 +1051,7 @@ public final class MachineService implements Listener, CommandExecutor {
                 (reason, failure) -> {
                     if (failure != null) { callback.accept(null, failure); return; }
                     engine(machineId).forget(session.id());
+                    mobileDelayedEvents.remove(owner);
                     remote.broadcastSnapshot(machineId);
                     callback.accept(mobileState(owner), null);
                 });
