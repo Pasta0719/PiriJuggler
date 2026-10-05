@@ -123,6 +123,17 @@ class RemoteMachineRegistryTest {
         assertTrue(registry.snapshot().isEmpty());
     }
 
+    @Test void pachinkoSnapshotAndEventKeepObserverOnCommittedBall() {
+        RemoteMachineRegistry registry=new RemoteMachineRegistry();
+        JsonObject snap=snapshot(44);snap.addProperty("machineType","PACHINKO");snap.addProperty("pachinkoPresentation","LEFT_KURUN");
+        snap.addProperty("pachinkoBallSequenceId",9);snap.addProperty("pachinkoOutcome","V");snap.addProperty("pachinkoStartTime",1234L);snap.addProperty("pachinkoSeed",9876L);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,snap));
+        var view=registry.view(44);assertNotNull(view);assertEquals(9,view.pachinkoBallSequenceId());assertEquals("V",view.pachinkoOutcome());assertEquals(9876L,view.pachinkoSeed());
+        JsonObject event=id(44);event.addProperty("ballSequenceId",10);event.addProperty("side","LEFT");event.addProperty("outcome","OUT");event.addProperty("seed",111L);event.addProperty("startTime",2000L);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.PACHINKO_EVENT,event));
+        assertEquals(10,view.pachinkoBallSequenceId());assertEquals("LEFT",view.pachinkoSide());assertEquals("OUT",view.pachinkoOutcome());assertEquals(111L,view.pachinkoSeed());
+    }
+
     private static JsonObject snapshot(int id) {
         JsonObject body = id(id);
         body.addProperty("world", UUID.randomUUID().toString());
