@@ -232,6 +232,7 @@ juggler_god_extreme:
 
     public TaskExecutors executors() { mainThread.requireMainThread(); return executors; }
     public MachineService machines() { mainThread.requireMainThread(); return machines; }
+    public PrizeService prizes() { mainThread.requireMainThread(); return prizes; }
     /** ReelEngine is immutable except for the solver's concurrent cache, so recovery DB work may safely read it. */
     public ReelEngine reels() { return reels; }
 
