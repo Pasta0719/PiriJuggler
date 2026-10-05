@@ -214,6 +214,10 @@ public final class MobileRemoteGateway implements AutoCloseable {
                 respond(ctx, HttpResponseStatus.NO_CONTENT, "text/plain", "");
                 return;
             }
+            if (request.method().equals(HttpMethod.GET) && path.startsWith("/assets/")) {
+                serveAsset(ctx, path.substring("/assets/".length()));
+                return;
+            }
             if (request.method().equals(HttpMethod.OPTIONS)) {
                 respond(ctx, HttpResponseStatus.NO_CONTENT, "text/plain", "");
                 return;
@@ -255,6 +259,15 @@ public final class MobileRemoteGateway implements AutoCloseable {
 
             if (request.method().equals(HttpMethod.GET) && path.equals("/api/machines")) {
                 onMain(ctx, done -> done.accept(machines.mobileMachines(owner), null));
+                return;
+            }
+            if (request.method().equals(HttpMethod.GET) && path.equals("/api/data")) {
+                Integer machineId = integer(one(query, "id"));
+                if (machineId == null) {
+                    json(ctx, HttpResponseStatus.BAD_REQUEST, error("INVALID_MACHINE"));
+                    return;
+                }
+                onMain(ctx, done -> machines.mobileData(machineId, done));
                 return;
             }
             if (request.method().equals(HttpMethod.GET) && path.equals("/api/state")) {
@@ -372,13 +385,42 @@ public final class MobileRemoteGateway implements AutoCloseable {
         return json;
     }
 
+    private void serveAsset(ChannelHandlerContext ctx, String relative) {
+        if (relative == null || relative.isBlank() || relative.contains("..") || relative.startsWith("/")) {
+            respond(ctx, HttpResponseStatus.NOT_FOUND, "text/plain", "");
+            return;
+        }
+        String resource = "/mobile-assets/textures/" + relative;
+        byte[] bytes = readResource(resource);
+        if (bytes == null && relative.startsWith("juggler_god/")) {
+            bytes = readResource("/mobile-assets/textures/" + relative.substring("juggler_god/".length()));
+        }
+        if (bytes == null) {
+            respond(ctx, HttpResponseStatus.NOT_FOUND, "text/plain", "");
+            return;
+        }
+        String contentType = relative.endsWith(".png") ? "image/png" : "application/octet-stream";
+        respondBytes(ctx, HttpResponseStatus.OK, contentType, bytes);
+    }
+
+    private static byte[] readResource(String path) {
+        try (var input = MobileRemoteGateway.class.getResourceAsStream(path)) {
+            return input == null ? null : input.readAllBytes();
+        } catch (java.io.IOException failure) {
+            return null;
+        }
+    }
+
     private void json(ChannelHandlerContext ctx, HttpResponseStatus status, JsonObject json) {
         respond(ctx, status, "application/json; charset=utf-8", GSON.toJson(json));
     }
 
     private void respond(ChannelHandlerContext ctx, HttpResponseStatus status, String contentType, String body) {
+        respondBytes(ctx, status, contentType, body.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void respondBytes(ChannelHandlerContext ctx, HttpResponseStatus status, String contentType, byte[] bytes) {
         if (!ctx.channel().isActive()) return;
-        byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         var response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.wrappedBuffer(bytes));
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, contentType);
         response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, bytes.length);
