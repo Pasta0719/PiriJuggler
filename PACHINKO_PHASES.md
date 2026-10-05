@@ -134,6 +134,13 @@ Completion criteria:
 - Disconnect/restart during payout cannot duplicate payout.
 - 450 outcome never enters RUSH; 1500 RUSH outcome always does.
 
+## Verified implementation status — 2026-10-05
+
+- Phase 03: COMPLETE — durable 250-ball loan/fire/start accounting, one-ball start prize, measured rotation from actual counters, routing-only payout-rate sensitivity, fixed 1/319 odds, and 17 reference tuning are covered by production tests; Piri build and Runtime helper build pass at `3e4616b`
+- Phase 04: COMPLETE — server-owned deterministic left-kurun event, synchronized Fabric owner/observer rendering, committed V/OUT reconstruction on reconnect, and seeded 1/319 statistical verification are covered; Piri build and Runtime helper build pass at `3e4616b`
+- Phase 05: COMPLETE — forced and statistical 40:60 allocation, 450 normal / 1500 RUSH mapping, durable idempotent payout, and reconnect duplicate-payout rejection are covered; Piri build and Runtime helper build pass at `3e4616b`
+- Existing SKILL STOP Phase 03/04 runtime workflows remain a separate regression gate; their latest push-run failures are not being relabeled as pachinko failures and must be resolved/re-run before final Phase 10 acceptance
+
 # Phase 06 - Right kurun, 81% continuation and payout allocation
 
 Implementation:
