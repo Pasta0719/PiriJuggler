@@ -317,6 +317,14 @@ public final class MobileRemoteGateway implements AutoCloseable {
                 onMain(ctx, done -> machines.mobileLoan(owner, done));
                 return;
             }
+            if (request.method().equals(HttpMethod.POST) && path.equals("/api/insert")) {
+                onMain(ctx, done -> machines.mobileInsert(owner, done));
+                return;
+            }
+            if (request.method().equals(HttpMethod.POST) && path.equals("/api/cashout")) {
+                onMain(ctx, done -> machines.mobileCashout(owner, done));
+                return;
+            }
             if (request.method().equals(HttpMethod.POST) && path.equals("/api/leave")) {
                 onMain(ctx, done -> machines.mobileLeave(owner, (state, failure) -> {
                     if (failure == null) npcs.remove(owner);
@@ -706,8 +714,8 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 <button id="centerBtn" class="machineControl stopBtn" data-action="STOP_CENTER" data-reel="1"><span></span><b class="stopText">CENTER</b></button>
 <button id="rightBtn" class="machineControl stopBtn" data-action="STOP_RIGHT" data-reel="2"><span></span><b class="stopText">RIGHT</b></button>
 <button id="loanBtn" class="machineControl sideBtn"><span>LOAN</span></button>
-<button id="insertBtn" class="machineControl sideBtn" disabled><span>INSERT</span></button>
-<button id="cashBtn" class="machineControl sideBtn" disabled><span>CASH OUT</span></button>
+<button id="insertBtn" class="machineControl sideBtn"><span>INSERT</span></button>
+<button id="cashBtn" class="machineControl sideBtn"><span>CASH OUT</span></button>
 <div id="machineLabel" class="dataTitle">MACHINE -</div><div id="graphLabel" class="dataTitle">DIFF GRAPH</div>
 <canvas id="gameGraph"></canvas>
 <div id="currentBox" class="topMetric"><div class="t">CURRENT G</div><div id="gCurrent" class="n">0</div></div>
@@ -768,7 +776,7 @@ async function api(path,method){
  return j;
 }
 function errorText(e){
- const m={BUSY:"処理中です",INVALID_STATE:"今は操作できません",INVALID_MACHINE:"この台は利用できません",NOT_ENOUGH_CREDIT:"クレジットが足りません",NOT_ENOUGH_VAULT:"所持金が足りません",MACHINE_OCCUPIED:"ほかのプレイヤーが遊技中です",MACHINE_DISABLED:"この台は利用できません",STOP_TOO_EARLY:"まだ停止できません",ALREADY_STOPPED:"停止済みです",SESSION_MISMATCH:"台との接続状態が変わりました",VAULT_ERROR:"所持金処理に失敗しました",ECONOMY_UNAVAILABLE:"貸出を利用できません",AUTH_LOADING:"サーバー起動中です"};
+ const m={BUSY:"処理中です",INVALID_STATE:"今は操作できません",INVALID_MACHINE:"この台は利用できません",NOT_ENOUGH_CREDIT:"クレジットが足りません",NOT_ENOUGH_VAULT:"所持金が足りません",MACHINE_OCCUPIED:"ほかのプレイヤーが遊技中です",MACHINE_DISABLED:"この台は利用できません",STOP_TOO_EARLY:"まだ停止できません",ALREADY_STOPPED:"停止済みです",SESSION_MISMATCH:"台との接続状態が変わりました",VAULT_ERROR:"所持金処理に失敗しました",ECONOMY_UNAVAILABLE:"貸出を利用できません",AUTH_LOADING:"サーバー起動中です",PLAYER_OFFLINE:"INSERTはMinecraftにログイン中のみ使えます",NOT_ENOUGH_MEDALS:"投入できるメダルがありません"};
  return m[e.message]||e.message;
 }
 async function pairNow(){
@@ -968,6 +976,8 @@ async function doAction(type,reel){
  finally{busy=false}
 }
 async function loan(){if(busy)return;busy=true;try{renderState(await api("/api/loan","POST"));$("gameMessage").textContent=""}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
+async function insertMedals(){if(busy)return;busy=true;try{renderState(await api("/api/insert","POST"));$("gameMessage").textContent=""}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
+async function cashout(){if(busy)return;busy=true;try{const j=await api("/api/cashout","POST");renderState(j);const pending=Number(j.cashoutPending||0);$("gameMessage").textContent=pending>0?("清算 "+j.cashoutAmount+"枚 / "+pending+"枚は回収待ち"):("清算 "+(j.cashoutAmount||0)+"枚")}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
 function startGame(j){
  show("game");currentType=j.machineType||"";renderState(j);pollData();stopTimers();stateTimer=setInterval(pollState,250);eventTimer=setInterval(pollEvents,100);dataTimer=setInterval(pollData,1500);
 }
@@ -987,7 +997,7 @@ function frame(now){
 $("pairBtn").onclick=pairNow;$("refresh").onclick=loadMachines;$("dataClose").onclick=function(){show("lobby")};
 $("betBtn").onclick=function(){doAction("SPACE_ACTION",-1)};$("leverBtn").onclick=function(){doAction("SPACE_ACTION",-1)};
 document.querySelectorAll(".stopBtn").forEach(function(b){b.onclick=function(){doAction(b.dataset.action,Number(b.dataset.reel))}});
-$("loanBtn").onclick=loan;$("leaveBtn").onclick=leave;
+$("loanBtn").onclick=loan;$("insertBtn").onclick=insertMedals;$("cashBtn").onclick=cashout;$("leaveBtn").onclick=leave;
 $("logout").onclick=async function(){try{await api("/api/revoke","POST")}catch(e){}token="";localStorage.removeItem("piriToken");localStorage.removeItem("piriPlayer");show("pair")};
 window.addEventListener("resize",resizeStage);
 requestAnimationFrame(frame);
