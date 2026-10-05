@@ -51,13 +51,21 @@ public final class PachinkoGameEngine implements GameEngine {
         if(sequence<=before.sequence())throw new DomainException("SEQUENCE_OLD");
         if(!PACHINKO_ACTIONS.contains(action))return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
         PachinkoRuntime runtime=runtime(before,machine);
+        if(action==PacketType.PACHINKO_PRESENTATION){
+            if(runtime.presentation()!=PachinkoRuntime.Presentation.LEFT_KURUN||runtime.initialHitCommitted())
+                return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
+            PachinkoRuntime idle=new PachinkoRuntime(runtime.mode(),runtime.ballsHeld(),runtime.ballsLoaned(),runtime.totalFired(),
+                    runtime.totalStarts(),runtime.ballSequenceId(),PachinkoRuntime.Presentation.IDLE,false,runtime.initialOutcome(),
+                    runtime.rushActive(),runtime.rushWins(),runtime.currentPayout(),runtime.cumulativePayout(),now);
+            return accepted(before,idle,action,sequence);
+        }
         if(action!=PacketType.PACHINKO_FIRE)return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
         if(runtime.ballsHeld()<1)return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
         try {
             PachinkoRuntime fired=PachinkoBallAccounting.fire(runtime,now);
             if(!routing.entersStart(random))return accepted(before,fired,action,sequence);
             PachinkoRuntime started=PachinkoBallAccounting.validStart(fired,now);
-            boolean v=random.nextInt((int)PachinkoSpec.INITIAL_JACKPOT_DENOMINATOR)==0;
+            boolean v=rollInitialV(random);
             PachinkoRuntime presenting=new PachinkoRuntime(
                     started.mode(),started.ballsHeld(),started.ballsLoaned(),started.totalFired(),started.totalStarts(),
                     started.ballSequenceId(),PachinkoRuntime.Presentation.LEFT_KURUN,v,started.initialOutcome(),
@@ -88,6 +96,8 @@ public final class PachinkoGameEngine implements GameEngine {
                 List.of(Envelope.current(PacketType.ACTION_ACCEPTED,accepted),Envelope.current(PacketType.PACHINKO_EVENT,event)),
                 List.of(),List.of(),runtime.toJsonString());
     }
+
+    static boolean rollInitialV(RandomGenerator random){return random.nextInt((int)PachinkoSpec.INITIAL_JACKPOT_DENOMINATOR)==0;}
 
     static long presentationSeed(UUID session,int machine,long ballSequence){
         long x=session.getMostSignificantBits()^session.getLeastSignificantBits()^((long)machine<<32)^ballSequence;
@@ -131,7 +141,14 @@ public final class PachinkoGameEngine implements GameEngine {
     }
 
     @Override public Optional<Envelope> resume(Session saved,long sentNanos){
-        return Optional.empty();
+        PachinkoRuntime runtime=PachinkoRuntime.fromJson(saved.machineState()!=null?saved.machineState().toString():null);
+        if(runtime.presentation()!=PachinkoRuntime.Presentation.LEFT_KURUN)return Optional.empty();
+        JsonObject event=new JsonObject();
+        event.addProperty("machineId",saved.machine());event.addProperty("ballSequenceId",runtime.ballSequenceId());
+        event.addProperty("side","LEFT");event.addProperty("outcome",runtime.initialHitCommitted()?"V":"OUT");
+        event.addProperty("seed",presentationSeed(saved.id(),saved.machine(),runtime.ballSequenceId()));
+        event.addProperty("startTime",runtime.lastActivity());
+        return Optional.of(Envelope.current(PacketType.PACHINKO_EVENT,event));
     }
 
     @Override public Session capture(Session saved,long now){
