@@ -2,12 +2,14 @@ package jp.pirijuggler.paper.machine;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
 import jp.pirijuggler.common.protocol.*;
 import jp.pirijuggler.paper.PiriJugglerPlugin;
 import jp.pirijuggler.paper.admin.AdminStore;
 import jp.pirijuggler.paper.database.GameStore;
 import jp.pirijuggler.paper.database.PiriDatabase;
 import jp.pirijuggler.paper.database.RecoveryStore;
+import jp.pirijuggler.paper.data.DataLampSnapshot;
 import jp.pirijuggler.paper.economy.EconomyStore;
 import jp.pirijuggler.paper.economy.MedalToken;
 import jp.pirijuggler.paper.economy.VaultBridge;
@@ -32,6 +34,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.lang.management.ManagementFactory;
+import java.sql.DriverManager;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -801,12 +804,11 @@ public final class MachineService implements Listener, CommandExecutor {
         }
         Session own = state.session(owner);
         for (Machine machine : state.machines()) {
-            if (machine.deleted()) continue;
+            if (machine.deleted() || machine.id() > 42 || machine.type() == MachineType.GOD) continue;
             JsonObject item = new JsonObject();
             boolean owned = own != null && own.machine() == machine.id() && own.ownsLock();
             item.addProperty("id", machine.id());
             item.addProperty("type", machine.type().name());
-            item.addProperty("setting", machine.setting());
             item.addProperty("enabled", machine.enabled());
             item.addProperty("busy", busy(machine.id()));
             item.addProperty("owned", owned);
@@ -815,6 +817,29 @@ public final class MachineService implements Listener, CommandExecutor {
         }
         result.add("machines", list);
         return result;
+    }
+
+    public void mobileData(int machineId, BiConsumer<JsonObject, String> callback) {
+        main();
+        if (!ready()) { callback.accept(null, "DB_ERROR"); return; }
+        Machine machine = state.machine(machineId);
+        if (machine == null || machine.deleted() || machine.id() > 42 || machine.type() == MachineType.GOD) {
+            callback.accept(null, "INVALID_MACHINE");
+            return;
+        }
+        String period = state.period();
+        var databasePath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        plugin.executors().database(() -> {
+            try (var connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath)) {
+                connection.createStatement().execute("PRAGMA query_only=ON");
+                return DataLampSnapshot.read(connection, machineId, period);
+            }
+        }, (snapshot, error) -> {
+            if (error != null) {
+                plugin.getLogger().log(Level.WARNING, "Mobile machine data query failed for machine " + machineId, error);
+                callback.accept(null, "DB_ERROR");
+            } else callback.accept(snapshot, null);
+        });
     }
 
     public JsonObject mobileState(UUID owner) {
@@ -843,7 +868,7 @@ public final class MachineService implements Listener, CommandExecutor {
         main();
         if (!ready()) { callback.accept(null, "DB_ERROR"); return; }
         Machine machine = state.machine(machineId);
-        if (machine == null || machine.deleted() || !mobileSupported(machine.type())) { callback.accept(null, "INVALID_STATE"); return; }
+        if (machine == null || machine.deleted() || machine.id() > 42 || !mobileSupported(machine.type())) { callback.accept(null, "INVALID_STATE"); return; }
         if (!machine.enabled()) { callback.accept(null, "MACHINE_DISABLED"); return; }
         Session session = state.session(owner);
         if (session != null && session.machine() != machineId) { callback.accept(null, "SESSION_MISMATCH"); return; }
@@ -853,9 +878,11 @@ public final class MachineService implements Listener, CommandExecutor {
         submitMobile(owner, machineId, () -> database.seat(owner, machineId, System.currentTimeMillis()), (seated, failure) -> {
             if (failure != null) { callback.accept(null, failure); return; }
             GameEngine game = engine(seated.machine());
-            game.resume(seated, System.nanoTime());
+            var resume = game.resume(seated, System.nanoTime());
             remote.broadcastSnapshot(seated.machine());
-            callback.accept(mobileState(owner), null);
+            JsonObject response = mobileState(owner);
+            resume.ifPresent(event -> response.add("events", mobileEvents(List.of(event))));
+            callback.accept(response, null);
         });
     }
 
@@ -882,10 +909,14 @@ public final class MachineService implements Listener, CommandExecutor {
                     .findFirst().orElse(null);
             submitMobile(owner, machineId, () -> new GameStore(database).commit(transition), (saved, failure) -> {
                 if (failure != null) { callback.accept(null, failure); return; }
-                game.committed(transition, System.nanoTime());
+                List<Envelope> committed = game.committed(transition, System.nanoTime());
                 remote.broadcastSnapshot(machineId);
                 if (rejection != null) callback.accept(null, rejection);
-                else callback.accept(mobileState(owner), null);
+                else {
+                    JsonObject response = mobileState(owner);
+                    response.add("events", mobileEvents(committed));
+                    callback.accept(response, null);
+                }
             });
         } catch (DomainException failure) {
             callback.accept(null, failure.getMessage());
@@ -998,8 +1029,18 @@ public final class MachineService implements Listener, CommandExecutor {
 
     private boolean mobileSupported(MachineType type) {
         return type == MachineType.JUGGLER || type == MachineType.JUGGLER_GOD
-                || type == MachineType.JUGGLER_GOD_EXTREME || type == MachineType.GOD
-                || type == MachineType.SKILL_STOP;
+                || type == MachineType.JUGGLER_GOD_EXTREME || type == MachineType.SKILL_STOP;
+    }
+
+    private static JsonArray mobileEvents(List<Envelope> events) {
+        JsonArray out = new JsonArray();
+        for (Envelope event : events) {
+            JsonObject item = new JsonObject();
+            item.addProperty("type", event.packetType().name());
+            item.add("payload", event.payload());
+            out.add(item);
+        }
+        return out;
     }
 
     private void addMobileBalance(JsonObject stateJson, UUID owner) {
