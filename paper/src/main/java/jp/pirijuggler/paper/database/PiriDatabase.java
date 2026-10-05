@@ -338,7 +338,7 @@ public final class PiriDatabase implements AutoCloseable {
         return Map.copyOf(result);
     }
 
-    public void saveMobilePairing(UUID owner, String tokenHash, long now) throws SQLException {
+    public void saveMobilePairing(UUID owner, String tokenHash, long now) throws Exception {
         Objects.requireNonNull(owner); Objects.requireNonNull(tokenHash);
         if (tokenHash.isBlank()) throw new IllegalArgumentException("tokenHash");
         transaction(() -> {
