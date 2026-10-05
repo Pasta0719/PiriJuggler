@@ -180,6 +180,12 @@ public final class RemoteMachineSync {
                 if (source.has("finalCount")) copyInt(source, body, "finalCount");
                 broadcast(machineId, PacketType.REMOTE_MACHINE_BONUS, body);
             }
+            case PACHINKO_EVENT -> {
+                JsonObject body=base(machineId);
+                copyLong(source,body,"ballSequenceId");copyString(source,body,"side");copyString(source,body,"outcome");
+                copyLong(source,body,"seed");copyLong(source,body,"startTime");
+                broadcast(machineId,PacketType.PACHINKO_EVENT,body);
+            }
             default -> { }
         }
     }
@@ -274,6 +280,14 @@ public final class RemoteMachineSync {
                     ?publicState.get("godPresentationStartMs").getAsLong():0L);
 
             boolean spinning = gameState.endsWith("_SPINNING");
+            if(machine.type()==MachineType.PACHINKO&&session.machineState()!=null){
+                var pachinko=jp.pirijuggler.paper.game.pachinko.PachinkoRuntime.fromJson(session.machineState().toString());
+                body.addProperty("pachinkoPresentation",pachinko.presentation().name());
+                body.addProperty("pachinkoBallSequenceId",pachinko.ballSequenceId());
+                body.addProperty("pachinkoOutcome",pachinko.initialHitCommitted()?"V":"OUT");
+                body.addProperty("pachinkoStartTime",pachinko.lastActivity());
+                body.addProperty("pachinkoSeed",jp.pirijuggler.paper.game.pachinko.PachinkoGameEngine.presentationSeed(session.id(),machine.id(),pachinko.ballSequenceId()));
+            }
             body.addProperty("spinning", spinning);
             if (spinning) {
                 Session sampled;
@@ -300,7 +314,9 @@ public final class RemoteMachineSync {
         return value;
     }
 
-    private static void copySkill(JsonObject source,JsonObject target){
+    private static void copyLong(JsonObject source,JsonObject target,String key){if(source.has(key))target.addProperty(key,source.get(key).getAsLong());}
+
+        private static void copySkill(JsonObject source,JsonObject target){
         if(source.has("skillRemaining")){
             jp.pirijuggler.common.protocol.SkillStopPresentation.read(source).write(target);
         }
