@@ -40,7 +40,12 @@ def tap(k):
 def command(text,expected):
  before=sum(expected in m for m in cli().get('messages',[])); action('command',text=text); wait(lambda:sum(expected in m for m in cli().get('messages',[]))>before,text)
 def click():
- # A prior OPEN_MACHINE packet may be retained by the helper across close/reopen.\n # Require the packet count to advance, but give the real client/server handshake\n # more time on busy CI runners before declaring the interaction failed.\n before=sum(p.get('type')=='OPEN_MACHINE' for p in cli().get('packets',[])); action('aim',x=0); action('click',x=0); wait(lambda:sum(p.get('type')=='OPEN_MACHINE' for p in cli().get('packets',[]))>before,'open',240)
+ # A prior OPEN_MACHINE packet may be retained by the helper across close/reopen.
+ # Require the packet count to advance, but give the real client/server handshake
+ # more time on busy CI runners before declaring the interaction failed.
+ before=sum(p.get('type')=='OPEN_MACHINE' for p in cli().get('packets',[]))
+ action('aim',x=0); action('click',x=0)
+ wait(lambda:sum(p.get('type')=='OPEN_MACHINE' for p in cli().get('packets',[]))>before,'open',240)
 def start_server(label):
  global server,sr
  plugins=SERVER/'plugins';plugins.mkdir(parents=True,exist_ok=True);shutil.copy2(prod['paper'],plugins);shutil.copy2(helper,plugins)
