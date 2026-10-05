@@ -107,6 +107,7 @@ def machine_count():
 
 def start_server():
     global server
+    _cache.pop(server_result,None)
     if server_result.exists(): server_result.unlink()
     plugins=SERVER/"plugins";plugins.mkdir(parents=True,exist_ok=True)
     shutil.copy2(prod["paper"],plugins);shutil.copy2(helper,plugins)
@@ -133,6 +134,7 @@ def stop_server():
 def start_client(name,scenario):
     folder=OUT/scenario;folder.mkdir(parents=True,exist_ok=True)
     result=folder/"client-result.json"
+    _cache.pop(result,None)
     if result.exists():result.unlink()
     for stale in folder.glob("command-*.json"): stale.unlink()
     run_dir=E/"work"/("client-"+scenario)
