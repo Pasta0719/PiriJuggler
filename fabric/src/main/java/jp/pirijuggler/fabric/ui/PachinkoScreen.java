@@ -9,8 +9,9 @@ import org.lwjgl.glfw.GLFW;
 
 /**
  * Functional baseline controller for the physical pachinko machine.
- * The authoritative ball/kurun presentation stays in the world renderer; this
- * screen only sends machine-family actions and never resolves an outcome locally.
+ * The authoritative ball/kurun presentation stays visible in the world renderer;
+ * this transparent overlay only sends machine-family actions and never resolves
+ * an outcome locally.
  */
 public final class PachinkoScreen extends Screen {
     private final SlotInput input;
@@ -34,7 +35,6 @@ public final class PachinkoScreen extends Screen {
     @Override public boolean shouldPause() { return false; }
 
     @Override public void render(DrawContext context,int mouseX,int mouseY,float delta) {
-        renderBackground(context,mouseX,mouseY,delta);
         context.drawCenteredTextWithShadow(textRenderer,"PACHINKO",width/2,height/2-42,0xffffff);
         context.drawCenteredTextWithShadow(textRenderer,"Ball / kurun motion is rendered on the physical machine",width/2,height/2-20,0xbfbfbf);
         context.drawCenteredTextWithShadow(textRenderer,"SPACE: FIRE   ENTER: RESOLVE   L: LOAN",width/2,height/2+2,0xbfbfbf);
