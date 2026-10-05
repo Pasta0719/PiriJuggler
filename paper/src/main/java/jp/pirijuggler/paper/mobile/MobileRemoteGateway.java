@@ -609,7 +609,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 .dataGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .metric{background:#101218;border:1px solid #292d36;border-radius:12px;padding:12px}
 .metric .k{font-size:11px;color:#9da3ae}.metric .v{font-size:22px;font-weight:900;margin-top:4px}
-#preGraph{display:block;width:100%;height:180px;background:#090b0e!important;border-radius:10px;margin-top:12px}
+#preGraph{display:block;width:100%;height:180px;background:#090b0e!important;border:1px solid #20242a;border-radius:10px;margin-top:12px}
 .histRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:7px 0;border-bottom:1px solid #252932}
 #game{position:fixed;inset:0;background:#000;z-index:30;overflow:hidden;touch-action:manipulation}
 #stageWrap{position:absolute;inset:0;overflow:hidden}
@@ -652,7 +652,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 .dataTitle{position:absolute;font-size:25px;font-weight:900}
 #machineLabel{left:38px;top:26px}
 #graphLabel{left:55px;top:55px}
-#gameGraph{position:absolute;left:55px;top:88px;width:825px;height:146px}
+#gameGraph{position:absolute;left:55px;top:88px;width:825px;height:146px;background:#090b0e!important}
 .topMetric{position:absolute;top:42px;width:205px;text-align:center}.topMetric .t{font-size:24px;font-weight:900}.topMetric .n{font-size:39px;font-weight:900;margin-top:8px}
 #currentBox{left:958px}#totalBox{left:1268px}#maxBox{left:1578px}
 #bigBox{left:1108px;top:144px;color:#ff4242}#regBox{left:1438px;top:144px;color:#3a78ff}
@@ -670,97 +670,61 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
  #game{background:#050608}
  #stageWrap{position:absolute;inset:0;overflow:hidden}
  #stage{
-  width:100vw;height:100dvh;transform:none!important;background:#050608;
-  display:block;overflow:hidden;
+  width:390px;height:844px;background:#050608;overflow:hidden;
+  transform-origin:0 0!important;
  }
  #dataTop{
-  left:10px;top:10px;width:calc(100vw - 20px);height:114px;
-  border-width:1px;border-radius:12px;background:#101218;
+  left:8px;top:8px;width:374px;height:100px;
+  border:1px solid #20242a;border-radius:10px;background:#101218;
  }
- #machineLabel{left:22px;top:18px;font-size:16px}
+ #machineLabel{left:18px;top:15px;font-size:15px}
  #graphLabel,#gameGraph,#dataLeft,#dataRight,#diffTitle,#diffValue,#historyTitle,#gameHistory,#oddsTitle,#bigOdds,#regOdds,#allOdds,#chain{display:none!important}
- .topMetric{
-  top:48px!important;width:auto!important;text-align:left!important;
-  position:absolute!important;
- }
- .topMetric .t{font-size:9px!important;color:#9da3ae}
- .topMetric .n{font-size:18px!important;margin-top:1px}
- #currentBox{left:22px!important}
- #totalBox{left:112px!important}
- #maxBox{left:202px!important}
- #bigBox{left:292px!important;top:48px!important}
- #regBox{left:292px!important;top:78px!important}
- #bigBox .t,#regBox .t{font-size:9px!important}
- #bigBox .n,#regBox .n{font-size:15px!important;margin-top:0}
+ .topMetric{position:absolute!important;top:47px!important;width:70px!important;text-align:left!important}
+ .topMetric .t{font-size:8px!important;color:#9da3ae}
+ .topMetric .n{font-size:17px!important;line-height:18px;margin-top:1px}
+ #currentBox{left:18px!important}
+ #totalBox{left:92px!important}
+ #maxBox{left:166px!important}
+ #bigBox{left:242px!important;top:42px!important}
+ #regBox{left:312px!important;top:42px!important}
+ #bigBox .t,#regBox .t{font-size:8px!important}
+ #bigBox .n,#regBox .n{font-size:17px!important}
 
  #cabinet{
-  left:10px;top:136px;width:calc(100vw - 20px);height:440px;
-  border-width:4px;box-shadow:inset 0 0 0 2px #e4c174;border-radius:10px;
+  left:8px;top:116px;width:374px;height:454px;
+  border:4px solid #b68a42;box-shadow:inset 0 0 0 2px #e4c174;border-radius:10px;
  }
- #reelBacking{
-  left:24px;top:222px;width:calc(100vw - 48px);height:188px;
-  background:#8a8175;border-radius:8px;
- }
- .reelWindow{
-  top:222px;width:29vw;height:188px;border-radius:4px;
- }
- #reel0{left:6.5vw}
- #reel1{left:35.5vw}
- #reel2{left:64.5vw}
- .sym{transform:scale(.55);transform-origin:center center}
-
- #lamp{
-  left:24px;top:430px;width:155px;height:82px;object-fit:contain;
- }
- #skillChallenge{
-  left:190px;top:430px;width:150px;height:82px;
- }
- #skillRemaining{
-  left:190px;top:514px;width:150px;font-size:13px;
- }
+ #reelBacking{left:30px;top:205px;width:330px;height:174px;background:#8a8175;border-radius:7px}
+ .reelWindow{top:205px;width:96px;height:174px;border-radius:4px}
+ #reel0{left:38px}#reel1{left:147px}#reel2{left:256px}
+ #lamp{left:24px;top:398px;width:140px;height:78px;object-fit:contain}
+ #skillChallenge{left:190px;top:395px;width:120px;height:78px}
+ #skillRemaining{left:190px;top:472px;width:120px;font-size:13px}
 
  #statusPanel{
-  left:24px;top:518px;width:calc(100vw - 48px);height:50px;
-  border-width:1px;border-radius:8px;padding:5px 8px;
+  left:24px;top:490px;width:342px;height:54px;
+  border:1px solid #20242a;border-radius:8px;padding:5px 8px;
   grid-template-columns:repeat(4,1fr);
  }
- .statLabel{font-size:9px}
- .statValue{font-size:18px;margin-top:0}
+ .statLabel{font-size:8px}.statValue{font-size:17px;margin-top:0}
 
- #betBtn{
-  left:18px;top:auto;bottom:122px;width:88px;height:68px;
- }
- #leverBtn{
-  left:114px;top:auto;bottom:110px;width:74px;height:100px;
- }
- #leverStem{left:31px;top:20px;width:12px;height:55px}
- #leverKnob{left:16px;top:8px;width:42px;height:42px;border-width:4px}
+ #betBtn{left:16px;top:574px;width:88px;height:64px}
+ #leverBtn{left:116px;top:554px;width:70px;height:112px}
+ #leverStem{left:29px;top:22px;width:12px;height:62px}
+ #leverKnob{left:14px;top:8px;width:42px;height:42px;border-width:4px}
  #leverLabel{bottom:2px;font-size:11px}
- .machineControl>span{font-size:14px}
+ .machineControl>span{font-size:13px}
 
- .stopBtn{top:auto!important;bottom:18px;width:92px;height:82px}
- .stopBtn>span{width:64px;height:64px;border-width:4px}
- .stopText{bottom:-4px;font-size:11px}
- #leftBtn{left:15vw}
- #centerBtn{left:39vw}
- #rightBtn{left:63vw}
+ .stopBtn{top:734px!important;width:96px;height:88px}
+ .stopBtn>span{width:66px;height:66px;border-width:4px}
+ .stopText{bottom:-2px;font-size:10px}
+ #leftBtn{left:18px}#centerBtn{left:147px}#rightBtn{left:276px}
 
- #loanBtn,#insertBtn,#cashBtn,#exchangeBtn{
-  top:auto;height:38px;width:68px;left:auto;
- }
- #loanBtn{right:12px;bottom:170px}
- #insertBtn{right:12px;bottom:128px}
- #cashBtn{right:12px;bottom:86px}
- #exchangeBtn{right:12px;bottom:44px}
+ #loanBtn,#insertBtn,#cashBtn,#exchangeBtn{left:294px!important;width:80px;height:38px}
+ #loanBtn{top:560px}#insertBtn{top:604px}#cashBtn{top:648px}#exchangeBtn{top:692px}
 
- #gameMessage{
-  left:110px;top:auto;bottom:98px;width:calc(100vw - 190px);
-  font-size:11px;
- }
- #leaveBtn{
-  right:12px;top:12px;padding:8px 10px;font-size:12px;z-index:100;
- }
-
+ #gameMessage{left:16px;top:680px;width:266px;font-size:11px;line-height:14px}
+ #leaveBtn{right:10px;top:10px;padding:7px 9px;font-size:11px;z-index:100}
  .reelWindow.godlike{background:#fff}
 }
 </style>
@@ -792,7 +756,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 <div class="metric"><div class="k">BIG</div><div id="dBig" class="v">0</div></div>
 <div class="metric"><div class="k">REG</div><div id="dReg" class="v">0</div></div>
 </div>
-<canvas id="preGraph"></canvas>
+<div id="preGraph" class="graphSurface"></div>
 <div class="card"><b>BONUS HISTORY</b><div id="preHistory"></div></div>
 </div>
 </section>
@@ -821,7 +785,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 <button id="cashBtn" class="machineControl sideBtn"><span>CASH OUT</span></button>
 <button id="exchangeBtn" class="machineControl sideBtn"><span>EXCHANGE</span></button>
 <div id="machineLabel" class="dataTitle">MACHINE -</div><div id="graphLabel" class="dataTitle">DIFF GRAPH</div>
-<canvas id="gameGraph"></canvas>
+<div id="gameGraph" class="graphSurface"></div>
 <div id="currentBox" class="topMetric"><div class="t">CURRENT G</div><div id="gCurrent" class="n">0</div></div>
 <div id="totalBox" class="topMetric"><div class="t">TOTAL G</div><div id="gTotal" class="n">0</div></div>
 <div id="maxBox" class="topMetric"><div class="t">MAX DIFF</div><div id="gMax" class="n">0</div></div>
@@ -951,7 +915,8 @@ async function seat(id){
 }
 function resizeStage(){
  if(innerWidth<=700&&innerHeight>=innerWidth){
-  $("stage").style.left="0";$("stage").style.top="0";$("stage").style.transform="none";
+  const scale=Math.min(innerWidth/390,innerHeight/844),x=(innerWidth-390*scale)/2,y=(innerHeight-844*scale)/2;
+  $("stage").style.left="0";$("stage").style.top="0";$("stage").style.transform="translate("+x+"px,"+y+"px) scale("+scale+")";
   return;
  }
  const sx=innerWidth/1920,sy=innerHeight/1080,s=Math.min(sx,sy);
@@ -1125,12 +1090,22 @@ function renderGameData(d){
  $("chain").classList.toggle("hidden",!d.piriChain);$("chainCount").textContent="CHAIN x"+Math.max(1,Number(d.piriChainCount||1));
  drawGraph($("gameGraph"),d.graph||[],d.totalGames||0);
 }
-function drawGraph(canvas,graph,total){
- const rect=canvas.getBoundingClientRect(),scale=window.devicePixelRatio||1,w=Math.max(1,Math.round(rect.width*scale)),h=Math.max(1,Math.round(rect.height*scale));if(canvas.width!==w)canvas.width=w;if(canvas.height!==h)canvas.height=h;
- const c=canvas.getContext("2d");c.clearRect(0,0,w,h);c.fillStyle="#090b0e";c.fillRect(0,0,w,h);if(!graph.length||!total)return;
- let vals=graph.filter(function(p){return p.game>=1&&p.game<=total});if(!vals.length)return;let min=Math.min.apply(null,vals.map(function(p){return p.difference})),max=Math.max.apply(null,vals.map(function(p){return p.difference}));if(min===max){min-=200;max+=200}else if(max-min<400){let mid=(min+max)/2;min=mid-200;max=mid+200}else{let pad=(max-min)*.05;min-=pad;max+=pad}
- if(min<=0&&max>=0){const zy=h-(0-min)/(max-min)*h;c.strokeStyle="#777";c.lineWidth=1*scale;c.beginPath();c.moveTo(0,zy);c.lineTo(w,zy);c.stroke()}
- c.strokeStyle="#f4f4f4";c.lineWidth=2*scale;c.beginPath();vals.forEach(function(p,i){const x=total<=1?w:(p.game-1)/(total-1)*w,y=h-(p.difference-min)/(max-min)*h;if(i===0)c.moveTo(x,y);else c.lineTo(x,y)});c.stroke();
+function drawGraph(surface,graph,total){
+ const rect=surface.getBoundingClientRect(),w=Math.max(1,Math.round(rect.width||surface.clientWidth||300)),h=Math.max(1,Math.round(rect.height||surface.clientHeight||150));
+ surface.style.background="#090b0e";
+ surface.textContent="";
+ const ns="http://www.w3.org/2000/svg",svg=document.createElementNS(ns,"svg");
+ svg.setAttribute("viewBox","0 0 "+w+" "+h);svg.setAttribute("width","100%");svg.setAttribute("height","100%");svg.setAttribute("preserveAspectRatio","none");
+ const bg=document.createElementNS(ns,"rect");bg.setAttribute("x","0");bg.setAttribute("y","0");bg.setAttribute("width",String(w));bg.setAttribute("height",String(h));bg.setAttribute("fill","#090b0e");svg.append(bg);
+ let vals=(graph||[]).filter(function(p){return Number(p.game)>=1&&Number(p.game)<=Number(total||0)});
+ if(vals.length&&Number(total||0)>0){
+  let min=Math.min.apply(null,vals.map(function(p){return Number(p.difference||0)})),max=Math.max.apply(null,vals.map(function(p){return Number(p.difference||0)}));
+  if(min===max){min-=200;max+=200}else if(max-min<400){let mid=(min+max)/2;min=mid-200;max=mid+200}else{let pad=(max-min)*.05;min-=pad;max+=pad}
+  if(min<=0&&max>=0){const zy=h-(0-min)/(max-min)*h,line=document.createElementNS(ns,"line");line.setAttribute("x1","0");line.setAttribute("x2",String(w));line.setAttribute("y1",String(zy));line.setAttribute("y2",String(zy));line.setAttribute("stroke","#777");line.setAttribute("stroke-width","1");svg.append(line)}
+  const points=vals.map(function(p){const x=Number(total)<=1?w:(Number(p.game)-1)/(Number(total)-1)*w,y=h-(Number(p.difference||0)-min)/(max-min)*h;return x+","+y}).join(" ");
+  const poly=document.createElementNS(ns,"polyline");poly.setAttribute("points",points);poly.setAttribute("fill","none");poly.setAttribute("stroke","#f4f4f4");poly.setAttribute("stroke-width","2");poly.setAttribute("vector-effect","non-scaling-stroke");svg.append(poly);
+ }
+ surface.append(svg);
 }
 async function doAction(type,reel){
  if(busy||!currentState)return;
@@ -1162,7 +1137,7 @@ async function insertMedals(){unlockAudio();if(busy)return;busy=true;try{renderS
 async function cashout(){unlockAudio();if(busy)return;busy=true;try{const j=await api("/api/cashout","POST");renderState(j);const pending=Number(j.cashoutPending||0);$("gameMessage").textContent=pending>0?("清算 "+j.cashoutAmount+"枚 / "+pending+"枚は回収待ち"):("清算 "+(j.cashoutAmount||0)+"枚")}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
 async function exchangeWallet(){unlockAudio();if(busy)return;busy=true;try{const j=await api("/api/exchange","POST");$("gameMessage").textContent="交換 "+j.exchangedMedals+"枚 → "+j.vaultAmount+" / 残 "+j.walletMedals+"枚"}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
 function startGame(j){
- show("game");currentType=j.machineType||"";renderState(j);pollData();stopTimers();
+ show("game");resizeStage();currentType=j.machineType||"";renderState(j);pollData();stopTimers();
  const gs=String(j.gameState||"");if(gs.startsWith("BIG_"))startLoop(j.godFirstBigAudio?"god_big_bgm":"big_bgm");else if(gs.startsWith("REG_"))startLoop("reg_bgm");
  stateTimer=setInterval(pollState,250);eventTimer=setInterval(pollEvents,100);dataTimer=setInterval(pollData,1500);
 }
