@@ -1034,15 +1034,15 @@ public final class MachineService implements Listener, CommandExecutor {
         });
     }
 
-    public void mobileLoadPairings(Consumer<Map<String, UUID>> callback) {
+    public void mobileLoadPairings(BiConsumer<Map<String, UUID>, String> callback) {
         main();
-        if (!ready()) { callback.accept(Map.of()); return; }
+        if (!ready()) { callback.accept(Map.of(), "DB_ERROR"); return; }
         plugin.executors().database(() -> database.mobilePairings(), (loaded, error) -> {
             if (stopped) return;
             if (error != null) {
                 logMobileFailure(error);
-                callback.accept(Map.of());
-            } else callback.accept(loaded);
+                callback.accept(Map.of(), mobileFailureCode(error));
+            } else callback.accept(loaded, null);
         });
     }
 
