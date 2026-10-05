@@ -56,9 +56,24 @@ public final class WorldCabinetRenderer {
         }
     }
 
+    private static void drawPachinko(VertexConsumerProvider consumers,RemoteMachineViewState state,CabinetPlacement.Basis basis,Vec3d camera,MinecraftClient client){
+        quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH,CabinetPlacement.HEIGHT,0,UiConstants.color("CABINET_EDGE"),0,0,1,1);
+        quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.02,CabinetPlacement.HEIGHT-.02,.0008,UiConstants.color("CABINET_BG"),0,0,1,1);
+        localText(consumers,client.textRenderer,basis,camera,0,.34,"PACHINKO",.0030f,UiConstants.color("DISPLAY_WHITE"),true);
+        if(!"LEFT".equals(state.pachinkoSide())&&!"LEFT_KURUN".equals(state.pachinkoSide()))return;
+        double t=Math.max(0.0,Math.min(1.0,(System.currentTimeMillis()-state.pachinkoStartTime())/1800.0));
+        long seed=state.pachinkoSeed();double phase=((seed>>>8)&1023)/1023.0*Math.PI*2.0;
+        double radius=.18*(1.0-.55*t);double angle=phase+t*Math.PI*4.0;
+        double bx=Math.cos(angle)*radius;double by=.02+Math.sin(angle)*radius*.72;
+        if(t>=.92){bx="V".equals(state.pachinkoOutcome())?0.0:.20;by=-.13;}
+        quad(consumers,WHITE,basis,camera,bx,by,.045,.045,.004,0xfff4f4f4,0,0,1,1);
+        localText(consumers,client.textRenderer,basis,camera,0,-.28,"V".equals(state.pachinkoOutcome())?"V":"OUT",.0028f,UiConstants.color("DISPLAY_WHITE"),true);
+    }
+
     private static void draw(WorldRenderContext context,RemoteMachineViewState state,
                              CabinetPlacement.Basis basis,Vec3d camera,long now,MinecraftClient client){
         var consumers=context.consumers();
+        if("PACHINKO".equals(state.machineType())){drawPachinko(consumers,state,basis,camera,client);return;}
 
         // Compact public data lamp above the cabinet.
         double dataY=CabinetPlacement.HEIGHT/2.0+.125;
