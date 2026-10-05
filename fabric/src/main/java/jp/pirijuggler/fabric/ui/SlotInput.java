@@ -24,7 +24,7 @@ public final class SlotInput {
     }
     public boolean send(PacketType action){
         if(session.sessionId()==null||closeAt!=null||!allowed.test(action))return false;
-        if(!Set.of(PacketType.SPACE_ACTION,PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT,PacketType.LOAN,PacketType.INSERT_MEDALS,PacketType.CASH_OUT,PacketType.CLOSE_REQUEST).contains(action))throw new IllegalArgumentException("Not a slot input");
+        if(!Set.of(PacketType.SPACE_ACTION,PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT,PacketType.LOAN,PacketType.INSERT_MEDALS,PacketType.CASH_OUT,PacketType.CLOSE_REQUEST,PacketType.PACHINKO_FIRE,PacketType.PACHINKO_PRESENTATION).contains(action))throw new IllegalArgumentException("Not a slot input");
         JsonObject body=new JsonObject();body.addProperty("sessionId",session.sessionId().toString());body.addProperty("machineId",session.machineId());body.addProperty("clientSequence",session.takeSequence());
         sender.accept(Envelope.current(action,body));if(action==PacketType.CLOSE_REQUEST)closeAt=time.getAsLong();return true;
     }
