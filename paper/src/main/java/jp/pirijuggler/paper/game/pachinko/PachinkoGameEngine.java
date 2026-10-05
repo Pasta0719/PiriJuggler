@@ -99,7 +99,7 @@ public final class PachinkoGameEngine implements GameEngine {
 
     static boolean rollInitialV(RandomGenerator random){return random.nextInt((int)PachinkoSpec.INITIAL_JACKPOT_DENOMINATOR)==0;}
 
-    static long presentationSeed(UUID session,int machine,long ballSequence){
+    public static long presentationSeed(UUID session,int machine,long ballSequence){
         long x=session.getMostSignificantBits()^session.getLeastSignificantBits()^((long)machine<<32)^ballSequence;
         x^=x>>>33;x*=0xff51afd7ed558ccdl;x^=x>>>33;x*=0xc4ceb9fe1a85ec53l;x^=x>>>33;return x;
     }
