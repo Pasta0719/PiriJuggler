@@ -52,6 +52,8 @@ public final class PachinkoGameEngine implements GameEngine {
         if(!PACHINKO_ACTIONS.contains(action))return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
         PachinkoRuntime runtime=runtime(before,machine);
         if(action==PacketType.PACHINKO_PRESENTATION){
+            if(runtime.presentation()==PachinkoRuntime.Presentation.RIGHT_KURUN)
+                return resolveRightPresentation(before,runtime,sequence,machine.id(),now);
             if(runtime.presentation()!=PachinkoRuntime.Presentation.LEFT_KURUN)
                 return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
             if(runtime.initialHitCommitted())return initialPayout(before,runtime,sequence,machine.id(),now);
@@ -61,6 +63,10 @@ public final class PachinkoGameEngine implements GameEngine {
             return accepted(before,idle,action,sequence);
         }
         if(action!=PacketType.PACHINKO_FIRE)return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
+        if(runtime.rushActive() && runtime.mode()==PachinkoRuntime.Mode.RUSH && runtime.presentation()==PachinkoRuntime.Presentation.IDLE)
+            return startRightKurun(before,runtime,sequence,machine.id(),now);
+        if(runtime.mode()!=PachinkoRuntime.Mode.NORMAL || runtime.presentation()!=PachinkoRuntime.Presentation.IDLE)
+            return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
         if(runtime.ballsHeld()<1)return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
         try {
             PachinkoRuntime fired=PachinkoBallAccounting.fire(runtime,now);
@@ -120,6 +126,38 @@ public final class PachinkoGameEngine implements GameEngine {
                 List.of(),List.of(),runtime.toJsonString());
     }
 
+
+    private GameTransition startRightKurun(Session before,PachinkoRuntime runtime,long sequence,int machineId,long now){
+        boolean win=rollRushContinuation(random);
+        PachinkoRuntime.RightOutcome outcome=win?(rollRight3000(random)?PachinkoRuntime.RightOutcome.WIN_3000:PachinkoRuntime.RightOutcome.WIN_1500):PachinkoRuntime.RightOutcome.OUT;
+        PachinkoRuntime pending=new PachinkoRuntime(PachinkoRuntime.Mode.RUSH,runtime.ballsHeld(),runtime.ballsLoaned(),runtime.totalFired(),runtime.totalStarts(),
+                runtime.ballSequenceId()+1,PachinkoRuntime.Presentation.RIGHT_KURUN,runtime.initialHitCommitted(),runtime.initialOutcome(),true,runtime.rushWins(),outcome,0,runtime.cumulativePayout(),now);
+        return acceptedRight(before,pending,sequence,machineId);
+    }
+
+    private GameTransition resolveRightPresentation(Session before,PachinkoRuntime runtime,long sequence,int machineId,long now){
+        if(runtime.rightOutcome()==PachinkoRuntime.RightOutcome.OUT){
+            PachinkoRuntime ended=new PachinkoRuntime(PachinkoRuntime.Mode.NORMAL,runtime.ballsHeld(),runtime.ballsLoaned(),runtime.totalFired(),runtime.totalStarts(),runtime.ballSequenceId(),
+                    PachinkoRuntime.Presentation.IDLE,runtime.initialHitCommitted(),runtime.initialOutcome(),false,runtime.rushWins(),PachinkoRuntime.RightOutcome.NONE,0,runtime.cumulativePayout(),now);
+            return accepted(before,ended,PacketType.PACHINKO_PRESENTATION,sequence);
+        }
+        int payout=runtime.rightOutcome()==PachinkoRuntime.RightOutcome.WIN_3000?PachinkoSpec.RIGHT_3000_PAYOUT:PachinkoSpec.RIGHT_1500_PAYOUT;
+        PachinkoRuntime paid=new PachinkoRuntime(PachinkoRuntime.Mode.RUSH,Math.addExact(runtime.ballsHeld(),payout),runtime.ballsLoaned(),runtime.totalFired(),runtime.totalStarts(),runtime.ballSequenceId(),
+                PachinkoRuntime.Presentation.IDLE,runtime.initialHitCommitted(),runtime.initialOutcome(),true,runtime.rushWins()+1,PachinkoRuntime.RightOutcome.NONE,payout,Math.addExact(runtime.cumulativePayout(),payout),now);
+        return accepted(before,paid,PacketType.PACHINKO_PRESENTATION,sequence);
+    }
+
+    private static GameTransition acceptedRight(Session before,PachinkoRuntime runtime,long sequence,int machineId){
+        var values=new LinkedHashMap<>(before.snapshot());values.put("last_client_sequence",sequence);values.put("last_activity",runtime.lastActivity());values.put("machine_state_json",runtime.toJsonString());
+        Session after=new Session(values);JsonObject accepted=new JsonObject();accepted.addProperty("clientSequence",sequence);accepted.addProperty("action",PacketType.PACHINKO_FIRE.name());
+        JsonObject event=new JsonObject();event.addProperty("machineId",machineId);event.addProperty("ballSequenceId",runtime.ballSequenceId());event.addProperty("side","RIGHT");
+        event.addProperty("outcome",runtime.rightOutcome().name());event.addProperty("seed",presentationSeed(before.id(),machineId,runtime.ballSequenceId()));event.addProperty("startTime",runtime.lastActivity());
+        return new GameTransition(UUID.randomUUID(),before,after,0,0,0,false,false,null,false,0,List.of(Envelope.current(PacketType.ACTION_ACCEPTED,accepted),Envelope.current(PacketType.PACHINKO_EVENT,event)),List.of(),List.of(),runtime.toJsonString());
+    }
+
+    static boolean rollRushContinuation(RandomGenerator random){return random.nextDouble()<PachinkoSpec.RUSH_CONTINUATION_RATE;}
+    static boolean rollRight3000(RandomGenerator random){return random.nextDouble()<PachinkoSpec.RIGHT_3000_RATE;}
+
     static boolean rollRushEntry(RandomGenerator random){return random.nextDouble()<PachinkoSpec.RUSH_ENTRY_RATE;}
 
     static boolean rollInitialV(RandomGenerator random){return random.nextInt((int)PachinkoSpec.INITIAL_JACKPOT_DENOMINATOR)==0;}
@@ -167,10 +205,11 @@ public final class PachinkoGameEngine implements GameEngine {
 
     @Override public Optional<Envelope> resume(Session saved,long sentNanos){
         PachinkoRuntime runtime=PachinkoRuntime.fromJson(saved.machineState()!=null?saved.machineState().toString():null);
-        if(runtime.presentation()!=PachinkoRuntime.Presentation.LEFT_KURUN)return Optional.empty();
+        if(runtime.presentation()!=PachinkoRuntime.Presentation.LEFT_KURUN && runtime.presentation()!=PachinkoRuntime.Presentation.RIGHT_KURUN)return Optional.empty();
         JsonObject event=new JsonObject();
         event.addProperty("machineId",saved.machine());event.addProperty("ballSequenceId",runtime.ballSequenceId());
-        event.addProperty("side","LEFT");event.addProperty("outcome",runtime.initialHitCommitted()?"V":"OUT");
+        boolean right=runtime.presentation()==PachinkoRuntime.Presentation.RIGHT_KURUN;
+        event.addProperty("side",right?"RIGHT":"LEFT");event.addProperty("outcome",right?runtime.rightOutcome().name():(runtime.initialHitCommitted()?"V":"OUT"));
         event.addProperty("seed",presentationSeed(saved.id(),saved.machine(),runtime.ballSequenceId()));
         event.addProperty("startTime",runtime.lastActivity());
         return Optional.of(Envelope.current(PacketType.PACHINKO_EVENT,event));
