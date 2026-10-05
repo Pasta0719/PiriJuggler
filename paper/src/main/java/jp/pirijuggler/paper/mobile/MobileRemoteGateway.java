@@ -33,6 +33,7 @@ import jp.pirijuggler.paper.machine.MachineService;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -42,6 +43,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.util.EulerAngle;
@@ -68,7 +72,7 @@ import java.util.function.BiConsumer;
  * Mobile HTTP runs on the server's separately allocated web port. This keeps the
  * Minecraft listener untouched while still using the same AGAMES server/process.
  */
-public final class MobileRemoteGateway implements AutoCloseable {
+public final class MobileRemoteGateway implements AutoCloseable, Listener {
     private static final int HTTP_PORT = 10271;
     private static final long PAIR_TTL_MS = 5 * 60_000L;
     private static final Set<PacketType> REMOTE_ACTIONS = Set.of(
@@ -95,6 +99,8 @@ public final class MobileRemoteGateway implements AutoCloseable {
     public MobileRemoteGateway(PiriJugglerPlugin plugin, MachineService machines) {
         this.plugin = plugin;
         this.machines = machines;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        plugin.getServer().getScheduler().runTask(plugin, npcs::sweepLoaded);
         installDedicatedHttpListener();
         plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             if (!closed && machines.ready()) {
@@ -162,6 +168,11 @@ public final class MobileRemoteGateway implements AutoCloseable {
         pairings.entrySet().removeIf(e -> e.getValue().owner().equals(owner));
         tokenHashes.entrySet().removeIf(e -> e.getValue().equals(owner));
         npcs.remove(owner);
+    }
+
+    @EventHandler
+    public void onChunkLoad(ChunkLoadEvent event) {
+        npcs.removeStale(event.getChunk());
     }
 
     private void installDedicatedHttpListener() {
@@ -513,7 +524,7 @@ public final class MobileRemoteGateway implements AutoCloseable {
                     0.0f);
 
             ArmorStand stand = world.spawn(location, ArmorStand.class, npc -> {
-                npc.setPersistent(true);
+                npc.setPersistent(false);
                 npc.setGravity(false);
                 npc.setInvulnerable(true);
                 npc.setCollidable(false);
@@ -573,6 +584,22 @@ public final class MobileRemoteGateway implements AutoCloseable {
 
         void clear() {
             for (UUID owner : List.copyOf(entities.keySet())) remove(owner);
+            sweepLoaded();
+        }
+
+        void sweepLoaded() {
+            for (World world : Bukkit.getWorlds()) {
+                for (Chunk chunk : world.getLoadedChunks()) removeStale(chunk);
+            }
+        }
+
+        void removeStale(Chunk chunk) {
+            Set<UUID> currentIds = new java.util.HashSet<>();
+            for (RemoteNpc ref : entities.values()) currentIds.add(ref.entityId());
+            for (Entity candidate : chunk.getEntities()) {
+                if (candidate.getScoreboardTags().contains("piri_remote")
+                        && !currentIds.contains(candidate.getUniqueId())) candidate.remove();
+            }
         }
 
         private static BlockFace face(String value) {
