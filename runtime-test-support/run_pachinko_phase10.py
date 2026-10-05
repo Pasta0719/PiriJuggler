@@ -107,6 +107,7 @@ def machine_count():
 
 def start_server():
     global server
+    if server_result.exists(): server_result.unlink()
     plugins=SERVER/"plugins";plugins.mkdir(parents=True,exist_ok=True)
     shutil.copy2(prod["paper"],plugins);shutil.copy2(helper,plugins)
     (SERVER/"eula.txt").write_text("eula=true\n",encoding="utf-8")
