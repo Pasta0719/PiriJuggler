@@ -5,6 +5,10 @@ import com.google.gson.JsonObject;
 import jp.pirijuggler.paper.database.PiriDatabase;
 import jp.pirijuggler.paper.database.RecoveryStore;
 import jp.pirijuggler.paper.machine.DomainException;
+import jp.pirijuggler.paper.machine.MachineType;
+import jp.pirijuggler.paper.game.pachinko.PachinkoBallAccounting;
+import jp.pirijuggler.paper.game.pachinko.PachinkoRuntime;
+import jp.pirijuggler.paper.game.pachinko.PachinkoSpec;
 import jp.pirijuggler.paper.session.Session;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -56,21 +60,23 @@ public final class EconomyStore {
     public LoanPlan prepareLoan(UUID player, UUID sessionId, int machine, long sequence,
                                 int borrow, double vaultAmount, double balanceBefore, long now) throws Exception {
         if (borrow < 1 || !Double.isFinite(vaultAmount) || vaultAmount <= 0 || balanceBefore < vaultAmount) throw new DomainException("NOT_ENOUGH_VAULT");
-        String transactionId = deterministic("LOAN", sessionId, sequence);
+        boolean pachinko=db.state().machine(machine)!=null&&db.state().machine(machine).type()==MachineType.PACHINKO;
+        int effectiveBorrow=pachinko?PachinkoSpec.BALLS_PER_1000_YEN:borrow;
+        String transactionId = deterministic(pachinko?"PACHINKO_LOAN":"LOAN", sessionId, sequence);
         return db.transaction(() -> {
             var existing = db.rows("SELECT * FROM economy_transactions WHERE transaction_id=?", transactionId);
             if (!existing.isEmpty()) {
                 String status = (String) existing.getFirst().get("status");
-                return new LoanPlan(transactionId, borrow, vaultAmount, balanceBefore, JournalState.valueOf(status));
+                return new LoanPlan(transactionId, effectiveBorrow, vaultAmount, balanceBefore, JournalState.valueOf(status));
             }
             requireNoEconomyReview(player);
             Session session = requireActive(player, sessionId, machine);
             if (!allowed(session.state())) throw new DomainException("INVALID_STATE");
             if (sequence <= session.sequence()) throw new DomainException("SEQUENCE_OLD");
-            Math.addExact(session.number("held_medals"), Math.max(0L, Math.addExact(session.number("credit"), borrow) - 50L));
-            db.sql("INSERT INTO economy_transactions(transaction_id,player_uuid,operation,vault_amount,item_snapshot_json,balance_before,status,created_at,updated_at) VALUES(?,?,'LOAN',?,NULL,?,'PREPARED',?,?)",
-                    transactionId, player.toString(), vaultAmount, balanceBefore, now, now);
-            return new LoanPlan(transactionId, borrow, vaultAmount, balanceBefore, JournalState.PREPARED);
+            if(!pachinko) Math.addExact(session.number("held_medals"), Math.max(0L, Math.addExact(session.number("credit"), effectiveBorrow) - 50L));
+            db.sql("INSERT INTO economy_transactions(transaction_id,player_uuid,operation,vault_amount,item_snapshot_json,balance_before,status,created_at,updated_at) VALUES(?,?,?,?,NULL,?,'PREPARED',?,?)",
+                    transactionId, player.toString(), pachinko?"PACHINKO_LOAN":"LOAN", vaultAmount, balanceBefore, now, now);
+            return new LoanPlan(transactionId, effectiveBorrow, vaultAmount, balanceBefore, JournalState.PREPARED);
         });
     }
 
@@ -86,11 +92,21 @@ public final class EconomyStore {
             if (!"CALL_STARTED".equals(tx.get("status"))) throw new DomainException("VAULT_ERROR");
             Session session = requireActive(player, sessionId, machine);
             if (sequence <= session.sequence()) throw new DomainException("SEQUENCE_OLD");
-            long total = Math.addExact(session.number("credit"), plan.borrow());
-            long credit = Math.min(50L, total);
-            long held = Math.addExact(session.number("held_medals"), Math.max(0L, total - 50L));
-            int changed = db.sql("UPDATE player_sessions SET credit=?,held_medals=?,last_client_sequence=?,last_activity=? WHERE session_id=? AND last_client_sequence=? AND lifecycle='ACTIVE'",
-                    credit, held, sequence, now, sessionId.toString(), session.sequence());
+            boolean pachinko=db.state().machine(machine)!=null&&db.state().machine(machine).type()==MachineType.PACHINKO;
+            int changed;
+            if(pachinko){
+                PachinkoRuntime runtime=PachinkoRuntime.fromJson(session.machineState()!=null?session.machineState().toString():db.state().machine(machine).runtimeJson());
+                PachinkoRuntime loaned=PachinkoBallAccounting.lend(runtime,now);
+                changed=db.sql("UPDATE player_sessions SET machine_state_json=?,last_client_sequence=?,last_activity=? WHERE session_id=? AND last_client_sequence=? AND lifecycle='ACTIVE'",
+                        loaned.toJsonString(),sequence,now,sessionId.toString(),session.sequence());
+                if(changed==1)db.sql("UPDATE machines SET machine_runtime_json=?,updated_at=? WHERE machine_id=?",loaned.toJsonString(),now,machine);
+            }else{
+                long total = Math.addExact(session.number("credit"), plan.borrow());
+                long credit = Math.min(50L, total);
+                long held = Math.addExact(session.number("held_medals"), Math.max(0L, total - 50L));
+                changed = db.sql("UPDATE player_sessions SET credit=?,held_medals=?,last_client_sequence=?,last_activity=? WHERE session_id=? AND last_client_sequence=? AND lifecycle='ACTIVE'",
+                        credit, held, sequence, now, sessionId.toString(), session.sequence());
+            }
             if (changed != 1) throw new DomainException("SEQUENCE_OLD");
             db.sql("UPDATE economy_transactions SET status='APPLIED',updated_at=? WHERE transaction_id=?", now, plan.transactionId());
             return requireSession(player);
