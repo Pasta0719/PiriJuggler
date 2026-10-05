@@ -1,5 +1,7 @@
 # PiriJuggler Codex Workflow v4 AUDITED
 
+**最優先:** 変更作業では [CHANGE_SAFETY_POLICY.md](CHANGE_SAFETY_POLICY.md) を必ず先に読む。既存の正常動作・承認済み仕様を無断で壊す変更は禁止。破壊可能性がある場合は実装前にユーザーの明示承諾を得る。
+
 音源を差し替えてJARを作成する場合は **`BUILD_JARS.md`** を読んでください。
 `user-audio` に必要なOGGだけを置き、`build-jars.bat` を実行すると `dist` に配布JARができます。音源未配置でもビルドできます。
 
