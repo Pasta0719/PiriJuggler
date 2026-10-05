@@ -4,7 +4,13 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
@@ -59,13 +65,11 @@ import java.util.function.BiConsumer;
 /**
  * Minimal iPhone/Safari remote controller.
  *
- * HTTP is multiplexed onto the already-open Minecraft TCP port by sniffing the first
- * bytes of each accepted connection. Normal Minecraft connections are passed through
- * untouched. Browser requests are removed from the Minecraft packet pipeline and
- * handled as short-lived HTTP requests.
+ * Mobile HTTP runs on the server's separately allocated web port. This keeps the
+ * Minecraft listener untouched while still using the same AGAMES server/process.
  */
 public final class MobileRemoteGateway implements AutoCloseable {
-    private static final Key LISTENER_KEY = Key.key("piri", "mobile-http");
+    private static final int HTTP_PORT = 10274;
     private static final long PAIR_TTL_MS = 5 * 60_000L;
     private static final Set<PacketType> REMOTE_ACTIONS = Set.of(
             PacketType.SPACE_ACTION, PacketType.STOP_LEFT, PacketType.STOP_CENTER, PacketType.STOP_RIGHT);
@@ -79,8 +83,8 @@ public final class MobileRemoteGateway implements AutoCloseable {
     private final Map<String, UUID> tokenHashes = new ConcurrentHashMap<>();
     private final RemoteNpcService npcs = new RemoteNpcService();
 
-    private Class<?> listenerHolder;
-    private Object listenerProxy;
+    private EventLoopGroup httpGroup;
+    private volatile Channel httpServerChannel;
     private volatile boolean closed;
     private boolean pairingsLoadRequested;
     private boolean pairingsLoaded;
@@ -90,7 +94,7 @@ public final class MobileRemoteGateway implements AutoCloseable {
     public MobileRemoteGateway(PiriJugglerPlugin plugin, MachineService machines) {
         this.plugin = plugin;
         this.machines = machines;
-        installSamePortListener();
+        installDedicatedHttpListener();
         plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             if (!closed && machines.ready()) {
                 npcs.retain(machines.mobileActiveOwners());
@@ -125,7 +129,7 @@ public final class MobileRemoteGateway implements AutoCloseable {
             while (pairings.containsKey(code));
             pairings.put(code, new Pairing(player.getUniqueId(), System.currentTimeMillis() + PAIR_TTL_MS));
             player.sendMessage(Component.text("スマホ接続コード: " + code + "  (5分間有効)"));
-            player.sendMessage(Component.text("Safariで http://piricraft.jpn.gg:10205/ を開いて入力してください。"));
+            player.sendMessage(Component.text("Safariで http://piricraft.jpn.gg:10274/ を開いて入力してください。"));
             return true;
         }
         if (args.length == 2 && args[1].equalsIgnoreCase("revoke")) {
@@ -149,80 +153,38 @@ public final class MobileRemoteGateway implements AutoCloseable {
         npcs.remove(owner);
     }
 
-    private void installSamePortListener() {
-        try {
-            listenerHolder = Class.forName("io.papermc.paper.network.ChannelInitializeListenerHolder");
-            Class<?> listenerType = Class.forName("io.papermc.paper.network.ChannelInitializeListener");
-            listenerProxy = Proxy.newProxyInstance(
-                    listenerType.getClassLoader(),
-                    new Class<?>[]{listenerType},
-                    (proxy, method, args) -> {
-                        if (method.getDeclaringClass() == Object.class) {
-                            return switch (method.getName()) {
-                                case "toString" -> "PiriMobileChannelListener";
-                                case "hashCode" -> System.identityHashCode(proxy);
-                                case "equals" -> proxy == args[0];
-                                default -> null;
-                            };
-                        }
-                        if (method.getName().equals("afterInitChannel") && args != null && args.length == 1 && args[0] instanceof Channel channel) {
-                            installSniffer(channel);
-                        }
-                        return null;
-                    });
-            Method add = listenerHolder.getMethod("addListener", Key.class, listenerType);
-            add.invoke(null, LISTENER_KEY, listenerProxy);
-            plugin.getLogger().info("PIRI_MOBILE_HTTP_READY samePort=true");
-        } catch (ReflectiveOperationException | LinkageError failure) {
-            listenerHolder = null;
-            listenerProxy = null;
-            plugin.getLogger().log(java.util.logging.Level.WARNING,
-                    "Piri mobile HTTP disabled: this Paper build does not expose the channel initialization hook", failure);
-        }
-    }
+    private void installDedicatedHttpListener() {
+        httpGroup = new NioEventLoopGroup(1, runnable -> {
+            Thread thread = new Thread(runnable, "piri-mobile-http");
+            thread.setDaemon(true);
+            return thread;
+        });
 
-    private void installSniffer(Channel channel) {
-        try {
-            if (closed || channel.pipeline().get("piri-mobile-sniffer") != null) return;
-            channel.pipeline().addFirst("piri-mobile-sniffer", new ProtocolSniffer());
-        } catch (RuntimeException failure) {
-            plugin.getLogger().fine("Could not install mobile protocol sniffer: " + failure.getMessage());
-        }
-    }
+        ServerBootstrap bootstrap = new ServerBootstrap();
+        bootstrap.group(httpGroup)
+                .channel(NioServerSocketChannel.class)
+                .childHandler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel channel) {
+                        channel.pipeline().addLast("piri-mobile-http-codec", new HttpServerCodec());
+                        channel.pipeline().addLast("piri-mobile-http-aggregate", new HttpObjectAggregator(64 * 1024));
+                        channel.pipeline().addLast("piri-mobile-http-handler", new HttpHandler());
+                    }
+                });
 
-    private final class ProtocolSniffer extends ByteToMessageDecoder {
-        @Override
-        protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
-            if (in.readableBytes() < 4) return;
-            int i = in.readerIndex();
-            boolean http = matches(in, i, "GET ") || matches(in, i, "POST") || matches(in, i, "HEAD") || matches(in, i, "OPTI");
-            if (!http) {
-                ByteBuf passthrough = in.readRetainedSlice(in.readableBytes());
-                ctx.pipeline().remove(this);
-                out.add(passthrough);
-                return;
+        bootstrap.bind("0.0.0.0", HTTP_PORT).addListener(future -> {
+            if (future.isSuccess()) {
+                httpServerChannel = ((io.netty.channel.ChannelFuture) future).channel();
+                plugin.getLogger().info("PIRI_MOBILE_HTTP_READY port=" + HTTP_PORT);
+            } else {
+                plugin.getLogger().log(java.util.logging.Level.SEVERE,
+                        "Piri mobile HTTP failed to bind port " + HTTP_PORT, future.cause());
+                if (httpGroup != null) {
+                    httpGroup.shutdownGracefully();
+                    httpGroup = null;
+                }
             }
-
-            ByteBuf first = in.readRetainedSlice(in.readableBytes());
-            ChannelPipeline pipeline = ctx.pipeline();
-            String self = ctx.name();
-            for (String name : new ArrayList<>(pipeline.names())) {
-                if (!name.equals(self) && pipeline.get(name) != null) pipeline.remove(name);
-            }
-            if (pipeline.get(self) != null) pipeline.remove(self);
-            pipeline.addLast("piri-mobile-http-codec", new HttpServerCodec());
-            pipeline.addLast("piri-mobile-http-aggregate", new HttpObjectAggregator(64 * 1024));
-            pipeline.addLast("piri-mobile-http-handler", new HttpHandler());
-            pipeline.fireChannelRead(first);
-        }
-
-        private boolean matches(ByteBuf in, int start, String text) {
-            if (in.readableBytes() < text.length()) return false;
-            for (int x = 0; x < text.length(); x++) {
-                if ((char) in.getUnsignedByte(start + x) != text.charAt(x)) return false;
-            }
-            return true;
-        }
+        });
     }
 
     private final class HttpHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
@@ -441,14 +403,12 @@ public final class MobileRemoteGateway implements AutoCloseable {
         pairings.clear();
         tokenHashes.clear();
         npcs.clear();
-        if (listenerHolder != null) {
-            try {
-                Method remove = listenerHolder.getMethod("removeListener", Key.class);
-                remove.invoke(null, LISTENER_KEY);
-            } catch (ReflectiveOperationException failure) {
-                plugin.getLogger().fine("Could not remove mobile channel listener: " + failure.getMessage());
-            }
-        }
+        Channel server = httpServerChannel;
+        httpServerChannel = null;
+        if (server != null) server.close();
+        EventLoopGroup group = httpGroup;
+        httpGroup = null;
+        if (group != null) group.shutdownGracefully();
     }
 
     private static final class RemoteNpcService {
