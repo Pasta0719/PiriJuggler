@@ -35,7 +35,8 @@ import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;\nimport java.util.function.Consumer;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 
 /** All live state and operation reservations are owned by the Paper main thread. */
