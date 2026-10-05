@@ -1089,13 +1089,46 @@ public final class MachineService implements Listener, CommandExecutor {
                             },
                             (saved, markError) -> {
                                 if (saved != null) state = saved.state;
-                                releaseEconomy(owner, machineId);
-                                if (markError != null) callback.accept(null, mobileFailureCode(markError));
-                                else {
-                                    remote.broadcastSnapshot(machineId);
-                                    callback.accept(mobileState(owner), null);
+                                if (markError != null) {
+                                    releaseEconomy(owner, machineId);
+                                    callback.accept(null, mobileFailureCode(markError));
+                                } else {
+                                    finishMobileInsertFromPending(owner, machineId, callback);
                                 }
                             });
+                });
+    }
+
+    private void finishMobileInsertFromPending(UUID owner, int machineId, BiConsumer<JsonObject, String> callback) {
+        Session current = state.session(owner);
+        if (current == null || current.lifecycle() != Session.Lifecycle.ACTIVE || current.machine() != machineId
+                || current.number("credit") >= 50) {
+            releaseEconomy(owner, machineId);
+            remote.broadcastSnapshot(machineId);
+            callback.accept(mobileState(owner), null);
+            return;
+        }
+        long sequence = current.sequence() + 1;
+        plugin.executors().database(
+                () -> {
+                    EconomyStore store = new EconomyStore(database);
+                    long wallet = store.pendingMedals(owner);
+                    Session inserted = wallet > 0
+                            ? store.insertPending(owner, current.id(), machineId, sequence, System.currentTimeMillis())
+                            : current;
+                    return new Saved<>(new Object[]{inserted, store.pendingMedals(owner)}, database.state());
+                },
+                (saved, error) -> {
+                    if (saved != null) state = saved.state;
+                    releaseEconomy(owner, machineId);
+                    if (error != null) {
+                        callback.accept(null, mobileFailureCode(error));
+                        return;
+                    }
+                    remote.broadcastSnapshot(machineId);
+                    JsonObject response = mobileState(owner);
+                    response.addProperty("walletMedals", (Long) saved.value[1]);
+                    callback.accept(response, null);
                 });
     }
 
