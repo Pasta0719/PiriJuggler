@@ -1,0 +1,46 @@
+package jp.pirijuggler.paper.game;
+
+import jp.pirijuggler.common.protocol.PacketType;
+import jp.pirijuggler.paper.game.pachinko.PachinkoGameEngine;
+import jp.pirijuggler.paper.game.pachinko.PachinkoRuntime;
+import jp.pirijuggler.paper.machine.Machine;
+import jp.pirijuggler.paper.machine.MachineType;
+import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class PachinkoGameEngineTest extends GameFixture {
+    @Test void dedicatedActionUsesDurableGameStorePathAndPreservesRuntime() throws Exception {
+        int id=db.create(new Machine.Location(UUID.randomUUID(),"world",20,64,0,"NORTH"),MachineType.PACHINKO,NOW);
+        UUID player=UUID.randomUUID();
+        db.seat(player,id,NOW);
+        var before=db.state().session(player);
+        var machine=db.state().machine(id);
+        var engine=new PachinkoGameEngine();
+
+        var transition=engine.plan(before,machine,PacketType.PACHINKO_FIRE,before.sequence()+1,NOW+1,1_000_000_000L,0,null);
+        var after=store.commit(transition);
+
+        assertEquals(before.sequence()+1,after.sequence());
+        assertNotNull(after.machineState());
+        assertEquals(PachinkoRuntime.initial(),PachinkoRuntime.fromJson(after.machineState().toString()));
+        assertEquals(PachinkoRuntime.initial(),PachinkoRuntime.fromJson(db.state().machine(id).runtimeJson()));
+        assertEquals(PacketType.ACTION_REJECTED,engine.committed(transition,0).getFirst().packetType());
+    }
+
+    @Test void slotActionIsNeverReinterpretedAsPachinkoAction() throws Exception {
+        int id=db.create(new Machine.Location(UUID.randomUUID(),"world",21,64,0,"NORTH"),MachineType.PACHINKO,NOW);
+        UUID player=UUID.randomUUID();
+        db.seat(player,id,NOW);
+        var before=db.state().session(player);
+        var engine=new PachinkoGameEngine();
+
+        var transition=engine.plan(before,db.state().machine(id),PacketType.SPACE_ACTION,before.sequence()+1,NOW+1,1_000_000_000L,0,null);
+
+        assertEquals(PacketType.ACTION_REJECTED,transition.packets().getFirst().packetType());
+        assertEquals(0,transition.bet());
+        assertEquals(0,transition.payout());
+    }
+}
