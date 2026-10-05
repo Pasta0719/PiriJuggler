@@ -52,10 +52,11 @@ public final class PachinkoGameEngine implements GameEngine {
         if(!PACHINKO_ACTIONS.contains(action))return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
         PachinkoRuntime runtime=runtime(before,machine);
         if(action==PacketType.PACHINKO_PRESENTATION){
-            if(runtime.presentation()!=PachinkoRuntime.Presentation.LEFT_KURUN||runtime.initialHitCommitted())
+            if(runtime.presentation()!=PachinkoRuntime.Presentation.LEFT_KURUN)
                 return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
+            if(runtime.initialHitCommitted())return initialPayout(before,runtime,sequence,machine.id(),now);
             PachinkoRuntime idle=new PachinkoRuntime(runtime.mode(),runtime.ballsHeld(),runtime.ballsLoaned(),runtime.totalFired(),
-                    runtime.totalStarts(),runtime.ballSequenceId(),PachinkoRuntime.Presentation.IDLE,false,runtime.initialOutcome(),
+                    runtime.totalStarts(),runtime.ballSequenceId(),PachinkoRuntime.Presentation.IDLE,false,PachinkoRuntime.InitialOutcome.NONE,
                     runtime.rushActive(),runtime.rushWins(),runtime.currentPayout(),runtime.cumulativePayout(),now);
             return accepted(before,idle,action,sequence);
         }
@@ -68,7 +69,7 @@ public final class PachinkoGameEngine implements GameEngine {
             boolean v=rollInitialV(random);
             PachinkoRuntime presenting=new PachinkoRuntime(
                     started.mode(),started.ballsHeld(),started.ballsLoaned(),started.totalFired(),started.totalStarts(),
-                    started.ballSequenceId(),PachinkoRuntime.Presentation.LEFT_KURUN,v,started.initialOutcome(),
+                    started.ballSequenceId(),PachinkoRuntime.Presentation.LEFT_KURUN,v,PachinkoRuntime.InitialOutcome.NONE,
                     started.rushActive(),started.rushWins(),started.currentPayout(),started.cumulativePayout(),now);
             return acceptedStart(before,presenting,sequence,machine.id(),v);
         } catch(IllegalStateException invalid) {
@@ -78,6 +79,25 @@ public final class PachinkoGameEngine implements GameEngine {
 
     private static PachinkoRuntime runtime(Session before,Machine machine){
         return PachinkoRuntime.fromJson(before.machineState()!=null?before.machineState().toString():machine.runtimeJson());
+    }
+
+    private GameTransition initialPayout(Session before,PachinkoRuntime runtime,long sequence,int machineId,long now){
+        boolean rush=random.nextDouble()<PachinkoSpec.RUSH_ENTRY_RATE;
+        int payout=rush?PachinkoSpec.RUSH_INITIAL_PAYOUT:PachinkoSpec.NORMAL_INITIAL_PAYOUT;
+        PachinkoRuntime.InitialOutcome outcome=rush?PachinkoRuntime.InitialOutcome.RUSH_1500:PachinkoRuntime.InitialOutcome.NORMAL_450;
+        PachinkoRuntime paid=new PachinkoRuntime(rush?PachinkoRuntime.Mode.RUSH:PachinkoRuntime.Mode.NORMAL,
+                Math.addExact(runtime.ballsHeld(),payout),runtime.ballsLoaned(),runtime.totalFired(),runtime.totalStarts(),
+                runtime.ballSequenceId(),PachinkoRuntime.Presentation.IDLE,true,outcome,rush,runtime.rushWins(),
+                payout,Math.addExact(runtime.cumulativePayout(),payout),now);
+        var values=new LinkedHashMap<>(before.snapshot());values.put("last_client_sequence",sequence);
+        values.put("last_activity",now);values.put("machine_state_json",paid.toJsonString());Session after=new Session(values);
+        JsonObject accepted=new JsonObject();accepted.addProperty("clientSequence",sequence);accepted.addProperty("action",PacketType.PACHINKO_PRESENTATION.name());
+        JsonObject event=new JsonObject();event.addProperty("machineId",machineId);event.addProperty("ballSequenceId",runtime.ballSequenceId());
+        event.addProperty("side","INITIAL_PAYOUT");event.addProperty("outcome",outcome.name());event.addProperty("payout",payout);
+        event.addProperty("rush",rush);event.addProperty("startTime",now);
+        return new GameTransition(UUID.randomUUID(),before,after,0,0,0,false,false,null,false,0,
+                List.of(Envelope.current(PacketType.ACTION_ACCEPTED,accepted),Envelope.current(PacketType.PACHINKO_EVENT,event)),
+                List.of(),List.of(),paid.toJsonString());
     }
 
     private static GameTransition acceptedStart(Session before,PachinkoRuntime runtime,long sequence,int machineId,boolean v){
