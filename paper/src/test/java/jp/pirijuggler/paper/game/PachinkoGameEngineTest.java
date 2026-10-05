@@ -170,5 +170,21 @@ class PachinkoGameEngineTest extends GameFixture {
         assertEquals(0.97,(double)wins1500/wins,0.001);
         assertEquals(1545.0,(double)payout/wins,3.0);
     }
+    @Test void twoPachinkoMachinesRemainIndependentAndSlotMachineTypeIsUntouched() throws Exception {
+        int a=db.create(new Machine.Location(UUID.randomUUID(),"world",40,64,0,"NORTH"),MachineType.PACHINKO,NOW);
+        int b=db.create(new Machine.Location(UUID.randomUUID(),"world",41,64,0,"NORTH"),MachineType.PACHINKO,NOW);
+        int slot=db.create(new Machine.Location(UUID.randomUUID(),"world",42,64,0,"NORTH"),MachineType.JUGGLER,NOW);
+        UUID pa=UUID.randomUUID(),pb=UUID.randomUUID();db.seat(pa,a,NOW);db.seat(pb,b,NOW);
+        var loanA=PachinkoBallAccounting.lend(PachinkoRuntime.initial(),NOW);
+        db.sql("UPDATE player_sessions SET machine_state_json=? WHERE player_uuid=?",loanA.toJsonString(),pa.toString());
+        var engine=new PachinkoGameEngine(new java.util.Random(17),new jp.pirijuggler.paper.game.pachinko.PachinkoRouting(250));
+        var sa=db.state().session(pa);store.commit(engine.plan(sa,db.state().machine(a),PacketType.PACHINKO_FIRE,sa.sequence()+1,NOW+1,0,0,null));
+        var ra=PachinkoRuntime.fromJson(db.state().session(pa).machineState().toString());
+        var rb=PachinkoRuntime.fromJson(db.state().session(pb).machineState()==null?null:db.state().session(pb).machineState().toString());
+        assertEquals(1,ra.totalFired());assertEquals(1,ra.totalStarts());
+        assertEquals(PachinkoRuntime.initial(),rb);
+        assertEquals(MachineType.JUGGLER,db.state().machine(slot).type());
+        assertNull(db.state().machine(slot).runtimeJson());
+    }
 
 }
