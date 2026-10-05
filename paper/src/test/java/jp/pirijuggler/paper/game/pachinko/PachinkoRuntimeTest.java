@@ -17,7 +17,7 @@ class PachinkoRuntimeTest {
                 0,2500,2500,170,12,
                 PachinkoRuntime.Presentation.IDLE,
                 false,PachinkoRuntime.InitialOutcome.NONE,
-                false,0,0,0,1234
+                false,0,PachinkoRuntime.RightOutcome.NONE,0,0,1234
         );
         assertEquals(17.0,runtime.measuredSpinsPer1000Yen(),1e-12);
         assertEquals(runtime,PachinkoRuntime.fromJson(runtime.toJsonString()));
