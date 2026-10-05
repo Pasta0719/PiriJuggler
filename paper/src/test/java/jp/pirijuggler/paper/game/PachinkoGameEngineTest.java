@@ -153,4 +153,22 @@ class PachinkoGameEngineTest extends GameFixture {
         }
     }
 
+
+    @Test void lockedRightEconomicsConvergeTo81PercentAnd97To3() {
+        int decisions=1_000_000;
+        var random=new java.util.Random(31981L);
+        long wins=0, wins1500=0, wins3000=0;
+        long payout=0;
+        for(int i=0;i<decisions;i++){
+            if(!PachinkoGameEngine.rollRushContinuation(random))continue;
+            wins++;
+            if(PachinkoGameEngine.rollRight3000(random)){wins3000++;payout+=3000;}
+            else {wins1500++;payout+=1500;}
+        }
+        assertEquals(0.81,(double)wins/decisions,0.002);
+        assertEquals(0.03,(double)wins3000/wins,0.001);
+        assertEquals(0.97,(double)wins1500/wins,0.001);
+        assertEquals(1545.0,(double)payout/wins,3.0);
+    }
+
 }
