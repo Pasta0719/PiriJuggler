@@ -284,7 +284,7 @@ public final class RemoteMachineSync {
                 var pachinko=jp.pirijuggler.paper.game.pachinko.PachinkoRuntime.fromJson(session.machineState().toString());
                 body.addProperty("pachinkoPresentation",pachinko.presentation().name());
                 body.addProperty("pachinkoBallSequenceId",pachinko.ballSequenceId());
-                body.addProperty("pachinkoOutcome",pachinko.initialHitCommitted()?"V":"OUT");
+                body.addProperty("pachinkoOutcome",pachinko.presentation()==jp.pirijuggler.paper.game.pachinko.PachinkoRuntime.Presentation.RIGHT_KURUN?pachinko.rightOutcome().name():(pachinko.initialHitCommitted()?"V":"OUT"));
                 body.addProperty("pachinkoStartTime",pachinko.lastActivity());
                 body.addProperty("pachinkoSeed",jp.pirijuggler.paper.game.pachinko.PachinkoGameEngine.presentationSeed(session.id(),machine.id(),pachinko.ballSequenceId()));
             }
