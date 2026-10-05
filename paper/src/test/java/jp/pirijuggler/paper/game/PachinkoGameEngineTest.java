@@ -102,4 +102,18 @@ class PachinkoGameEngineTest extends GameFixture {
         assertEquals(event.payload().get("startTime"),resumed.payload().get("startTime"));
     }
 
+    @Test void forcedInitialAllocationMaps450ToNormalAnd1500ToRush() throws Exception {
+        int id=db.create(new Machine.Location(UUID.randomUUID(),"world",27,64,0,"NORTH"),MachineType.PACHINKO,NOW);
+        UUID player=UUID.randomUUID();db.seat(player,id,NOW);
+        var base=PachinkoBallAccounting.validStart(PachinkoBallAccounting.fire(PachinkoBallAccounting.lend(PachinkoRuntime.initial(),NOW),NOW+1),NOW+2);
+        var v=new PachinkoRuntime(base.mode(),base.ballsHeld(),base.ballsLoaned(),base.totalFired(),base.totalStarts(),base.ballSequenceId(),
+                PachinkoRuntime.Presentation.LEFT_KURUN,true,PachinkoRuntime.InitialOutcome.NONE,false,0,0,0,NOW+2);
+        db.sql("UPDATE player_sessions SET machine_state_json=? WHERE player_uuid=?",v.toJsonString(),player.toString());
+        var before=db.state().session(player);var engine=new PachinkoGameEngine(new java.util.Random(1));
+        var normal=engine.initialPayout(before,v,1,id,NOW+3,false);var nr=PachinkoRuntime.fromJson(normal.after().machineState().toString());
+        assertEquals(PachinkoRuntime.InitialOutcome.NORMAL_450,nr.initialOutcome());assertFalse(nr.rushActive());assertEquals(450,nr.currentPayout());
+        var rush=engine.initialPayout(before,v,1,id,NOW+3,true);var rr=PachinkoRuntime.fromJson(rush.after().machineState().toString());
+        assertEquals(PachinkoRuntime.InitialOutcome.RUSH_1500,rr.initialOutcome());assertTrue(rr.rushActive());assertEquals(1500,rr.currentPayout());
+    }
+
 }
