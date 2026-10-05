@@ -49,7 +49,7 @@ class PachinkoGameEngineTest extends GameFixture {
         UUID player=UUID.randomUUID();db.seat(player,id,NOW);
         var r=PachinkoBallAccounting.validStart(PachinkoBallAccounting.fire(PachinkoBallAccounting.lend(PachinkoRuntime.initial(),NOW),NOW+1),NOW+2);
         r=new PachinkoRuntime(r.mode(),r.ballsHeld(),r.ballsLoaned(),r.totalFired(),r.totalStarts(),r.ballSequenceId(),
-                PachinkoRuntime.Presentation.LEFT_KURUN,false,r.initialOutcome(),r.rushActive(),r.rushWins(),r.currentPayout(),r.cumulativePayout(),NOW+2);
+                PachinkoRuntime.Presentation.LEFT_KURUN,false,r.initialOutcome(),r.rushActive(),r.rushWins(),r.rightOutcome(),r.currentPayout(),r.cumulativePayout(),NOW+2);
         db.sql("UPDATE player_sessions SET machine_state_json=? WHERE player_uuid=?",r.toJsonString(),player.toString());
         var saved=db.state().session(player);var engine=new PachinkoGameEngine();
         var first=engine.resume(saved,0).orElseThrow();var second=engine.resume(saved,99).orElseThrow();
@@ -64,7 +64,7 @@ class PachinkoGameEngineTest extends GameFixture {
         UUID player=UUID.randomUUID();db.seat(player,id,NOW);
         var r=PachinkoBallAccounting.validStart(PachinkoBallAccounting.fire(PachinkoBallAccounting.lend(PachinkoRuntime.initial(),NOW),NOW+1),NOW+2);
         r=new PachinkoRuntime(r.mode(),r.ballsHeld(),r.ballsLoaned(),r.totalFired(),r.totalStarts(),r.ballSequenceId(),
-                PachinkoRuntime.Presentation.LEFT_KURUN,true,PachinkoRuntime.InitialOutcome.NONE,false,0,0,0,NOW+2);
+                PachinkoRuntime.Presentation.LEFT_KURUN,true,PachinkoRuntime.InitialOutcome.NONE,false,0,PachinkoRuntime.RightOutcome.NONE,0,0,NOW+2);
         db.sql("UPDATE player_sessions SET machine_state_json=? WHERE player_uuid=?",r.toJsonString(),player.toString());
         var engine=new PachinkoGameEngine(new java.util.Random(7));
         var before=db.state().session(player);var first=engine.plan(before,db.state().machine(id),PacketType.PACHINKO_PRESENTATION,1,NOW+3,0,0,null);
@@ -107,7 +107,7 @@ class PachinkoGameEngineTest extends GameFixture {
         UUID player=UUID.randomUUID();db.seat(player,id,NOW);
         var base=PachinkoBallAccounting.validStart(PachinkoBallAccounting.fire(PachinkoBallAccounting.lend(PachinkoRuntime.initial(),NOW),NOW+1),NOW+2);
         var v=new PachinkoRuntime(base.mode(),base.ballsHeld(),base.ballsLoaned(),base.totalFired(),base.totalStarts(),base.ballSequenceId(),
-                PachinkoRuntime.Presentation.LEFT_KURUN,true,PachinkoRuntime.InitialOutcome.NONE,false,0,0,0,NOW+2);
+                PachinkoRuntime.Presentation.LEFT_KURUN,true,PachinkoRuntime.InitialOutcome.NONE,false,0,PachinkoRuntime.RightOutcome.NONE,0,0,NOW+2);
         db.sql("UPDATE player_sessions SET machine_state_json=? WHERE player_uuid=?",v.toJsonString(),player.toString());
         var before=db.state().session(player);var engine=new PachinkoGameEngine(new java.util.Random(1));
         var normal=engine.initialPayout(before,v,1,id,NOW+3,false);var nr=PachinkoRuntime.fromJson(normal.after().machineState().toString());
@@ -120,7 +120,7 @@ class PachinkoGameEngineTest extends GameFixture {
         int id=db.create(new Machine.Location(UUID.randomUUID(),"world",28,64,0,"NORTH"),MachineType.PACHINKO,NOW);
         UUID player=UUID.randomUUID();db.seat(player,id,NOW);
         var base=PachinkoBallAccounting.validStart(PachinkoBallAccounting.fire(PachinkoBallAccounting.lend(PachinkoRuntime.initial(),NOW),NOW+1),NOW+2);
-        var v=new PachinkoRuntime(base.mode(),base.ballsHeld(),base.ballsLoaned(),base.totalFired(),base.totalStarts(),base.ballSequenceId(),PachinkoRuntime.Presentation.LEFT_KURUN,true,PachinkoRuntime.InitialOutcome.NONE,false,0,0,0,NOW+2);
+        var v=new PachinkoRuntime(base.mode(),base.ballsHeld(),base.ballsLoaned(),base.totalFired(),base.totalStarts(),base.ballSequenceId(),PachinkoRuntime.Presentation.LEFT_KURUN,true,PachinkoRuntime.InitialOutcome.NONE,false,0,PachinkoRuntime.RightOutcome.NONE,0,0,NOW+2);
         db.sql("UPDATE player_sessions SET machine_state_json=? WHERE player_uuid=?",v.toJsonString(),player.toString());
         var engine=new PachinkoGameEngine(new java.util.Random(1));var paid=engine.initialPayout(db.state().session(player),v,1,id,NOW+3,true);var saved=store.commit(paid);
         long held=PachinkoRuntime.fromJson(saved.machineState().toString()).ballsHeld();long cumulative=PachinkoRuntime.fromJson(saved.machineState().toString()).cumulativePayout();
