@@ -28,6 +28,10 @@ commands:
     description: Runtime-test-only session game snapshot reset
     usage: /pirigamereset [player]
     permission: piri.runtime
+  piripachinko:
+    description: Runtime-test-only pachinko state fixture
+    usage: /piripachinko <normal|left_v|left_out|rush|right_out|right_1500|right_3000> [player]
+    permission: piri.runtime
 permissions:
   piri.runtime:
     default: op
