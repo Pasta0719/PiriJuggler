@@ -1034,6 +1034,48 @@ public final class MachineService implements Listener, CommandExecutor {
         });
     }
 
+    public void mobileLoadPairings(Consumer<Map<String, UUID>> callback) {
+        main();
+        if (!ready()) { callback.accept(Map.of()); return; }
+        plugin.executors().database(() -> database.mobilePairings(), (loaded, error) -> {
+            if (stopped) return;
+            if (error != null) {
+                logMobileFailure(error);
+                callback.accept(Map.of());
+            } else callback.accept(loaded);
+        });
+    }
+
+    public void mobileSavePairing(UUID owner, String tokenHash, Consumer<String> callback) {
+        main();
+        if (!ready()) { callback.accept("DB_ERROR"); return; }
+        plugin.executors().database(() -> {
+            database.saveMobilePairing(owner, tokenHash, System.currentTimeMillis());
+            return null;
+        }, (ignored, error) -> {
+            if (stopped) return;
+            if (error != null) {
+                logMobileFailure(error);
+                callback.accept(mobileFailureCode(error));
+            } else callback.accept(null);
+        });
+    }
+
+    public void mobileRevokePairing(UUID owner, Consumer<String> callback) {
+        main();
+        if (!ready()) { callback.accept("DB_ERROR"); return; }
+        plugin.executors().database(() -> {
+            database.revokeMobilePairing(owner);
+            return null;
+        }, (ignored, error) -> {
+            if (stopped) return;
+            if (error != null) {
+                logMobileFailure(error);
+                callback.accept(mobileFailureCode(error));
+            } else callback.accept(null);
+        });
+    }
+
     private String mobileFailureCode(Throwable failure) {
         return failure instanceof DomainException ? failure.getMessage() : "DB_ERROR";
     }
