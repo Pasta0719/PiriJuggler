@@ -36,7 +36,7 @@ import java.util.UUID;
 import jp.pirijuggler.paper.reel.ReelEngine;
 
 public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessageListener, Listener {
-    private static final String BUILD_IDENTITY = "MOBILE_REMOTE_MVP_20261005_A";
+    private static final String BUILD_IDENTITY = "MOBILE_REMOTE_MVP_20261005_B";
     private PaperMainThread mainThread;
     private TaskExecutors executors;
     private ServerHandshake handshake;
@@ -82,6 +82,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
                 for (String error : result.errors()) getLogger().severe("Gameplay disabled: " + error);
                 if (configurationValid) {
                     machines = new MachineService(this, result.values());
+                    mobileRemote = new MobileRemoteGateway(this, machines);
                     dataLamp = new DataLampPublisher(this);
                     publicData = new PublicDataCommand(this);
                     machineSimulation = new MachineDataSimulationService(this,result.values());
@@ -237,6 +238,7 @@ juggler_god_extreme:
     @Override public void onDisable() {
         configurationValid = false;
         if (dataLamp != null) dataLamp.close();
+        if (mobileRemote != null) mobileRemote.close();
         if (machines != null) machines.shutdown();
         if (handshake != null) handshake.clear();
         getServer().getMessenger().unregisterIncomingPluginChannel(this);
