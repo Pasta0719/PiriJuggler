@@ -325,6 +325,10 @@ public final class MobileRemoteGateway implements AutoCloseable {
                 onMain(ctx, done -> machines.mobileCashout(owner, done));
                 return;
             }
+            if (request.method().equals(HttpMethod.POST) && path.equals("/api/exchange")) {
+                onMain(ctx, done -> plugin.prizes().mobileExchange(owner, done));
+                return;
+            }
             if (request.method().equals(HttpMethod.POST) && path.equals("/api/leave")) {
                 onMain(ctx, done -> machines.mobileLeave(owner, (state, failure) -> {
                     if (failure == null) npcs.remove(owner);
@@ -642,7 +646,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 .stopText{position:absolute;left:0;right:0;bottom:-19px;text-align:center;font-size:25px;font-weight:900}
 #leftBtn{left:720px;top:865px}#centerBtn{left:990px;top:865px}#rightBtn{left:1260px;top:865px}
 .sideBtn{left:1664px;width:220px;height:55px}
-#loanBtn{top:780px}#insertBtn{top:845px}#cashBtn{top:910px;height:65px}
+#loanBtn{top:750px}#insertBtn{top:812px}#cashBtn{top:874px;height:55px}#exchangeBtn{top:936px;height:55px}
 #gameMessage{position:absolute;left:700px;top:990px;width:820px;text-align:center;font-size:25px;font-weight:800;color:#ffd36b;z-index:10}
 #leaveBtn{position:fixed;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));z-index:50;background:#5a2525;border-radius:12px;padding:10px 14px;font-size:14px;opacity:.9}
 .dataTitle{position:absolute;font-size:25px;font-weight:900}
@@ -741,12 +745,13 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
  #centerBtn{left:39vw}
  #rightBtn{left:63vw}
 
- #loanBtn,#insertBtn,#cashBtn{
-  top:auto;height:42px;width:64px;left:auto;
+ #loanBtn,#insertBtn,#cashBtn,#exchangeBtn{
+  top:auto;height:38px;width:68px;left:auto;
  }
- #loanBtn{right:12px;bottom:158px}
- #insertBtn{right:12px;bottom:110px}
- #cashBtn{right:12px;bottom:62px}
+ #loanBtn{right:12px;bottom:170px}
+ #insertBtn{right:12px;bottom:128px}
+ #cashBtn{right:12px;bottom:86px}
+ #exchangeBtn{right:12px;bottom:44px}
 
  #gameMessage{
   left:110px;top:auto;bottom:98px;width:calc(100vw - 190px);
@@ -814,6 +819,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 <button id="loanBtn" class="machineControl sideBtn"><span>LOAN</span></button>
 <button id="insertBtn" class="machineControl sideBtn"><span>INSERT</span></button>
 <button id="cashBtn" class="machineControl sideBtn"><span>CASH OUT</span></button>
+<button id="exchangeBtn" class="machineControl sideBtn"><span>EXCHANGE</span></button>
 <div id="machineLabel" class="dataTitle">MACHINE -</div><div id="graphLabel" class="dataTitle">DIFF GRAPH</div>
 <canvas id="gameGraph"></canvas>
 <div id="currentBox" class="topMetric"><div class="t">CURRENT G</div><div id="gCurrent" class="n">0</div></div>
@@ -1154,6 +1160,7 @@ async function doAction(type,reel){
 async function loan(){unlockAudio();if(busy)return;busy=true;try{renderState(await api("/api/loan","POST"));$("gameMessage").textContent=""}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
 async function insertMedals(){unlockAudio();if(busy)return;busy=true;try{renderState(await api("/api/insert","POST"));$("gameMessage").textContent=""}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
 async function cashout(){unlockAudio();if(busy)return;busy=true;try{const j=await api("/api/cashout","POST");renderState(j);const pending=Number(j.cashoutPending||0);$("gameMessage").textContent=pending>0?("清算 "+j.cashoutAmount+"枚 / "+pending+"枚は回収待ち"):("清算 "+(j.cashoutAmount||0)+"枚")}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
+async function exchangeWallet(){unlockAudio();if(busy)return;busy=true;try{const j=await api("/api/exchange","POST");$("gameMessage").textContent="交換 "+j.exchangedMedals+"枚 → "+j.vaultAmount+" / 残 "+j.walletMedals+"枚"}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
 function startGame(j){
  show("game");currentType=j.machineType||"";renderState(j);pollData();stopTimers();
  const gs=String(j.gameState||"");if(gs.startsWith("BIG_"))startLoop(j.godFirstBigAudio?"god_big_bgm":"big_bgm");else if(gs.startsWith("REG_"))startLoop("reg_bgm");
@@ -1175,7 +1182,7 @@ function frame(now){
 $("pairBtn").onclick=pairNow;$("refresh").onclick=loadMachines;$("dataClose").onclick=function(){show("lobby")};
 $("betBtn").onclick=function(){doAction("SPACE_ACTION",-1)};$("leverBtn").onclick=function(){doAction("SPACE_ACTION",-1)};
 document.querySelectorAll(".stopBtn").forEach(function(b){b.onclick=function(){doAction(b.dataset.action,Number(b.dataset.reel))}});
-$("loanBtn").onclick=loan;$("insertBtn").onclick=insertMedals;$("cashBtn").onclick=cashout;$("leaveBtn").onclick=leave;
+$("loanBtn").onclick=loan;$("insertBtn").onclick=insertMedals;$("cashBtn").onclick=cashout;$("exchangeBtn").onclick=exchangeWallet;$("leaveBtn").onclick=leave;
 $("logout").onclick=async function(){try{await api("/api/revoke","POST")}catch(e){}token="";localStorage.removeItem("piriToken");localStorage.removeItem("piriPlayer");show("pair")};
 window.addEventListener("resize",resizeStage);
 requestAnimationFrame(frame);
