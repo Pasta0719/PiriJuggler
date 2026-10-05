@@ -149,7 +149,7 @@ juggler_god:
     '5': {bonus_scale_ppm: 741839, small_role_scale_ppm: 841000}
     '6': {bonus_scale_ppm: 696323, small_role_scale_ppm: 833500}
 """;
-        Files.writeString(path, original.stripTrailing() + "\\n" + block, StandardCharsets.UTF_8);
+        Files.writeString(path, original.stripTrailing() + "\n" + block, StandardCharsets.UTF_8);
         getLogger().info("Migrated existing config with juggler_god defaults");
     }
 
@@ -175,8 +175,7 @@ juggler_god_extreme:
     '5': {bonus_scale_ppm: 571106, small_role_scale_ppm: 700000, god_continuation_percent: 85}
     '6': {bonus_scale_ppm: 537600, small_role_scale_ppm: 700000, god_continuation_percent: 90}
 """;
-        Files.writeString(path, original.stripTrailing() + "
-" + block, StandardCharsets.UTF_8);
+        Files.writeString(path, original.stripTrailing() + "\n" + block, StandardCharsets.UTF_8);
         getLogger().info("Migrated existing config with juggler_god_extreme defaults");
     }
 
