@@ -61,6 +61,7 @@ public final class PiriDatabase implements AutoCloseable {
                 ensureMachineRuntimeColumn();
                 ensureMachineStateColumn();
                 ensureJugglerGodHistoryTable();
+                ensureMobilePairingTable();
                 String oldJvm = metadata("current_jvm_start_ms");
                 if (Long.toString(jvmStart).equals(oldJvm)) {
                     period = Objects.requireNonNull(metadata("current_business_period_id"));
@@ -323,6 +324,43 @@ public final class PiriDatabase implements AutoCloseable {
     }
     private void ensureJugglerGodHistoryTable() throws SQLException {
         sql("CREATE TABLE IF NOT EXISTS juggler_god_history(id INTEGER PRIMARY KEY AUTOINCREMENT,machine_id INTEGER NOT NULL,business_period_id TEXT NOT NULL,event_type TEXT NOT NULL CHECK(event_type='GOD'),games INTEGER NOT NULL,occurred_at INTEGER NOT NULL,FOREIGN KEY(machine_id) REFERENCES machines(machine_id),FOREIGN KEY(business_period_id) REFERENCES business_periods(business_period_id))");
+    }
+
+    private void ensureMobilePairingTable() throws SQLException {
+        sql("CREATE TABLE IF NOT EXISTS mobile_pairings(player_uuid TEXT PRIMARY KEY NOT NULL,token_hash TEXT UNIQUE NOT NULL,created_at INTEGER NOT NULL,last_used_at INTEGER NOT NULL)");
+    }
+
+    public Map<String, UUID> mobilePairings() throws SQLException {
+        Map<String, UUID> result = new LinkedHashMap<>();
+        for (var row : rows("SELECT token_hash,player_uuid FROM mobile_pairings")) {
+            result.put((String) row.get("token_hash"), UUID.fromString((String) row.get("player_uuid")));
+        }
+        return Map.copyOf(result);
+    }
+
+    public void saveMobilePairing(UUID owner, String tokenHash, long now) throws SQLException {
+        Objects.requireNonNull(owner); Objects.requireNonNull(tokenHash);
+        if (tokenHash.isBlank()) throw new IllegalArgumentException("tokenHash");
+        transaction(() -> {
+            sql("DELETE FROM mobile_pairings WHERE player_uuid=? OR token_hash=?", owner.toString(), tokenHash);
+            sql("INSERT INTO mobile_pairings(player_uuid,token_hash,created_at,last_used_at) VALUES(?,?,?,?)",
+                    owner.toString(), tokenHash, now, now);
+            return null;
+        });
+    }
+
+    public UUID authenticateMobilePairing(String tokenHash, long now) throws SQLException {
+        if (tokenHash == null || tokenHash.isBlank()) return null;
+        var found = rows("SELECT player_uuid FROM mobile_pairings WHERE token_hash=?", tokenHash);
+        if (found.isEmpty()) return null;
+        UUID owner = UUID.fromString((String) found.getFirst().get("player_uuid"));
+        sql("UPDATE mobile_pairings SET last_used_at=? WHERE token_hash=?", now, tokenHash);
+        return owner;
+    }
+
+    public void revokeMobilePairing(UUID owner) throws SQLException {
+        Objects.requireNonNull(owner);
+        sql("DELETE FROM mobile_pairings WHERE player_uuid=?", owner.toString());
     }
 
     public void setMachineRuntimeJson(int id, String runtimeJson, long now) throws SQLException {
