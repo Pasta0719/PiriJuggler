@@ -133,6 +133,7 @@ def start_client(name,scenario):
     folder=OUT/scenario;folder.mkdir(parents=True,exist_ok=True)
     result=folder/"client-result.json"
     if result.exists():result.unlink()
+    for stale in folder.glob("command-*.json"): stale.unlink()
     run_dir=E/"work"/("client-"+scenario)
     if run_dir.exists():shutil.rmtree(run_dir)
     run_dir.mkdir(parents=True,exist_ok=True)
