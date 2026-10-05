@@ -82,7 +82,10 @@ public final class PachinkoGameEngine implements GameEngine {
     }
 
     private GameTransition initialPayout(Session before,PachinkoRuntime runtime,long sequence,int machineId,long now){
-        boolean rush=rollRushEntry(random);
+        return initialPayout(before,runtime,sequence,machineId,now,rollRushEntry(random));
+    }
+
+    GameTransition initialPayout(Session before,PachinkoRuntime runtime,long sequence,int machineId,long now,boolean rush){
         int payout=rush?PachinkoSpec.RUSH_INITIAL_PAYOUT:PachinkoSpec.NORMAL_INITIAL_PAYOUT;
         PachinkoRuntime.InitialOutcome outcome=rush?PachinkoRuntime.InitialOutcome.RUSH_1500:PachinkoRuntime.InitialOutcome.NORMAL_450;
         PachinkoRuntime paid=new PachinkoRuntime(rush?PachinkoRuntime.Mode.RUSH:PachinkoRuntime.Mode.NORMAL,
