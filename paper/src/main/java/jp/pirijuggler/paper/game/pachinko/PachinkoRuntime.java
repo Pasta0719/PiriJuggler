@@ -23,6 +23,7 @@ public record PachinkoRuntime(
         InitialOutcome initialOutcome,
         boolean rushActive,
         long rushWins,
+        RightOutcome rightOutcome,
         long currentPayout,
         long cumulativePayout,
         long lastActivity
@@ -30,11 +31,13 @@ public record PachinkoRuntime(
     public enum Mode { NORMAL, INITIAL_PAYOUT, RUSH, RIGHT_PAYOUT }
     public enum Presentation { IDLE, LEFT_KURUN, RIGHT_KURUN, PAYOUT }
     public enum InitialOutcome { NONE, NORMAL_450, RUSH_1500 }
+    public enum RightOutcome { NONE, OUT, WIN_1500, WIN_3000 }
 
     public PachinkoRuntime {
         Objects.requireNonNull(mode);
         Objects.requireNonNull(presentation);
         Objects.requireNonNull(initialOutcome);
+        Objects.requireNonNull(rightOutcome);
         if (ballsHeld < 0 || ballsLoaned < 0 || totalFired < 0 || totalStarts < 0 ||
                 ballSequenceId < 0 || rushWins < 0 || currentPayout < 0 ||
                 cumulativePayout < 0 || lastActivity < 0) {
@@ -50,7 +53,7 @@ public record PachinkoRuntime(
         return new PachinkoRuntime(
                 Mode.NORMAL, 0, 0, 0, 0, 0,
                 Presentation.IDLE, false, InitialOutcome.NONE,
-                false, 0, 0, 0, 0
+                false, 0, RightOutcome.NONE, 0, 0, 0
         );
     }
 
@@ -69,6 +72,7 @@ public record PachinkoRuntime(
                 enumValue(o, "initialOutcome", InitialOutcome.NONE),
                 boolValue(o, "rushActive", false),
                 longValue(o, "rushWins", 0),
+                enumValue(o, "rightOutcome", RightOutcome.NONE),
                 longValue(o, "currentPayout", 0),
                 longValue(o, "cumulativePayout", 0),
                 longValue(o, "lastActivity", 0)
@@ -88,6 +92,7 @@ public record PachinkoRuntime(
         o.addProperty("initialOutcome", initialOutcome.name());
         o.addProperty("rushActive", rushActive);
         o.addProperty("rushWins", rushWins);
+        o.addProperty("rightOutcome", rightOutcome.name());
         o.addProperty("currentPayout", currentPayout);
         o.addProperty("cumulativePayout", cumulativePayout);
         o.addProperty("lastActivity", lastActivity);
