@@ -16,6 +16,7 @@ public final class MachineScreenFactory {
         return switch (type) {
             case "SKILL_STOP", "JUGGLER", "JUGGLER_GOD", "JUGGLER_GOD_EXTREME" -> new SlotScreen(view, input);
             case "GOD" -> new GodScreen(view,input);
+            case "PACHINKO" -> new PachinkoScreen(input);
             case "OKIDOKI", "DISC" -> new MachineUnavailableScreen(type, input);
             default -> new MachineUnavailableScreen(type, input);
         };
