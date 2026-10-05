@@ -568,101 +568,412 @@ public final class MobileRemoteGateway implements AutoCloseable {
 <style>
 :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:#0b0c10;color:#f5f5f5;min-height:100vh}
-main{max-width:560px;margin:auto;padding:18px 16px 40px}
-h1{font-size:22px;margin:4px 0 16px}.muted{color:#9da3ae;font-size:13px}
+html,body{margin:0;min-height:100%;background:#0b0c10;color:#f6f1e7}
+button,input{font:inherit}
+button{border:0;color:#fff;background:#343944;font-weight:800;cursor:pointer}
+button:disabled{opacity:.35;cursor:default}
+.hidden{display:none!important}
+#normal{max-width:680px;margin:auto;padding:18px 16px 48px}
+h1{font-size:22px;margin:4px 0 16px}
 .card{background:#16181e;border:1px solid #292d36;border-radius:18px;padding:16px;margin:12px 0}
-input,button{font:inherit;font-size:16px}input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;background:#0f1116;color:white;margin:8px 0}
-button{border:0;border-radius:14px;min-height:52px;padding:12px 16px;background:#343944;color:#fff;font-weight:700}
-button.primary{background:#f0c24a;color:#17130a}button.danger{background:#5a2525}button:disabled{opacity:.4}
-.row{display:flex;gap:10px}.row>*{flex:1}.hidden{display:none!important}
-.machine{display:flex;align-items:center;gap:12px;border-bottom:1px solid #292d36;padding:12px 0}.machine:last-child{border-bottom:0}.machine .info{flex:1}
-.badge{font-size:11px;padding:4px 7px;border:1px solid #444b57;border-radius:999px;color:#c9ced7}
-.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.value{font-size:28px;font-variant-numeric:tabular-nums;font-weight:800}.label{font-size:11px;color:#9da3ae}
-.reels{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:#050607;border-radius:14px;padding:8px;margin:16px 0}
-.reel{background:#f5f0dd;color:#121212;border-radius:8px;text-align:center;padding:26px 4px;font-weight:900;font-size:24px;min-width:0}
-.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stop{min-height:64px;font-size:18px}
-.space{width:100%;min-height:62px;margin:10px 0;font-size:18px}
-#msg{min-height:20px;color:#ffd36b;font-size:13px;margin-top:8px}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.muted{color:#9da3ae;font-size:13px}
+input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;background:#0f1116;color:white;margin:8px 0;font-size:16px}
+.normalBtn{border-radius:14px;min-height:48px;padding:10px 15px}
+.primary{background:#f0c24a!important;color:#17130a!important}
+.danger{background:#5a2525!important}
+.machine{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:13px 0;border-bottom:1px solid #292d36}
+.machine:last-child{border-bottom:0}
+.machineName{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status{font-size:12px;color:#aab0ba;margin-top:3px}
+#dataPanel{position:fixed;inset:0;z-index:40;background:#08090c;overflow:auto;padding:18px}
+#dataInner{max-width:760px;margin:auto}
+.dataGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.metric{background:#101218;border:1px solid #292d36;border-radius:12px;padding:12px}
+.metric .k{font-size:11px;color:#9da3ae}.metric .v{font-size:22px;font-weight:900;margin-top:4px}
+#preGraph{width:100%;height:180px;background:#090b0e;border-radius:10px;margin-top:12px}
+.histRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:7px 0;border-bottom:1px solid #252932}
+#game{position:fixed;inset:0;background:#000;z-index:30;overflow:hidden;touch-action:manipulation}
+#stageWrap{position:absolute;inset:0;overflow:hidden}
+#stage{position:absolute;width:1920px;height:1080px;transform-origin:0 0;background:#000;color:#f6f1e7;font-family:Arial,sans-serif;user-select:none}
+.panel{position:absolute;background:#090b0e;border:3px solid #20242a}
+#dataTop{left:20px;top:12px;width:1880px;height:270px}
+#dataLeft{left:18px;top:325px;width:275px;height:430px}
+#dataRight{left:1645px;top:325px;width:257px;height:430px}
+#cabinet{position:absolute;left:290px;top:205px;width:1340px;height:835px;background:#3c0a10;border:8px solid #b68a42;box-shadow:inset 0 0 0 5px #e4c174}
+#cabinet.godlike{background:linear-gradient(#e9d07a 0%,#c49a3a 25%,#9c6f1d 65%,#65420e 100%);border-color:#b8892f}
+#reelBacking{position:absolute;left:670px;top:300px;width:900px;height:390px;background:#8a8175}
+.reelWindow{position:absolute;top:300px;width:270px;height:390px;overflow:hidden;background:#f4f1e8;z-index:4}
+#reel0{left:670px}#reel1{left:985px}#reel2{left:1300px}
+.reelWindow.godlike{background:#fff}
+.sym{position:absolute;object-fit:contain;pointer-events:none}
+#lamp{position:absolute;left:350px;top:390px;width:300px;height:170px;object-fit:contain;z-index:5}
+#skillChallenge{position:absolute;left:410px;top:580px;width:180px;height:140px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:28px;font-weight:900;color:#fff;z-index:5}
+#statusPanel{position:absolute;left:670px;top:710px;width:900px;height:95px;background:#090b0e;border:3px solid #20242a;display:grid;grid-template-columns:repeat(4,1fr);padding:11px 18px;z-index:5}
+.statLabel{font-size:20px;color:#b9bcc2}.statValue{font-size:35px;font-weight:900;margin-top:3px}
+.machineControl{position:absolute;z-index:8;border-radius:18px;background:#666a72;padding:4px}
+.machineControl>span{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:14px;background:#c92734;font-size:28px;font-weight:900;text-shadow:2px 2px #190406}
+.machineControl:active>span{background:#8a1720;transform:translateY(3px)}
+#betBtn{left:440px;top:860px;width:150px;height:100px}
+#leverBtn{left:300px;top:780px;width:130px;height:260px;background:transparent;padding:0}
+#leverStem{position:absolute;left:54px;top:35px;width:22px;height:190px;background:#666a72}
+#leverKnob{position:absolute;left:30px;top:27px;width:70px;height:70px;border-radius:50%;background:#c92734;border:6px solid #666a72;transition:transform .09s}
+#leverBtn:active #leverKnob{transform:translateY(18px)}
+#leverLabel{position:absolute;left:0;right:0;bottom:18px;text-align:center;font-size:25px;font-weight:900}
+.stopBtn{width:180px;height:110px;background:transparent;padding:0}
+.stopBtn>span{width:88px;height:88px;border-radius:50%;border:6px solid #b9bcc2;background:#c92734;font-size:0;margin:auto}
+.stopBtn>span:after{content:"";display:block}
+.stopBtn:active>span{background:#8a1720}
+.stopBtn:disabled>span{background:#666a72;border-color:#666a72}
+.stopText{position:absolute;left:0;right:0;bottom:-19px;text-align:center;font-size:25px;font-weight:900}
+#leftBtn{left:720px;top:865px}#centerBtn{left:990px;top:865px}#rightBtn{left:1260px;top:865px}
+.sideBtn{left:1664px;width:220px;height:55px}
+#loanBtn{top:780px}#insertBtn{top:845px}#cashBtn{top:910px;height:65px}
+#gameMessage{position:absolute;left:700px;top:990px;width:820px;text-align:center;font-size:25px;font-weight:800;color:#ffd36b;z-index:10}
+#leaveBtn{position:fixed;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));z-index:50;background:#5a2525;border-radius:12px;padding:10px 14px;font-size:14px;opacity:.9}
+.dataTitle{position:absolute;font-size:25px;font-weight:900}
+#machineLabel{left:38px;top:26px}
+#graphLabel{left:55px;top:55px}
+#gameGraph{position:absolute;left:55px;top:88px;width:825px;height:146px}
+.topMetric{position:absolute;top:42px;width:205px;text-align:center}.topMetric .t{font-size:24px;font-weight:900}.topMetric .n{font-size:39px;font-weight:900;margin-top:8px}
+#currentBox{left:958px}#totalBox{left:1268px}#maxBox{left:1578px}
+#bigBox{left:1108px;top:144px;color:#ff4242}#regBox{left:1438px;top:144px;color:#3a78ff}
+#diffTitle{left:42px;top:344px}.sideLarge{position:absolute;left:35px;width:230px;text-align:center;font-size:42px;font-weight:900}
+#diffValue{top:382px}
+#historyTitle{left:42px;top:465px}.historyList{position:absolute;left:42px;top:505px;width:210px;font-size:19px}
+.historyItem{display:flex;justify-content:space-between;height:24px}.big{color:#ff4242}.reg{color:#3a78ff}.god{color:#58e36a}
+#oddsTitle{left:1672px;top:344px}.odds{position:absolute;left:1672px;width:205px;font-size:22px}.odds b{float:right;font-size:28px}
+#bigOdds{top:385px;color:#ff4242}#regOdds{top:455px;color:#3a78ff}#allOdds{top:525px}
+#chain{position:absolute;left:1664px;top:615px;width:220px;height:102px;border:5px solid #58e36a;border-radius:12px;text-align:center;padding-top:13px;font-size:24px;font-weight:900;color:#58e36a}
+@media(max-width:700px){
+ #normal{padding:12px 10px 30px}.machine{grid-template-columns:minmax(0,1fr) auto auto}.normalBtn{padding:8px 10px;font-size:14px}.dataGrid{grid-template-columns:repeat(2,1fr)}
+}
 </style>
 </head>
-<body><main>
+<body>
+<div id="normal">
 <h1>Piri Remote</h1>
 <section id="pair" class="card">
-<div>スマホ接続</div><div class="muted">Minecraftで <b>/piri mobile pair</b> を実行し、6桁コードを入力</div>
+<div>スマホ接続</div>
+<div class="muted">Minecraftで <b>/piri mobile pair</b> を実行し、6桁コードを入力</div>
 <input id="code" inputmode="numeric" maxlength="6" placeholder="000000">
-<button id="pairBtn" class="primary" style="width:100%">接続</button>
+<button id="pairBtn" class="normalBtn primary" style="width:100%">接続</button>
 <div id="pairMsg" class="muted"></div>
 </section>
-
 <section id="lobby" class="hidden">
-<div class="card top"><div><div class="label">PLAYER</div><div id="player">-</div></div><button id="logout">接続解除</button></div>
-<div class="card"><div class="top"><b>台一覧</b><button id="refresh">更新</button></div><div id="machines"></div></div>
+<div class="card top"><div><div class="muted">PLAYER</div><div id="player">-</div></div><button id="logout" class="normalBtn">接続解除</button></div>
+<div class="card"><div class="top"><b>台一覧</b><button id="refresh" class="normalBtn">更新</button></div><div id="machines"></div></div>
+</section>
+</div>
+
+<section id="dataPanel" class="hidden">
+<div id="dataInner">
+<div class="top"><div><b id="dataTitle">台データ</b><div id="dataType" class="muted"></div></div><button id="dataClose" class="normalBtn">戻る</button></div>
+<div class="dataGrid" style="margin-top:14px">
+<div class="metric"><div class="k">CURRENT G</div><div id="dCurrent" class="v">0</div></div>
+<div class="metric"><div class="k">TOTAL G</div><div id="dTotal" class="v">0</div></div>
+<div class="metric"><div class="k">DIFF</div><div id="dDiff" class="v">0</div></div>
+<div class="metric"><div class="k">MAX DIFF</div><div id="dMax" class="v">0</div></div>
+<div class="metric"><div class="k">BIG</div><div id="dBig" class="v">0</div></div>
+<div class="metric"><div class="k">REG</div><div id="dReg" class="v">0</div></div>
+</div>
+<canvas id="preGraph"></canvas>
+<div class="card"><b>BONUS HISTORY</b><div id="preHistory"></div></div>
+</div>
 </section>
 
 <section id="game" class="hidden">
-<div class="card">
-<div class="top"><div><div id="machineTitle">-</div><span id="gameState" class="badge">-</span></div><button id="leave" class="danger">離席</button></div>
-<div class="row" style="margin-top:16px">
-<div><div class="label">CREDIT</div><div id="credit" class="value">0</div></div>
-<div><div class="label">PAY</div><div id="pay" class="value">0</div></div>
-<div><div class="label">BET</div><div id="bet" class="value">0</div></div>
+<button id="leaveBtn">離席</button>
+<div id="stageWrap"><div id="stage">
+<div id="dataTop" class="panel"></div><div id="dataLeft" class="panel"></div><div id="dataRight" class="panel"></div>
+<div id="cabinet"></div><div id="reelBacking"></div>
+<div id="reel0" class="reelWindow"></div><div id="reel1" class="reelWindow"></div><div id="reel2" class="reelWindow"></div>
+<img id="lamp" src="/assets/lamp/piri_chance_off.png" alt="">
+<div id="skillChallenge"></div>
+<div id="statusPanel">
+<div><div class="statLabel">CREDIT</div><div id="credit" class="statValue">0</div></div>
+<div><div class="statLabel">BET</div><div id="bet" class="statValue">0</div></div>
+<div><div class="statLabel">PAY</div><div id="pay" class="statValue">0</div></div>
+<div><div class="statLabel">MEDALS</div><div id="medals" class="statValue">0</div></div>
 </div>
-<div class="reels"><div id="r0" class="reel">--</div><div id="r1" class="reel">--</div><div id="r2" class="reel">--</div></div>
-<button id="space" class="space primary">BET / LEVER</button>
-<div class="controls"><button class="stop" data-action="STOP_LEFT">左 STOP</button><button class="stop" data-action="STOP_CENTER">中 STOP</button><button class="stop" data-action="STOP_RIGHT">右 STOP</button></div>
-<div class="row" style="margin-top:10px"><button id="loan">貸出</button><button id="back">台一覧</button></div>
-<div id="msg"></div>
-</div>
+<button id="betBtn" class="machineControl"><span>BET</span></button>
+<button id="leverBtn" class="machineControl"><i id="leverStem"></i><i id="leverKnob"></i><b id="leverLabel">LEVER</b></button>
+<button id="leftBtn" class="machineControl stopBtn" data-action="STOP_LEFT" data-reel="0"><span></span><b class="stopText">LEFT</b></button>
+<button id="centerBtn" class="machineControl stopBtn" data-action="STOP_CENTER" data-reel="1"><span></span><b class="stopText">CENTER</b></button>
+<button id="rightBtn" class="machineControl stopBtn" data-action="STOP_RIGHT" data-reel="2"><span></span><b class="stopText">RIGHT</b></button>
+<button id="loanBtn" class="machineControl sideBtn"><span>LOAN</span></button>
+<button id="insertBtn" class="machineControl sideBtn" disabled><span>INSERT</span></button>
+<button id="cashBtn" class="machineControl sideBtn" disabled><span>CASH OUT</span></button>
+<div id="machineLabel" class="dataTitle">MACHINE -</div><div id="graphLabel" class="dataTitle">DIFF GRAPH</div>
+<canvas id="gameGraph"></canvas>
+<div id="currentBox" class="topMetric"><div class="t">CURRENT G</div><div id="gCurrent" class="n">0</div></div>
+<div id="totalBox" class="topMetric"><div class="t">TOTAL G</div><div id="gTotal" class="n">0</div></div>
+<div id="maxBox" class="topMetric"><div class="t">MAX DIFF</div><div id="gMax" class="n">0</div></div>
+<div id="bigBox" class="topMetric"><div class="t">BIG</div><div id="gBig" class="n">0</div></div>
+<div id="regBox" class="topMetric"><div class="t">REG</div><div id="gReg" class="n">0</div></div>
+<div id="diffTitle" class="dataTitle">DIFF</div><div id="diffValue" class="sideLarge">0</div>
+<div id="historyTitle" class="dataTitle">BONUS HISTORY</div><div id="gameHistory" class="historyList"></div>
+<div id="oddsTitle" class="dataTitle">ODDS</div>
+<div id="bigOdds" class="odds">BIG ODDS <b>---</b></div>
+<div id="regOdds" class="odds">REG ODDS <b>---</b></div>
+<div id="allOdds" class="odds">COMBINED <b>---</b></div>
+<div id="chain" class="hidden">PIRI CHAIN<br><span id="chainCount">CHAIN x1</span></div>
+<div id="gameMessage"></div>
+</div></div>
 </section>
-</main>
+
 <script>
-(()=> {
-const $=id=>document.getElementById(id);
-let token=localStorage.getItem("piriToken")||"", player=localStorage.getItem("piriPlayer")||"", timer=0, busy=false;
-const pair=$("pair"),lobby=$("lobby"),game=$("game");
-function show(name){pair.classList.toggle("hidden",name!=="pair");lobby.classList.toggle("hidden",name!=="lobby");game.classList.toggle("hidden",name!=="game")}
-async function api(path,method="GET"){
- const r=await fetch(path,{method,headers:token?{"X-Piri-Token":token}:{}});
- let j={};try{j=await r.json()}catch{}
- if(r.status===401&&path!=="/api/pair"){token="";localStorage.removeItem("piriToken");show("pair");throw new Error("接続が無効です")}
+(function(){
+const $=function(id){return document.getElementById(id)};
+let token=localStorage.getItem("piriToken")||"";
+let player=localStorage.getItem("piriPlayer")||"";
+let stateTimer=0,dataTimer=0,currentState=null,currentData=null,currentType="",busy=false;
+let motion=null,pendingState=null;
+
+const fixed=[
+["grape","replay","grape","seven","piero","grape","replay","grape","cherry","bar","grape","replay","grape","bell","seven","replay","grape","replay","grape","bar","cherry"],
+["cherry","piero","replay","seven","grape","cherry","replay","bell","grape","cherry","replay","bar","grape","cherry","replay","bell","grape","cherry","replay","bar","grape"],
+["bell","replay","grape","seven","bar","bell","replay","grape","piero","bell","replay","grape","piero","bell","replay","grape","piero","bell","replay","grape","piero"]
+];
+const skillNumbered=[
+["replay","grape","bar","cherry","grape","replay","grape","replay","bell","seven","piero","replay","grape","cherry","bar","grape","replay","grape","piero","seven","grape"],
+["cherry","grape","piero","replay","cherry","grape","bar","replay","cherry","grape","replay","cherry","grape","piero","bar","replay","cherry","grape","bell","seven","replay"],
+["bell","replay","piero","grape","bell","replay","piero","grape","bell","replay","piero","grape","bell","replay","piero","grape","bell","replay","bar","seven","grape"]
+];
+function mod(n,m){return((n%m)+m)%m}
+function symbolAt(reel,index){
+ if(currentType==="SKILL_STOP")return skillNumbered[reel][20-mod(index,21)];
+ return fixed[reel][mod(index,21)];
+}
+function asset(path){
+ return "/assets/"+((currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME")?"juggler_god/":"")+path;
+}
+function show(name){
+ $("pair").classList.toggle("hidden",name!=="pair");
+ $("lobby").classList.toggle("hidden",name!=="lobby");
+ $("dataPanel").classList.toggle("hidden",name!=="data");
+ $("game").classList.toggle("hidden",name!=="game");
+ $("normal").classList.toggle("hidden",name==="game"||name==="data");
+ if(name==="game")resizeStage();
+}
+async function api(path,method){
+ const r=await fetch(path,{method:method||"GET",cache:"no-store",headers:token?{"X-Piri-Token":token}:{}});
+ let j={};try{j=await r.json()}catch(e){}
+ if(r.status===401&&path.indexOf("/api/pair")!==0){token="";localStorage.removeItem("piriToken");show("pair");throw new Error("接続が無効です")}
  if(!r.ok||j.ok===false)throw new Error(j.error||("HTTP "+r.status));
  return j;
 }
-function errorText(e){const m={BUSY:"処理中です",INVALID_STATE:"今は操作できません",NOT_ENOUGH_CREDIT:"クレジットが足りません",NOT_ENOUGH_VAULT:"所持金が足りません",MACHINE_OCCUPIED:"ほかのプレイヤーが遊技中です",MACHINE_DISABLED:"この台は利用できません",STOP_TOO_EARLY:"まだ停止できません",ALREADY_STOPPED:"停止済みです",SESSION_MISMATCH:"台との接続状態が変わりました",VAULT_ERROR:"所持金処理に失敗しました",ECONOMY_UNAVAILABLE:"貸出を利用できません",AUTH_LOADING:"サーバー起動中です。少しして自動再接続します"};return m[e.message]||e.message}
+function errorText(e){
+ const m={BUSY:"処理中です",INVALID_STATE:"今は操作できません",INVALID_MACHINE:"この台は利用できません",NOT_ENOUGH_CREDIT:"クレジットが足りません",NOT_ENOUGH_VAULT:"所持金が足りません",MACHINE_OCCUPIED:"ほかのプレイヤーが遊技中です",MACHINE_DISABLED:"この台は利用できません",STOP_TOO_EARLY:"まだ停止できません",ALREADY_STOPPED:"停止済みです",SESSION_MISMATCH:"台との接続状態が変わりました",VAULT_ERROR:"所持金処理に失敗しました",ECONOMY_UNAVAILABLE:"貸出を利用できません",AUTH_LOADING:"サーバー起動中です"};
+ return m[e.message]||e.message;
+}
 async function pairNow(){
  $("pairMsg").textContent="接続中…";
- try{const code=$("code").value.trim();const j=await api("/api/pair?code="+encodeURIComponent(code),"POST");token=j.token;player=j.player||"";localStorage.setItem("piriToken",token);localStorage.setItem("piriPlayer",player);$("player").textContent=player;show("lobby");await loadMachines()}
- catch(e){$("pairMsg").textContent=errorText(e)}
+ try{
+  const j=await api("/api/pair?code="+encodeURIComponent($("code").value.trim()),"POST");
+  token=j.token;player=j.player||"";localStorage.setItem("piriToken",token);localStorage.setItem("piriPlayer",player);
+  $("player").textContent=player;show("lobby");await loadMachines();
+ }catch(e){$("pairMsg").textContent=errorText(e)}
+}
+function machineLabel(type){
+ return type==="JUGGLER_GOD_EXTREME"?"JUGGLER GOD EXTREME":type==="JUGGLER_GOD"?"JUGGLER GOD":type==="SKILL_STOP"?"SKILL STOP":type;
 }
 async function loadMachines(){
- try{const j=await api("/api/machines");$("player").textContent=player||j.player||"-";const box=$("machines");box.textContent="";
- (j.machines||[]).forEach(m=>{const row=document.createElement("div");row.className="machine";const info=document.createElement("div");info.className="info";info.innerHTML="<b>台"+m.id+"</b> "+m.type+"<br><span class=muted>設定 "+m.setting+" / "+(m.busy?(m.owned?"自分が遊技中":"遊技中"):"空き")+"</span>";const b=document.createElement("button");b.textContent=m.owned?"再開":"遊ぶ";b.disabled=!m.supported||(!m.enabled)|| (m.busy&&!m.owned);b.addEventListener("click",()=>seat(m.id));row.append(info,b);box.append(row)});
+ try{
+  const j=await api("/api/machines");$("player").textContent=player||j.player||"-";const box=$("machines");box.textContent="";
+  (j.machines||[]).forEach(function(m){
+   const row=document.createElement("div");row.className="machine";
+   const info=document.createElement("div");info.className="info";
+   info.innerHTML='<div class="machineName">台'+m.id+' '+machineLabel(m.type)+'</div><div class="status">'+(m.busy?(m.owned?"自分が遊技中":"遊技中"):"空き")+'</div>';
+   const data=document.createElement("button");data.className="normalBtn";data.textContent="データ";data.onclick=function(){openData(m.id,m.type)};
+   const play=document.createElement("button");play.className="normalBtn";play.textContent=m.owned?"再開":"遊ぶ";play.disabled=!m.supported||!m.enabled||(m.busy&&!m.owned);play.onclick=function(){seat(m.id)};
+   row.append(info,data,play);box.append(row);
+  });
  }catch(e){$("machines").textContent=errorText(e)}
 }
-async function seat(id){try{await api("/api/seat?id="+id,"POST");show("game");await state()}catch(e){alert(errorText(e))}}
-function render(j){
- if(!j.seated){clearInterval(timer);show("lobby");loadMachines();return}
- $("machineTitle").textContent="台"+j.machineId+" / "+(j.machineType||"");
- $("gameState").textContent=j.gameState||"-";$("credit").textContent=j.credit??0;$("pay").textContent=j.pay??0;$("bet").textContent=j.bet??0;
- const stops=j.displayStops||{};const spinning=String(j.gameState||"").includes("SPINNING");
- $("r0").textContent=spinning&&!(j.stoppedMask&1)?"◌":("STOP "+(stops.left??"-"));
- $("r1").textContent=spinning&&!(j.stoppedMask&2)?"◌":("STOP "+(stops.center??"-"));
- $("r2").textContent=spinning&&!(j.stoppedMask&4)?"◌":("STOP "+(stops.right??"-"));
- $("msg").textContent=j.godFreeze?"GOD FREEZE":(j.lampOn?"BONUS":"");
+async function openData(id,type){
+ try{
+  const d=await api("/api/data?id="+id);$("dataTitle").textContent="台"+id+" データ";$("dataType").textContent=machineLabel(type);renderPreData(d);show("data");
+ }catch(e){alert(errorText(e))}
 }
-async function state(){try{render(await api("/api/state"))}catch(e){$("msg").textContent=errorText(e)}}
-async function action(type){if(busy)return;busy=true;try{render(await api("/api/action?type="+type,"POST"))}catch(e){$("msg").textContent=errorText(e)}finally{busy=false}}
-async function startGame(){show("game");await state();clearInterval(timer);timer=setInterval(state,350)}
-$("pairBtn").addEventListener("click",pairNow);
-$("refresh").addEventListener("click",loadMachines);
-$("space").addEventListener("click",()=>action("SPACE_ACTION"));
-document.querySelectorAll(".stop").forEach(b=>b.addEventListener("click",()=>action(b.dataset.action)));
-$("loan").addEventListener("click",async()=>{try{render(await api("/api/loan","POST"))}catch(e){$("msg").textContent=errorText(e)}});
-$("leave").addEventListener("click",async()=>{try{await api("/api/leave","POST");clearInterval(timer);show("lobby");loadMachines()}catch(e){$("msg").textContent=errorText(e)}});
-$("back").addEventListener("click",()=>{clearInterval(timer);show("lobby");loadMachines()});
-$("logout").addEventListener("click",async()=>{try{await api("/api/revoke","POST")}catch{} token="";localStorage.removeItem("piriToken");localStorage.removeItem("piriPlayer");show("pair")});
-if(token){$("player").textContent=player;api("/api/state").then(j=>{if(j.seated){startGame()}else{show("lobby");loadMachines()}}).catch(e=>{if(e.message==="AUTH_LOADING")setTimeout(()=>location.reload(),1000);else show("pair")})}else show("pair");
+function signed(v){v=Number(v||0);return v>0?"+"+v:String(v)}
+function odds(g,h){g=Number(g||0);h=Number(h||0);return g>0&&h>0?"1/"+Math.max(1,Math.round(g/h)):"---"}
+function renderPreData(d){
+ $("dCurrent").textContent=d.currentGames||0;$("dTotal").textContent=d.totalGames||0;$("dDiff").textContent=signed(d.todayDifference);$("dMax").textContent=signed(d.todayMaxDifference);$("dBig").textContent=d.bigCount||0;$("dReg").textContent=d.regCount||0;
+ drawGraph($("preGraph"),d.graph||[],d.totalGames||0);
+ const h=$("preHistory");h.textContent="";(d.history||[]).slice(0,20).forEach(function(x){const r=document.createElement("div");r.className="histRow";r.innerHTML="<b>"+x.type+"</b><span>"+x.games+"G</span>";h.append(r)});if(!(d.history||[]).length)h.textContent="-- no bonus yet --";
+}
+async function seat(id){
+ try{
+  const j=await api("/api/seat?id="+id,"POST");startGame(j);
+ }catch(e){alert(errorText(e))}
+}
+function resizeStage(){
+ const sx=innerWidth/1920,sy=innerHeight/1080,s=Math.min(sx,sy);
+ const x=(innerWidth-1920*s)/2,y=(innerHeight-1080*s)/2;
+ $("stage").style.transform="translate("+x+"px,"+y+"px) scale("+s+")";
+}
+function delta(profile,e){
+ e=Math.max(0,e);
+ if(profile==="NORMAL"){if(e<=.150)return 0;if(e<.500)return-.5*(21/.350)*(e-.150)*(e-.150);return-3.675-21*(e-.500)}
+ if(profile==="REVERSE_500MS"){if(e<.500)return 12*e;if(e<.800)return 6-.5*(21/.300)*(e-.500)*(e-.500);return 2.85-21*(e-.800)}
+ return-21*e;
+}
+function endpoint(from,target){let e=target;while(e>from)e-=21;return e}
+function currentPhase(reel,now){
+ if(!currentState)return 0;
+ if(motion){
+  const st=motion.stops[reel];
+  if(st){
+   let p=st.duration<=0?1:Math.min(1,Math.max(0,(now-st.at)/st.duration));
+   return mod(st.from+(st.end-st.from)*p,21);
+  }
+  if(motion.spinning){
+   return mod(motion.starts[reel]+delta(motion.animation,(now-motion.at)/1000),21);
+  }
+ }
+ const names=["left","center","right"],stops=currentState.displayStops||{};
+ return Number(stops[names[reel]]||0);
+}
+function symbolSize(sym){
+ const god=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME";
+ if(god){if(sym==="bar")return[230,150];if(sym==="seven"||sym==="grape"||sym==="replay")return[230,150];return[130,130]}
+ if(sym==="bar")return[230,150];if(sym==="seven")return[230,130];return[130,130];
+}
+function ensureReels(){
+ for(let r=0;r<3;r++){const box=$("reel"+r);if(box.children.length===5)continue;box.textContent="";for(let i=0;i<5;i++){const im=document.createElement("img");im.className="sym";box.append(im)}}
+}
+function drawReels(now){
+ ensureReels();
+ for(let r=0;r<3;r++){
+  const phase=currentPhase(r,now),middle=Math.floor(phase),frac=phase-middle,box=$("reel"+r),imgs=box.children;
+  for(let row=-2;row<=2;row++){
+   const im=imgs[row+2],sym=symbolAt(r,middle+row),sz=symbolSize(sym),w=sz[0],h=sz[1];
+   const src=asset("symbols/"+sym+".png");if(im.getAttribute("src")!==src)im.setAttribute("src",src);
+   im.style.width=w+"px";im.style.height=h+"px";im.style.left=((270-w)/2)+"px";im.style.top=(130+(row-frac)*130-(h-130)/2)+"px";
+  }
+ }
+}
+function nextPendingReel(){
+ if(!currentState)return-1;const mask=Number(currentState.stoppedMask||0);for(let r=0;r<3;r++)if((mask&(1<<r))===0)return r;return-1;
+}
+function canStop(reel){
+ if(!motion||!motion.spinning||reel<0)return false;
+ if(performance.now()-motion.at<Number(motion.stopEnableAfterMs||0))return false;
+ if(motion.stops[reel])return false;
+ const names=["left","center","right"];return !!(motion.hints&&motion.hints[names[reel]]);
+}
+function localStop(reel,pressed){
+ if(!canStop(reel))return;
+ const names=["left","center","right"],list=motion.hints[names[reel]],hint=list&&list[pressed];if(!hint)return;
+ const now=performance.now(),from=currentPhase(reel,now),end=endpoint(from,Number(hint.stopIndex)),exact=(from-end)/21*1000,duration=Math.max(Number(hint.durationMs||0),Math.ceil(exact-1e-9));
+ motion.stops[reel]={from:from,end:end,target:Number(hint.stopIndex),at:now,duration:duration};
+ motion.hints=Object.assign({},motion.hints);delete motion.hints[names[reel]];
+}
+function handleEvents(events){
+ (events||[]).forEach(function(ev){
+  const p=ev.payload||{};
+  if(ev.type==="SPIN_START"){
+   motion={spinId:p.spinId||"",animation:p.animation||"NORMAL",at:performance.now(),starts:[Number(p.startPhase.left),Number(p.startPhase.center),Number(p.startPhase.right)],stopEnableAfterMs:Number(p.stopEnableAfterMs||0),hints:p.stopHints||{},stops:[null,null,null],spinning:true};
+  }else if(ev.type==="REEL_STOP"&&motion){
+   const map={LEFT:0,CENTER:1,RIGHT:2},r=map[p.reel];if(r===undefined)return;
+   if(!motion.stops[r]){
+    const now=performance.now(),from=currentPhase(r,now),end=endpoint(from,Number(p.stopIndex)),duration=Math.max(Number(p.durationMs||0),Math.ceil((from-end)/21*1000-1e-9));
+    motion.stops[r]={from:from,end:end,target:Number(p.stopIndex),at:now,duration:duration};
+   }
+   motion.hints=p.nextStopHints||motion.hints;
+  }
+ });
+}
+function visualBusy(){
+ if(!motion)return false;const now=performance.now();for(let r=0;r<3;r++){const st=motion.stops[r];if(st&&now<st.at+st.duration)return true}return false;
+}
+function applyState(j){
+ currentState=j;currentType=j.machineType||currentType;
+ $("machineLabel").textContent="MACHINE "+j.machineId;
+ $("credit").textContent=j.credit||0;$("bet").textContent=j.bet||0;$("pay").textContent=j.pay||0;$("medals").textContent=j.heldMedals||0;
+ const godlike=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME";
+ $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);
+ $("lamp").src=asset("lamp/piri_chance_"+(j.lampOn?"on":"off")+".png");
+ if(currentType==="SKILL_STOP"){
+  const rem=j.skillRemaining==null?"":("残り "+j.skillRemaining+"G");const ch=j.skillChallenge&&j.skillChallenge!=="AUTO"?("<br>"+j.skillChallenge):"";$("skillChallenge").innerHTML=rem+ch;
+ }else $("skillChallenge").textContent="";
+ if(!String(j.gameState||"").includes("SPINNING")&&!visualBusy())motion=null;
+ updateControlState();
+}
+function renderState(j){
+ handleEvents(j.events);
+ if(visualBusy()&&currentState&&String(currentState.gameState||"").includes("SPINNING")&&!String(j.gameState||"").includes("SPINNING"))pendingState=j;
+ else applyState(j);
+}
+function updateControlState(){
+ const spinning=currentState&&String(currentState.gameState||"").includes("SPINNING");
+ [["leftBtn",0],["centerBtn",1],["rightBtn",2]].forEach(function(x){$(x[0]).disabled=spinning?!canStop(x[1]):true});
+}
+async function pollState(){
+ try{const j=await api("/api/state");if(!j.seated){stopTimers();show("lobby");loadMachines();return}if(!visualBusy())renderState(j)}catch(e){$("gameMessage").textContent=errorText(e)}
+}
+async function pollData(){
+ if(!currentState||!currentState.machineId)return;
+ try{currentData=await api("/api/data?id="+currentState.machineId);renderGameData(currentData)}catch(e){}
+}
+function renderGameData(d){
+ $("gCurrent").textContent=d.currentGames||0;$("gTotal").textContent=d.totalGames||0;$("gMax").textContent=signed(d.todayMaxDifference);$("gBig").textContent=d.bigCount||0;$("gReg").textContent=d.regCount||0;$("diffValue").textContent=signed(d.todayDifference);
+ $("bigOdds").querySelector("b").textContent=odds(d.totalGames,d.bigCount);$("regOdds").querySelector("b").textContent=odds(d.totalGames,d.regCount);$("allOdds").querySelector("b").textContent=odds(d.totalGames,Number(d.bigCount||0)+Number(d.regCount||0));
+ const h=$("gameHistory");h.textContent="";(d.history||[]).slice(0,10).forEach(function(x){const row=document.createElement("div");row.className="historyItem";let c=x.type==="BIG"?"big":x.type==="REG"?"reg":x.type==="GOD"?"god":"";row.innerHTML='<span class="'+c+'">'+x.type+'</span><span>'+x.games+'G</span>';h.append(row)});
+ $("chain").classList.toggle("hidden",!d.piriChain);$("chainCount").textContent="CHAIN x"+Math.max(1,Number(d.piriChainCount||1));
+ drawGraph($("gameGraph"),d.graph||[],d.totalGames||0);
+}
+function drawGraph(canvas,graph,total){
+ const rect=canvas.getBoundingClientRect(),scale=window.devicePixelRatio||1,w=Math.max(1,Math.round(rect.width*scale)),h=Math.max(1,Math.round(rect.height*scale));if(canvas.width!==w)canvas.width=w;if(canvas.height!==h)canvas.height=h;
+ const c=canvas.getContext("2d");c.clearRect(0,0,w,h);c.fillStyle="#090b0e";c.fillRect(0,0,w,h);if(!graph.length||!total)return;
+ let vals=graph.filter(function(p){return p.game>=1&&p.game<=total});if(!vals.length)return;let min=Math.min.apply(null,vals.map(function(p){return p.difference})),max=Math.max.apply(null,vals.map(function(p){return p.difference}));if(min===max){min-=200;max+=200}else if(max-min<400){let mid=(min+max)/2;min=mid-200;max=mid+200}else{let pad=(max-min)*.05;min-=pad;max+=pad}
+ if(min<=0&&max>=0){const zy=h-(0-min)/(max-min)*h;c.strokeStyle="#777";c.lineWidth=1*scale;c.beginPath();c.moveTo(0,zy);c.lineTo(w,zy);c.stroke()}
+ c.strokeStyle="#f4f4f4";c.lineWidth=2*scale;c.beginPath();vals.forEach(function(p,i){const x=total<=1?w:(p.game-1)/(total-1)*w,y=h-(p.difference-min)/(max-min)*h;if(i===0)c.moveTo(x,y);else c.lineTo(x,y)});c.stroke();
+}
+async function doAction(type,reel){
+ if(busy||!currentState)return;
+ let pressed=null;
+ if(type.indexOf("STOP_")===0){
+  if(!canStop(reel))return;pressed=Math.floor(currentPhase(reel,performance.now()));localStop(reel,pressed);
+ }else if(type==="SPACE_ACTION"&&String(currentState.gameState||"").includes("SPINNING")){
+  reel=nextPendingReel();if(!canStop(reel))return;pressed=Math.floor(currentPhase(reel,performance.now()));localStop(reel,pressed);
+ }
+ busy=true;
+ try{
+  let path="/api/action?type="+encodeURIComponent(type);if(pressed!==null)path+="&pressed="+pressed;
+  const j=await api(path,"POST");renderState(j);$("gameMessage").textContent="";
+ }catch(e){$("gameMessage").textContent=errorText(e);await pollState()}
+ finally{busy=false}
+}
+async function loan(){if(busy)return;busy=true;try{renderState(await api("/api/loan","POST"));$("gameMessage").textContent=""}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
+function startGame(j){
+ show("game");currentType=j.machineType||"";renderState(j);pollData();stopTimers();stateTimer=setInterval(pollState,250);dataTimer=setInterval(pollData,1500);
+}
+function stopTimers(){if(stateTimer)clearInterval(stateTimer);if(dataTimer)clearInterval(dataTimer);stateTimer=0;dataTimer=0}
+async function leave(){
+ try{await api("/api/leave","POST")}catch(e){$("gameMessage").textContent=errorText(e);return}
+ stopTimers();motion=null;pendingState=null;currentState=null;show("lobby");loadMachines();
+}
+function frame(now){
+ if(!$("game").classList.contains("hidden")){
+  drawReels(now);
+  if(pendingState&&!visualBusy()){const j=pendingState;pendingState=null;applyState(j)}
+  updateControlState();
+ }
+ requestAnimationFrame(frame);
+}
+$("pairBtn").onclick=pairNow;$("refresh").onclick=loadMachines;$("dataClose").onclick=function(){show("lobby")};
+$("betBtn").onclick=function(){doAction("SPACE_ACTION",-1)};$("leverBtn").onclick=function(){doAction("SPACE_ACTION",-1)};
+document.querySelectorAll(".stopBtn").forEach(function(b){b.onclick=function(){doAction(b.dataset.action,Number(b.dataset.reel))}});
+$("loanBtn").onclick=loan;$("leaveBtn").onclick=leave;
+$("logout").onclick=async function(){try{await api("/api/revoke","POST")}catch(e){}token="";localStorage.removeItem("piriToken");localStorage.removeItem("piriPlayer");show("pair")};
+window.addEventListener("resize",resizeStage);
+requestAnimationFrame(frame);
+if(token){
+ $("player").textContent=player;
+ api("/api/state").then(function(j){if(j.seated)startGame(j);else{show("lobby");loadMachines()}}).catch(function(e){if(e.message==="AUTH_LOADING")setTimeout(function(){location.reload()},1000);else show("pair")});
+}else show("pair");
 })();
 </script>
 </body>
