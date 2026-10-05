@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.SplittableRandom;
+import java.util.random.RandomGenerator;
 
 /**
  * Durable protocol boundary for the pachinko family.
@@ -26,6 +28,16 @@ import java.util.UUID;
  * BET/LEVER/reel-stop actions.
  */
 public final class PachinkoGameEngine implements GameEngine {
+    private final RandomGenerator random;
+    private final PachinkoRouting routing;
+
+    public PachinkoGameEngine(){this(new SplittableRandom(),PachinkoRouting.reference());}
+    public PachinkoGameEngine(RandomGenerator random){this(random,PachinkoRouting.reference());}
+    public PachinkoGameEngine(RandomGenerator random,PachinkoRouting routing){
+        this.random=java.util.Objects.requireNonNull(random);
+        this.routing=java.util.Objects.requireNonNull(routing);
+    }
+
     private static final Set<PacketType> PACHINKO_ACTIONS=Set.of(
             PacketType.PACHINKO_FIRE,
             PacketType.PACHINKO_START,
@@ -43,7 +55,14 @@ public final class PachinkoGameEngine implements GameEngine {
         if(runtime.ballsHeld()<1)return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
         try {
             PachinkoRuntime fired=PachinkoBallAccounting.fire(runtime,now);
-            return accepted(before,fired,action,sequence);
+            if(!routing.entersStart(random))return accepted(before,fired,action,sequence);
+            PachinkoRuntime started=PachinkoBallAccounting.validStart(fired,now);
+            boolean v=random.nextInt((int)PachinkoSpec.INITIAL_JACKPOT_DENOMINATOR)==0;
+            PachinkoRuntime presenting=new PachinkoRuntime(
+                    started.mode(),started.ballsHeld(),started.ballsLoaned(),started.totalFired(),started.totalStarts(),
+                    started.ballSequenceId(),PachinkoRuntime.Presentation.LEFT_KURUN,v,started.initialOutcome(),
+                    started.rushActive(),started.rushWins(),started.currentPayout(),started.cumulativePayout(),now);
+            return acceptedStart(before,presenting,sequence,machine.id(),v);
         } catch(IllegalStateException invalid) {
             return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
         }
@@ -51,6 +70,28 @@ public final class PachinkoGameEngine implements GameEngine {
 
     private static PachinkoRuntime runtime(Session before,Machine machine){
         return PachinkoRuntime.fromJson(before.machineState()!=null?before.machineState().toString():machine.runtimeJson());
+    }
+
+    private static GameTransition acceptedStart(Session before,PachinkoRuntime runtime,long sequence,int machineId,boolean v){
+        var values=new LinkedHashMap<>(before.snapshot());
+        values.put("last_client_sequence",sequence);
+        values.put("last_activity",runtime.lastActivity());
+        values.put("machine_state_json",runtime.toJsonString());
+        Session after=new Session(values);
+        long seed=presentationSeed(before.id(),machineId,runtime.ballSequenceId());
+        JsonObject accepted=new JsonObject();accepted.addProperty("clientSequence",sequence);accepted.addProperty("action",PacketType.PACHINKO_FIRE.name());
+        JsonObject event=new JsonObject();
+        event.addProperty("machineId",machineId);event.addProperty("ballSequenceId",runtime.ballSequenceId());
+        event.addProperty("side","LEFT");event.addProperty("outcome",v?"V":"OUT");
+        event.addProperty("seed",seed);event.addProperty("startTime",runtime.lastActivity());
+        return new GameTransition(UUID.randomUUID(),before,after,0,0,0,false,false,null,false,0,
+                List.of(Envelope.current(PacketType.ACTION_ACCEPTED,accepted),Envelope.current(PacketType.PACHINKO_EVENT,event)),
+                List.of(),List.of(),runtime.toJsonString());
+    }
+
+    static long presentationSeed(UUID session,int machine,long ballSequence){
+        long x=session.getMostSignificantBits()^session.getLeastSignificantBits()^((long)machine<<32)^ballSequence;
+        x^=x>>>33;x*=0xff51afd7ed558ccdl;x^=x>>>33;x*=0xc4ceb9fe1a85ec53l;x^=x>>>33;return x;
     }
 
     private static GameTransition accepted(Session before,PachinkoRuntime runtime,PacketType action,long sequence){
