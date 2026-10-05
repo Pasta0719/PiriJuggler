@@ -1015,7 +1015,6 @@ public final class MachineService implements Listener, CommandExecutor {
         main();
         if (!ready()) { callback.accept(null, "DB_ERROR"); return; }
         Player player = Bukkit.getPlayer(owner);
-        if (player == null || !player.isOnline()) { callback.accept(null, "PLAYER_OFFLINE"); return; }
         Session session = state.session(owner);
         if (session == null || session.lifecycle() != Session.Lifecycle.ACTIVE) { callback.accept(null, "SESSION_MISMATCH"); return; }
         if (!EconomyStore.allowed(session.state())) { callback.accept(null, "INVALID_STATE"); return; }
@@ -1024,9 +1023,31 @@ public final class MachineService implements Listener, CommandExecutor {
         if (pendingPlayers.contains(owner) || pendingMachines.contains(machineId)) { callback.accept(null, "BUSY"); return; }
 
         List<EconomyStore.InsertCandidate> candidates = new ArrayList<>();
-        for (int slot = 0; slot <= 35; slot++) {
-            MedalToken.Value value = MedalToken.read(player.getInventory().getItem(slot));
-            if (value != null) candidates.add(new EconomyStore.InsertCandidate(slot, value.bundleId(), value.amount()));
+        if (player != null && player.isOnline()) {
+            for (int slot = 0; slot <= 35; slot++) {
+                MedalToken.Value value = MedalToken.read(player.getInventory().getItem(slot));
+                if (value != null) candidates.add(new EconomyStore.InsertCandidate(slot, value.bundleId(), value.amount()));
+            }
+        }
+        if (candidates.isEmpty()) {
+            pendingPlayers.add(owner);
+            pendingMachines.add(machineId);
+            plugin.executors().database(
+                    () -> {
+                        EconomyStore store = new EconomyStore(database);
+                        Session inserted = store.insertPending(owner, session.id(), machineId, sequence, System.currentTimeMillis());
+                        return new Saved<>(new Object[]{inserted, store.pendingMedals(owner)}, database.state());
+                    },
+                    (saved, error) -> {
+                        if (saved != null) state = saved.state;
+                        releaseEconomy(owner, machineId);
+                        if (error != null) { callback.accept(null, mobileFailureCode(error)); return; }
+                        remote.broadcastSnapshot(machineId);
+                        JsonObject response = mobileState(owner);
+                        response.addProperty("walletMedals", (Long) saved.value[1]);
+                        callback.accept(response, null);
+                    });
+            return;
         }
         pendingPlayers.add(owner);
         pendingMachines.add(machineId);
@@ -1110,35 +1131,28 @@ public final class MachineService implements Listener, CommandExecutor {
                     }
 
                     Player online = Bukkit.getPlayer(owner);
-                    Set<UUID> delivered = new HashSet<>();
-                    long deliveredAmount = 0;
-                    if (online != null && online.isOnline()) {
-                        for (var bundle : plan.bundles()) {
-                            int slot = online.getInventory().firstEmpty();
-                            if (slot < 0) break;
-                            online.getInventory().setItem(slot, MedalToken.create(bundle.id(), bundle.amount()));
-                            delivered.add(bundle.id());
-                            deliveredAmount = Math.addExact(deliveredAmount, bundle.amount());
-                        }
-                    }
-                    long deliveredFinal = deliveredAmount;
-                    Set<UUID> deliveredFinalIds = Set.copyOf(delivered);
+                    long deliveredFinal = 0;
+                    Set<UUID> deliveredFinalIds = Set.of();
                     plugin.executors().database(
                             () -> new Saved<>(new EconomyStore(database).finishCashout(owner, plan.transactionId(), deliveredFinalIds, System.currentTimeMillis()), database.state()),
                             (finished, finishError) -> {
                                 if (finished != null) state = finished.state;
                                 releaseEconomy(owner, machineId);
                                 if (finishError != null) {
-                                    if (online != null) removeBundleItems(online, deliveredFinalIds);
                                     callback.accept(null, mobileFailureCode(finishError));
                                     return;
                                 }
                                 remote.broadcastSnapshot(machineId);
                                 JsonObject response = mobileState(owner);
                                 response.addProperty("cashoutAmount", plan.amount());
-                                response.addProperty("cashoutDelivered", deliveredFinal);
-                                response.addProperty("cashoutPending", plan.amount() - deliveredFinal);
-                                callback.accept(response, null);
+                                response.addProperty("cashoutDelivered", 0);
+                                response.addProperty("cashoutPending", plan.amount());
+                                plugin.executors().database(
+                                        () -> new EconomyStore(database).pendingMedals(owner),
+                                        (wallet, walletError) -> {
+                                            if (walletError == null && wallet != null) response.addProperty("walletMedals", wallet);
+                                            callback.accept(response, null);
+                                        });
                             });
                 });
     }
