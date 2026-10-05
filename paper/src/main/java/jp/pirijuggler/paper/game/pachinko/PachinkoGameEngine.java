@@ -40,6 +40,7 @@ public final class PachinkoGameEngine implements GameEngine {
         if(!PACHINKO_ACTIONS.contains(action))return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
         PachinkoRuntime runtime=runtime(before,machine);
         if(action!=PacketType.PACHINKO_FIRE)return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
+        if(runtime.ballsHeld()<1)return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
         try {
             PachinkoRuntime fired=PachinkoBallAccounting.fire(runtime,now);
             return accepted(before,fired,action,sequence);
