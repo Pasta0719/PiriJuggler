@@ -3,6 +3,8 @@ package jp.pirijuggler.paper.admin;
 import jp.pirijuggler.paper.config.ConfigValidation;
 import jp.pirijuggler.paper.database.PiriDatabase;
 import jp.pirijuggler.paper.game.JugglerGodRuntime;
+import jp.pirijuggler.paper.game.pachinko.PachinkoRuntime;
+import jp.pirijuggler.paper.game.pachinko.PachinkoStatistics;
 import jp.pirijuggler.paper.machine.Machine;
 import jp.pirijuggler.paper.machine.MachineType;
 import org.junit.jupiter.api.*;
@@ -93,4 +95,31 @@ class AdminStoreTest {
         store.clearNextProfile();assertTrue(store.eventStatus(db.state()).get("nextProfile").isJsonNull());
         assertThrows(jp.pirijuggler.paper.machine.DomainException.class,()->store.setNextProfile("missing"));
     }
+
+    @Test void dailyResetIsTheExplicitPachinkoStatisticsResetAndPreservesLiveRights() throws Exception {
+        var location=new Machine.Location(UUID.randomUUID(),"world",10,64,0,"NORTH");
+        int id=db.create(location,MachineType.PACHINKO,NOW);
+        var runtime=new PachinkoRuntime(
+                PachinkoRuntime.Mode.RUSH,4321,5000,900,61,77,
+                PachinkoRuntime.Presentation.IDLE,true,PachinkoRuntime.InitialOutcome.RUSH_1500,true,12,
+                PachinkoRuntime.RightOutcome.NONE,1500,24000,
+                new PachinkoStatistics(8,3,5,5,12,11,1),NOW+1);
+        db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",runtime.toJsonString(),id);
+
+        store.resetDaily(db.state(),id,NOW+10);
+
+        var reset=PachinkoRuntime.fromJson(db.state().machine(id).runtimeJson());
+        assertEquals(runtime.mode(),reset.mode());
+        assertEquals(runtime.ballsHeld(),reset.ballsHeld());
+        assertEquals(runtime.ballsLoaned(),reset.ballsLoaned());
+        assertEquals(runtime.ballSequenceId(),reset.ballSequenceId());
+        assertTrue(reset.rushActive());
+        assertEquals(runtime.initialOutcome(),reset.initialOutcome());
+        assertEquals(0,reset.totalFired());
+        assertEquals(0,reset.totalStarts());
+        assertEquals(0,reset.rushWins());
+        assertEquals(0,reset.cumulativePayout());
+        assertEquals(PachinkoStatistics.empty(),reset.statistics());
+    }
+
 }
