@@ -608,7 +608,7 @@ public final class MobileRemoteGateway implements AutoCloseable {
 :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 .graphSurface{display:block;overflow:hidden;background:#090b0e!important}\ncanvas{background:#090b0e}
-html,body{margin:0;min-height:100%;background:#0b0c10;color:#f6f1e7}
+html,body{margin:0;min-height:100%;background:#0b0c10;color:#F6F1E7}
 button,input{font:inherit}
 button{border:0;color:#fff;background:#343944;font-weight:800;cursor:pointer}
 button:disabled{opacity:.35;cursor:default}
@@ -629,14 +629,14 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #dataPanel{position:fixed;inset:0;z-index:40;background:#08090c;overflow:auto;padding:18px}
 #dataInner{max-width:760px;margin:auto}
 .dataGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.metric{background:#101218;border:1px solid #292d36;border-radius:12px;padding:12px}
+.metric{background:#090B0E;border:1px solid #292d36;border-radius:12px;padding:12px}
 .metric .k{font-size:11px;color:#9da3ae}.metric .v{font-size:22px;font-weight:900;margin-top:4px}
-#preGraph{display:block;width:100%;height:180px;background:#090b0e!important;border:1px solid #20242a;border-radius:10px;margin-top:12px}
+#preGraph{display:block;width:100%;height:180px;background:#090b0e!important;border:1px solid #B68A42;border-radius:10px;margin-top:12px}
 .histRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:7px 0;border-bottom:1px solid #252932}
-#game{position:fixed;inset:0;background:#000;z-index:30;overflow:hidden;touch-action:manipulation}
+#game{position:fixed;inset:0;background:#000000;z-index:30;overflow:hidden;touch-action:manipulation}
 #stageWrap{position:absolute;inset:0;overflow:hidden}
-#stage{position:absolute;width:1600px;height:900px;transform-origin:0 0;background:#000;color:#f6f1e7;font-family:Arial,sans-serif;user-select:none}
-.panel{position:absolute;background:#090b0e;border:2px solid #20242a}
+#stage{position:absolute;width:1600px;height:900px;transform-origin:0 0;background:#000000;color:#F6F1E7;font-family:Arial,sans-serif;user-select:none}
+.panel{position:absolute;background:#090B0E;border:2px solid #B68A42}
 #dataTop{left:8px;top:8px;width:1584px;height:170px}
 #dataLeft{left:8px;top:262px;width:218px;height:365px}
 #dataRight{left:1374px;top:262px;width:218px;height:365px}
@@ -655,29 +655,29 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #skillChallengeImg{display:none;max-width:100%;max-height:100%;object-fit:contain}
 #skillRemaining{position:absolute;left:858px;top:675px;width:190px;text-align:center;font-size:22px;font-weight:900;color:#F6F1E7;z-index:6}
 
-#statusPanel{position:absolute;left:555px;top:605px;width:765px;height:70px;background:#090B0E;border:2px solid #20242A;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 14px;z-index:5}
-.statLabel{font-size:15px;color:#b9bcc2}.statValue{font-size:27px;font-weight:900;margin-top:1px}
+#statusPanel{position:absolute;left:555px;top:605px;width:765px;height:70px;background:#090B0E;border:2px solid #B68A42;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 14px;z-index:5}
+.statLabel{font-size:15px;color:#B9BCC2}.statValue{font-size:27px;font-weight:900;margin-top:1px}
 
-.machineControl{position:absolute;z-index:8;border-radius:14px;background:#666a72;padding:4px}
-.machineControl>span{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:10px;background:#c92734;font-size:22px;font-weight:900;text-shadow:2px 2px #190406}
-.machineControl:active>span{background:#8a1720;transform:translateY(2px)}
+.machineControl{position:absolute;z-index:8;border-radius:14px;background:#666A72;padding:4px}
+.machineControl>span{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:10px;background:#C92734;font-size:22px;font-weight:900;text-shadow:2px 2px #190406}
+.machineControl:active>span{background:#8A1720;transform:translateY(2px)}
 #betBtn{left:360px;top:724px;width:115px;height:78px}
 #leverBtn{left:250px;top:650px;width:105px;height:215px;background:transparent;padding:0}
-#leverStem{position:absolute;left:43px;top:31px;width:18px;height:150px;background:#666a72}
-#leverKnob{position:absolute;left:25px;top:22px;width:55px;height:55px;border-radius:50%;background:#c92734;border:5px solid #666a72;transition:transform .09s}
+#leverStem{position:absolute;left:43px;top:31px;width:18px;height:150px;background:#666A72}
+#leverKnob{position:absolute;left:25px;top:22px;width:55px;height:55px;border-radius:50%;background:#C92734;border:5px solid #666A72;transition:transform .09s}
 #leverBtn:active #leverKnob{transform:translateY(14px)}
 #leverLabel{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-size:20px;font-weight:900}
 .stopBtn{width:150px;height:95px;background:transparent;padding:0}
-.stopBtn>span{width:72px;height:72px;border-radius:50%;border:5px solid #b9bcc2;background:#c92734;font-size:0;margin:auto}
+.stopBtn>span{width:72px;height:72px;border-radius:50%;border:5px solid #B9BCC2;background:#C92734;font-size:0;margin:auto}
 .stopBtn>span:after{content:"";display:block}
-.stopBtn:active>span{background:#8a1720}
-.stopBtn:disabled>span{background:#666a72;border-color:#666a72}
+.stopBtn:active>span{background:#8A1720}
+.stopBtn:disabled>span{background:#666A72;border-color:#666A72}
 .stopText{position:absolute;left:0;right:0;bottom:-12px;text-align:center;font-size:20px;font-weight:900}
 #leftBtn{left:600px;top:733px}#centerBtn{left:835px;top:733px}#rightBtn{left:1070px;top:733px}
 
 .sideBtn{left:1395px;width:180px;height:46px}
 #loanBtn{top:646px}#insertBtn{top:698px}#cashBtn{top:750px}#exchangeBtn{top:802px}
-#gameMessage{position:absolute;left:550px;top:840px;width:770px;text-align:center;font-size:18px;font-weight:800;color:#ffd36b;z-index:10}
+#gameMessage{position:absolute;left:550px;top:840px;width:770px;text-align:center;font-size:18px;font-weight:800;color:#F6F1E7;z-index:10}
 #leaveBtn{position:fixed;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));z-index:50;background:#5a2525;border-radius:12px;padding:10px 14px;font-size:14px;opacity:.9}
 
 .dataTitle{position:absolute;font-size:20px;font-weight:900}
@@ -700,15 +700,15 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
  #normal{padding:12px 10px 30px}.machine{grid-template-columns:minmax(0,1fr) auto auto}.normalBtn{padding:8px 10px;font-size:14px}.dataGrid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:700px) and (orientation:portrait){
- #game{background:#050608}
+ #game{background:#000000}
  #stageWrap{position:absolute;inset:0;overflow:hidden}
  #stage{
-  width:390px;height:844px;background:#050608;overflow:hidden;
+  width:390px;height:844px;background:#000000;overflow:hidden;
   transform-origin:0 0!important;
  }
  #dataTop{
   left:8px;top:8px;width:374px;height:100px;
-  border:1px solid #20242a;border-radius:10px;background:#101218;
+  border:1px solid #B68A42;border-radius:10px;background:#090B0E;
  }
  #machineLabel{left:18px;top:15px;font-size:15px}
  #graphLabel,#gameGraph,#dataLeft,#dataRight,#diffTitle,#diffValue,#historyTitle,#gameHistory,#oddsTitle,#bigOdds,#regOdds,#allOdds,#chain{display:none!important}
@@ -725,10 +725,11 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 
  #cabinet{
   left:8px;top:116px;width:374px;height:454px;
-  border:4px solid #b68a42;box-shadow:inset 0 0 0 2px #e4c174;border-radius:10px;
+  background:#3C0A10;border:4px solid #B68A42;
+  box-shadow:inset 0 0 0 2px #E4C174;border-radius:10px;
  }
- #reelBacking{left:30px;top:205px;width:330px;height:174px;background:#8a8175;border-radius:7px}
- .reelWindow{top:205px;width:96px;height:174px;border-radius:4px}
+ #reelBacking{left:30px;top:205px;width:330px;height:174px;background:#8A8175;border-radius:7px}
+ .reelWindow{top:205px;width:96px;height:174px;border-radius:4px;background:#F4F1E8}
  #reel0{left:38px}#reel1{left:147px}#reel2{left:256px}
  #lamp{left:24px;top:398px;width:140px;height:78px;object-fit:contain}
  #skillChallenge{left:83px;top:454px;width:92px;height:72px}
@@ -736,7 +737,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 
  #statusPanel{
   left:24px;top:490px;width:342px;height:54px;
-  border:1px solid #20242a;border-radius:8px;padding:5px 8px;
+  background:#090B0E;border:1px solid #B68A42;border-radius:8px;padding:5px 8px;
   grid-template-columns:repeat(4,1fr);
  }
  .statLabel{font-size:8px}.statValue{font-size:17px;margin-top:0}
