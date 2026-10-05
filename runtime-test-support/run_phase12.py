@@ -250,7 +250,16 @@ try:
 
     start_mismatch()
 
+    # Regression: a legacy persistent REMOTE ArmorStand must not survive a real Paper restart.
+    command(owner,"piritest remoteorphan","TEST_REMOTE_ORPHAN_CREATED")
+    wait(lambda:state().get("remoteArmorStands")==1,"persistent REMOTE orphan fixture")
+    check("persistent REMOTE orphan exists before restart",state().get("remoteArmorStands")==1,{"count":state().get("remoteArmorStands")})
     stop_client(spec);stop_client(owner);stop_server()
+    if server_result.exists(): server_result.unlink()
+    start_server()
+    wait(lambda:state().get("ready") and state().get("remoteArmorStands")==0,"REMOTE orphan startup cleanup",180)
+    check("server restart removes stale REMOTE ArmorStand",state().get("remoteArmorStands")==0,{"count":state().get("remoteArmorStands")})
+    stop_server()
     manifest["passed"]=True
 except Exception as error:
     manifest["failure"]=str(error);print("RUNTIME FAILURE: "+str(error),flush=True)
