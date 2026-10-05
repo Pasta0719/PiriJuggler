@@ -60,14 +60,19 @@ public final class WorldCabinetRenderer {
         quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH,CabinetPlacement.HEIGHT,0,UiConstants.color("CABINET_EDGE"),0,0,1,1);
         quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.02,CabinetPlacement.HEIGHT-.02,.0008,UiConstants.color("CABINET_BG"),0,0,1,1);
         localText(consumers,client.textRenderer,basis,camera,0,.34,"PACHINKO",.0030f,UiConstants.color("DISPLAY_WHITE"),true);
-        if(!"LEFT".equals(state.pachinkoSide())&&!"LEFT_KURUN".equals(state.pachinkoSide()))return;
+        boolean right="RIGHT".equals(state.pachinkoSide())||"RIGHT_KURUN".equals(state.pachinkoSide());
+        boolean left="LEFT".equals(state.pachinkoSide())||"LEFT_KURUN".equals(state.pachinkoSide());
+        if(!left&&!right)return;
         double t=Math.max(0.0,Math.min(1.0,(System.currentTimeMillis()-state.pachinkoStartTime())/1800.0));
         long seed=state.pachinkoSeed();double phase=((seed>>>8)&1023)/1023.0*Math.PI*2.0;
+        double centerX=right?.22:-.22;
         double radius=.18*(1.0-.55*t);double angle=phase+t*Math.PI*4.0;
-        double bx=Math.cos(angle)*radius;double by=.02+Math.sin(angle)*radius*.72;
-        if(t>=.92){bx="V".equals(state.pachinkoOutcome())?0.0:.20;by=-.13;}
+        double bx=centerX+Math.cos(angle)*radius;double by=.02+Math.sin(angle)*radius*.72;
+        boolean win=right?state.pachinkoOutcome().startsWith("WIN_"):"V".equals(state.pachinkoOutcome());
+        if(t>=.92){bx=win?centerX:centerX+(right?-.20:.20);by=-.13;}
         quad(consumers,WHITE,basis,camera,bx,by,.045,.045,.004,0xfff4f4f4,0,0,1,1);
-        localText(consumers,client.textRenderer,basis,camera,0,-.28,"V".equals(state.pachinkoOutcome())?"V":"OUT",.0028f,UiConstants.color("DISPLAY_WHITE"),true);
+        String result=right?(win?state.pachinkoOutcome().substring(4):"OUT"):(win?"V":"OUT");
+        localText(consumers,client.textRenderer,basis,camera,centerX,-.28,result,.0028f,UiConstants.color("DISPLAY_WHITE"),true);
     }
 
     private static void draw(WorldRenderContext context,RemoteMachineViewState state,
