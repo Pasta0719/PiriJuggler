@@ -116,4 +116,17 @@ class PachinkoGameEngineTest extends GameFixture {
         assertEquals(PachinkoRuntime.InitialOutcome.RUSH_1500,rr.initialOutcome());assertTrue(rr.rushActive());assertEquals(1500,rr.currentPayout());
     }
 
+    @Test void reconnectAfterCommittedInitialPayoutCannotPayAgain() throws Exception {
+        int id=db.create(new Machine.Location(UUID.randomUUID(),"world",28,64,0,"NORTH"),MachineType.PACHINKO,NOW);
+        UUID player=UUID.randomUUID();db.seat(player,id,NOW);
+        var base=PachinkoBallAccounting.validStart(PachinkoBallAccounting.fire(PachinkoBallAccounting.lend(PachinkoRuntime.initial(),NOW),NOW+1),NOW+2);
+        var v=new PachinkoRuntime(base.mode(),base.ballsHeld(),base.ballsLoaned(),base.totalFired(),base.totalStarts(),base.ballSequenceId(),PachinkoRuntime.Presentation.LEFT_KURUN,true,PachinkoRuntime.InitialOutcome.NONE,false,0,0,0,NOW+2);
+        db.sql("UPDATE player_sessions SET machine_state_json=? WHERE player_uuid=?",v.toJsonString(),player.toString());
+        var engine=new PachinkoGameEngine(new java.util.Random(1));var paid=engine.initialPayout(db.state().session(player),v,1,id,NOW+3,true);var saved=store.commit(paid);
+        long held=PachinkoRuntime.fromJson(saved.machineState().toString()).ballsHeld();long cumulative=PachinkoRuntime.fromJson(saved.machineState().toString()).cumulativePayout();
+        assertTrue(engine.resume(saved,0).isEmpty());
+        var duplicate=engine.plan(saved,db.state().machine(id),PacketType.PACHINKO_PRESENTATION,2,NOW+4,0,0,null);var after=store.commit(duplicate);
+        var restored=PachinkoRuntime.fromJson(after.machineState().toString());assertEquals(held,restored.ballsHeld());assertEquals(cumulative,restored.cumulativePayout());assertTrue(restored.rushActive());
+    }
+
 }
