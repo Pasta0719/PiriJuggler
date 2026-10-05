@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import jp.pirijuggler.paper.database.PiriDatabase;
 import jp.pirijuggler.paper.database.StartupProfile;
 import jp.pirijuggler.paper.game.JugglerGodRuntime;
+import jp.pirijuggler.paper.game.pachinko.PachinkoRuntime;
 import jp.pirijuggler.paper.machine.DomainException;
 import jp.pirijuggler.paper.machine.Machine;
 
@@ -57,9 +58,9 @@ public final class AdminStore {
     }
 
     public void resetDaily(PiriDatabase.State state, int machineId, long now) throws Exception {
-        requireMachine(state, machineId);
+        Machine machine=requireMachine(state, machineId);
         db.transaction(() -> {
-            resetDailyRow(state.period(), machineId, now);
+            resetDailyRow(state.period(), machine, now);
             return null;
         });
     }
@@ -67,20 +68,32 @@ public final class AdminStore {
     public void resetDailyAll(PiriDatabase.State state, List<Integer> machineIds, long now) throws Exception {
         db.transaction(() -> {
             for (int machineId : machineIds) {
-                requireMachine(state, machineId);
-                resetDailyRow(state.period(), machineId, now);
+                Machine machine=requireMachine(state, machineId);
+                resetDailyRow(state.period(), machine, now);
             }
             return null;
         });
     }
 
-    private void resetDailyRow(String period, int machineId, long now) throws SQLException {
+    private void resetDailyRow(String period, Machine machine, long now) throws SQLException {
+        int machineId=machine.id();
         db.sql("UPDATE machine_period_stats SET total_games=0,big_count=0,reg_count=0,current_games=0,today_difference=0,today_max_difference=0,last_bonus_type=NULL,last_bonus_at=NULL WHERE machine_id=? AND business_period_id=?", machineId, period);
         db.sql("DELETE FROM bonus_history WHERE machine_id=? AND business_period_id=?", machineId, period);
         db.sql("DELETE FROM juggler_god_history WHERE machine_id=? AND business_period_id=?", machineId, period);
         db.sql("DELETE FROM metadata WHERE key=?", "SIM_CURSOR:"+period+":"+machineId);
-        db.sql("UPDATE machines SET machine_runtime_json=?,updated_at=? WHERE machine_id=? AND machine_type IN ('JUGGLER_GOD','JUGGLER_GOD_EXTREME')", JugglerGodRuntime.initial().toJsonString(), now, machineId);
-        db.sql("UPDATE player_sessions SET machine_state_json=? WHERE machine_id=? AND lifecycle='SUSPENDED_SAFE'", JugglerGodRuntime.initial().toJsonString(), machineId);
+        switch(machine.type()){
+            case JUGGLER_GOD, JUGGLER_GOD_EXTREME -> {
+                String reset=JugglerGodRuntime.initial().toJsonString();
+                db.sql("UPDATE machines SET machine_runtime_json=?,updated_at=? WHERE machine_id=?",reset,now,machineId);
+                db.sql("UPDATE player_sessions SET machine_state_json=? WHERE machine_id=? AND lifecycle='SUSPENDED_SAFE'",reset,machineId);
+            }
+            case PACHINKO -> {
+                String reset=PachinkoRuntime.fromJson(machine.runtimeJson()).resetStatistics(now).toJsonString();
+                db.sql("UPDATE machines SET machine_runtime_json=?,updated_at=? WHERE machine_id=?",reset,now,machineId);
+                db.sql("UPDATE player_sessions SET machine_state_json=? WHERE machine_id=? AND lifecycle='SUSPENDED_SAFE'",reset,machineId);
+            }
+            default -> { }
+        }
         db.sql("DELETE FROM graph_points WHERE machine_id=? AND business_period_id=?", machineId, period);
         db.sql("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,0,0,?)", machineId, period, now);
     }
