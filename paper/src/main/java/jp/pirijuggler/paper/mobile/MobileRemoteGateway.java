@@ -85,6 +85,7 @@ public final class MobileRemoteGateway implements AutoCloseable {
 
     private EventLoopGroup httpGroup;
     private volatile Channel httpServerChannel;
+    private volatile String httpBindError;
     private volatile boolean closed;
     private boolean pairingsLoadRequested;
     private boolean pairingsLoaded;
@@ -122,6 +123,16 @@ public final class MobileRemoteGateway implements AutoCloseable {
             sender.sendMessage(Component.text("この操作はプレイヤーから実行してください。"));
             return true;
         }
+        if (args.length == 2 && args[1].equalsIgnoreCase("status")) {
+            if (httpServerChannel != null && httpServerChannel.isActive()) {
+                player.sendMessage(Component.text("Piri Mobile HTTP: READY http://02.jpn.gg:10271/"));
+            } else if (httpBindError != null) {
+                player.sendMessage(Component.text("Piri Mobile HTTP: FAILED " + httpBindError));
+            } else {
+                player.sendMessage(Component.text("Piri Mobile HTTP: STARTING"));
+            }
+            return true;
+        }
         if (args.length == 2 && args[1].equalsIgnoreCase("pair")) {
             pairings.entrySet().removeIf(e -> e.getValue().owner().equals(player.getUniqueId()));
             String code;
@@ -142,7 +153,7 @@ public final class MobileRemoteGateway implements AutoCloseable {
             });
             return true;
         }
-        player.sendMessage(Component.text("/piri mobile pair | /piri mobile revoke"));
+        player.sendMessage(Component.text("/piri mobile pair | /piri mobile status | /piri mobile revoke"));
         return true;
     }
 
@@ -175,8 +186,11 @@ public final class MobileRemoteGateway implements AutoCloseable {
         bootstrap.bind("0.0.0.0", HTTP_PORT).addListener(future -> {
             if (future.isSuccess()) {
                 httpServerChannel = ((io.netty.channel.ChannelFuture) future).channel();
+                httpBindError = null;
                 plugin.getLogger().info("PIRI_MOBILE_HTTP_READY port=" + HTTP_PORT);
             } else {
+                httpBindError = future.cause() == null ? "UNKNOWN" :
+                        future.cause().getClass().getSimpleName() + ": " + String.valueOf(future.cause().getMessage());
                 plugin.getLogger().log(java.util.logging.Level.SEVERE,
                         "Piri mobile HTTP failed to bind port " + HTTP_PORT, future.cause());
                 if (httpGroup != null) {
@@ -303,6 +317,13 @@ public final class MobileRemoteGateway implements AutoCloseable {
                 return;
             }
             json(ctx, HttpResponseStatus.NOT_FOUND, error("NOT_FOUND"));
+        }
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+            plugin.getLogger().log(java.util.logging.Level.WARNING,
+                    "Piri mobile HTTP request failed from " + ctx.channel().remoteAddress(), cause);
+            ctx.close();
         }
     }
 
