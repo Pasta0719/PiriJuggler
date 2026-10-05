@@ -26,6 +26,7 @@ public record PachinkoRuntime(
         RightOutcome rightOutcome,
         long currentPayout,
         long cumulativePayout,
+        PachinkoStatistics statistics,
         long lastActivity
 ) {
     public enum Mode { NORMAL, INITIAL_PAYOUT, RUSH, RIGHT_PAYOUT }
@@ -38,6 +39,7 @@ public record PachinkoRuntime(
         Objects.requireNonNull(presentation);
         Objects.requireNonNull(initialOutcome);
         Objects.requireNonNull(rightOutcome);
+        Objects.requireNonNull(statistics);
         if (ballsHeld < 0 || ballsLoaned < 0 || totalFired < 0 || totalStarts < 0 ||
                 ballSequenceId < 0 || rushWins < 0 || currentPayout < 0 ||
                 cumulativePayout < 0 || lastActivity < 0) {
@@ -49,11 +51,15 @@ public record PachinkoRuntime(
         }
     }
 
+    public PachinkoRuntime(Mode mode,long ballsHeld,long ballsLoaned,long totalFired,long totalStarts,long ballSequenceId,Presentation presentation,boolean initialHitCommitted,InitialOutcome initialOutcome,boolean rushActive,long rushWins,RightOutcome rightOutcome,long currentPayout,long cumulativePayout,long lastActivity) {
+        this(mode,ballsHeld,ballsLoaned,totalFired,totalStarts,ballSequenceId,presentation,initialHitCommitted,initialOutcome,rushActive,rushWins,rightOutcome,currentPayout,cumulativePayout,PachinkoStatistics.empty(),lastActivity);
+    }
+
     public static PachinkoRuntime initial() {
         return new PachinkoRuntime(
                 Mode.NORMAL, 0, 0, 0, 0, 0,
                 Presentation.IDLE, false, InitialOutcome.NONE,
-                false, 0, RightOutcome.NONE, 0, 0, 0
+                false, 0, RightOutcome.NONE, 0, 0, PachinkoStatistics.empty(), 0
         );
     }
 
@@ -75,6 +81,7 @@ public record PachinkoRuntime(
                 enumValue(o, "rightOutcome", RightOutcome.NONE),
                 longValue(o, "currentPayout", 0),
                 longValue(o, "cumulativePayout", 0),
+                PachinkoStatistics.fromJson(o.has("statistics") ? o.getAsJsonObject("statistics") : null),
                 longValue(o, "lastActivity", 0)
         );
     }
@@ -95,6 +102,7 @@ public record PachinkoRuntime(
         o.addProperty("rightOutcome", rightOutcome.name());
         o.addProperty("currentPayout", currentPayout);
         o.addProperty("cumulativePayout", cumulativePayout);
+        o.add("statistics", statistics.toJson());
         o.addProperty("lastActivity", lastActivity);
         return o.toString();
     }
