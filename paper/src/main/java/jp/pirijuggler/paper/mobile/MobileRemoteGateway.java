@@ -125,7 +125,7 @@ public final class MobileRemoteGateway implements AutoCloseable {
             while (pairings.containsKey(code));
             pairings.put(code, new Pairing(player.getUniqueId(), System.currentTimeMillis() + PAIR_TTL_MS));
             player.sendMessage(Component.text("スマホ接続コード: " + code + "  (5分間有効)"));
-            player.sendMessage(Component.text("Safariで " + mobileUrl(player) + " を開いて入力してください。"));
+            player.sendMessage(Component.text("Safariで http://piricraft.jpn.gg:10205/ を開いて入力してください。"));
             return true;
         }
         if (args.length == 2 && args[1].equalsIgnoreCase("revoke")) {
@@ -142,30 +142,6 @@ public final class MobileRemoteGateway implements AutoCloseable {
         return true;
     }
 
-
-    private String mobileUrl(Player player) {
-        java.net.InetSocketAddress virtualHost = player.getVirtualHost();
-        String host = virtualHost == null ? "" : virtualHost.getHostString();
-        int port = virtualHost == null ? plugin.getServer().getPort() : virtualHost.getPort();
-
-        if (host == null || host.isBlank() || host.equals("0.0.0.0") || host.equals("::")) {
-            String envHost = System.getenv("SERVER_IP");
-            if (envHost != null && !envHost.isBlank() && !envHost.equals("0.0.0.0") && !envHost.equals("::")) {
-                host = envHost.trim();
-            }
-        }
-        String envPort = System.getenv("SERVER_PORT");
-        if (envPort != null && !envPort.isBlank()) {
-            try {
-                int parsed = Integer.parseInt(envPort.trim());
-                if (parsed > 0 && parsed <= 65535) port = parsed;
-            } catch (NumberFormatException ignored) {
-            }
-        }
-        if (host == null || host.isBlank()) host = "localhost";
-        if (host.contains(":") && !host.startsWith("[")) host = "[" + host + "]";
-        return "http://" + host + ":" + port + "/";
-    }
 
     private void revokeLocal(UUID owner) {
         pairings.entrySet().removeIf(e -> e.getValue().owner().equals(owner));
