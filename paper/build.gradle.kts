@@ -29,6 +29,7 @@ tasks.jar {
     from(project(":common").extensions.getByType<SourceSetContainer>()["main"].output)
     from(project(":fabric").file("src/main/resources/assets/piri/textures")) { into("mobile-assets/textures") }
     from(rootProject.file("user-audio")) { include("*.ogg"); into("mobile-assets/sounds") }
+    from(project(":fabric").file("src/main/resources/assets/piri/sounds")) { include("*.ogg"); into("mobile-assets/sounds") }
     from(project(":fabric").file("src/main/resources/assets/piri/client-ui.json")) { into("mobile-assets") }
     from({ configurations.runtimeClasspath.get().filter { it.name.startsWith("sqlite-jdbc-") || it.name.startsWith("netty-codec-http-") }.map { zipTree(it) } })
     exclude("META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.DSA", "META-INF/versions/**/module-info.class")
