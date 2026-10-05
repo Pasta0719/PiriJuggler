@@ -648,6 +648,11 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 .reelWindow{position:absolute;top:255px;width:230px;height:330px;overflow:hidden;background:#F4F1E8;z-index:4}
 #reel0{left:555px}#reel1{left:823px}#reel2{left:1090px}
 .reelWindow.godlike{background:#fff}
+#stage.skillstop #cabinet{background:#3C0A10!important;border-color:#B68A42!important;box-shadow:inset 0 0 0 4px #E4C174!important}
+#stage.skillstop #reelBacking{background:#8A8175!important}
+#stage.skillstop .reelWindow{background:#F4F1E8!important}
+#stage.skillstop #statusPanel{background:#090B0E!important;border-color:#B68A42!important}
+#stage.skillstop #dataTop,#stage.skillstop #dataLeft,#stage.skillstop #dataRight{background:#090B0E!important;border-color:#B68A42!important}
 .sym{position:absolute;object-fit:contain;pointer-events:none}
 
 #lamp{position:absolute;left:305px;top:360px;width:220px;height:125px;object-fit:contain;z-index:5}
@@ -1051,7 +1056,7 @@ function applyState(j){
  $("machineLabel").textContent="MACHINE "+j.machineId+" · "+machineLabel(currentType);
  $("credit").textContent=j.credit||0;$("bet").textContent=j.bet||0;$("pay").textContent=j.pay||0;$("medals").textContent=j.heldMedals||0;
  const godlike=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME";
- $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);const skillstop=currentType==="SKILL_STOP";$("skillChallenge").style.display=skillstop?"flex":"none";$("skillRemaining").style.display=skillstop?"block":"none";
+ $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);const skillstop=currentType==="SKILL_STOP";$("stage").classList.toggle("skillstop",skillstop);$("skillChallenge").style.display=skillstop?"flex":"none";$("skillRemaining").style.display=skillstop?"block":"none";
  $("lamp").src=asset("lamp/piri_chance_"+(j.lampOn?"on":"off")+".png");
  if(currentType==="SKILL_STOP"){
   $("skillRemaining").textContent=(String(j.gameState||"").startsWith("BIG_")||String(j.gameState||"").startsWith("REG_"))&&j.skillRemaining!=null?"残り "+j.skillRemaining+"G":"";
