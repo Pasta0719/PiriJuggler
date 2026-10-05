@@ -17,6 +17,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -55,12 +56,29 @@ public final class DevFundCommand implements CommandExecutor {
         if (args.length >= 1 && args[0].equalsIgnoreCase("force")) return force(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("heaven")) return heaven(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("skillreset")) return skillReset(sender,args);
+        if (args.length >= 1 && args[0].equalsIgnoreCase("remoteorphan")) return remoteOrphan(sender,args);
         if (args.length == 1 && args[0].equalsIgnoreCase("clear")) {
             if (pendingForce == null) sender.sendMessage("NO_TEST_FORCE_PENDING");
             else restoreForce("TEST_FORCE_CLEARED");
             return true;
         }
         sender.sendMessage("Usage: /piritest fund [player] | /piritest force <god|big|reg|A|B|C|D|E|F> [player] | /piritest heaven <1-32> [player] | /piritest skillreset [player] | /piritest clear");
+        return true;
+    }
+
+    /** Runtime-only fixture for proving production stale REMOTE ArmorStand cleanup. */
+    private boolean remoteOrphan(CommandSender sender,String[] args) {
+        if(args.length!=1){sender.sendMessage("Usage: /piritest remoteorphan");return true;}
+        Player target=sender instanceof Player player?player:null;
+        if(target==null){sender.sendMessage("PLAYER_REQUIRED");return true;}
+        ArmorStand stand=target.getWorld().spawn(target.getLocation(),ArmorStand.class,npc->{
+            npc.setPersistent(true);
+            npc.setGravity(false);
+            npc.setInvulnerable(true);
+            npc.addScoreboardTag("piri_remote");
+            npc.addScoreboardTag("piri_remote_runtime_orphan");
+        });
+        sender.sendMessage("TEST_REMOTE_ORPHAN_CREATED "+stand.getUniqueId());
         return true;
     }
 
