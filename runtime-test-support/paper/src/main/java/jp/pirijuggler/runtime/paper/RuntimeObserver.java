@@ -31,7 +31,11 @@ public final class RuntimeObserver extends JavaPlugin {
         var resetCommand=getCommand("pirigamereset");
         if(resetCommand==null)throw new IllegalStateException("pirigamereset command missing");
         resetCommand.setExecutor(new TestResetCommand(this));
+        var pachinkoCommand=getCommand("piripachinko");
+        if(pachinkoCommand==null)throw new IllegalStateException("piripachinko command missing");
+        pachinkoCommand.setExecutor(new PachinkoFixtureCommand(this));
 
+        if ("pachinko10".equals(System.getProperty("piri.runtime.phase"))) {new Phase02Observer(this);getLogger().info("PIRI_RUNTIME_OBSERVER_READY Pachinko10");return;}
         if ("phase12".equals(System.getProperty("piri.runtime.phase"))) {new Phase02Observer(this);getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase12");return;}
         if ("phase05".equals(System.getProperty("piri.runtime.phase"))) {new Phase02Observer(this);new Phase05Fixture(this);getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase05");return;}
         if ("phase04".equals(System.getProperty("piri.runtime.phase"))) {
