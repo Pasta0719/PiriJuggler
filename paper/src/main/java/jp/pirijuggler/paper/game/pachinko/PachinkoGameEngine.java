@@ -82,7 +82,7 @@ public final class PachinkoGameEngine implements GameEngine {
     }
 
     private GameTransition initialPayout(Session before,PachinkoRuntime runtime,long sequence,int machineId,long now){
-        boolean rush=random.nextDouble()<PachinkoSpec.RUSH_ENTRY_RATE;
+        boolean rush=rollRushEntry(random);
         int payout=rush?PachinkoSpec.RUSH_INITIAL_PAYOUT:PachinkoSpec.NORMAL_INITIAL_PAYOUT;
         PachinkoRuntime.InitialOutcome outcome=rush?PachinkoRuntime.InitialOutcome.RUSH_1500:PachinkoRuntime.InitialOutcome.NORMAL_450;
         PachinkoRuntime paid=new PachinkoRuntime(rush?PachinkoRuntime.Mode.RUSH:PachinkoRuntime.Mode.NORMAL,
@@ -116,6 +116,8 @@ public final class PachinkoGameEngine implements GameEngine {
                 List.of(Envelope.current(PacketType.ACTION_ACCEPTED,accepted),Envelope.current(PacketType.PACHINKO_EVENT,event)),
                 List.of(),List.of(),runtime.toJsonString());
     }
+
+    static boolean rollRushEntry(RandomGenerator random){return random.nextDouble()<PachinkoSpec.RUSH_ENTRY_RATE;}
 
     static boolean rollInitialV(RandomGenerator random){return random.nextInt((int)PachinkoSpec.INITIAL_JACKPOT_DENOMINATOR)==0;}
 
