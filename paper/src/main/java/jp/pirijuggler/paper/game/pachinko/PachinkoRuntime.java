@@ -113,6 +113,4 @@ public record PachinkoRuntime(
         Class<E> type = (Class<E>) fallback.getDeclaringClass();
         return Enum.valueOf(type, o.get(key).getAsString());
     }
-    public double measuredSpinsPer1000Yen(){return totalFired==0?0.0:totalStarts*(double)PachinkoSpec.BALLS_PER_1000_YEN/totalFired;}
-
 }
