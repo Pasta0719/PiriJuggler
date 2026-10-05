@@ -8,7 +8,7 @@ public final class PachinkoDataText {
     public static List<String> detail(int machineId, PachinkoRuntime runtime) {
         PachinkoStatistics s = runtime.statistics();
         double rotation = runtime.measuredSpinsPer1000Yen();
-        long difference = PachinkoSimulator.observedDifferenceBalls(runtime);
+        double difference = PachinkoSimulator.observedDifferenceBalls(runtime);
         return List.of(
                 "--- PACHINKO #" + machineId + " ---",
                 "STARTS " + runtime.totalStarts() + " / FIRED " + runtime.totalFired(),
@@ -22,6 +22,6 @@ public final class PachinkoDataText {
     }
 
     private static String decimal(double value) { return String.format(Locale.ROOT, "%.4f", value); }
-    private static String signed(long value) { return value > 0 ? "+" + value : Long.toString(value); }
+    private static String signed(double value) { return (value > 0 ? "+" : "") + String.format(Locale.ROOT, "%.1f", value); }
     private PachinkoDataText() {}
 }
