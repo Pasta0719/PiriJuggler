@@ -1,5 +1,16 @@
 # CODEX_START.md — v4
 
+## 最優先: 既存機能保全ルール
+
+作業開始前に **[CHANGE_SAFETY_POLICY.md](CHANGE_SAFETY_POLICY.md)** を必ず読み、その内容を他の通常実装手順より優先する。
+
+- 新機能追加の依頼は、既存機能を変更・削除・弱体化する許可ではない
+- 現在の `main` だけを完成仕様の唯一の基準にしない
+- COMPLETE/PASS済み仕様、過去の完成実装、Git履歴、ユーザー承認済み挙動も保全対象として確認する
+- 既存挙動を壊す可能性がある場合は、実装前に影響を説明して明示承諾を得る
+- 承諾が得られない場合は既存を維持し、必要なら既存を壊さない別方式への方向転換を推奨する
+- 判断に迷った場合のデフォルトは **既存を壊さない**
+
 `SPEC.md`が既存PiriJuggler製品仕様の正本。Phase12–14のRemote Machine Visual / Hall Audioについては `docs/REMOTE_MACHINE_VISUAL_SPEC.md` を追加の仕様正本として必ず併読する。Phase05完了後のユーザー承認hotfixについては `docs/POST_PHASE05_HOTFIX.md` を必ず併読し、同文書が明示的に変更した範囲ではhotfix内容を最新仕様として扱う。次回SPEC整合更新時に正本へ統合する。
 `AUDIT_REPORT.md`はv3からの修正理由であり、仕様値の正はSPEC.mdと上記承認hotfix。
 
