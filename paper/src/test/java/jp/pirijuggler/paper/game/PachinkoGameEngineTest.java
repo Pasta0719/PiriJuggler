@@ -187,4 +187,33 @@ class PachinkoGameEngineTest extends GameFixture {
         assertNull(db.state().machine(slot).runtimeJson());
     }
 
+
+    @Test void productionStatisticsSurviveDatabaseRestart() throws Exception {
+        int id=db.create(new Machine.Location(UUID.randomUUID(),"world",43,64,0,"NORTH"),MachineType.PACHINKO,NOW);
+        UUID player=UUID.randomUUID();db.seat(player,id,NOW);
+        var base=PachinkoBallAccounting.validStart(PachinkoBallAccounting.fire(PachinkoBallAccounting.lend(PachinkoRuntime.initial(),NOW),NOW+1),NOW+2);
+        var v=new PachinkoRuntime(base.mode(),base.ballsHeld(),base.ballsLoaned(),base.totalFired(),base.totalStarts(),base.ballSequenceId(),
+                PachinkoRuntime.Presentation.LEFT_KURUN,true,PachinkoRuntime.InitialOutcome.NONE,false,0,PachinkoRuntime.RightOutcome.NONE,0,0,NOW+2);
+        db.sql("UPDATE player_sessions SET machine_state_json=? WHERE player_uuid=?",v.toJsonString(),player.toString());
+        var engine=new PachinkoGameEngine(new java.util.Random(1));
+        var committed=store.commit(engine.initialPayout(db.state().session(player),v,1,id,NOW+3,true));
+        var expected=PachinkoRuntime.fromJson(committed.machineState().toString());
+        assertEquals(1,expected.statistics().initialJackpots());
+        assertEquals(1,expected.statistics().initial1500());
+        assertEquals(1,expected.statistics().rushEntries());
+        assertEquals(expected,PachinkoRuntime.fromJson(db.state().machine(id).runtimeJson()));
+
+        db.close();
+        db=new jp.pirijuggler.paper.database.PiriDatabase(directory.resolve("piri.db"));
+        db.open(2,NOW+10_000,config,new java.util.SplittableRandom(2),ignored->{});
+        store=new jp.pirijuggler.paper.database.GameStore(db);
+
+        var restored=PachinkoRuntime.fromJson(db.state().machine(id).runtimeJson());
+        assertEquals(expected,restored);
+        assertEquals(expected.statistics(),restored.statistics());
+        assertEquals(1,restored.statistics().initialJackpots());
+        assertEquals(1,restored.statistics().initial1500());
+        assertEquals(1,restored.statistics().rushEntries());
+    }
+
 }
