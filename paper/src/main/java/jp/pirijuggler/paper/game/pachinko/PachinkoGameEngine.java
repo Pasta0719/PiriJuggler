@@ -64,7 +64,7 @@ public final class PachinkoGameEngine implements GameEngine {
             if(runtime.initialHitCommitted())return initialPayout(before,runtime,sequence,machine.id(),now);
             PachinkoRuntime idle=new PachinkoRuntime(runtime.mode(),runtime.ballsHeld(),runtime.ballsLoaned(),runtime.totalFired(),
                     runtime.totalStarts(),runtime.ballSequenceId(),PachinkoRuntime.Presentation.IDLE,false,PachinkoRuntime.InitialOutcome.NONE,
-                    runtime.rushActive(),runtime.rushWins(),runtime.rightOutcome(),runtime.currentPayout(),runtime.cumulativePayout(),now);
+                    runtime.rushActive(),runtime.rushWins(),runtime.rightOutcome(),runtime.currentPayout(),runtime.cumulativePayout(),runtime.statistics(),now);
             return accepted(before,idle,action,sequence);
         }
         if(action!=PacketType.PACHINKO_FIRE)return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
@@ -102,7 +102,7 @@ public final class PachinkoGameEngine implements GameEngine {
         PachinkoRuntime paid=new PachinkoRuntime(rush?PachinkoRuntime.Mode.RUSH:PachinkoRuntime.Mode.NORMAL,
                 Math.addExact(runtime.ballsHeld(),payout),runtime.ballsLoaned(),runtime.totalFired(),runtime.totalStarts(),
                 runtime.ballSequenceId(),PachinkoRuntime.Presentation.IDLE,true,outcome,rush,runtime.rushWins(),runtime.rightOutcome(),
-                payout,Math.addExact(runtime.cumulativePayout(),payout),now);
+                payout,Math.addExact(runtime.cumulativePayout(),payout),runtime.statistics().initial(rush),now);
         var values=new LinkedHashMap<>(before.snapshot());values.put("last_client_sequence",sequence);
         values.put("last_activity",now);values.put("machine_state_json",paid.toJsonString());Session after=new Session(values);
         JsonObject accepted=new JsonObject();accepted.addProperty("clientSequence",sequence);accepted.addProperty("action",PacketType.PACHINKO_PRESENTATION.name());
@@ -135,19 +135,19 @@ public final class PachinkoGameEngine implements GameEngine {
     private GameTransition startRightKurun(Session before,PachinkoRuntime runtime,long sequence,int machineId,long now){
         PachinkoRuntime.RightOutcome outcome=rushStrategy.decide(random);
         PachinkoRuntime pending=new PachinkoRuntime(PachinkoRuntime.Mode.RUSH,runtime.ballsHeld(),runtime.ballsLoaned(),runtime.totalFired(),runtime.totalStarts(),
-                runtime.ballSequenceId()+1,PachinkoRuntime.Presentation.RIGHT_KURUN,runtime.initialHitCommitted(),runtime.initialOutcome(),true,runtime.rushWins(),outcome,0,runtime.cumulativePayout(),now);
+                runtime.ballSequenceId()+1,PachinkoRuntime.Presentation.RIGHT_KURUN,runtime.initialHitCommitted(),runtime.initialOutcome(),true,runtime.rushWins(),outcome,0,runtime.cumulativePayout(),runtime.statistics(),now);
         return acceptedRight(before,pending,sequence,machineId);
     }
 
     private GameTransition resolveRightPresentation(Session before,PachinkoRuntime runtime,long sequence,int machineId,long now){
         if(runtime.rightOutcome()==PachinkoRuntime.RightOutcome.OUT){
             PachinkoRuntime ended=new PachinkoRuntime(PachinkoRuntime.Mode.NORMAL,runtime.ballsHeld(),runtime.ballsLoaned(),runtime.totalFired(),runtime.totalStarts(),runtime.ballSequenceId(),
-                    PachinkoRuntime.Presentation.IDLE,runtime.initialHitCommitted(),runtime.initialOutcome(),false,runtime.rushWins(),PachinkoRuntime.RightOutcome.NONE,0,runtime.cumulativePayout(),now);
+                    PachinkoRuntime.Presentation.IDLE,runtime.initialHitCommitted(),runtime.initialOutcome(),false,runtime.rushWins(),PachinkoRuntime.RightOutcome.NONE,0,runtime.cumulativePayout(),runtime.statistics(),now);
             return accepted(before,ended,PacketType.PACHINKO_PRESENTATION,sequence);
         }
         int payout=runtime.rightOutcome()==PachinkoRuntime.RightOutcome.WIN_3000?PachinkoSpec.RIGHT_3000_PAYOUT:PachinkoSpec.RIGHT_1500_PAYOUT;
         PachinkoRuntime paid=new PachinkoRuntime(PachinkoRuntime.Mode.RUSH,Math.addExact(runtime.ballsHeld(),payout),runtime.ballsLoaned(),runtime.totalFired(),runtime.totalStarts(),runtime.ballSequenceId(),
-                PachinkoRuntime.Presentation.IDLE,runtime.initialHitCommitted(),runtime.initialOutcome(),true,runtime.rushWins()+1,PachinkoRuntime.RightOutcome.NONE,payout,Math.addExact(runtime.cumulativePayout(),payout),now);
+                PachinkoRuntime.Presentation.IDLE,runtime.initialHitCommitted(),runtime.initialOutcome(),true,runtime.rushWins()+1,PachinkoRuntime.RightOutcome.NONE,payout,Math.addExact(runtime.cumulativePayout(),payout),runtime.statistics().right(runtime.rightOutcome()),now);
         return accepted(before,paid,PacketType.PACHINKO_PRESENTATION,sequence);
     }
 
