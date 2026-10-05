@@ -32,6 +32,6 @@ public final class PachinkoBallAccounting {
                                         long fired, long starts, long sequence, long now) {
         return new PachinkoRuntime(r.mode(), held, loaned, fired, starts, sequence,
                 r.presentation(), r.initialHitCommitted(), r.initialOutcome(),
-                r.rushActive(), r.rushWins(), r.rightOutcome(), r.currentPayout(), r.cumulativePayout(), now);
+                r.rushActive(), r.rushWins(), r.rightOutcome(), r.currentPayout(), r.cumulativePayout(), r.statistics(), now);
     }
 }
