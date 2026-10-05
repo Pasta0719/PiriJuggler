@@ -1131,28 +1131,102 @@ public final class MachineService implements Listener, CommandExecutor {
                     }
 
                     Player online = Bukkit.getPlayer(owner);
-                    long deliveredFinal = 0;
-                    Set<UUID> deliveredFinalIds = Set.of();
+                    Set<UUID> delivered = new HashSet<>();
+                    long deliveredAmount = 0;
+                    if (online != null && online.isOnline()) {
+                        for (var bundle : plan.bundles()) {
+                            int slot = online.getInventory().firstEmpty();
+                            if (slot < 0) break;
+                            online.getInventory().setItem(slot, MedalToken.create(bundle.id(), bundle.amount()));
+                            delivered.add(bundle.id());
+                            deliveredAmount = Math.addExact(deliveredAmount, bundle.amount());
+                        }
+                        online.updateInventory();
+                    }
+                    long finalDelivered = deliveredAmount;
+                    Set<UUID> finalDeliveredIds = Set.copyOf(delivered);
                     plugin.executors().database(
-                            () -> new Saved<>(new EconomyStore(database).finishCashout(owner, plan.transactionId(), deliveredFinalIds, System.currentTimeMillis()), database.state()),
+                            () -> new Saved<>(new EconomyStore(database).finishCashout(owner, plan.transactionId(), finalDeliveredIds, System.currentTimeMillis()), database.state()),
                             (finished, finishError) -> {
                                 if (finished != null) state = finished.state;
                                 releaseEconomy(owner, machineId);
                                 if (finishError != null) {
+                                    if (online != null && online.isOnline()) {
+                                        removeBundleItems(online, finalDeliveredIds);
+                                        online.updateInventory();
+                                    }
                                     callback.accept(null, mobileFailureCode(finishError));
                                     return;
                                 }
                                 remote.broadcastSnapshot(machineId);
                                 JsonObject response = mobileState(owner);
                                 response.addProperty("cashoutAmount", plan.amount());
-                                response.addProperty("cashoutDelivered", 0);
-                                response.addProperty("cashoutPending", plan.amount());
+                                response.addProperty("cashoutDelivered", finalDelivered);
+                                response.addProperty("cashoutPending", plan.amount() - finalDelivered);
                                 plugin.executors().database(
                                         () -> new EconomyStore(database).pendingMedals(owner),
                                         (wallet, walletError) -> {
                                             if (walletError == null && wallet != null) response.addProperty("walletMedals", wallet);
                                             callback.accept(response, null);
                                         });
+                            });
+                });
+    }
+
+    /**
+     * Delivers only mobile/offline wallet medals when the player joins Minecraft.
+     * Resumable machine-session credit/held medals are deliberately left untouched.
+     */
+    public void recoverPendingWallet(Player player) {
+        main();
+        if (!ready() || player == null || !player.isOnline()) return;
+        UUID owner = player.getUniqueId();
+        Session session = state.session(owner);
+        int machineId = session == null ? 0 : session.machine();
+        if (pendingPlayers.contains(owner) || (machineId != 0 && pendingMachines.contains(machineId))) return;
+        pendingPlayers.add(owner);
+        if (machineId != 0) pendingMachines.add(machineId);
+        plugin.executors().database(
+                () -> new Saved<>(new EconomyStore(database).preparePendingWalletCashout(owner, System.currentTimeMillis()), database.state()),
+                (prepared, error) -> {
+                    if (prepared != null) state = prepared.state;
+                    if (stopped) { releaseEconomy(owner, machineId); return; }
+                    if (error != null) {
+                        releaseEconomy(owner, machineId);
+                        if (!(error instanceof DomainException de && "NOT_ENOUGH_MEDALS".equals(de.getMessage())))
+                            logMobileFailure(error);
+                        return;
+                    }
+                    EconomyStore.RecoveryCashoutPlan plan = prepared.value;
+                    Set<UUID> delivered = new HashSet<>();
+                    long deliveredAmount = 0;
+                    for (var bundle : plan.bundles()) {
+                        int slot = player.getInventory().firstEmpty();
+                        if (slot < 0) break;
+                        player.getInventory().setItem(slot, MedalToken.create(bundle.id(), bundle.amount()));
+                        delivered.add(bundle.id());
+                        deliveredAmount = Math.addExact(deliveredAmount, bundle.amount());
+                    }
+                    player.updateInventory();
+                    long finalDelivered = deliveredAmount;
+                    Set<UUID> finalDeliveredIds = Set.copyOf(delivered);
+                    plugin.executors().database(
+                            () -> {
+                                new EconomyStore(database).finishRecoveryCashout(owner, plan.transactionId(), finalDeliveredIds, System.currentTimeMillis());
+                                return new Saved<>(Boolean.TRUE, database.state());
+                            },
+                            (finished, finishError) -> {
+                                if (finished != null) state = finished.state;
+                                releaseEconomy(owner, machineId);
+                                if (finishError != null) {
+                                    removeBundleItems(player, finalDeliveredIds);
+                                    player.updateInventory();
+                                    logMobileFailure(finishError);
+                                    return;
+                                }
+                                if (machineId != 0) remote.broadcastSnapshot(machineId);
+                                if (finalDelivered > 0)
+                                    tell(player, "未回収メダル " + finalDelivered + "枚をインベントリへ返却しました。");
                             });
                 });
     }
