@@ -41,4 +41,14 @@ class SlotInputTest {
         var enriched=SlotInput.withPressedIndex(original,20);
         assertFalse(original.payload().has("pressedIndex"));assertEquals(20,enriched.payload().get("pressedIndex").getAsInt());
     }
+    @Test void pachinkoActionsUseNormalSessionSequencingWithoutSlotFields(){
+        var s=session();var sent=new ArrayList<Envelope>();var input=new SlotInput(s,sent::add,()->0L);
+        assertTrue(input.send(PacketType.PACHINKO_FIRE));
+        assertTrue(input.send(PacketType.PACHINKO_PRESENTATION));
+        assertEquals(List.of(PacketType.PACHINKO_FIRE,PacketType.PACHINKO_PRESENTATION),sent.stream().map(Envelope::packetType).toList());
+        assertEquals(8,sent.get(0).payload().get("clientSequence").getAsLong());
+        assertEquals(9,sent.get(1).payload().get("clientSequence").getAsLong());
+        for(var envelope:sent)assertEquals(Set.of("sessionId","machineId","clientSequence"),envelope.payload().keySet());
+    }
+
 }
