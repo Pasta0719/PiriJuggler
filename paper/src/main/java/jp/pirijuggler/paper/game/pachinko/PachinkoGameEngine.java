@@ -81,7 +81,7 @@ public final class PachinkoGameEngine implements GameEngine {
             PachinkoRuntime presenting=new PachinkoRuntime(
                     started.mode(),started.ballsHeld(),started.ballsLoaned(),started.totalFired(),started.totalStarts(),
                     started.ballSequenceId(),PachinkoRuntime.Presentation.LEFT_KURUN,v,PachinkoRuntime.InitialOutcome.NONE,
-                    started.rushActive(),started.rushWins(),started.rightOutcome(),started.currentPayout(),started.cumulativePayout(),now);
+                    started.rushActive(),started.rushWins(),started.rightOutcome(),started.currentPayout(),started.cumulativePayout(),started.statistics(),now);
             return acceptedStart(before,presenting,sequence,machine.id(),v);
         } catch(IllegalStateException invalid) {
             return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
