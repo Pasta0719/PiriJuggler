@@ -57,7 +57,7 @@ public final class PachinkoGameEngine implements GameEngine {
             if(runtime.initialHitCommitted())return initialPayout(before,runtime,sequence,machine.id(),now);
             PachinkoRuntime idle=new PachinkoRuntime(runtime.mode(),runtime.ballsHeld(),runtime.ballsLoaned(),runtime.totalFired(),
                     runtime.totalStarts(),runtime.ballSequenceId(),PachinkoRuntime.Presentation.IDLE,false,PachinkoRuntime.InitialOutcome.NONE,
-                    runtime.rushActive(),runtime.rushWins(),runtime.currentPayout(),runtime.cumulativePayout(),now);
+                    runtime.rushActive(),runtime.rushWins(),runtime.rightOutcome(),runtime.currentPayout(),runtime.cumulativePayout(),now);
             return accepted(before,idle,action,sequence);
         }
         if(action!=PacketType.PACHINKO_FIRE)return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
@@ -70,7 +70,7 @@ public final class PachinkoGameEngine implements GameEngine {
             PachinkoRuntime presenting=new PachinkoRuntime(
                     started.mode(),started.ballsHeld(),started.ballsLoaned(),started.totalFired(),started.totalStarts(),
                     started.ballSequenceId(),PachinkoRuntime.Presentation.LEFT_KURUN,v,PachinkoRuntime.InitialOutcome.NONE,
-                    started.rushActive(),started.rushWins(),started.currentPayout(),started.cumulativePayout(),now);
+                    started.rushActive(),started.rushWins(),started.rightOutcome(),started.currentPayout(),started.cumulativePayout(),now);
             return acceptedStart(before,presenting,sequence,machine.id(),v);
         } catch(IllegalStateException invalid) {
             return rejected(before,machine,sequence,now,ErrorCode.INVALID_STATE);
@@ -90,7 +90,7 @@ public final class PachinkoGameEngine implements GameEngine {
         PachinkoRuntime.InitialOutcome outcome=rush?PachinkoRuntime.InitialOutcome.RUSH_1500:PachinkoRuntime.InitialOutcome.NORMAL_450;
         PachinkoRuntime paid=new PachinkoRuntime(rush?PachinkoRuntime.Mode.RUSH:PachinkoRuntime.Mode.NORMAL,
                 Math.addExact(runtime.ballsHeld(),payout),runtime.ballsLoaned(),runtime.totalFired(),runtime.totalStarts(),
-                runtime.ballSequenceId(),PachinkoRuntime.Presentation.IDLE,true,outcome,rush,runtime.rushWins(),
+                runtime.ballSequenceId(),PachinkoRuntime.Presentation.IDLE,true,outcome,rush,runtime.rushWins(),runtime.rightOutcome(),
                 payout,Math.addExact(runtime.cumulativePayout(),payout),now);
         var values=new LinkedHashMap<>(before.snapshot());values.put("last_client_sequence",sequence);
         values.put("last_activity",now);values.put("machine_state_json",paid.toJsonString());Session after=new Session(values);
