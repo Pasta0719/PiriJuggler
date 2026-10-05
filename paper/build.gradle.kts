@@ -6,7 +6,7 @@ repositories { maven("https://repo.papermc.io/repository/maven-public/") }
 
 dependencies {
     implementation(project(":common"))
-    compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")\n    compileOnly("io.netty:netty-codec-http:4.1.115.Final")
     compileOnly("org.yaml:snakeyaml:2.2")
     testImplementation("org.yaml:snakeyaml:2.2")
     implementation("org.xerial:sqlite-jdbc:3.50.3.0")
