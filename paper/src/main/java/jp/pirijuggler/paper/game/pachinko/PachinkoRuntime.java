@@ -107,6 +107,13 @@ public record PachinkoRuntime(
         return o.toString();
     }
 
+    /** Explicit statistics reset; ordinary runtime transitions never clear production counters. */
+    public PachinkoRuntime resetStatistics(long now) {
+        return new PachinkoRuntime(mode, ballsHeld, ballsLoaned, 0, 0, ballSequenceId, presentation,
+                initialHitCommitted, initialOutcome, rushActive, 0, rightOutcome, currentPayout, 0,
+                PachinkoStatistics.empty(), now);
+    }
+
     public double measuredSpinsPer1000Yen() {
         if (totalFired == 0) return 0.0;
         return (double) totalStarts * PachinkoSpec.BALLS_PER_1000_YEN / totalFired;
