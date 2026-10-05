@@ -29,7 +29,7 @@ import java.util.random.RandomGenerator;
  */
 public final class PachinkoGameEngine implements GameEngine {
     @FunctionalInterface public interface RushDecisionStrategy { PachinkoRuntime.RightOutcome decide(RandomGenerator random); }
-    public static final RushDecisionStrategy LOCKED_RUSH_STRATEGY=random -> !rollRushContinuation(random)?PachinkoRuntime.RightOutcome.OUT:(rollRight3000(random)?PachinkoRuntime.RightOutcome.WIN_3000:PachinkoRuntime.RightOutcome.WIN_1500);
+    public static final RushDecisionStrategy LOCKED_RUSH_STRATEGY=random -> !PachinkoRushPresentation.selectedContinues(random)?PachinkoRuntime.RightOutcome.OUT:(rollRight3000(random)?PachinkoRuntime.RightOutcome.WIN_3000:PachinkoRuntime.RightOutcome.WIN_1500);
     private final RandomGenerator random;
     private final PachinkoRouting routing;
     private final RushDecisionStrategy rushStrategy;
