@@ -177,8 +177,10 @@ try:
 
     def stop_top(reel,top,mask):
         index=(22-top)%21
+        expected_reel=["LEFT","CENTER","RIGHT"][reel]
+        before=len(packets("REEL_STOP"))
         action("tap_at_phase",reel=reel,phase=index,key=[263,264,262][reel])
-        wait(lambda:settled() and session()["stopped_mask"]==mask,"timed stop mask "+str(mask),40)
+        wait(lambda:settled() and session()["stopped_mask"]==mask and len(packets("REEL_STOP"))>before and packets("REEL_STOP")[-1].get("reel")==expected_reel,"timed stop mask "+str(mask),40)
         packet=packets("REEL_STOP")[-1]
         check("screen press samples requested input",packet["pressedIndex"]==index,packet)
 
