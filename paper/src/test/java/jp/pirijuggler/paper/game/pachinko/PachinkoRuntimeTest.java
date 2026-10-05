@@ -29,7 +29,7 @@ class PachinkoRuntimeTest {
                 0,0,0,0,0,
                 PachinkoRuntime.Presentation.IDLE,
                 true,PachinkoRuntime.InitialOutcome.RUSH_1500,
-                true,0,0,0,0
+                true,0,PachinkoRuntime.RightOutcome.NONE,0,0,0
         ));
     }
 }
