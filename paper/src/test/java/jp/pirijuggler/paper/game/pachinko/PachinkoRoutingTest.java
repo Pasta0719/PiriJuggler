@@ -26,4 +26,13 @@ class PachinkoRoutingTest {
         assertThrows(IllegalArgumentException.class,()->new PachinkoRouting(251));
         assertThrows(IllegalArgumentException.class,()->new PachinkoRouting(Double.NaN));
     }
+    @Test void routingAloneChangesMeasuredRateWhileJackpotDenominatorStaysLocked() {
+        assertEquals(319.0,PachinkoSpec.INITIAL_JACKPOT_DENOMINATOR,0.0);
+        assertEquals(14.0,new PachinkoRouting(14).expectedSpinsPer1000Yen(),0.0);
+        assertEquals(17.0,new PachinkoRouting(17).expectedSpinsPer1000Yen(),0.0);
+        assertEquals(20.0,new PachinkoRouting(20).expectedSpinsPer1000Yen(),0.0);
+        assertTrue(PachinkoSpec.payoutRatePercent(14)<PachinkoSpec.payoutRatePercent(17));
+        assertTrue(PachinkoSpec.payoutRatePercent(17)<PachinkoSpec.payoutRatePercent(20));
+    }
+
 }
