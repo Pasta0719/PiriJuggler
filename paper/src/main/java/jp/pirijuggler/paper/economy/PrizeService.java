@@ -782,12 +782,13 @@ public final class PrizeService implements Listener {
         if (player == null || !player.isOnline()) return;
         UUID owner = player.getUniqueId();
         var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        plugin.executors().database(() -> {
             Map<PrizeItem.Type,Integer> reserved = new EnumMap<>(PrizeItem.Type.class);
             try (Connection connection = open(dbPath.toString())) {
                 connection.setAutoCommit(false);
                 try {
                     ensureMobilePrizeTable(connection);
+                    long now = System.currentTimeMillis();
                     for (PrizeItem.Type type : PrizeItem.Type.values()) {
                         int count = 0;
                         try (var q = connection.prepareStatement("SELECT amount FROM mobile_prizes WHERE player_uuid=? AND prize_type=?")) {
@@ -798,42 +799,43 @@ public final class PrizeService implements Listener {
                             reserved.put(type, count);
                             try (var u = connection.prepareStatement(
                                     "UPDATE mobile_prizes SET amount=0,updated_at=? WHERE player_uuid=? AND prize_type=?")) {
-                                u.setLong(1, System.currentTimeMillis()); u.setString(2, owner.toString()); u.setString(3, type.id()); u.executeUpdate();
+                                u.setLong(1, now); u.setString(2, owner.toString()); u.setString(3, type.id()); u.executeUpdate();
                             }
                         }
                     }
                     connection.commit();
                 } catch (Exception failure) { connection.rollback(); throw failure; }
-            } catch (Exception failure) {
+            }
+            return reserved;
+        }, (reserved, failure) -> {
+            if (failure != null) {
                 plugin.getLogger().severe("PIRI_MOBILE_PRIZE_RECOVERY_RESERVE_FAILED player=" + owner + " " + failure);
                 return;
             }
-            if (reserved.isEmpty()) return;
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                if (!player.isOnline()) {
-                    restoreMobilePrizes(owner, reserved);
-                    return;
+            if (reserved == null || reserved.isEmpty()) return;
+            if (!player.isOnline()) {
+                restoreMobilePrizes(owner, reserved);
+                return;
+            }
+            Map<PrizeItem.Type,Integer> leftovers = new EnumMap<>(PrizeItem.Type.class);
+            for (var entry : reserved.entrySet()) {
+                int remaining = entry.getValue();
+                while (remaining > 0) {
+                    int stack = Math.min(64, remaining);
+                    Map<Integer,ItemStack> left = player.getInventory().addItem(PrizeItem.create(entry.getKey(), stack));
+                    int failed = left.values().stream().mapToInt(ItemStack::getAmount).sum();
+                    remaining -= (stack - failed);
+                    if (failed > 0) { leftovers.put(entry.getKey(), remaining); break; }
                 }
-                Map<PrizeItem.Type,Integer> leftovers = new EnumMap<>(PrizeItem.Type.class);
-                for (var entry : reserved.entrySet()) {
-                    int remaining = entry.getValue();
-                    while (remaining > 0) {
-                        int stack = Math.min(64, remaining);
-                        Map<Integer,ItemStack> left = player.getInventory().addItem(PrizeItem.create(entry.getKey(), stack));
-                        int failed = left.values().stream().mapToInt(ItemStack::getAmount).sum();
-                        remaining -= (stack - failed);
-                        if (failed > 0) { leftovers.put(entry.getKey(), remaining); break; }
-                    }
-                }
-                player.updateInventory();
-                if (!leftovers.isEmpty()) restoreMobilePrizes(owner, leftovers);
-            });
+            }
+            player.updateInventory();
+            if (!leftovers.isEmpty()) restoreMobilePrizes(owner, leftovers);
         });
     }
 
     private void restoreMobilePrizes(UUID owner, Map<PrizeItem.Type,Integer> amounts) {
         var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        plugin.executors().database(() -> {
             try (Connection connection = open(dbPath.toString())) {
                 ensureMobilePrizeTable(connection);
                 long now = System.currentTimeMillis();
@@ -846,9 +848,11 @@ public final class PrizeService implements Listener {
                         u.setInt(3, entry.getValue()); u.setLong(4, now); u.executeUpdate();
                     }
                 }
-            } catch (Exception failure) {
-                plugin.getLogger().severe("PIRI_MOBILE_PRIZE_RECOVERY_RESTORE_FAILED player=" + owner + " " + failure);
             }
+            return Boolean.TRUE;
+        }, (ignored, failure) -> {
+            if (failure != null)
+                plugin.getLogger().severe("PIRI_MOBILE_PRIZE_RECOVERY_RESTORE_FAILED player=" + owner + " " + failure);
         });
     }
 
