@@ -27,7 +27,10 @@ public final class RemoteMachineRegistry {
     private final Map<Integer, JsonObject> machines = new HashMap<>();
     private final Map<Integer, RemoteMachineViewState> views = new HashMap<>();
     private final Map<Integer,SkillStopPresentation.NoticeGate> skillNotices=new HashMap<>();
-    private Integer skillSuccessSound;\n    private final ArrayDeque<AudioEvent> soundEvents=new ArrayDeque<>();\n    public record AudioEvent(int machineId,String kind,String bonusType){}\n    private final ArrayDeque<AudioEvent> audioEvents=new ArrayDeque<>();
+    private Integer skillSuccessSound;
+    private final ArrayDeque<AudioEvent> soundEvents=new ArrayDeque<>();
+    public record AudioEvent(int machineId,String kind,String bonusType){}
+    private final ArrayDeque<AudioEvent> audioEvents=new ArrayDeque<>();
     private final LongSupplier time,wallTimeMs;
 
     public RemoteMachineRegistry() {
@@ -167,7 +170,8 @@ public final class RemoteMachineRegistry {
                 case REMOTE_MACHINE_REMOVE -> {
                     machines.remove(machineId);
                     views.remove(machineId);
-                    skillNotices.remove(machineId);\n                    audioEvents.add(new AudioEvent(machineId,"REMOVE",null));
+                    skillNotices.remove(machineId);
+                    audioEvents.add(new AudioEvent(machineId,"REMOVE",null));
                 }
                 case REMOTE_MACHINE_SOUND -> {
                     requireString(body,"sound");String sound=body.get("sound").getAsString();
@@ -206,13 +210,19 @@ public final class RemoteMachineRegistry {
         return List.copyOf(views.values());
     }
 
-    public RemoteMachineViewState view(int machineId) {\n        return views.get(machineId);\n    }\n    public Map<Integer,RemoteMachineViewState> viewsSnapshot(){return Map.copyOf(views);}
-    public Integer pollSkillSuccessSound(){Integer value=skillSuccessSound;skillSuccessSound=null;return value;}\n    public AudioEvent pollAudioEvent(){AudioEvent e=soundEvents.poll();return e!=null?e:audioEvents.poll();}
+    public RemoteMachineViewState view(int machineId) {
+        return views.get(machineId);
+    }
+    public Map<Integer,RemoteMachineViewState> viewsSnapshot(){return Map.copyOf(views);}
+    public Integer pollSkillSuccessSound(){Integer value=skillSuccessSound;skillSuccessSound=null;return value;}
+    public AudioEvent pollAudioEvent(){AudioEvent e=soundEvents.poll();return e!=null?e:audioEvents.poll();}
 
     public void reset() {
         machines.clear();
         views.clear();
-        skillNotices.clear();\n        audioEvents.clear();\n        soundEvents.clear();skillSuccessSound=null;
+        skillNotices.clear();
+        audioEvents.clear();
+        soundEvents.clear();skillSuccessSound=null;
     }
 
     private void applySnapshot(int machineId, JsonObject body) {
