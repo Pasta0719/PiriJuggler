@@ -269,10 +269,12 @@ finally:
     for name,(proc,_,_) in list(clients.items()):
         if proc.poll() is None:
             try:stop_client(name)
-            except Exception:\n                if proc.poll() is None: proc.kill()
+            except Exception:
+                if proc.poll() is None: proc.kill()
     if server and server.poll() is None:
         try:stop_server()
-        except Exception:\n            if server.poll() is None: server.kill()
+        except Exception:
+            if server.poll() is None: server.kill()
     manifest["finishedAt"]=datetime.datetime.now(datetime.timezone.utc).isoformat()
     save(EVIDENCE/"result.json",manifest);save(OUT/"result.json",manifest)
     report=["# Phase12 Runtime Acceptance","",f"- Run: {RUN}",f"- PASS: {manifest['passed']}","",
