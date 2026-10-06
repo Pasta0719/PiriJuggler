@@ -27,6 +27,13 @@ public final class HallAudio {
             PiriSounds.startRemoteLoop(event.machineId(),PiriSounds.forMachine(machine.machineType(),sound),machine.x()+.5,machine.y()+1.5,machine.z()+.5);
             bonusLoops.put(event.machineId(),sound);
         }
+        for(var entry:registry.viewsSnapshot().entrySet()){
+            int id=entry.getKey();RemoteMachineViewState machine=entry.getValue();String mode=machine.bonusMode();
+            if(!"NONE".equals(mode)&&!bonusLoops.containsKey(id)&&inRange(machine,BGM_RADIUS)){
+                String sound="BIG".equals(mode)?"big_bgm":"reg_bgm";
+                PiriSounds.startRemoteLoop(id,PiriSounds.forMachine(machine.machineType(),sound),machine.x()+.5,machine.y()+1.5,machine.z()+.5);bonusLoops.put(id,sound);
+            }
+        }
         for(int id:new ArrayList<>(bonusLoops.keySet())){
             RemoteMachineViewState machine=registry.view(id);
             if(machine==null||!inRange(machine,BGM_RADIUS))stop(id);
