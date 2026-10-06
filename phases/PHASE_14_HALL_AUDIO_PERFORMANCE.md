@@ -1,6 +1,6 @@
 # PHASE 14 — Positional Hall Audio / Performance / Hardening
 
-Status: NOT_STARTED
+Status: IN_PROGRESS — IMPLEMENTATION
 Depends on: Phase13 COMPLETE
 
 ## 読むもの
@@ -110,3 +110,12 @@ Acceptance threshold:
 
 ## 終了時
 IMPLEMENTATION_STATUS の Phase14 を COMPLETE にして停止。
+
+
+## Implementation record
+- Remote positional public NOTICE/TENPAI path implemented without changing owner audio
+- Remote BIG/REG BGM implemented per machineId with range/remove/end/disconnect/reconnect/redefine lifecycle
+- 16-block SE / 12-block BGM radii and 0.35 / 0.45 / 0.18 volumes locked by deterministic tests
+- Server retains one global 10-tick interest refresh and no per-machine repeating task
+- Client retains one entity-free AFTER_ENTITIES renderer with distance/frustum culling
+- Lightweight client/server performance metrics and short 42-cabinet performance acceptance runner added
