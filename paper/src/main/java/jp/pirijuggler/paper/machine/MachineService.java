@@ -858,11 +858,25 @@ public final class MachineService implements Listener, CommandExecutor {
             return result;
         }
         result = session.publicState();
+        String spinId=session.text("spin_id");
+        if(spinId!=null&&!spinId.isBlank())result.addProperty("spinId",spinId);
         Machine machine = state.machine(session.machine());
         if (machine != null) result.addProperty("machineType", machine.type().name());
         result.addProperty("seated", true);
         addMobileBalance(result, owner);
         return result;
+    }
+
+    public void mobileResume(UUID owner, BiConsumer<JsonObject,String> callback) {
+        main();
+        if(!ready()){callback.accept(null,"DB_ERROR");return;}
+        Session session=state.session(owner);
+        if(session==null||session.lifecycle()!=Session.Lifecycle.ACTIVE){callback.accept(null,"SESSION_MISMATCH");return;}
+        Machine machine=state.machine(session.machine());
+        if(machine==null||!mobileSupported(machine.type())){callback.accept(null,"INVALID_STATE");return;}
+        JsonObject response=mobileState(owner);
+        engine(session.machine()).resume(session,System.nanoTime()).ifPresent(event->response.add("events",mobileEvents(List.of(event))));
+        callback.accept(response,null);
     }
 
     public void mobileSeat(UUID owner, int machineId, BiConsumer<JsonObject, String> callback) {
