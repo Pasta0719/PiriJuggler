@@ -63,6 +63,23 @@ class RemoteMachineViewStateTest {
         assertEquals(1, view.stoppedMask() & 1);
     }
 
+    @Test void publicNoticeDrivesDeterministicLampOffOnAndBlink() {
+        AtomicLong now = new AtomicLong(1_000_000_000L);
+        RemoteMachineRegistry registry = new RemoteMachineRegistry(now::get);
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, snapshot(13)));
+        RemoteMachineViewState view = registry.view(13);
+        assertFalse(view.lampVisible(now.get()));
+        JsonObject notice = id(13); notice.addProperty("lamp","ON"); notice.addProperty("pattern","FAST_BLINK_1S");
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_NOTICE, notice));
+        assertTrue(view.lampVisible(now.get()));
+        now.addAndGet(100_000_000L); assertFalse(view.lampVisible(now.get()));
+        now.addAndGet(100_000_000L); assertTrue(view.lampVisible(now.get()));
+        now.addAndGet(800_000_000L); assertTrue(view.lampVisible(now.get()));
+        JsonObject off = id(13); off.addProperty("lamp","OFF"); off.addProperty("pattern","NONE");
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_NOTICE, off));
+        assertFalse(view.lampVisible(now.get()));
+    }
+
     @Test void resetClearsTypedViewCache() {
         RemoteMachineRegistry registry = new RemoteMachineRegistry();
         registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, snapshot(9)));
