@@ -58,9 +58,9 @@ class SlotViewStateTest {
     }
 
     @Test void motionBoundariesAreContinuousAndRespectReceptionTime(){
-        assertEquals(0,SlotViewState.distance("NORMAL",.150));assertEquals(-4.9,SlotViewState.distance("NORMAL",.5),1e-9);assertEquals(-18.9,SlotViewState.distance("NORMAL",1),1e-9);
-        assertEquals(6,SlotViewState.distance("REVERSE_500MS",.5),1e-9);assertEquals(1.8,SlotViewState.distance("REVERSE_500MS",.8),1e-9);assertEquals(-28,SlotViewState.distance("RESUME_NORMAL",1));
-        var time=new AtomicLong(9_000_000_000L);var view=open(time);view.receive(start());assertEquals(8,view.phase(0));time.addAndGet(150_000_000);assertEquals(8,view.phase(0));time.addAndGet(350_000_000);assertEquals(3.1,view.phase(0),1e-9);
+        assertEquals(0,SlotViewState.distance("NORMAL",.150));assertEquals(-3.675,SlotViewState.distance("NORMAL",.5),1e-9);assertEquals(-14.175,SlotViewState.distance("NORMAL",1),1e-9);
+        assertEquals(6,SlotViewState.distance("REVERSE_500MS",.5),1e-9);assertEquals(2.85,SlotViewState.distance("REVERSE_500MS",.8),1e-9);assertEquals(-21,SlotViewState.distance("RESUME_NORMAL",1));
+        var time=new AtomicLong(9_000_000_000L);var view=open(time);view.receive(start());assertEquals(8,view.phase(0));time.addAndGet(150_000_000);assertEquals(8,view.phase(0));time.addAndGet(350_000_000);assertEquals(4.325,view.phase(0),1e-9);
     }
     @Test void ServerStopIndexWinsIncludingSixSlipAndWrongSpinIsIgnored(){
         var time=new AtomicLong();var view=open(time);view.receive(start());
