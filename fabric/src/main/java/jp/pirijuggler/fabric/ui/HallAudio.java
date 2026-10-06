@@ -19,6 +19,7 @@ public final class HallAudio {
         RemoteMachineRegistry.AudioEvent event;
         while((event=registry.pollAudioEvent())!=null){
             if("REMOVE".equals(event.kind())||"BONUS_END".equals(event.kind())){stop(event.machineId());continue;}
+            if("SOUND".equals(event.kind())){RemoteMachineViewState machine=registry.view(event.machineId());if(machine!=null)publicNotice(machine,event.bonusType().toLowerCase(java.util.Locale.ROOT));continue;}
             if(!"BONUS_START".equals(event.kind()))continue;
             RemoteMachineViewState machine=registry.view(event.machineId());
             if(machine==null||!inRange(machine,BGM_RADIUS))continue;
