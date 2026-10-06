@@ -4,7 +4,7 @@ import datetime,json,os,shutil,subprocess,time
 ROOT=Path(__file__).resolve().parents[1];E=ROOT/"runtime-evidence/PHASE_14";RUN=datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ");OUT=E/"attempts"/RUN;SERVER=E/"work"/("server-"+RUN)
 JAVA=shutil.which("java");PAPER=ROOT/"runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar";GRADLE=["cmd.exe","/d","/c",str(ROOT/"gradlew.bat")] if os.name=="nt" else [str(ROOT/"gradlew")]
 prod={s:ROOT/s/f"build/libs/piri-juggler-{s}-1.0.0.jar" for s in ("paper","fabric")};helper={s:ROOT/f"runtime-test-support/{m}/build/libs/piri-runtime-test-{s}-1.0.0.jar" for s,m in (("paper","paper"),("client","client"))}
-OUT.mkdir(parents=True,exist_ok=True);sr=OUT/"server-result.json";cr=OUT/"client-result.json";cache={};server=client=None;handles=[];manifest={"run":RUN,"passed":False,"metrics":{},"assertions":[]}
+OUT.mkdir(parents=True,exist_ok=True);sr=OUT/"server-result.json";cr=OUT/"phase14-perf"/"client-result.json";cache={};server=client=None;handles=[];manifest={"run":RUN,"passed":False,"metrics":{},"assertions":[]}
 def load(p):
  try: cache[p]=json.loads(p.read_text())
  except: pass
@@ -36,7 +36,7 @@ def packets():
 try:
  plugins=SERVER/"plugins";plugins.mkdir(parents=True);shutil.copy2(prod["paper"],plugins);shutil.copy2(helper["paper"],plugins);(SERVER/"eula.txt").write_text("eula=true\n");(SERVER/"server.properties").write_text("server-ip=127.0.0.1\nserver-port=25592\nonline-mode=false\nenforce-secure-profile=false\nview-distance=6\nsimulation-distance=5\ngenerate-structures=false\n")
  h=(OUT/"server.log").open("w");handles.append(h);server=subprocess.Popen([JAVA,"-Xms512M","-Xmx1536M","-Dpiri.runtime.phase=phase13",f"-Dpiri.runtime.serverResult={sr}","-jar",str(PAPER),"nogui"],cwd=SERVER,stdin=subprocess.PIPE,stdout=h,stderr=subprocess.STDOUT,text=True);wait(lambda:"PIRI_DATABASE_READY" in log(OUT/"server.log"),"server")
- h=(OUT/"client.log").open("w");handles.append(h);client=subprocess.Popen(GRADLE+["-PruntimeAcceptance=true","-PruntimeScenario=phase14-perf",f"-PruntimeRun={RUN}","-PruntimeEvidencePhase=PHASE_14",":runtime-test-client:runClient","--console=plain"],cwd=ROOT,stdout=h,stderr=subprocess.STDOUT);wait(lambda:load(cr).get("connected") and load(cr).get("handshake"),"client",600)
+ work=E/"work"/"client-phase14-perf"\n if work.exists(): shutil.rmtree(work)\n work.mkdir(parents=True);(work/"options.txt").write_text("version:3953\\nlang:en_us\\nrenderDistance:6\\nsimulationDistance:5\\nmaxFps:30\\npauseOnLostFocus:false\\nsoundCategory_master:0.0\\nskipMultiplayerWarning:true\\nonboardAccessibility:false\\n")\n h=(OUT/"client.log").open("w");handles.append(h);client=subprocess.Popen(GRADLE+["-PruntimeAcceptance=true","-PruntimeScenario=phase14-perf",f"-PruntimeRun={RUN}","-PruntimeEvidencePhase=PHASE_14",":runtime-test-client:runClient","--console=plain"],cwd=ROOT,stdout=h,stderr=subprocess.STDOUT);wait(lambda:load(cr).get("connected") and load(cr).get("handshake"),"client",600)
  cmd("op PiriRuntimeTest");action("command",text="piritest phase13grid");wait(lambda:len(load(sr).get("machines",[]))==42,"42 machines",60)
  cmd("tp PiriRuntimeTest 200 100 200");wait(lambda:load(cr).get("remoteCacheSize",0)==0,"baseline out of range",60);entityBefore=load(sr).get("totalEntities");baseline=sample(20)
  cmd("tp PiriRuntimeTest 0.5 99 0.5");wait(lambda:load(cr).get("remoteCacheSize")==42,"42 cache",120);idleStart=packets();idle=sample(30);idleTraffic=packets()-idleStart
