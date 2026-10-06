@@ -1026,9 +1026,9 @@ function resizeStage(){
 }
 function delta(profile,e){
  e=Math.max(0,e);
- if(profile==="NORMAL"){if(e<=.150)return 0;if(e<.500)return-.5*(21/.350)*(e-.150)*(e-.150);return-3.675-21*(e-.500)}
- if(profile==="REVERSE_500MS"){if(e<.500)return 12*e;if(e<.800)return 6-.5*(21/.300)*(e-.500)*(e-.500);return 2.85-21*(e-.800)}
- return-21*e;
+ if(profile==="NORMAL"){if(e<=.150)return 0;if(e<.500)return-.5*(28/.350)*(e-.150)*(e-.150);return-4.9-28*(e-.500)}
+ if(profile==="REVERSE_500MS"){if(e<.500)return 12*e;if(e<.800)return 6-.5*(28/.300)*(e-.500)*(e-.500);return 1.8-28*(e-.800)}
+ return-28*e;
 }
 function endpoint(from,target){let e=target;while(e>from)e-=21;return e}
 function currentPhase(reel,now){
@@ -1058,10 +1058,10 @@ function drawReels(now){
  ensureReels();
  for(let r=0;r<3;r++){
   const phase=currentPhase(r,now),middle=Math.floor(phase),frac=phase-middle,box=$("reel"+r),imgs=box.children;
-  const sx=Math.max(.01,box.clientWidth/270),sy=Math.max(.01,box.clientHeight/390);
+  const scale=Math.max(.01,Math.min(box.clientWidth/270,box.clientHeight/390)),sy=scale;
   for(let row=-2;row<=2;row++){
    const im=imgs[row+2],sym=symbolAt(r,middle+row),sz=symbolSize(sym);
-   const w=sz[0]*sx,h=sz[1]*sx;
+   const w=sz[0]*scale,h=sz[1]*scale;
    const src=asset("symbols/"+sym+".png");if(im.getAttribute("src")!==src)im.setAttribute("src",src);
    im.style.width=w+"px";im.style.height=h+"px";
    im.style.left=((box.clientWidth-w)/2)+"px";
@@ -1081,7 +1081,7 @@ function canStop(reel){
 function localStop(reel,pressed){
  if(!canStop(reel))return;
  const names=["left","center","right"],list=motion.hints[names[reel]],hint=list&&list[pressed];if(!hint)return;
- const now=performance.now(),from=currentPhase(reel,now),end=endpoint(from,Number(hint.stopIndex)),exact=(from-end)/21*1000,duration=Math.max(Number(hint.durationMs||0),Math.ceil(exact-1e-9));
+ const now=performance.now(),from=currentPhase(reel,now),end=endpoint(from,Number(hint.stopIndex)),exact=(from-end)/28*1000,duration=Math.max(Number(hint.durationMs||0),Math.ceil(exact-1e-9));
  motion.stops[reel]={from:from,end:end,target:Number(hint.stopIndex),at:now,duration:duration};
  motion.hints=Object.assign({},motion.hints);delete motion.hints[names[reel]];
  if(motion.godFreeze){
@@ -1097,12 +1097,12 @@ function handleEvents(events){
    const freeze=!!p.godFreeze;
    if(queuedLeverTimer){clearTimeout(queuedLeverTimer);queuedLeverTimer=0}
    if(freeze)stopAllAudio();
-   motion={spinId:p.spinId||"",animation:p.animation||"NORMAL",godFreeze:freeze,at:performance.now(),starts:[Number(p.startPhase.left),Number(p.startPhase.center),Number(p.startPhase.right)],stopEnableAfterMs:Number(p.stopEnableAfterMs||0),hints:p.stopHints||{},stops:[null,null,null],spinning:true};
+   const receiveNow=performance.now(),serverStart=Number(p.serverStartEpochMs||0),elapsed=serverStart>0?Math.max(0,Date.now()-serverStart):0;\n   motion={spinId:p.spinId||"",animation:p.animation||"NORMAL",godFreeze:freeze,at:receiveNow-elapsed,starts:[Number(p.startPhase.left),Number(p.startPhase.center),Number(p.startPhase.right)],stopEnableAfterMs:Number(p.stopEnableAfterMs||0),hints:p.stopHints||{},stops:[null,null,null],spinning:true};
    if(p.animation!=="RESUME_NORMAL")playNamed(freeze?"juggler_god_god_freeze":machineSound("lever"),freeze?"god_freeze":"lever");
   }else if(ev.type==="REEL_STOP"&&motion){
    const map={LEFT:0,CENTER:1,RIGHT:2},r=map[p.reel];if(r===undefined)return;
    if(!motion.stops[r]){
-    const now=performance.now(),from=currentPhase(r,now),end=endpoint(from,Number(p.stopIndex)),duration=Math.max(Number(p.durationMs||0),Math.ceil((from-end)/21*1000-1e-9));
+    const now=performance.now(),from=currentPhase(r,now),end=endpoint(from,Number(p.stopIndex)),duration=Math.max(Number(p.durationMs||0),Math.ceil((from-end)/28*1000-1e-9));
     motion.stops[r]={from:from,end:end,target:Number(p.stopIndex),at:now,duration:duration};
    }
    motion.hints=p.nextStopHints||motion.hints;
