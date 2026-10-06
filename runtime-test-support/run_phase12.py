@@ -84,10 +84,15 @@ def wait_stoppable(name,state_name):
     time.sleep(delay + .15)
 def stop_reels(name,sequence):
     reel_by_key={263:0,264:1,262:2}
-    for index,(key,mask) in enumerate(sequence):
-        # Reuse the proven real-client input path used by Phase05/SKILL STOP:
-        # wait for a live reel phase, then inject the physical key edge in Fabric.
-        action(name,"tap_at_phase",reel=reel_by_key[key],key=key,phase=5.72+index*4)
+    for key,mask in sequence:
+        reel=reel_by_key[key]
+        phases=client(name).get("displayPhases") or [0.0,0.0,0.0]
+        current=float(phases[reel]) if len(phases)>reel else 0.0
+        # Aim a few symbols ahead of the reel's *current* visible phase.
+        # Fixed targets can already be behind a reel after an earlier stop,
+        # forcing a full-cycle wait (or timing out during entry/bonus motion).
+        target=(current+3.0)%21.0
+        action(name,"tap_at_phase",reel=reel,key=key,phase=target)
         wait(lambda:settled(name) and session().get("stopped_mask")==mask,"normal stop "+str(mask),40)
 def remote_counts(name):
     kinds=["REMOTE_MACHINE_SNAPSHOT","REMOTE_MACHINE_SPIN","REMOTE_MACHINE_STOP","REMOTE_MACHINE_NOTICE","REMOTE_MACHINE_BONUS","REMOTE_MACHINE_REMOVE","REMOTE_MACHINE_SOUND"]
