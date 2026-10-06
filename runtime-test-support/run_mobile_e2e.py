@@ -212,7 +212,10 @@ try:
             raise TimeoutError("mobile stop never became available: "+stop)
         time.sleep(.15)
     after=http("GET","/api/state",token)
-    check("mobile third stop commits a non-spinning production state","SPINNING" not in str(after.get("gameState","")),after)
+    check("mobile third stop commits a non-spinning production state",
+          "SPINNING" not in str(after.get("gameState",""))
+          and int(after.get("stoppedMask",0))==7,
+          after)
 
     cash=http("POST","/api/cashout",token)
     pending=int(cash.get("cashoutPending",0))
