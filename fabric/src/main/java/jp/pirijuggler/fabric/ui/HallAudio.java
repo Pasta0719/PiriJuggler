@@ -34,9 +34,6 @@ public final class HallAudio {
     private static boolean inRange(RemoteMachineViewState machine,double radius){
         MinecraftClient client=MinecraftClient.getInstance();
         if(client.player==null||client.world==null)return false;
-        if(machine.world()!=null&&!machine.world().equals(client.world.getRegistryKey().getValue())) {
-            // UUID/world-name validation is handled by remote interest; distance remains the final audio gate.
-        }
         double dx=client.player.getX()-(machine.x()+.5),dy=client.player.getY()-(machine.y()+1.5),dz=client.player.getZ()-(machine.z()+.5);
         return dx*dx+dy*dy+dz*dz<=radius*radius;
     }
