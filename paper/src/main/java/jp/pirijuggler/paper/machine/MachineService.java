@@ -1360,9 +1360,19 @@ public final class MachineService implements Listener, CommandExecutor {
     }
 
     private void addMobileBalance(JsonObject stateJson, UUID owner) {
-        if (vault == null) return;
-        try { stateJson.addProperty("vaultBalance", vault.balance(Bukkit.getOfflinePlayer(owner))); }
-        catch (RuntimeException ignored) { }
+        stateJson.addProperty("loanAmount", loanAmount);
+        stateJson.addProperty("loanMedals", loanMedals);
+        if (vault == null) {
+            stateJson.addProperty("loanAvailable", false);
+            return;
+        }
+        try {
+            double balance = vault.balance(Bukkit.getOfflinePlayer(owner));
+            stateJson.addProperty("vaultBalance", balance);
+            stateJson.addProperty("loanAvailable", balance >= loanAmount);
+        } catch (RuntimeException ignored) {
+            stateJson.addProperty("loanAvailable", false);
+        }
     }
 
     private <T> void submitMobile(UUID player, int machine, Callable<T> operation, BiConsumer<T, String> callback) {
