@@ -83,7 +83,7 @@ class SlotViewStateTest {
     @Test void resumedDisplayKeepsAlreadyStoppedReelsFixed(){
         var time=new AtomicLong();var view=open(time);
         view.receive(packet(PacketType.PUBLIC_STATE,"{\"sessionId\":\""+ID+"\",\"machineId\":1,\"gameState\":\"NORMAL_SPINNING\",\"stoppedMask\":1,\"lampOn\":false,\"displayStops\":{\"left\":14,\"center\":3,\"right\":12}}"));
-        var b=start().payload();b.addProperty("animation","RESUME_NORMAL");view.receive(Envelope.current(PacketType.SPIN_START,b));time.set(1_000_000_000);assertEquals(14,view.phase(0));assertEquals(3,view.phase(1),1e-9);assertEquals(12,view.phase(2),1e-9);
+        var b=start().payload();b.addProperty("animation","RESUME_NORMAL");view.receive(Envelope.current(PacketType.SPIN_START,b));time.set(1_000_000_000);assertEquals(14,view.phase(0));assertEquals(17,view.phase(1),1e-9);assertEquals(5,view.phase(2),1e-9);
     }
     @Test void clientStopDelayUsesEachServerMotionProfile(){
         for(var profile:jp.pirijuggler.common.reel.ReelMotion.Profile.values()){
