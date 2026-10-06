@@ -731,7 +731,19 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #dataRight{left:1374px;top:262px;width:218px;height:365px}
 
 #cabinet{position:absolute;left:235px;top:188px;width:1130px;height:690px;background:#3C0A10;border:6px solid #B68A42;box-shadow:inset 0 0 0 4px #E4C174}
-#cabinet.godlike{background:linear-gradient(#e9d07a 0%,#c49a3a 25%,#9c6f1d 65%,#65420e 100%);border-color:#b8892f}
+#cabinet.godlike{
+ background:
+  linear-gradient(to bottom,
+   transparent 0,transparent 24px,
+   rgba(255,241,184,.40) 24px,rgba(255,241,184,.40) 34px,
+   transparent 34px,transparent 38px,
+   rgba(255,247,214,.14) 38px,rgba(255,247,214,.14) 42px,
+   transparent 42px,transparent 656px,
+   rgba(74,44,8,.23) 656px,rgba(74,44,8,.23) 666px,
+   transparent 666px),
+  linear-gradient(to bottom,#E9D07A,#64410D);
+ border-color:#E4C174
+}
 
 #reelBacking{position:absolute;left:555px;top:255px;width:765px;height:330px;background:#8A8175}
 .reelWindow{position:absolute;top:255px;width:230px;height:330px;overflow:hidden;background:#F4F1E8;z-index:4}
@@ -748,8 +760,6 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #stockLamp{position:absolute;left:1390px;top:835px;width:150px;height:58px;border-radius:14px;background:#34363b;color:#555861;display:none;align-items:center;justify-content:center;font-size:24px;font-weight:900;z-index:7;box-shadow:inset 0 0 0 6px #090B0E}
 #stockLamp.on{background:#58e36a;color:#58e36a;text-shadow:0 0 8px #58e36a}
 #cabinet.godlike{overflow:hidden}
-#cabinet.godlike:before{content:"";position:absolute;left:18px;right:18px;top:24px;height:18px;background:linear-gradient(#f7e7a5aa,#fff2b833);pointer-events:none}
-#cabinet.godlike:after{content:"";position:absolute;left:18px;right:18px;bottom:24px;height:10px;background:#4b2f09aa;pointer-events:none}
 
 #lamp{position:absolute;left:305px;top:360px;width:220px;height:125px;object-fit:contain;z-index:5}
 #skillChallenge{position:absolute;left:342px;top:483px;width:150px;height:117px;display:flex;align-items:center;justify-content:center;z-index:5}
@@ -1104,9 +1114,9 @@ function symbolSize(sym){
 }
 function ensureReels(){
  for(let r=0;r<3;r++){
-  const box=$("reel"+r);if(box.children.length===6)continue;box.textContent="";
+  const box=$("reel"+r);if(box.children.length===8)continue;box.textContent="";
   for(let i=0;i<5;i++){const im=document.createElement("img");im.className="sym";box.append(im)}
-  const reveal=document.createElement("img");reveal.className="godReveal";box.append(reveal);
+  for(let i=0;i<3;i++){const reveal=document.createElement("img");reveal.className="godReveal";box.append(reveal)}
  }
 }
 function presentationPhase(reel,now){
@@ -1147,11 +1157,15 @@ function drawReels(now){
     im.style.opacity="1";im.style.transform="none";
    }
   }
-  const reveal=imgs[5],st=freeze&&motion?motion.stops[r]:null,revealed=!!(st&&now>=st.at+st.duration&&freezeMs>=165);
+  const glow1=imgs[5],glow2=imgs[6],reveal=imgs[7],st=freeze&&motion?motion.stops[r]:null,revealed=!!(st&&now>=st.at+st.duration&&freezeMs>=165);
   if(god&&revealed){
-   const w=230*scale,h=150*scale;reveal.src=asset("symbols/bar.png");reveal.style.display="block";
-   reveal.style.width=w+"px";reveal.style.height=h+"px";reveal.style.left=((box.clientWidth-w)/2)+"px";reveal.style.top=(120*sy)+"px";
-  }else reveal.style.display="none";
+   const ox=(box.clientWidth-270*scale)/2,oy=(box.clientHeight-390*scale)/2,src=asset("symbols/bar.png"),age=Math.max(0,now-(st.at+st.duration));
+   const glow=age<120?Math.max(0,.24*(1-age/120)):0;
+   [[glow1,14,114,242,162,glow],[glow2,18,118,234,154,glow],[reveal,20,120,230,150,1]].forEach(function(v){
+    const im=v[0];im.src=src;im.style.display=v[5]>0?"block":"none";im.style.opacity=String(v[5]);im.style.objectFit="contain";
+    im.style.left=(ox+v[1]*scale)+"px";im.style.top=(oy+v[2]*scale)+"px";im.style.width=(v[3]*scale)+"px";im.style.height=(v[4]*scale)+"px";
+   });
+  }else{glow1.style.display="none";glow2.style.display="none";reveal.style.display="none"}
  }
 }
 function nextPendingReel(){
