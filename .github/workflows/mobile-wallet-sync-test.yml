@@ -1,0 +1,23 @@
+name: Mobile wallet sync test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'paper/src/main/java/jp/pirijuggler/paper/economy/EconomyStore.java'
+      - 'paper/src/test/java/jp/pirijuggler/paper/economy/EconomyStoreTest.java'
+      - '.github/workflows/mobile-wallet-sync-test.yml'
+  workflow_dispatch:
+
+jobs:
+  mobile-wallet-sync:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Run mobile wallet round-trip test
+        run: gradlew.bat :paper:test --tests "jp.pirijuggler.paper.economy.EconomyStoreTest.mobileWalletRoundTripPreservesPlayerMedalsAndMachineCredit" --console=plain
