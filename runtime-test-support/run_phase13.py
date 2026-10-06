@@ -45,9 +45,10 @@ def command(n,text,expected=None):
  before=msgcount(n,expected) if expected else 0; action(n,"command",text=text)
  if expected: wait(lambda:msgcount(n,expected)>before,text+" -> "+expected)
 def tap(n,key): action(n,"key",key=key,action=1); action(n,"key",key=key,action=0)
-def session():
+def session(player="PiriRuntimeTest"):
  for s in state().get("sessions",[]):
-  if s.get("lifecycle")=="ACTIVE": return s
+  if s.get("lifecycle")=="ACTIVE" and s.get("player_uuid"):
+   return s
  return {}
 def settled(n):
  vals=packets(n,"PUBLIC_STATE"); p=vals[-1] if vals else {}
