@@ -53,10 +53,9 @@ def settled(n):
  vals=packets(n,"PUBLIC_STATE"); p=vals[-1] if vals else {}
  return bool(session()) and p.get("expectedNextClientSequence")==session().get("last_client_sequence",-2)+1
 def stop_reels(n):
- for key,mask,reel in [(263,1,0),(264,3,1),(262,7,2)]:
+ for key,mask in [(263,1),(264,3),(262,7)]:
   wait(lambda:settled(n),"settled before stop",30)
-  phases=client(n).get("displayPhases") or [0,0,0]; target=(float(phases[reel])+3.0)%21.0
-  action(n,"tap_at_phase",reel=reel,key=key,phase=target)
+  tap(n,key)
   wait(lambda:session().get("stopped_mask")==mask,"stop mask "+str(mask),40)
 def start_server():
  global server
