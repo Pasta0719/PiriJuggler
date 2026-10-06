@@ -733,6 +733,125 @@ public final class PrizeService implements Listener {
         });
     }
 
+    /**
+     * Player inventory -> mobile prize inventory. Runs while the quitting player's
+     * Bukkit inventory is still authoritative, then removes only canonical prize items.
+     */
+    public void stashPrizesForMobile(Player player) {
+        if (player == null) return;
+        UUID owner = player.getUniqueId();
+        Map<PrizeItem.Type,Integer> counts = new EnumMap<>(PrizeItem.Type.class);
+        for (PrizeItem.Type type : PrizeItem.Type.values()) {
+            int count = countPrizes(player, type);
+            if (count > 0) counts.put(type, count);
+        }
+        if (counts.isEmpty()) return;
+        var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        try {
+            plugin.executors().databaseBarrier(() -> {
+                try (Connection connection = open(dbPath.toString())) {
+                    connection.setAutoCommit(false);
+                    try {
+                        ensureMobilePrizeTable(connection);
+                        long now = System.currentTimeMillis();
+                        for (var entry : counts.entrySet()) {
+                            try (var u = connection.prepareStatement(
+                                    "INSERT INTO mobile_prizes(player_uuid,prize_type,amount,updated_at) VALUES(?,?,?,?) " +
+                                    "ON CONFLICT(player_uuid,prize_type) DO UPDATE SET amount=mobile_prizes.amount+excluded.amount,updated_at=excluded.updated_at")) {
+                                u.setString(1, owner.toString()); u.setString(2, entry.getKey().id());
+                                u.setInt(3, entry.getValue()); u.setLong(4, now); u.executeUpdate();
+                            }
+                        }
+                        connection.commit();
+                    } catch (Exception failure) { connection.rollback(); throw failure; }
+                }
+                return null;
+            }).get(5, java.util.concurrent.TimeUnit.SECONDS);
+            for (var entry : counts.entrySet()) removeType(player, entry.getKey(), entry.getValue());
+            player.updateInventory();
+        } catch (Exception failure) {
+            plugin.getLogger().severe("PIRI_MOBILE_PRIZE_STASH_FAILED player=" + owner + " " + failure);
+        }
+    }
+
+    /**
+     * Mobile prize inventory -> real Minecraft prize items on login.
+     * The mobile balance is reserved first; any items that do not fit are credited back.
+     */
+    public void recoverMobilePrizes(Player player) {
+        if (player == null || !player.isOnline()) return;
+        UUID owner = player.getUniqueId();
+        var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            Map<PrizeItem.Type,Integer> reserved = new EnumMap<>(PrizeItem.Type.class);
+            try (Connection connection = open(dbPath.toString())) {
+                connection.setAutoCommit(false);
+                try {
+                    ensureMobilePrizeTable(connection);
+                    for (PrizeItem.Type type : PrizeItem.Type.values()) {
+                        int count = 0;
+                        try (var q = connection.prepareStatement("SELECT amount FROM mobile_prizes WHERE player_uuid=? AND prize_type=?")) {
+                            q.setString(1, owner.toString()); q.setString(2, type.id());
+                            try (var rs = q.executeQuery()) { if (rs.next()) count = rs.getInt(1); }
+                        }
+                        if (count > 0) {
+                            reserved.put(type, count);
+                            try (var u = connection.prepareStatement(
+                                    "UPDATE mobile_prizes SET amount=0,updated_at=? WHERE player_uuid=? AND prize_type=?")) {
+                                u.setLong(1, System.currentTimeMillis()); u.setString(2, owner.toString()); u.setString(3, type.id()); u.executeUpdate();
+                            }
+                        }
+                    }
+                    connection.commit();
+                } catch (Exception failure) { connection.rollback(); throw failure; }
+            } catch (Exception failure) {
+                plugin.getLogger().severe("PIRI_MOBILE_PRIZE_RECOVERY_RESERVE_FAILED player=" + owner + " " + failure);
+                return;
+            }
+            if (reserved.isEmpty()) return;
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (!player.isOnline()) {
+                    restoreMobilePrizes(owner, reserved);
+                    return;
+                }
+                Map<PrizeItem.Type,Integer> leftovers = new EnumMap<>(PrizeItem.Type.class);
+                for (var entry : reserved.entrySet()) {
+                    int remaining = entry.getValue();
+                    while (remaining > 0) {
+                        int stack = Math.min(64, remaining);
+                        Map<Integer,ItemStack> left = player.getInventory().addItem(PrizeItem.create(entry.getKey(), stack));
+                        int failed = left.values().stream().mapToInt(ItemStack::getAmount).sum();
+                        remaining -= (stack - failed);
+                        if (failed > 0) { leftovers.put(entry.getKey(), remaining); break; }
+                    }
+                }
+                player.updateInventory();
+                if (!leftovers.isEmpty()) restoreMobilePrizes(owner, leftovers);
+            });
+        });
+    }
+
+    private void restoreMobilePrizes(UUID owner, Map<PrizeItem.Type,Integer> amounts) {
+        var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try (Connection connection = open(dbPath.toString())) {
+                ensureMobilePrizeTable(connection);
+                long now = System.currentTimeMillis();
+                for (var entry : amounts.entrySet()) {
+                    if (entry.getValue() <= 0) continue;
+                    try (var u = connection.prepareStatement(
+                            "INSERT INTO mobile_prizes(player_uuid,prize_type,amount,updated_at) VALUES(?,?,?,?) " +
+                            "ON CONFLICT(player_uuid,prize_type) DO UPDATE SET amount=mobile_prizes.amount+excluded.amount,updated_at=excluded.updated_at")) {
+                        u.setString(1, owner.toString()); u.setString(2, entry.getKey().id());
+                        u.setInt(3, entry.getValue()); u.setLong(4, now); u.executeUpdate();
+                    }
+                }
+            } catch (Exception failure) {
+                plugin.getLogger().severe("PIRI_MOBILE_PRIZE_RECOVERY_RESTORE_FAILED player=" + owner + " " + failure);
+            }
+        });
+    }
+
     private void exchangeCommand(Player player, String[] args) {
         if (args.length < 2 || args.length > 3) { player.sendMessage("交換内容を確認できませんでした。交換窓口からもう一度お試しください。"); return; }
         UUID owner = player.getUniqueId();
