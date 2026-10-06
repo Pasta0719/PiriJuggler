@@ -549,3 +549,4 @@ public final class DevFundCommand implements CommandExecutor {
         return new PremiumPolicy(Map.of("premium",Map.of("denominator",1,"big_chance_weight",type==null?0:1,"weights",weights)));
     }
 }
+
