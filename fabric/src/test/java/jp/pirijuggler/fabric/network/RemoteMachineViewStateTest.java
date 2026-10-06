@@ -193,7 +193,7 @@ class RemoteMachineViewStateTest {
         notice.addProperty("pattern", "FAST_BLINK_1S");
         registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_NOTICE, notice));
         assertTrue(view.lampVisible(now.get()));
-        now.addAndGet(250_000_000L);
+        now.addAndGet(150_000_000L);
         assertFalse(view.lampVisible(now.get()));
 
         JsonObject bonus = id(13);
