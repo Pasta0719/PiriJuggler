@@ -123,6 +123,7 @@ try:
  wait(lambda:client(spec).get("remoteCacheSize",0)>0,"spectator returns to cabinet interest",30)
  # Physical owner fixture overlays machine #2 (SOUTH).
  mid=ids[1]; command(owner,"setblock -6 100 -10 stone"); command(owner,"setblock -6 100 -9 stone_button[face=wall,facing=south]")
+ command(owner,"setblock -6 99 -7 stone"); command(owner,"setblock -5 99 -7 stone"); command(owner,"setblock -6 99 -6 stone"); command(owner,"setblock -5 99 -6 stone")
  command(owner,"tp @s -5.5 99 -6.5"); action(owner,"aimpos",x=-6,y=100,z=-9); action(owner,"clickpos",x=-6,y=100,z=-9)
  wait(lambda:pcount(owner,"OPEN_MACHINE")>0 and bool(session()),"owner open"); command(owner,"piritest fund","TEST_FUNDED"); action(owner,"close"); wait(lambda:not session(),"fund close"); action(owner,"aimpos",x=-6,y=100,z=-9); action(owner,"clickpos",x=-6,y=100,z=-9); wait(lambda:bool(session()),"fixture reopen",60)
  command(spec,"tp @s -5.5 100 -5.5"); action(spec,"aimpos",x=-6,y=100,z=-9)
