@@ -122,11 +122,11 @@ try:
  mid=ids[1]; command(owner,"setblock -6 100 -10 stone"); command(owner,"setblock -6 100 -9 stone_button[face=wall,facing=south]")
  command(owner,"tp @s -5.5 99 -6.5"); action(owner,"aimpos",x=-6,y=100,z=-9); action(owner,"clickpos",x=-6,y=100,z=-9)
  wait(lambda:pcount(owner,"OPEN_MACHINE")>0 and bool(session()),"owner open"); command(owner,"piritest fund","TEST_FUNDED"); action(owner,"close"); wait(lambda:not session(),"fund close"); action(owner,"aimpos",x=-6,y=100,z=-9); action(owner,"clickpos",x=-6,y=100,z=-9); wait(lambda:bool(session()),"fixture reopen",60)
+ command(spec,"tp @s -5.5 100 -5.5"); action(spec,"aimpos",x=-6,y=100,z=-9)
  command(owner,"piritest force reg","TEST_FORCE_ARMED"); tap(owner,32); wait(lambda:session().get("game_state")=="NORMAL_BETTED","bet"); tap(owner,32)
  wait(lambda:session().get("game_state")=="NORMAL_SPINNING" and pcount(owner,"SPIN_START")>0,"spin"); time.sleep(1)
  stop_reels(owner); wait(lambda:session().get("game_state")=="BONUS_PENDING_REG","pending reg")
  authoritative=[int(session()["display_left_stop"]),int(session()["display_center_stop"]),int(session()["display_right_stop"])]
- command(spec,"tp @s -5.5 100 -5.5"); action(spec,"aimpos",x=-6,y=100,z=-9)
  wait(lambda:machine_view(spec,mid).get("stoppedMask")==7 or pcount(spec,"REMOTE_MACHINE_STOP")>=3,"spectator stopped",30); world=machine_view(spec,mid).get("displayStops")
  check("owner authoritative stop indexes equal external cabinet",world==authoritative,{"owner":authoritative,"external":world})
  check("hidden bonus internals absent before public",not forbidden([p for p in client(spec).get("packets",[]) if p["type"].startswith("REMOTE_MACHINE_")]))
