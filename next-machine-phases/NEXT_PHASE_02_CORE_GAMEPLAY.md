@@ -53,9 +53,7 @@ This applies to reel symbols, Piri Chance lamp imagery, UI imagery, and independ
 - Existing production build/test suite returned PASS after successor integration and regression fixes.
 - Added `JugglerGodCoreTest` for guaranteed-stock zero-G accounting, post-guarantee 1G accounting, heaven target forcing, GOD BAR contract, and runtime-state persistence.
 - Added runtime-test helper support for `/piritest force god` on JUGGLER_GOD only.
-- Added `runtime-test-support/run_next_phase02.py` and `run-next-phase02-runtime.bat`.
-
-Dedicated NEXT Phase 02 real Paper+Fabric acceptance passed in GitHub Actions run `35788369912` on commit `f602ea82d4af319ee4858b110aec361a7e5aabca`.
+The obsolete dedicated NEXT Phase 02 runtime workflow/runner was retired on 2026-10-06. Core gameplay tests and production implementation remain.
 
 ## Phase 02 hardening notes
 
