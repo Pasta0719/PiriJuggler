@@ -38,7 +38,7 @@ SKILL STOP Phase02 COMPLETE。既存Paper/Fabric JARへ追加し、全入力4,38
 | Phase03 BLOCKED解除 | 第120章の単語間隔20pxを正として、第138章を4 logical columnsへ修正。4×5px=20px | SPEC第120/138章、[UI実装](docs/PHASE_03_CLIENT_UI.md) |
 | 音源生成中止 | 実音源はユーザーが別途提供する。実装側は所定ファイル名のOGGを受け入れて再生する。今回追加した自動生成音源・生成コード・Vorbis依存/タスクは削除済み。内容の推測・代替生成をしない | SPEC第32/106/129章、[音源仕様](docs/USER_AUDIO.md) |
 | Phase05 BLOCKED解除 | 第101章の秘匿を優先し、PUBLIC_STATE用の明示的mappingを実装。Paper内部GameState・DB値・第18/131章の遷移は維持 | SPEC第92/101章、下表 |
-| リール方向反転 | 通常はindex減少・画面下向き。プレミア逆回転の最初500msはindex増加・画面上向き、その後300msで通常方向の18 symbols/secへ加速。RESUME・slip・停止補間も同期。固定配列/行定義は維持 | SPEC第5/25/33/34/90/132章、[リール実装](docs/PHASE_04_REELS.md) |
+| リール方向反転 | 通常はindex減少・画面下向き。プレミア逆回転の最初500msはindex増加・画面上向き、その後300msで通常方向の28 symbols/secへ加速。RESUME・slip・停止補間も同期。固定配列/行定義は維持 | SPEC第5/25/33/34/90/132章、[リール実装](docs/PHASE_04_REELS.md) |
 | BAR確定目 | 単独BIG/REGの両方でBAR-BAR-BARを出現可能にした。0枚、Piri Chance点灯、権利保持、種類非公開。ハズレでは有効5ラインすべてでBAR揃いを禁止 | SPEC第9–14/30/92章、[通常ゲーム実装](docs/PHASE_05_GAME_LOGIC.md) |
 
 Phase03/05のBLOCKEDは、それぞれ承認済みSPEC反映→IN_PROGRESS復帰→実装・test/build/runtime全PASS→COMPLETEまで完了している。
