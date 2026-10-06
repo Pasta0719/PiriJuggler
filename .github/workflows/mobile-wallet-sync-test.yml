@@ -20,4 +20,4 @@ jobs:
           java-version: '21'
           cache: gradle
       - name: Run mobile wallet round-trip test
-        run: gradlew.bat :paper:test --tests "jp.pirijuggler.paper.economy.EconomyStoreTest.mobileWalletRoundTripPreservesPlayerMedalsAndMachineCredit" --console=plain
+        run: .\\gradlew.bat :paper:test --tests "jp.pirijuggler.paper.economy.EconomyStoreTest.mobileWalletRoundTripPreservesPlayerMedalsAndMachineCredit" --console=plain
