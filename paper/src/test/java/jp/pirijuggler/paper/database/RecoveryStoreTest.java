@@ -144,6 +144,74 @@ class RecoveryStoreTest {
         assertEquals(3,scalar("SELECT today_difference FROM machine_period_stats WHERE machine_id="+machine));
     }
 
+    @Test void remoteLoginSkillStopCancelsUnfinishedNormalSpinAndRefundsBet() throws Exception {
+        int machine=db.create(new Machine.Location(UUID.randomUUID(),"world",40,64,0,"NORTH"),MachineType.SKILL_STOP,NOW);
+        UUID player=UUID.randomUUID();db.seat(player,machine,NOW);
+        db.sql("UPDATE player_sessions SET game_state='NORMAL_SPINNING',credit=47,held_medals=0,current_bet=3,internal_role='MISS',last_client_sequence=5 WHERE player_uuid=?",player.toString());
+        db.sql("UPDATE machine_period_stats SET total_games=1,current_games=1,today_difference=-3 WHERE machine_id=?",machine);
+        Session before=db.state().session(player);
+        RecoveryStore recovery=new RecoveryStore(db,config,new StopSolver(new StopCatalogue()),123L);
+
+        db.transaction(()->{recovery.settleRemoteLogin(before,NOW+1);return null;});
+        Session after=db.state().session(player);
+        assertEquals(Session.GameState.SEATED_READY,after.state());
+        assertEquals(50,after.number("credit"));assertEquals(0,after.number("held_medals"));
+        assertEquals(0,scalar("SELECT total_games FROM machine_period_stats WHERE machine_id="+machine));
+        assertEquals(0,scalar("SELECT current_games FROM machine_period_stats WHERE machine_id="+machine));
+        assertEquals(0,scalar("SELECT today_difference FROM machine_period_stats WHERE machine_id="+machine));
+    }
+
+    @Test void remoteLoginSkillStopPreservesReplayValue() throws Exception {
+        int machine=db.create(new Machine.Location(UUID.randomUUID(),"world",41,64,0,"NORTH"),MachineType.SKILL_STOP,NOW);
+        UUID player=UUID.randomUUID();db.seat(player,machine,NOW);
+        db.sql("UPDATE player_sessions SET game_state='REPLAY_READY',credit=47,held_medals=0,current_bet=3,last_client_sequence=6 WHERE player_uuid=?",player.toString());
+        Session before=db.state().session(player);
+        RecoveryStore recovery=new RecoveryStore(db,config,new StopSolver(new StopCatalogue()),123L);
+
+        db.transaction(()->{recovery.settleRemoteLogin(before,NOW+1);return null;});
+        Session after=db.state().session(player);
+        assertEquals(Session.GameState.SEATED_READY,after.state());
+        assertEquals(50,after.number("credit"));
+        assertEquals(3,scalar("SELECT today_difference FROM machine_period_stats WHERE machine_id="+machine));
+    }
+
+    @Test void remoteLoginSkillStopCashesConfirmedRemainingBonusGames() throws Exception {
+        int machine=db.create(new Machine.Location(UUID.randomUUID(),"world",42,64,0,"NORTH"),MachineType.SKILL_STOP,NOW);
+        UUID player=UUID.randomUUID();db.seat(player,machine,NOW);
+        JsonObject skill=new JsonObject();skill.addProperty("skillRemaining",3);skill.addProperty("skillChallenge","AUTO");
+        db.sql("UPDATE player_sessions SET game_state='BIG_BETTED',credit=8,held_medals=0,current_bet=2,bonus_type='BIG',bonus_payout_count=238,machine_state_json=?,last_client_sequence=7 WHERE player_uuid=?",
+                skill.toString(),player.toString());
+        db.sql("UPDATE machine_period_stats SET big_count=1,current_games=17,today_difference=0 WHERE machine_id=?",machine);
+        Session before=db.state().session(player);
+        RecoveryStore recovery=new RecoveryStore(db,config,new StopSolver(new StopCatalogue()),123L);
+
+        db.transaction(()->{recovery.settleRemoteLogin(before,NOW+1);return null;});
+        Session after=db.state().session(player);
+        // 3 confirmed rounds * net 12, plus the already-paid current 2-medal bet.
+        assertEquals(46,after.number("credit"));assertEquals(0,after.number("held_medals"));
+        assertEquals(Session.GameState.SEATED_READY,after.state());
+        assertEquals(1,scalar("SELECT big_count FROM machine_period_stats WHERE machine_id="+machine));
+        assertEquals(0,scalar("SELECT current_games FROM machine_period_stats WHERE machine_id="+machine));
+        assertEquals(38,scalar("SELECT today_difference FROM machine_period_stats WHERE machine_id="+machine));
+    }
+
+    @Test void remoteLoginSkillStopConvertsPendingBonusRightInsteadOfDroppingIt() throws Exception {
+        int machine=db.create(new Machine.Location(UUID.randomUUID(),"world",43,64,0,"NORTH"),MachineType.SKILL_STOP,NOW);
+        UUID player=UUID.randomUUID();db.seat(player,machine,NOW);
+        db.sql("UPDATE player_sessions SET game_state='BONUS_PENDING_REG',credit=10,held_medals=0,current_bet=0,bonus_type='REG',last_client_sequence=8 WHERE player_uuid=?",player.toString());
+        db.sql("UPDATE machine_period_stats SET current_games=25 WHERE machine_id=?",machine);
+        Session before=db.state().session(player);
+        RecoveryStore recovery=new RecoveryStore(db,config,new StopSolver(new StopCatalogue()),123L);
+
+        db.transaction(()->{recovery.settleRemoteLogin(before,NOW+1);return null;});
+        Session after=db.state().session(player);
+        // REG has eight confirmed rounds: 8 * 12 = 96 medals.
+        assertEquals(50,after.number("credit"));assertEquals(56,after.number("held_medals"));
+        assertEquals(1,scalar("SELECT reg_count FROM machine_period_stats WHERE machine_id="+machine));
+        assertEquals(0,scalar("SELECT current_games FROM machine_period_stats WHERE machine_id="+machine));
+        assertEquals(1,scalar("SELECT count(*) FROM bonus_history WHERE machine_id="+machine+" AND bonus_type='REG'"));
+    }
+
     @Test void jugglerGodGraceExpiryKeepsGuaranteedZeroGameContinuation() throws Exception {
         int machine=db.create(new Machine.Location(UUID.randomUUID(),"world",8,64,0,"NORTH"),MachineType.JUGGLER_GOD,NOW);
         UUID player=UUID.randomUUID();
