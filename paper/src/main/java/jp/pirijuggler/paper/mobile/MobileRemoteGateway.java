@@ -782,8 +782,8 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
   background:#3C0A10;border:4px solid #B68A42;
   box-shadow:inset 0 0 0 2px #E4C174;border-radius:10px;
  }
- #reelBacking{left:30px;top:205px;width:330px;height:174px;background:#8A8175;border-radius:7px}
- .reelWindow{top:205px;width:96px;height:174px;border-radius:4px;background:#F4F1E8}
+ #reelBacking{left:30px;top:205px;width:330px;height:139px;background:#8A8175;border-radius:7px}
+ .reelWindow{top:205px;width:96px;height:139px;border-radius:4px;background:#F4F1E8}
  #reel0{left:38px}#reel1{left:147px}#reel2{left:256px}
  #lamp{left:24px;top:398px;width:140px;height:78px;object-fit:contain}
  #skillChallenge{left:83px;top:454px;width:92px;height:72px}
@@ -1097,7 +1097,7 @@ function handleEvents(events){
    const freeze=!!p.godFreeze;
    if(queuedLeverTimer){clearTimeout(queuedLeverTimer);queuedLeverTimer=0}
    if(freeze)stopAllAudio();
-   const receiveNow=performance.now(),serverStart=Number(p.serverStartEpochMs||0),elapsed=serverStart>0?Math.max(0,Date.now()-serverStart):0;\n   motion={spinId:p.spinId||"",animation:p.animation||"NORMAL",godFreeze:freeze,at:receiveNow-elapsed,starts:[Number(p.startPhase.left),Number(p.startPhase.center),Number(p.startPhase.right)],stopEnableAfterMs:Number(p.stopEnableAfterMs||0),hints:p.stopHints||{},stops:[null,null,null],spinning:true};
+   motion={spinId:p.spinId||"",animation:p.animation||"NORMAL",godFreeze:freeze,at:performance.now(),starts:[Number(p.startPhase.left),Number(p.startPhase.center),Number(p.startPhase.right)],stopEnableAfterMs:Number(p.stopEnableAfterMs||0),hints:p.stopHints||{},stops:[null,null,null],spinning:true};
    if(p.animation!=="RESUME_NORMAL")playNamed(freeze?"juggler_god_god_freeze":machineSound("lever"),freeze?"god_freeze":"lever");
   }else if(ev.type==="REEL_STOP"&&motion){
    const map={LEFT:0,CENTER:1,RIGHT:2},r=map[p.reel];if(r===undefined)return;
