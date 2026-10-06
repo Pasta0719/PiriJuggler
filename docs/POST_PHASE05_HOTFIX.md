@@ -12,7 +12,7 @@ slip = (pressedIndex - targetStopIndex + 21) mod 21
 
 Fabricの停止表示は、STOP packet受信時点の現在visual phaseから **index減少方向だけ** に進み、反対方向へのshortcutを禁止する。
 
-packet到着が遅れてクライアント表示がserver計算時点より先へ進んでいた場合、同じtargetStopIndexの次の周回位置を選ぶ。このときserver指定durationMsをそのまま使うと約1周を短時間で補間して「ギュン」「逆走のような見え方」になるため、停止表示速度が通常回転速度18 symbols/secを超えない最小durationまでFabric側だけ延長する。
+packet到着が遅れてクライアント表示がserver計算時点より先へ進んでいた場合、同じtargetStopIndexの次の周回位置を選ぶ。このときserver指定durationMsをそのまま使うと約1周を短時間で補間して「ギュン」「逆走のような見え方」になるため、停止表示速度が通常回転速度28 symbols/secを超えない最小durationまでFabric側だけ延長する。
 
 - 最終stopIndexはPaper指定を厳守する。
 - Paperの成立役、slip、stop solver、payoutは変更しない。
