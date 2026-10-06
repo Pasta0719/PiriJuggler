@@ -80,7 +80,9 @@ public final class RemoteMachineSync {
             if (!compatible.test(viewer)) continue;
             Set<Integer> current = interests.computeIfAbsent(viewer, ignored -> new HashSet<>());
             boolean had = current.contains(machineId);
-            boolean wants = machine != null && inRange(player, machine);
+            Session localSession=state==null?null:state.session(viewer);
+            boolean localMachine=localSession!=null&&localSession.machine()==machineId&&localSession.lifecycle()==Session.Lifecycle.ACTIVE;
+            boolean wants = machine != null && !localMachine && inRange(player, machine);
             if (had && !wants) {
                 current.remove(machineId);
                 sendRemove(player, machineId);
@@ -210,8 +212,10 @@ public final class RemoteMachineSync {
         }
         Set<Integer> current = interests.computeIfAbsent(player.getUniqueId(), ignored -> new HashSet<>());
         Set<Integer> desired = new HashSet<>();
+        Session localSession=state.session(player.getUniqueId());
         for (Machine machine : state.machines()) {
-            if (!machine.deleted() && inRange(player, machine, current.contains(machine.id()))) desired.add(machine.id());
+            boolean localMachine=localSession!=null&&localSession.machine()==machine.id()&&localSession.lifecycle()==Session.Lifecycle.ACTIVE;
+            if (!machine.deleted() && !localMachine && inRange(player, machine, current.contains(machine.id()))) desired.add(machine.id());
         }
         for (int id : new HashSet<>(current)) {
             if (!desired.contains(id)) {
