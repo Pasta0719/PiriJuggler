@@ -10,6 +10,7 @@ import jp.pirijuggler.paper.database.PiriDatabase;
 import jp.pirijuggler.paper.game.JugglerGameEngine;
 import jp.pirijuggler.paper.game.JugglerGodGameEngine;
 import jp.pirijuggler.paper.machine.Machine;
+import jp.pirijuggler.paper.machine.MachineType;
 import jp.pirijuggler.paper.reel.InternalRole;
 import jp.pirijuggler.paper.session.Session;
 import org.bukkit.Bukkit;
@@ -57,12 +58,48 @@ public final class DevFundCommand implements CommandExecutor {
         if (args.length >= 1 && args[0].equalsIgnoreCase("heaven")) return heaven(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("skillreset")) return skillReset(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("remoteorphan")) return remoteOrphan(sender,args);
+        if (args.length >= 1 && args[0].equalsIgnoreCase("phase12grid")) return phase12Grid(sender,args);
         if (args.length == 1 && args[0].equalsIgnoreCase("clear")) {
             if (pendingForce == null) sender.sendMessage("NO_TEST_FORCE_PENDING");
             else restoreForce("TEST_FORCE_CLEARED");
             return true;
         }
         sender.sendMessage("Usage: /piritest fund [player] | /piritest force <god|big|reg|A|B|C|D|E|F> [player] | /piritest heaven <1-32> [player] | /piritest skillreset [player] | /piritest clear");
+        return true;
+    }
+
+    /**
+     * Runtime-only Phase12 setup. Creates the 42 registered machines directly through
+     * the production database API so the acceptance test spends its time on remote
+     * synchronization/gameplay rather than repeated player ray-trace registration.
+     */
+    private boolean phase12Grid(CommandSender sender,String[] args) {
+        if(args.length!=1){sender.sendMessage("Usage: /piritest phase12grid");return true;}
+        Player target=sender instanceof Player player?player:null;
+        if(target==null){sender.sendMessage("PLAYER_REQUIRED");return true;}
+        var production=production(sender);if(production==null)return true;
+        var service=production.machines();
+        try{
+            Field dbField=service.getClass().getDeclaredField("database");dbField.setAccessible(true);
+            PiriDatabase database=(PiriDatabase)dbField.get(service);
+            Field stateField=service.getClass().getDeclaredField("state");stateField.setAccessible(true);
+            UUID worldId=target.getWorld().getUID();String worldName=target.getWorld().getName();
+            int[] xs={-12,-8,-4,0,4,8,12};int[] zs={-10,-6,-2,2,6,10};
+            production.executors().database(()->{
+                long now=System.currentTimeMillis();int count=0;
+                for(int z:zs)for(int x:xs){
+                    database.create(new Machine.Location(worldId,worldName,x,66,z,"SOUTH"),MachineType.JUGGLER,now+count);
+                    count++;
+                }
+                return database.state();
+            },(fresh,error)->{
+                if(error!=null){sender.sendMessage("TEST_PHASE12_GRID_FAILED "+error);return;}
+                try{
+                    stateField.set(service,fresh);
+                    sender.sendMessage("TEST_PHASE12_GRID count="+fresh.machines().stream().filter(m->!m.deleted()).count());
+                }catch(IllegalAccessException setError){sender.sendMessage("TEST_PHASE12_GRID_FAILED "+setError);}
+            });
+        }catch(ReflectiveOperationException error){sender.sendMessage("TEST_PHASE12_GRID_FAILED "+error);}
         return true;
     }
 
