@@ -687,7 +687,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #skillChallengeImg{display:none;max-width:100%;max-height:100%;object-fit:contain}
 #skillRemaining{position:absolute;left:858px;top:675px;width:190px;text-align:center;font-size:22px;font-weight:900;color:#F6F1E7;z-index:6}
 
-#statusPanel{position:absolute;left:555px;top:605px;width:765px;height:70px;background:#090B0E;border:2px solid #B68A42;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 14px;z-index:5}
+#statusPanel{position:absolute;left:555px;top:605px;width:765px;height:70px;background:#090B0E;border:2px solid #B68A42;display:grid;grid-template-columns:repeat(5,1fr);padding:8px 14px;z-index:5}
 .statLabel{font-size:15px;color:#B9BCC2}.statValue{font-size:27px;font-weight:900;margin-top:1px}
 
 .machineControl{position:absolute;z-index:8;border-radius:14px;background:#666A72;padding:4px}
@@ -770,7 +770,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
  #statusPanel{
   left:24px;top:490px;width:342px;height:54px;
   background:#090B0E;border:1px solid #B68A42;border-radius:8px;padding:5px 8px;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(5,1fr);
  }
  .statLabel{font-size:8px}.statValue{font-size:17px;margin-top:0}
 
@@ -840,6 +840,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 <div><div class="statLabel">BET</div><div id="bet" class="statValue">0</div></div>
 <div><div class="statLabel">PAY</div><div id="pay" class="statValue">0</div></div>
 <div><div class="statLabel">MEDALS</div><div id="medals" class="statValue">0</div></div>
+<div><div class="statLabel">MONEY</div><div id="money" class="statValue">---</div></div>
 </div>
 <button id="betBtn" class="machineControl"><span>BET</span></button>
 <button id="leverBtn" class="machineControl"><i id="leverStem"></i><i id="leverKnob"></i><b id="leverLabel">LEVER</b></button>
@@ -1082,6 +1083,8 @@ function applyState(j){
  if(Number(j.godPresentationStartMs||0)>0)godPresentationUntil=Math.max(godPresentationUntil,Number(j.godPresentationStartMs)+15000);
  $("machineLabel").textContent="MACHINE "+j.machineId;
  $("credit").textContent=j.credit||0;$("bet").textContent=j.bet||0;$("pay").textContent=j.pay||0;$("medals").textContent=j.heldMedals||0;
+ $("money").textContent=j.vaultBalance==null?"---":Number(j.vaultBalance).toLocaleString();
+ if(j.loanAmount!=null){$("loanBtn").querySelector("span").textContent="LOAN "+Number(j.loanAmount).toLocaleString();}
  const godlike=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME";
  $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);const skillstop=currentType==="SKILL_STOP";$("stage").classList.toggle("skillstop",skillstop);$("skillChallenge").style.display=skillstop?"flex":"none";$("skillRemaining").style.display=skillstop?"block":"none";
  $("lamp").src=asset("lamp/piri_chance_"+(j.lampOn?"on":"off")+".png");
@@ -1107,6 +1110,7 @@ function updateControlState(){
  const presentation=Date.now()<godPresentationUntil;
  $("betBtn").disabled=presentation;
  $("leverBtn").disabled=presentation;
+ $("loanBtn").disabled=presentation||!currentState||currentState.loanAvailable===false;
  [["leftBtn",0],["centerBtn",1],["rightBtn",2]].forEach(function(x){$(x[0]).disabled=presentation||(spinning?!canStop(x[1]):true)});
 }
 async function pollState(){
