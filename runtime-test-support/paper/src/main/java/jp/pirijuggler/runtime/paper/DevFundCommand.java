@@ -85,7 +85,10 @@ public final class DevFundCommand implements CommandExecutor {
                 Class.forName("org.sqlite.JDBC");
                 try(var connection=DriverManager.getConnection("jdbc:sqlite:"+dbPath)){
                     try(var pragma=connection.createStatement()){pragma.execute("PRAGMA busy_timeout=5000");}
-                    try(var insert=connection.prepareStatement("INSERT INTO medal_tokens(bundle_id,amount,state,source_transaction_id,created_at,updated_at) VALUES(?,?,'ACTIVE',NULL,?,?)")){
+                    try(var create=connection.createStatement()){
+                        create.execute("CREATE TABLE IF NOT EXISTS medal_tokens_unlimited (bundle_id TEXT PRIMARY KEY,amount INTEGER NOT NULL CHECK(amount>=1),state TEXT NOT NULL CHECK(state IN ('PENDING_DELIVERY','ACTIVE','RETIRED')),source_transaction_id TEXT,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL)");
+                    }
+                    try(var insert=connection.prepareStatement("INSERT INTO medal_tokens_unlimited(bundle_id,amount,state,source_transaction_id,created_at,updated_at) VALUES(?,?,'ACTIVE',NULL,?,?)")){
                         insert.setString(1,bundle.toString());insert.setInt(2,medals);insert.setLong(3,now);insert.setLong(4,now);insert.executeUpdate();
                     }
                 }
