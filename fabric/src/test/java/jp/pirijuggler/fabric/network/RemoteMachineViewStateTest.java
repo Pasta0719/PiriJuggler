@@ -95,6 +95,26 @@ class RemoteMachineViewStateTest {
         assertEquals("EAST", registry.view(21).facing());
     }
 
+    @Test void resumedSnapshotKeepsStoppedReelsFixedAndOnlyRunsUnstoppedReels() {
+        AtomicLong now = new AtomicLong(2_000_000_000L);
+        RemoteMachineRegistry registry = new RemoteMachineRegistry(now::get);
+        JsonObject snap = snapshot(31);
+        snap.addProperty("spinning", true);
+        snap.addProperty("stoppedMask", 1);
+        snap.addProperty("spinId", UUID.randomUUID().toString());
+        snap.addProperty("animation", "NORMAL");
+        JsonObject phase = new JsonObject(); phase.addProperty("left",4.0); phase.addProperty("center",5.0); phase.addProperty("right",6.0);
+        snap.add("startPhase", phase);
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, snap));
+        RemoteMachineViewState view = registry.view(31);
+        double left = view.phase(0, now.get());
+        double center = view.phase(1, now.get());
+        now.addAndGet(500_000_000L);
+        assertEquals(left, view.phase(0, now.get()), 1e-9);
+        assertNotEquals(center, view.phase(1, now.get()), 1e-6);
+        assertTrue(view.spinning());
+    }
+
     @Test void resetClearsTypedViewCache() {
         RemoteMachineRegistry registry = new RemoteMachineRegistry();
         registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, snapshot(9)));
