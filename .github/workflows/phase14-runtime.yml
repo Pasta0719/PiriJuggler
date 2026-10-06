@@ -4,32 +4,53 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'fabric/src/main/java/jp/pirijuggler/fabric/ui/HallAudio.java'
-      - 'fabric/src/main/java/jp/pirijuggler/fabric/ui/PiriSounds.java'
-      - 'fabric/src/main/java/jp/pirijuggler/fabric/render/WorldCabinetRenderer.java'
-      - 'fabric/src/main/java/jp/pirijuggler/fabric/network/RemoteMachineRegistry.java'
-      - 'paper/src/main/java/jp/pirijuggler/paper/machine/RemoteMachineSync.java'
+      - 'fabric/**'
+      - 'paper/**'
+      - 'common/**'
       - 'runtime-test-support/run_phase14.py'
       - 'runtime-test-support/client/**'
       - 'runtime-test-support/paper/**'
       - '.github/workflows/phase14-runtime.yml'
 jobs:
   phase14:
-    runs-on: windows-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: '21' }
-      - uses: gradle/actions/setup-gradle@v4
-      - run: .\gradlew.bat build -PruntimeAcceptance=true --console=plain
-      - shell: pwsh
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install headless OpenGL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
+          chmod +x gradlew
+      - name: Build production and focused runtime helpers
+        run: |
+          ./gradlew test build --console=plain
+          ./gradlew -PruntimeAcceptance=true :runtime-test-paper:jar :runtime-test-client:remapJar --console=plain
+      - name: Download verified Paper 1.21 build 130
+        shell: pwsh
         run: |
           New-Item -ItemType Directory -Force runtime-evidence/PHASE_01/work/downloads | Out-Null
-          Invoke-WebRequest https://api.papermc.io/v2/projects/paper/versions/1.21/builds/130/downloads/paper-1.21-130.jar -OutFile runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar
-      - run: python runtime-test-support/run_phase14.py
-      - if: always()
-        uses: actions/upload-artifact@v4
+          $headers=@{"User-Agent"="PiriJuggler-runtime-tests/1.0"}
+          $builds=Invoke-RestMethod -Headers $headers -Uri "https://fill.papermc.io/v3/projects/paper/versions/1.21/builds"
+          $build=$builds | Where-Object { $_.id -eq 130 } | Select-Object -First 1
+          if ($null -eq $build) { throw "Paper 1.21 build 130 missing" }
+          Invoke-WebRequest -Headers $headers -Uri $build.downloads.'server:default'.url -OutFile "runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar"
+          $actual=(Get-FileHash "runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar" -Algorithm SHA256).Hash.ToLower()
+          if ($actual -ne "ab9bb1afc3cea6978a0c03ce8448aa654fe8a9c4dddf341e7cbda1b0edaa73f5") { throw "Paper SHA256 mismatch: $actual" }
+      - name: Validate focused runner
+        run: python -m py_compile runtime-test-support/run_phase14.py
+      - name: Run Phase14 focused runtime acceptance
+        run: xvfb-run -a -s "-screen 0 1280x720x24" python runtime-test-support/run_phase14.py
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: phase14-performance-evidence
-          path: runtime-evidence/PHASE_14/
+          name: phase14-runtime-evidence
+          path: runtime-evidence/PHASE_14/**
