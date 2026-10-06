@@ -125,6 +125,46 @@ class RemoteMachineViewStateTest {
         assertEquals(3,view.phase(2,nanos.get()),1e-9);
     }
 
+
+    @Test void publicNoticeBonusAndRedefineUpdateWorldCabinetStateDeterministically() {
+        AtomicLong now = new AtomicLong(1_000_000_000L);
+        RemoteMachineRegistry registry = new RemoteMachineRegistry(now::get);
+        JsonObject snap = snapshot(13);
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, snap));
+        RemoteMachineViewState view = registry.view(13);
+        assertNotNull(view);
+        assertFalse(view.lampVisible(now.get()));
+        assertEquals("NONE", view.bonusMode());
+
+        JsonObject notice = id(13);
+        notice.addProperty("on", true);
+        notice.addProperty("blinkMs", 200);
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_NOTICE, notice));
+        assertTrue(view.lampVisible(now.get()));
+        now.addAndGet(250_000_000L);
+        assertFalse(view.lampVisible(now.get()));
+
+        JsonObject bonus = id(13);
+        bonus.addProperty("active", true);
+        bonus.addProperty("mode", "REG");
+        bonus.addProperty("bonusCount", 4);
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_BONUS, bonus));
+        assertEquals("REG", view.bonusMode());
+        assertEquals(4, view.bonusCount());
+
+        JsonObject moved = snapshot(13);
+        moved.addProperty("x", 30);
+        moved.addProperty("y", 80);
+        moved.addProperty("z", -4);
+        moved.addProperty("facing", "EAST");
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, moved));
+        RemoteMachineViewState redefined = registry.view(13);
+        assertEquals(30, redefined.x());
+        assertEquals(80, redefined.y());
+        assertEquals(-4, redefined.z());
+        assertEquals("EAST", redefined.facing());
+    }
+
     private static JsonObject snapshot(int id) {
         JsonObject body = id(id);
         body.addProperty("world", UUID.randomUUID().toString());
