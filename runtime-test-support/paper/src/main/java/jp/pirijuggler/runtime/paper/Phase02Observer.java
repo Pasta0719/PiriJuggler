@@ -34,13 +34,15 @@ public final class Phase02Observer implements Listener {
         if (java.util.Set.of("phase12","god02","skill02","skill03","skill05","skill06").contains(System.getProperty("piri.runtime.phase", ""))) {
             // Deterministic test platform: keep the automated client at y=65 so its
             // raytrace cannot fall into generated terrain and hit gravel/stone.
-            // Phase12 spans 42 machine positions, so clear generated trees/leaves
-            // from the whole raytrace corridor before placing supports/buttons.
-            if ("phase12".equals(System.getProperty("piri.runtime.phase", ""))) {
-                for (int x=-22;x<=23;x++) for (int z=-3;z<=3;z++)
+            boolean phase12 = "phase12".equals(System.getProperty("piri.runtime.phase", ""));
+            int minZ = phase12 ? -13 : -3, maxZ = phase12 ? 13 : 3;
+            // Phase12's compact 7x6 grid spans z=-10..10. Clear the whole
+            // player-to-button ray corridor and provide a flat floor under it.
+            if (phase12) {
+                for (int x=-22;x<=23;x++) for (int z=minZ;z<=maxZ;z++)
                     for (int y=65;y<=69;y++) world.getBlockAt(x,y,z).setType(Material.AIR,false);
             }
-            for (int x=-22;x<=23;x++) for (int z=-3;z<=3;z++)
+            for (int x=-22;x<=23;x++) for (int z=minZ;z<=maxZ;z++)
                 world.getBlockAt(x,64,z).setType(Material.STONE,false);
             // Build supports first, then buttons.
             for (int x=-20;x<=21;x++)
