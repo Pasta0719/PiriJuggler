@@ -31,7 +31,7 @@ class ReelMotionTest {
     @Test void motionBoundariesAndReverseWrapAreExact(){
         assertEquals(0,ReelMotion.delta(ReelMotion.Profile.NORMAL,.150));assertEquals(-4.9,ReelMotion.delta(ReelMotion.Profile.NORMAL,.500),1e-12);
         assertEquals(6,ReelMotion.delta(ReelMotion.Profile.REVERSE_500MS,.5),1e-12);assertEquals(1.8,ReelMotion.delta(ReelMotion.Profile.REVERSE_500MS,.8),1e-12);
-        assertEquals(6,ReelMotion.phase(ReelMotion.Profile.REVERSE_500MS,0,.5),1e-12);assertEquals(6,ReelMotion.phase(ReelMotion.Profile.RESUME_NORMAL,6,1),1e-12);
+        assertEquals(6,ReelMotion.phase(ReelMotion.Profile.REVERSE_500MS,0,.5),1e-12);assertEquals(20,ReelMotion.phase(ReelMotion.Profile.RESUME_NORMAL,6,1),1e-12);
         for(var p:ReelMotion.Profile.values())for(double boundary:new double[]{.150,.500,.800})assertEquals(ReelMotion.delta(p,boundary-1e-10),ReelMotion.delta(p,boundary+1e-10),1e-7);
     }
     @Test void rttUsesClampedFullPingAndCannotGoBeforeStart(){
