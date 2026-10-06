@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Enable Gradle wrapper
+        run: chmod +x gradlew
       - name: Build production and runtime helpers
         run: ./gradlew test build :runtime-test-paper:build :runtime-test-client:build --console=plain
       - name: Run Phase13 real runtime acceptance
