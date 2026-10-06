@@ -250,6 +250,16 @@ juggler_god_extreme:
 
     @Override public void onDisable() {
         configurationValid = false;
+        // Do not depend on PlayerQuitEvent ordering during a restart.  Persist every
+        // currently-online player's physical mobile assets before MachineService closes.
+        // The stash methods are idempotent at the inventory boundary: successfully
+        // journaled items are removed immediately, so a later quit event cannot duplicate them.
+        if (machines != null && machines.ready()) {
+            for (Player player : getServer().getOnlinePlayers()) {
+                if (prizes != null) prizes.stashPrizesForMobile(player);
+                machines.stashInventoryForMobile(player);
+            }
+        }
         if (dataLamp != null) dataLamp.close();
         if (mobileRemote != null) mobileRemote.close();
         if (machines != null) machines.shutdown();
