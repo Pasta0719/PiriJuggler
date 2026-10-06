@@ -728,13 +728,13 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 .histRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:7px 0;border-bottom:1px solid #252932}
 #game{position:fixed;inset:0;background:#000000;z-index:30;overflow:hidden;touch-action:manipulation}
 #stageWrap{position:absolute;inset:0;overflow:hidden}
-#stage{position:absolute;width:1600px;height:900px;transform-origin:0 0;background:#000000;color:#F6F1E7;font-family:Arial,sans-serif;user-select:none}
+#stage{position:absolute;width:1920px;height:1080px;transform-origin:0 0;background:#000000;color:#F6F1E7;font-family:Arial,sans-serif;user-select:none}
 .panel{position:absolute;background:#090B0E;border:2px solid #B68A42}
-#dataTop{left:8px;top:8px;width:1584px;height:170px}
-#dataLeft{left:8px;top:262px;width:218px;height:365px}
-#dataRight{left:1374px;top:262px;width:218px;height:365px}
+#dataTop{left:20px;top:12px;width:1880px;height:270px}
+#dataLeft{left:18px;top:325px;width:275px;height:430px}
+#dataRight{left:1645px;top:325px;width:257px;height:430px}
 
-#cabinet{position:absolute;left:235px;top:188px;width:1130px;height:690px;background:#3C0A10;border:6px solid #B68A42;box-shadow:inset 0 0 0 4px #E4C174}
+#cabinet{position:absolute;left:290px;top:205px;width:1340px;height:835px;background:#3C0A10;border:6px solid #B68A42;box-shadow:inset 0 0 0 4px #E4C174}
 #cabinet.godlike{
  background:
   linear-gradient(to bottom,
@@ -749,9 +749,9 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
  border-color:#E4C174
 }
 
-#reelBacking{position:absolute;left:555px;top:255px;width:765px;height:330px;background:#8A8175}
-.reelWindow{position:absolute;top:255px;width:230px;height:330px;overflow:hidden;background:#F4F1E8;z-index:4}
-#reel0{left:555px}#reel1{left:823px}#reel2{left:1090px}
+#reelBacking{position:absolute;left:670px;top:300px;width:900px;height:390px;background:#8A8175}
+.reelWindow{position:absolute;top:300px;width:270px;height:390px;overflow:hidden;background:#F4F1E8;z-index:4}
+#reel0{left:670px}#reel1{left:985px}#reel2{left:1300px}
 .reelWindow.godlike{background:#fff}
 #stage.skillstop #cabinet{background:#111015!important;border-color:#B68A42!important;box-shadow:inset 0 0 0 4px #E4C174!important}
 #stage.skillstop #reelBacking{background:#8A8175!important}
@@ -760,45 +760,50 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #stage.skillstop #dataTop,#stage.skillstop #dataLeft,#stage.skillstop #dataRight{background:#090B0E!important;border-color:#B68A42!important}
 .sym{position:absolute;pointer-events:none}
 .godReveal{position:absolute;display:none;pointer-events:none;object-fit:contain;z-index:7}
-#stateText{position:absolute;left:960px;top:798px;width:300px;text-align:center;font-size:26px;font-weight:900;color:#F6F1E7;z-index:7}
-#stockLamp{position:absolute;left:1390px;top:835px;width:150px;height:58px;border-radius:14px;background:#34363b;color:#555861;display:none;align-items:center;justify-content:center;font-size:24px;font-weight:900;z-index:7;box-shadow:inset 0 0 0 6px #090B0E}
-#stockLamp.on{background:#58e36a;color:#58e36a;text-shadow:0 0 8px #58e36a}
+#replayText{position:absolute;left:950px;top:810px;width:200px;text-align:center;font-size:32px;font-weight:900;color:#F6F1E7;z-index:7}
+#countText{position:absolute;left:990px;top:810px;width:200px;text-align:center;font-size:32px;font-weight:900;color:#F6F1E7;z-index:7}
+#stockLamp{position:absolute;left:1390px;top:835px;width:150px;height:58px;border-radius:14px;background:#34363b;display:none;align-items:center;justify-content:center;z-index:7;padding:6px}
+#stockInner{width:138px;height:46px;border-radius:10px;background:#090B0E;display:flex;align-items:center;justify-content:center}
+#stockText{font-size:29px;font-weight:900;color:#555861}
+#stockLamp.on{background:#58e36a}
+#stockLamp.on #stockText{color:#58e36a;text-shadow:0 0 8px #58e36a}
 #cabinet.godlike{overflow:hidden}
 
-#lamp{position:absolute;left:305px;top:360px;width:220px;height:125px;object-fit:contain;z-index:5}
-#skillChallenge{position:absolute;left:342px;top:483px;width:150px;height:117px;display:flex;align-items:center;justify-content:center;z-index:5}
+#lamp{position:absolute;left:350px;top:390px;width:300px;height:170px;object-fit:contain;z-index:5}
+#skillChallenge{position:absolute;left:410px;top:580px;width:180px;height:140px;display:flex;align-items:center;justify-content:center;z-index:5}
 #skillChallengeImg{display:none;max-width:100%;max-height:100%;object-fit:contain}
-#skillRemaining{position:absolute;left:858px;top:675px;width:190px;text-align:center;font-size:22px;font-weight:900;color:#F6F1E7;z-index:6}
+#skillRemaining{display:none}
 
-#statusPanel{position:absolute;left:555px;top:605px;width:765px;height:70px;background:#090B0E;border:2px solid #B68A42;display:grid;grid-template-columns:repeat(5,1fr);padding:8px 14px;z-index:5}
-.statLabel{font-size:15px;color:#B9BCC2}.statValue{font-size:27px;font-weight:900;margin-top:1px}
+#statusPanel{position:absolute;left:670px;top:710px;width:900px;height:95px;background:#090B0E;border:2px solid #B68A42;display:grid;grid-template-columns:repeat(4,198px);column-gap:0;padding:10px 18px;z-index:5}
+#statusPanel>div:nth-child(5){display:none}
+.statLabel{font-size:24px;color:#B9BCC2}.statValue{font-size:36px;font-weight:900;margin-top:4px}
 
 .machineControl{position:absolute;z-index:8;border-radius:14px;background:#666A72;padding:4px}
 .machineControl>span{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:10px;background:#C92734;font-size:22px;font-weight:900;text-shadow:2px 2px #190406}
 .machineControl:active>span{background:#8A1720;transform:translateY(2px)}
-#betBtn{left:360px;top:724px;width:115px;height:78px}
-#leverBtn{left:250px;top:650px;width:105px;height:215px;background:transparent;padding:0}
-#leverStem{position:absolute;left:43px;top:31px;width:18px;height:150px;background:#666A72}
-#leverKnob{position:absolute;left:25px;top:22px;width:55px;height:55px;border-radius:50%;background:#C92734;border:5px solid #666A72;transition:transform .09s}
-#leverBtn:active #leverKnob{transform:translateY(14px)}
-#leverLabel{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-size:20px;font-weight:900}
-.stopBtn{width:150px;height:95px;background:transparent;padding:0}
-.stopBtn>span{width:72px;height:72px;border-radius:50%;border:5px solid #B9BCC2;background:#C92734;font-size:0;margin:auto}
+#betBtn{left:440px;top:860px;width:150px;height:100px}
+#leverBtn{left:300px;top:780px;width:130px;height:260px;background:transparent;padding:0}
+#leverStem{position:absolute;left:54px;top:35px;width:22px;height:190px;background:#666A72}
+#leverKnob{position:absolute;left:30px;top:27px;width:70px;height:70px;border-radius:50%;background:#C92734;border:5px solid #666A72;transition:transform .09s}
+#leverBtn:active #leverKnob{transform:translateY(18px)}
+#leverLabel{position:absolute;left:0;right:0;bottom:25px;text-align:center;font-size:26px;font-weight:900}
+.stopBtn{width:180px;height:110px;background:transparent;padding:0}
+.stopBtn>span{width:88px;height:88px;border-radius:50%;border:6px solid #B9BCC2;background:#C92734;font-size:0;margin:auto}
 .stopBtn>span:after{content:"";display:block}
 .stopBtn:active>span{background:#8A1720}
 .stopBtn:disabled>span{background:#666A72;border-color:#666A72}
-.stopText{position:absolute;left:0;right:0;bottom:-12px;text-align:center;font-size:20px;font-weight:900}
-#leftBtn{left:600px;top:733px}#centerBtn{left:835px;top:733px}#rightBtn{left:1070px;top:733px}
+.stopText{position:absolute;left:0;right:0;bottom:-12px;text-align:center;font-size:24px;font-weight:900}
+#leftBtn{left:720px;top:865px}#centerBtn{left:990px;top:865px}#rightBtn{left:1260px;top:865px}
 
-.sideBtn{left:1395px;width:180px;height:46px}
-#loanBtn{top:646px}#insertBtn{top:698px}#cashBtn{top:750px}#exchangeBtn{top:802px}
-#gameMessage{position:absolute;left:550px;top:840px;width:770px;text-align:center;font-size:18px;font-weight:800;color:#F6F1E7;z-index:10}
+.sideBtn{left:1664px;width:220px;height:55px}
+#loanBtn{top:780px}#insertBtn{top:845px}#cashBtn{top:910px;height:65px}#exchangeBtn{display:none}
+#gameMessage{position:absolute;left:840px;top:990px;width:400px;text-align:center;font-size:24px;font-weight:800;color:#F6F1E7;z-index:10}
 #leaveBtn{position:fixed;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));z-index:50;background:#5a2525;border-radius:12px;padding:10px 14px;font-size:14px;opacity:.9}
 
 .dataTitle{position:absolute;font-size:20px;font-weight:900}
-#machineLabel{left:20px;top:18px}
-#graphLabel{left:35px;top:48px}
-#gameGraph{position:absolute;left:35px;top:70px;width:700px;height:88px;background:#090b0e!important}
+#machineLabel{left:38px;top:27px}
+#graphLabel{left:55px;top:55px}
+#gameGraph{position:absolute;left:55px;top:88px;width:825px;height:146px;background:#090b0e!important}
 
 .topMetric{position:absolute;top:25px;width:180px;text-align:center}.topMetric .t{font-size:18px;font-weight:900}.topMetric .n{font-size:31px;font-weight:900;margin-top:4px}
 #currentBox{left:820px}#totalBox{left:1085px}#maxBox{left:1340px}
@@ -813,70 +818,6 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #chain{position:absolute;left:1395px;top:500px;width:180px;height:88px;border:4px solid #58e36a;border-radius:10px;text-align:center;padding-top:12px;font-size:19px;font-weight:900;color:#58e36a}
 @media(max-width:700px){
  #normal{padding:12px 10px 30px}.machine{grid-template-columns:minmax(0,1fr) auto auto}.normalBtn{padding:8px 10px;font-size:14px}.dataGrid{grid-template-columns:repeat(2,1fr)}
-}
-@media(max-width:700px) and (orientation:portrait){
- #game{background:#000000}
- #stageWrap{position:absolute;inset:0;overflow:hidden}
- #stage{
-  width:390px;height:844px;background:#000000;overflow:hidden;
-  transform-origin:0 0!important;
- }
- #dataTop{
-  left:8px;top:8px;width:374px;height:100px;
-  border:1px solid #B68A42;border-radius:10px;background:#090B0E;
- }
- #machineLabel{left:18px;top:15px;font-size:15px}
- #graphLabel,#gameGraph,#dataLeft,#dataRight,#diffTitle,#diffValue,#historyTitle,#gameHistory,#oddsTitle,#bigOdds,#regOdds,#allOdds,#chain{display:none!important}
- .topMetric{position:absolute!important;top:47px!important;width:70px!important;text-align:left!important}
- .topMetric .t{font-size:8px!important;color:#9da3ae}
- .topMetric .n{font-size:17px!important;line-height:18px;margin-top:1px}
- #currentBox{left:18px!important}
- #totalBox{left:92px!important}
- #maxBox{left:166px!important}
- #bigBox{left:242px!important;top:42px!important}
- #regBox{left:312px!important;top:42px!important}
- #bigBox .t,#regBox .t{font-size:8px!important}
- #bigBox .n,#regBox .n{font-size:17px!important}
-
- #cabinet{
-  left:8px;top:116px;width:374px;height:454px;
-  background:#3C0A10;border:4px solid #B68A42;
-  box-shadow:inset 0 0 0 2px #E4C174;border-radius:10px;
- }
- #reelBacking{left:30px;top:205px;width:330px;height:139px;background:#8A8175;border-radius:7px}
- .reelWindow{top:205px;width:96px;height:139px;border-radius:4px;background:#F4F1E8}
- #reel0{left:38px}#reel1{left:147px}#reel2{left:256px}
- #lamp{left:24px;top:398px;width:140px;height:78px;object-fit:contain}
- #skillChallenge{left:83px;top:454px;width:92px;height:72px}
- #skillRemaining{left:214px;top:528px;width:100px;font-size:12px}
- #stateText{left:196px;top:520px;width:110px;font-size:12px}
- #stockLamp{left:304px;top:506px;width:70px;height:30px;border-radius:7px;font-size:10px;box-shadow:inset 0 0 0 3px #090B0E}
-
- #statusPanel{
-  left:24px;top:490px;width:342px;height:54px;
-  background:#090B0E;border:1px solid #B68A42;border-radius:8px;padding:5px 8px;
-  grid-template-columns:repeat(5,1fr);
- }
- .statLabel{font-size:8px}.statValue{font-size:17px;margin-top:0}
-
- #betBtn{left:16px;top:574px;width:88px;height:64px}
- #leverBtn{left:116px;top:554px;width:70px;height:112px}
- #leverStem{left:29px;top:22px;width:12px;height:62px}
- #leverKnob{left:14px;top:8px;width:42px;height:42px;border-width:4px}
- #leverLabel{bottom:2px;font-size:11px}
- .machineControl>span{font-size:13px}
-
- .stopBtn{top:734px!important;width:96px;height:88px}
- .stopBtn>span{width:66px;height:66px;border-width:4px}
- .stopText{bottom:-2px;font-size:10px}
- #leftBtn{left:18px}#centerBtn{left:147px}#rightBtn{left:276px}
-
- #loanBtn,#insertBtn,#cashBtn{left:294px!important;width:80px;height:38px}
- #loanBtn{top:560px}#insertBtn{top:604px}#cashBtn{top:648px}
-
- #gameMessage{left:16px;top:680px;width:266px;font-size:11px;line-height:14px}
- #leaveBtn{right:10px;top:10px;padding:7px 9px;font-size:11px;z-index:100}
- .reelWindow.godlike{background:#fff}
 }
 </style>
 </head>
@@ -932,7 +873,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 <div id="reel0" class="reelWindow"></div><div id="reel1" class="reelWindow"></div><div id="reel2" class="reelWindow"></div>
 <img id="lamp" src="/assets/lamp/piri_chance_off.png" alt="">
 <div id="skillChallenge"><img id="skillChallengeImg" alt=""></div><div id="skillRemaining"></div>
-<div id="stateText"></div><div id="stockLamp">STOCK</div>
+<div id="replayText"></div><div id="countText"></div><div id="stockLamp"><div id="stockInner"><span id="stockText">STOCK</span></div></div>
 <div id="statusPanel">
 <div><div class="statLabel">CREDIT</div><div id="credit" class="statValue">0</div></div>
 <div><div class="statLabel">BET</div><div id="bet" class="statValue">0</div></div>
@@ -1079,13 +1020,9 @@ async function seat(id){
  }catch(e){alert(errorText(e))}
 }
 function resizeStage(){
- const portrait=innerHeight>=innerWidth&&innerWidth<=700;
- const baseW=portrait?390:1600,baseH=portrait?844:900;
- const scale=Math.min(innerWidth/baseW,innerHeight/baseH);
- const x=(innerWidth-baseW*scale)/2,y=(innerHeight-baseH*scale)/2;
- const stage=$("stage");
- stage.style.width=baseW+"px";stage.style.height=baseH+"px";
- stage.style.left="0";stage.style.top="0";
+ const baseW=1920,baseH=1080,scale=Math.min(innerWidth/baseW,innerHeight/baseH);
+ const x=(innerWidth-baseW*scale)/2,y=(innerHeight-baseH*scale)/2,stage=$("stage");
+ stage.style.width=baseW+"px";stage.style.height=baseH+"px";stage.style.left="0";stage.style.top="0";
  stage.style.transform="translate("+x+"px,"+y+"px) scale("+scale+")";
 }
 function delta(profile,e){
