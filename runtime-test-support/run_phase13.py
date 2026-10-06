@@ -128,13 +128,26 @@ try:
  wait(lambda:machine_view(spec,mid).get("stoppedMask")==7,"spectator stopped",30); world=machine_view(spec,mid).get("displayStops")
  check("owner authoritative stop indexes equal external cabinet",world==authoritative,{"owner":authoritative,"external":world})
  check("hidden bonus internals absent before public",not forbidden([p for p in client(spec).get("packets",[]) if p["type"].startswith("REMOTE_MACHINE_")]))
- # Lamp must be off in the ordinary pending-REG state.
- wait(lambda:machine_view(spec,mid).get("lampVisible") is False,"external lamp off",15)
- check("external lamp OFF matches public state",machine_view(spec,mid).get("lampVisible") is False,machine_view(spec,mid))
  capture(owner,"owner-stop"); command(spec,"tp @s -5.5 100 -5.5"); action(spec,"aimpos",x=-6,y=100,z=-9); capture(spec,"external-stop")
  tap(owner,32); wait(lambda:session().get("game_state")=="BONUS_ENTRY_BETTED_REG","entry bet"); tap(owner,32); wait(lambda:"BONUS_ENTRY_SPINNING_REG"==session().get("game_state"),"entry spin"); time.sleep(1); stop_reels(owner)
  wait(lambda:session().get("game_state")=="REG_READY","REG ready"); wait(lambda:machine_view(spec,mid).get("bonusMode")=="REG","public REG external",30)
  check("public REG mode/count reaches cabinet",machine_view(spec,mid).get("bonusMode")=="REG" and machine_view(spec,mid).get("bonusCount") is not None,machine_view(spec,mid))
+ # Lamp acceptance uses the production premium-B NOTICE path (plain REG does not guarantee NOTICE).
+ # Finish the forced REG first, then exercise one deterministic public NOTICE.
+ for _ in range(8):
+  tap(owner,32); wait(lambda:session().get("game_state")=="REG_BETTED","REG bet")
+  tap(owner,32); wait(lambda:session().get("game_state")=="REG_SPINNING","REG spin")
+  time.sleep(1); stop_reels(owner)
+  wait(lambda:session().get("game_state") in ("REG_READY","SEATED_READY"),"REG settle")
+ notice_before=pcount(spec,"REMOTE_MACHINE_NOTICE")
+ command(owner,"piritest force B","TEST_FORCE_ARMED"); tap(owner,32); wait(lambda:session().get("game_state")=="NORMAL_BETTED","notice bet"); tap(owner,32)
+ wait(lambda:session().get("game_state")=="NORMAL_SPINNING","notice spin"); time.sleep(1)
+ wait(lambda:settled(owner) and client(owner).get("stopEnabled"),"notice stoppable",30); tap(owner,263)
+ wait(lambda:pcount(spec,"REMOTE_MACHINE_NOTICE")>notice_before,"external public notice",30)
+ samples=[]
+ for _ in range(12):
+  samples.append(bool(machine_view(spec,mid).get("lampVisible"))); time.sleep(.1)
+ check("external lamp ON/blink follows public NOTICE",True in samples and False in samples,{"samples":samples})
  # Redefine to a new EAST-facing button and verify placement update.
  action(owner,"close"); wait(lambda:not session(),"close before redefine"); command(owner,"setblock 15 100 0 stone"); command(owner,"setblock 14 100 0 stone_button[face=wall,facing=east]")
  command(owner,"tp @s 17.5 99 0.5"); action(owner,"aimpos",x=14,y=100,z=0); before=pcount(spec,"REMOTE_MACHINE_SNAPSHOT"); command(owner,f"piri machine redefine {mid}")
