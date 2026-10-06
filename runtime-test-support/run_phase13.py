@@ -100,7 +100,7 @@ def forbidden(v):
  return False
 
 try:
- start_server(); start_client("phase13-owner"); owner="phase13-owner"; start_client("phase13-spectator"); spec="phase13-spectator"
+ start_server(); start_client("phase13-owner"); owner="phase13-owner"; command(owner,"op PiriRuntimeTest"); start_client("phase13-spectator"); spec="phase13-spectator"; command(owner,"op PiriRuntimeTest2")
  baseline=entity_count(owner)
  command(owner,"piritest phase13grid","TEST_PHASE13_GRID")
  wait(lambda:client(spec).get("remoteCacheSize")==42,"42 remote machines",120); after=entity_count(owner)
