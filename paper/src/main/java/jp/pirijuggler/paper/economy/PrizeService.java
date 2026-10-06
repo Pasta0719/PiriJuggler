@@ -472,66 +472,96 @@ public final class PrizeService implements Listener {
         });
     }
 
-    /**
-     * Mobile wallet exchange. Uses the same configured prize costs/values as the existing
-     * counter, but keeps the operation virtual so a mobile-only player needs no inventory.
-     */
-    public void mobileExchange(UUID owner, BiConsumer<JsonObject, String> callback) {
-        if (!pending.add(owner)) { callback.accept(null, "BUSY"); return; }
-        if (vault == null) { pending.remove(owner); callback.accept(null, "VAULT_ERROR"); return; }
-        var account = Bukkit.getOfflinePlayer(owner);
-        final double balanceBefore;
-        try { balanceBefore = vault.balance(account); }
-        catch (RuntimeException failure) { pending.remove(owner); callback.accept(null, "VAULT_ERROR"); return; }
+    private void ensureMobilePrizeTable(Connection connection) throws Exception {
+        try (var statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE IF NOT EXISTS mobile_prizes(" +
+                    "player_uuid TEXT NOT NULL,prize_type TEXT NOT NULL," +
+                    "amount INTEGER NOT NULL CHECK(amount>=0),updated_at INTEGER NOT NULL," +
+                    "PRIMARY KEY(player_uuid,prize_type))");
+        }
+    }
 
+    private boolean mobileLobbyOnly(UUID owner, BiConsumer<JsonObject, String> callback) {
+        JsonObject state = plugin.machines().mobileState(owner);
+        if (state.has("seated") && state.get("seated").getAsBoolean()) {
+            callback.accept(null, "MUST_LEAVE_MACHINE");
+            return false;
+        }
+        return true;
+    }
+
+    public void mobilePrizeState(UUID owner, BiConsumer<JsonObject, String> callback) {
+        if (!mobileLobbyOnly(owner, callback)) return;
         var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            String tx = UUID.randomUUID().toString();
-            int consumed;
-            int remaining;
-            double vaultAmount;
+            JsonObject body = new JsonObject();
+            try (Connection connection = open(dbPath.toString())) {
+                ensureMobilePrizeTable(connection);
+                long wallet = 0;
+                try (var q = connection.prepareStatement("SELECT pending_medals FROM player_wallet WHERE player_uuid=?")) {
+                    q.setString(1, owner.toString());
+                    try (var rs = q.executeQuery()) { if (rs.next()) wallet = rs.getLong(1); }
+                }
+                body.addProperty("walletMedals", wallet);
+                for (PrizeItem.Type type : PrizeItem.Type.values()) {
+                    int count = 0;
+                    try (var q = connection.prepareStatement("SELECT amount FROM mobile_prizes WHERE player_uuid=? AND prize_type=?")) {
+                        q.setString(1, owner.toString()); q.setString(2, type.id());
+                        try (var rs = q.executeQuery()) { if (rs.next()) count = rs.getInt(1); }
+                    }
+                    body.addProperty(type.id() + "Prizes", count);
+                    body.addProperty(type.id() + "Cost", defs.get(type).medalCost());
+                    body.addProperty(type.id() + "Value", defs.get(type).vaultValue());
+                }
+            } catch (Exception failure) {
+                Bukkit.getScheduler().runTask(plugin, () -> callback.accept(null, "DB_ERROR"));
+                return;
+            }
+            final JsonObject result = body;
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (vault != null) {
+                    try { result.addProperty("vaultBalance", vault.balance(Bukkit.getOfflinePlayer(owner))); }
+                    catch (RuntimeException ignored) { }
+                }
+                callback.accept(result, null);
+            });
+        });
+    }
+
+    /** Mobile lobby: exchange wallet medals for the same SMALL/MEDIUM/LARGE prize types as the in-game counter. */
+    public void mobileBuyPrize(UUID owner, PrizeItem.Type type, int count, BiConsumer<JsonObject, String> callback) {
+        if (!mobileLobbyOnly(owner, callback)) return;
+        if (type == null || count < 1) { callback.accept(null, "INVALID_STATE"); return; }
+        if (!pending.add(owner)) { callback.accept(null, "BUSY"); return; }
+        var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try (Connection connection = open(dbPath.toString())) {
                 connection.setAutoCommit(false);
                 try {
+                    ensureMobilePrizeTable(connection);
                     ensureNoEconomyReview(connection, owner);
-                    int medals = 0;
+                    long wallet = 0;
                     try (var q = connection.prepareStatement("SELECT pending_medals FROM player_wallet WHERE player_uuid=?")) {
                         q.setString(1, owner.toString());
-                        try (var rs = q.executeQuery()) { if (rs.next()) medals = Math.toIntExact(rs.getLong(1)); }
+                        try (var rs = q.executeQuery()) { if (rs.next()) wallet = rs.getLong(1); }
                     }
-                    int unit = defs.get(PrizeItem.Type.SMALL).medalCost();
-                    if (unit <= 0) throw new IllegalStateException("INVALID_PRIZE_CONFIG");
-                    int units = medals / unit;
-                    if (units <= 0) throw new IllegalStateException("NOT_ENOUGH_MEDALS");
-                    consumed = Math.multiplyExact(units, unit);
-                    remaining = medals - consumed;
-                    vaultAmount = units * defs.get(PrizeItem.Type.SMALL).vaultValue();
+                    long cost = Math.multiplyExact((long) defs.get(type).medalCost(), count);
+                    if (wallet < cost) throw new IllegalStateException("NOT_ENOUGH_MEDALS");
+                    long remaining = wallet - cost;
                     long now = System.currentTimeMillis();
-
                     if (remaining == 0) {
                         try (var d = connection.prepareStatement("DELETE FROM player_wallet WHERE player_uuid=?")) {
                             d.setString(1, owner.toString()); d.executeUpdate();
                         }
                     } else {
                         try (var u = connection.prepareStatement("UPDATE player_wallet SET pending_medals=?,updated_at=? WHERE player_uuid=?")) {
-                            u.setInt(1, remaining); u.setLong(2, now); u.setString(3, owner.toString()); u.executeUpdate();
+                            u.setLong(1, remaining); u.setLong(2, now); u.setString(3, owner.toString()); u.executeUpdate();
                         }
                     }
-
-                    JsonObject snapshot = new JsonObject();
-                    snapshot.addProperty("source", "MOBILE_WALLET");
-                    snapshot.addProperty("medals", consumed);
-                    try (var insert = connection.prepareStatement(
-                            "INSERT INTO economy_transactions(transaction_id,player_uuid,operation,vault_amount,item_snapshot_json,balance_before,status,created_at,updated_at) " +
-                            "VALUES(?,?,'PRIZE_TO_VAULT',?,?,?,'CALL_STARTED',?,?)")) {
-                        insert.setString(1, tx);
-                        insert.setString(2, owner.toString());
-                        insert.setDouble(3, vaultAmount);
-                        insert.setString(4, snapshot.toString());
-                        insert.setDouble(5, balanceBefore);
-                        insert.setLong(6, now);
-                        insert.setLong(7, now);
-                        insert.executeUpdate();
+                    try (var u = connection.prepareStatement(
+                            "INSERT INTO mobile_prizes(player_uuid,prize_type,amount,updated_at) VALUES(?,?,?,?) " +
+                            "ON CONFLICT(player_uuid,prize_type) DO UPDATE SET amount=mobile_prizes.amount+excluded.amount,updated_at=excluded.updated_at")) {
+                        u.setString(1, owner.toString()); u.setString(2, type.id()); u.setInt(3, count); u.setLong(4, now); u.executeUpdate();
                     }
                     connection.commit();
                 } catch (Exception failure) {
@@ -540,33 +570,99 @@ public final class PrizeService implements Listener {
                 }
             } catch (Exception failure) {
                 String code = failure.getMessage() == null ? "DB_ERROR" : failure.getMessage();
-                Bukkit.getScheduler().runTask(plugin, () -> {
-                    pending.remove(owner);
-                    callback.accept(null, code);
-                });
+                Bukkit.getScheduler().runTask(plugin, () -> { pending.remove(owner); callback.accept(null, code); });
                 return;
             }
-
-            final int used = consumed;
-            final int left = remaining;
-            final double amount = vaultAmount;
             Bukkit.getScheduler().runTask(plugin, () -> {
-                final boolean deposited;
-                try { deposited = vault.deposit(account, amount); }
-                catch (RuntimeException uncertain) {
-                    markMobileExchangeReview(tx, owner, "CALL_EXCEPTION", callback);
-                    return;
-                }
-                if (!deposited) {
-                    rollbackMobileExchange(tx, owner, used, callback);
-                    return;
-                }
-                markMobileExchangeApplied(tx, owner, used, left, amount, callback);
+                pending.remove(owner);
+                mobilePrizeState(owner, callback);
             });
         });
     }
 
-    private void rollbackMobileExchange(String tx, UUID owner, int medals, BiConsumer<JsonObject, String> callback) {
+    /** Mobile lobby: cash owned virtual prize items into Vault, mirroring the in-game prize -> Vault step. */
+    public void mobileCashPrizes(UUID owner, PrizeItem.Type requestedType, int requestedCount, BiConsumer<JsonObject, String> callback) {
+        if (!mobileLobbyOnly(owner, callback)) return;
+        if (vault == null) { callback.accept(null, "VAULT_ERROR"); return; }
+        if (!pending.add(owner)) { callback.accept(null, "BUSY"); return; }
+        var account = Bukkit.getOfflinePlayer(owner);
+        final double balanceBefore;
+        try { balanceBefore = vault.balance(account); }
+        catch (RuntimeException failure) { pending.remove(owner); callback.accept(null, "VAULT_ERROR"); return; }
+
+        var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            String tx = UUID.randomUUID().toString();
+            Map<PrizeItem.Type,Integer> used = new EnumMap<>(PrizeItem.Type.class);
+            double amount = 0;
+            try (Connection connection = open(dbPath.toString())) {
+                connection.setAutoCommit(false);
+                try {
+                    ensureMobilePrizeTable(connection);
+                    ensureNoEconomyReview(connection, owner);
+                    for (PrizeItem.Type type : PrizeItem.Type.values()) {
+                        if (requestedType != null && type != requestedType) continue;
+                        int owned = 0;
+                        try (var q = connection.prepareStatement("SELECT amount FROM mobile_prizes WHERE player_uuid=? AND prize_type=?")) {
+                            q.setString(1, owner.toString()); q.setString(2, type.id());
+                            try (var rs = q.executeQuery()) { if (rs.next()) owned = rs.getInt(1); }
+                        }
+                        int consume = requestedType == null ? owned : Math.min(owned, requestedCount);
+                        if (consume > 0) {
+                            used.put(type, consume);
+                            amount += consume * defs.get(type).vaultValue();
+                        }
+                    }
+                    if (used.isEmpty()) throw new IllegalStateException("NOT_ENOUGH_PRIZES");
+                    if (requestedType != null && used.getOrDefault(requestedType,0) < requestedCount)
+                        throw new IllegalStateException("NOT_ENOUGH_PRIZES");
+                    long now = System.currentTimeMillis();
+                    for (var entry : used.entrySet()) {
+                        try (var u = connection.prepareStatement(
+                                "UPDATE mobile_prizes SET amount=amount-?,updated_at=? WHERE player_uuid=? AND prize_type=? AND amount>=?")) {
+                            u.setInt(1, entry.getValue()); u.setLong(2, now); u.setString(3, owner.toString());
+                            u.setString(4, entry.getKey().id()); u.setInt(5, entry.getValue());
+                            if (u.executeUpdate() != 1) throw new IllegalStateException("NOT_ENOUGH_PRIZES");
+                        }
+                    }
+                    JsonObject snapshot = new JsonObject();
+                    for (var entry : used.entrySet()) snapshot.addProperty(entry.getKey().id(), entry.getValue());
+                    try (var insert = connection.prepareStatement(
+                            "INSERT INTO economy_transactions(transaction_id,player_uuid,operation,vault_amount,item_snapshot_json,balance_before,status,created_at,updated_at) " +
+                            "VALUES(?,?,'PRIZE_TO_VAULT',?,?,?,'CALL_STARTED',?,?)")) {
+                        insert.setString(1, tx); insert.setString(2, owner.toString()); insert.setDouble(3, amount);
+                        insert.setString(4, snapshot.toString()); insert.setDouble(5, balanceBefore);
+                        insert.setLong(6, now); insert.setLong(7, now); insert.executeUpdate();
+                    }
+                    connection.commit();
+                } catch (Exception failure) {
+                    connection.rollback();
+                    throw failure;
+                }
+            } catch (Exception failure) {
+                String code = failure.getMessage() == null ? "DB_ERROR" : failure.getMessage();
+                Bukkit.getScheduler().runTask(plugin, () -> { pending.remove(owner); callback.accept(null, code); });
+                return;
+            }
+
+            final double vaultAmount = amount;
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                final boolean deposited;
+                try { deposited = vault.deposit(account, vaultAmount); }
+                catch (RuntimeException uncertain) {
+                    markMobilePrizeCashReview(tx, owner, "CALL_EXCEPTION", callback);
+                    return;
+                }
+                if (!deposited) {
+                    rollbackMobilePrizeCash(tx, owner, used, callback);
+                    return;
+                }
+                markMobilePrizeCashApplied(tx, owner, vaultAmount, callback);
+            });
+        });
+    }
+
+    private void rollbackMobilePrizeCash(String tx, UUID owner, Map<PrizeItem.Type,Integer> used, BiConsumer<JsonObject, String> callback) {
         var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             String failure = null;
@@ -574,10 +670,13 @@ public final class PrizeService implements Listener {
                 connection.setAutoCommit(false);
                 try {
                     long now = System.currentTimeMillis();
-                    try (var wallet = connection.prepareStatement(
-                            "INSERT INTO player_wallet(player_uuid,pending_medals,updated_at) VALUES(?,?,?) " +
-                            "ON CONFLICT(player_uuid) DO UPDATE SET pending_medals=player_wallet.pending_medals+excluded.pending_medals,updated_at=excluded.updated_at")) {
-                        wallet.setString(1, owner.toString()); wallet.setInt(2, medals); wallet.setLong(3, now); wallet.executeUpdate();
+                    ensureMobilePrizeTable(connection);
+                    for (var entry : used.entrySet()) {
+                        try (var u = connection.prepareStatement(
+                                "UPDATE mobile_prizes SET amount=amount+?,updated_at=? WHERE player_uuid=? AND prize_type=?")) {
+                            u.setInt(1, entry.getValue()); u.setLong(2, now); u.setString(3, owner.toString()); u.setString(4, entry.getKey().id());
+                            u.executeUpdate();
+                        }
                     }
                     try (var update = connection.prepareStatement(
                             "UPDATE economy_transactions SET status='ROLLED_BACK',updated_at=? WHERE transaction_id=? AND status='CALL_STARTED'")) {
@@ -594,7 +693,7 @@ public final class PrizeService implements Listener {
         });
     }
 
-    private void markMobileExchangeReview(String tx, UUID owner, String reason, BiConsumer<JsonObject, String> callback) {
+    private void markMobilePrizeCashReview(String tx, UUID owner, String reason, BiConsumer<JsonObject, String> callback) {
         var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try (Connection connection = open(dbPath.toString());
@@ -612,8 +711,7 @@ public final class PrizeService implements Listener {
         });
     }
 
-    private void markMobileExchangeApplied(String tx, UUID owner, int medals, int remaining, double amount,
-                                           BiConsumer<JsonObject, String> callback) {
+    private void markMobilePrizeCashApplied(String tx, UUID owner, double amount, BiConsumer<JsonObject, String> callback) {
         var dbPath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             String failure = null;
@@ -627,12 +725,10 @@ public final class PrizeService implements Listener {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 pending.remove(owner);
                 if (result != null) { callback.accept(null, result); return; }
-                JsonObject body = new JsonObject();
-                body.addProperty("ok", true);
-                body.addProperty("exchangedMedals", medals);
-                body.addProperty("walletMedals", remaining);
-                body.addProperty("vaultAmount", amount);
-                callback.accept(body, null);
+                mobilePrizeState(owner, (body, stateFailure) -> {
+                    if (stateFailure == null && body != null) body.addProperty("vaultAdded", amount);
+                    callback.accept(body, stateFailure);
+                });
             });
         });
     }
