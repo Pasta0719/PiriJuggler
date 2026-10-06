@@ -915,7 +915,7 @@ const $=function(id){return document.getElementById(id)};
 let token=localStorage.getItem("piriToken")||"";
 let player=localStorage.getItem("piriPlayer")||"";
 let stateTimer=0,dataTimer=0,eventTimer=0,currentState=null,currentData=null,currentType="",busy=false;
-let motion=null,pendingState=null,nextGameAt=0,queuedLeverTimer=0,godPresentationUntil=0,godPresentation=null,godBigAudioPending=false,godBigAudioActive=false,pendingBigBgmAt=0,pendingBigBgmName="",pendingGodHitSound="",noticeOn=false,noticeBlink=false,noticeAt=0,resumeInFlight=false,lastResumeAt=0,lastEventAt=0,lastSnapshotAt=0,godFreezeVisual=false,godFreezeAt=-1,godRevealed=[false,false,false],godRevealAt=[-1,-1,-1],godImpactAt=-1;
+let motion=null,pendingState=null,nextGameAt=0,queuedLeverTimer=0,godPresentationUntil=0,godPresentation=null,godBigAudioPending=false,godBigAudioActive=false,pendingBigBgmAt=0,pendingBigBgmName="",pendingGodHitSound="",noticeOn=false,noticeBlink=false,noticeAt=0,resumeInFlight=false,lastResumeAt=0,lastEventAt=0,lastSnapshotAt=0,godFreezeVisual=false,godFreezeAt=-1,godRevealed=[false,false,false],godRevealAt=[-1,-1,-1],godImpactAt=-1;let skillNoticePlayed=[];
 
 const fixed=[
 ["grape","replay","grape","seven","piero","grape","replay","grape","cherry","bar","grape","replay","grape","bell","seven","replay","grape","replay","grape","bar","cherry"],
@@ -1217,6 +1217,11 @@ function renderLamp(){
  img.style.objectFit=godlike?"contain":"fill";
  img.style.filter=on?"drop-shadow(-4px 0 rgba(255,255,255,.18)) drop-shadow(4px 0 rgba(255,255,255,.18)) drop-shadow(0 4px rgba(255,255,255,.18))":"none";
 }
+function acceptSkillSuccess(p){
+ if(currentType!=="SKILL_STOP"||!motion||!p||!p.spinId||String(p.spinId)!==String(motion.spinId))return false;
+ const id=String(p.spinId);if(skillNoticePlayed.includes(id))return false;
+ skillNoticePlayed.push(id);if(skillNoticePlayed.length>128)skillNoticePlayed.shift();return true;
+}
 function reconcileStoppedFromSnapshot(j){
  if(!motion||!motion.spinning||!j||!String(j.gameState||"").includes("SPINNING"))return;
  if(j.spinId&&String(j.spinId)!==String(motion.spinId))return;
@@ -1324,7 +1329,9 @@ async function pollEvents(){
    j.events.forEach(function(ev){
     const p=ev.payload||{},type=ev.type||"";
     if(type==="NOTICE"){
-     const snd=p.sound||"";if(snd==="NOTICE")playSound("notice");else if(snd==="NOTICE_STRONG")playSound("notice_strong");else if(snd==="NOTICE_X5")for(let n=0;n<5;n++)setTimeout(function(){playSound("notice")},n*100);
+     const snd=p.sound||"",skillSuccess=!!p.skillChallengeSuccess;
+     if(skillSuccess&&!acceptSkillSuccess(p))return;
+     if(snd==="NOTICE")playSound("notice");else if(snd==="NOTICE_STRONG")playSound("notice_strong");else if(snd==="NOTICE_X5")for(let n=0;n<5;n++)setTimeout(function(){playSound("notice")},n*100);
     }else if(type==="TENPAI_SOUND"){
      if(!motion||!p.spinId||String(p.spinId)===String(motion.spinId))playSound("tenpai");
     }else if(type==="PAYOUT")playSound("payout");
@@ -1435,7 +1442,7 @@ async function cashPrizes(){
  catch(e){$("prizeMsg").textContent=errorText(e)}finally{busy=false}
 }
 function startGame(j){
- show("game");resizeStage();currentType=j.machineType||"";pendingState=null;motion=null;noticeOn=!!j.lampOn;noticeBlink=false;noticeAt=performance.now();lastEventAt=performance.now();
+ show("game");resizeStage();currentType=j.machineType||"";pendingState=null;motion=null;noticeOn=!!j.lampOn;noticeBlink=false;noticeAt=performance.now();lastEventAt=performance.now();skillNoticePlayed=[];
  applyState(j);handleEvents(j.events);pollData();stopTimers();
  const gs=String(j.gameState||"");
  if(gs.startsWith("BIG_")){
@@ -1449,7 +1456,7 @@ function startGame(j){
 function stopTimers(){if(stateTimer)clearInterval(stateTimer);if(eventTimer)clearInterval(eventTimer);if(dataTimer)clearInterval(dataTimer);if(queuedLeverTimer)clearTimeout(queuedLeverTimer);stateTimer=0;eventTimer=0;dataTimer=0;queuedLeverTimer=0}
 async function leave(){
  try{await api("/api/leave","POST")}catch(e){$("gameMessage").textContent=errorText(e);return}
- stopTimers();stopAllAudio();motion=null;pendingState=null;currentState=null;godBigAudioPending=false;godBigAudioActive=false;show("lobby");loadMachines();
+ stopTimers();stopAllAudio();motion=null;pendingState=null;currentState=null;godBigAudioPending=false;godBigAudioActive=false;skillNoticePlayed=[];show("lobby");loadMachines();
 }
 function frame(now){
  if(!$("game").classList.contains("hidden")){
