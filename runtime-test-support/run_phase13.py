@@ -104,7 +104,7 @@ def forbidden(v):
 try:
  start_server(); start_client("phase13-owner"); owner="phase13-owner"; console("op PiriRuntimeTest"); start_client("phase13-spectator"); spec="phase13-spectator"; console("op PiriRuntimeTest2")
  command(owner,"tp @s 0.5 100 0.5"); command(spec,"tp @s 0.5 100 0.5")
- baseline=entity_count(owner)
+ command(owner,"tp @s 0.5 100 0.5"); command(spec,"tp @s 0.5 100 0.5"); baseline=entity_count(owner)
  command(owner,"piritest phase13grid","TEST_PHASE13_GRID")
  wait(lambda:len(state().get("machines",[]))==42,"42 direct runtime machines committed",60)
  command(spec,"tp @s 0.5 99 0.5")
