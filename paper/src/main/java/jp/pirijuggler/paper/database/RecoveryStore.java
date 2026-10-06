@@ -362,7 +362,7 @@ public final class RecoveryStore {
             Map<String,Object> values,Stats stats,String type,boolean currentBetAlreadyPaid,boolean currentSpinOverlayAlreadyDrawn,
             JugglerGodRuntime runtime,int setting,int machine,long now
     ) throws Exception {
-        String recoveryStockPriority=runtime.additionalBigStock()>0?"BIG":runtime.additionalRegStock()>0?"REG":"NONE";
+        String recoveryStockPriority=runtime.additionalRegStock()>0?"REG":runtime.additionalBigStock()>0?"BIG":"NONE";
         long gross=jgBonusGross(type);
         long paid=((Number)values.get("bonus_payout_count")).longValue();
         long remainingGross=gross-paid;
