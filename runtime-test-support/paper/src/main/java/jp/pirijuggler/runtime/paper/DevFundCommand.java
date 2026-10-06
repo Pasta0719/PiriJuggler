@@ -194,7 +194,7 @@ public final class DevFundCommand implements CommandExecutor {
                 for(int i=0;i<42;i++){
                     int x=(i%7-3)*3,z=(i/7-3)*3;
                     String facing=i<6?facings[i]:"SOUTH";
-                    database.create(new Machine.Location(worldId,worldName,x,66,z,facing),MachineType.JUGGLER,now+i);
+                    database.create(new Machine.Location(worldId,worldName,x,100,z,facing),MachineType.JUGGLER,now+i);
                 }
                 return database.state();
             },(fresh,error)->{
