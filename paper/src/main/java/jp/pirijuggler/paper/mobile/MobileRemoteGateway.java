@@ -1090,7 +1090,7 @@ function drawReels(now){
   }
   if(freeze&&freezeMs>=120&&freezeMs<165){
    const p=(freezeMs-120)/45,half=135*(1-p),th=Math.max(1,5*(1-p));
-   box.style.background="linear-gradient(to right,#141414 calc(50% - "+half*scale+"px),#d8d8d8 calc(50% - "+half*scale+"px),#d8d8d8 calc(50% + "+half*scale+"px),#141414 calc(50% + "+half*scale+"px))";
+   box.style.background="linear-gradient(#d8d8d8,#d8d8d8) center / "+(half*2*scale)+"px "+(th*2*scale)+"px no-repeat,#141414";
   }
   const glow1=imgs[5],glow2=imgs[6],reveal=imgs[7],revealed=freeze&&godRevealed[r]&&godRevealAt[r]>=0&&now>=godRevealAt[r];
   if(god&&revealed){
@@ -1128,10 +1128,6 @@ function localStop(reel,pressed){
   const n=motion.stops.filter(Boolean).length;
   playNamed("juggler_god_god_stop_"+Math.max(1,Math.min(3,n)),machineSound("stop"));
  }else playSound("stop");
- if(motion.stops.filter(Boolean).length===3){
-  nextGameAt=Math.max(nextGameAt,motion.at+2000);
-  motion.godImpactAt=Math.max.apply(null,[now].concat((motion.revealAt||[]).filter(function(v){return v>=0})));
- }
  return pressed;
 }
 function handleEvents(events){
@@ -1223,10 +1219,13 @@ function reconcileStoppedFromSnapshot(j){
  if(!motion||!motion.spinning||!j||!String(j.gameState||"").includes("SPINNING"))return;
  if(j.spinId&&String(j.spinId)!==String(motion.spinId))return;
  const mask=Number(j.stoppedMask||0),ds=j.displayStops||{},vals=[Number(ds.left||0),Number(ds.center||0),Number(ds.right||0)],now=performance.now();
- for(let r=0;r<3;r++)if((mask&(1<<r))!==0&&!motion.stops[r]){
-  motion.stops[r]={from:vals[r],end:vals[r],target:vals[r],at:now,duration:0};
-  if(motion.godFreeze){godRevealed[r]=true;godRevealAt[r]=now-250}
+ for(let r=0;r<3;r++)if((mask&(1<<r))!==0){
+  if(motion.presses&&motion.presses[r])motion.presses[r]=null;
+  if(!motion.stops[r])motion.stops[r]={from:vals[r],end:vals[r],target:vals[r],at:now,duration:0};
+  else if(motion.stops[r].duration<=0)motion.stops[r].target=vals[r];
+  if(motion.godFreeze){godRevealed[r]=true;if(godRevealAt[r]<0)godRevealAt[r]=now-250}
  }
+ if(mask===7)nextGameAt=Math.max(nextGameAt,motion.at+2000);
 }
 function needsResume(j){
  return !!j&&String(j.gameState||"").includes("SPINNING")&&(!motion||!motion.spinning||!j.spinId||String(j.spinId)!==String(motion.spinId));
@@ -1460,6 +1459,7 @@ function frame(now){
   }
   drawReels(now);
   if(pendingState&&!visualBusy()){const j=pendingState;pendingState=null;applyState(j)}
+  if(motion&&!visualBusy()&&currentState&&!String(currentState.gameState||"").includes("SPINNING"))motion.spinning=false;
   renderLamp();updateControlState();
  }
  requestAnimationFrame(frame);
