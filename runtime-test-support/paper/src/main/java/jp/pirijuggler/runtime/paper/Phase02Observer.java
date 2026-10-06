@@ -91,7 +91,7 @@ public final class Phase02Observer implements Listener {
             }}catch(java.io.IOException error){throw new java.io.UncheckedIOException(error);}
         }
         var production = (PiriJugglerPlugin) Bukkit.getPluginManager().getPlugin("PiriJuggler");
-        JsonObject result = new JsonObject(); result.addProperty("serverVersion",Bukkit.getVersion()); result.addProperty("enabled",production != null && production.isEnabled());
+        JsonObject result = new JsonObject(); result.addProperty("serverVersion",Bukkit.getVersion()); result.addProperty("enabled",production != null && production.isEnabled()); double[] tps=Bukkit.getTPS();result.addProperty("tps1m",tps.length>0?tps[0]:20.0);result.addProperty("mspt",Bukkit.getAverageTickTime());long used=Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();result.addProperty("heapMiB",used/1048576.0);
         if (production != null && production.machines() != null && production.machines().ready()) {
             var state = production.machines().snapshot(); result.addProperty("ready",true); result.addProperty("period",state.period());
             result.add("machines",new Gson().toJsonTree(state.machines())); result.add("sessions",new Gson().toJsonTree(state.sessions().stream().map(s -> s.snapshot()).toList()));
