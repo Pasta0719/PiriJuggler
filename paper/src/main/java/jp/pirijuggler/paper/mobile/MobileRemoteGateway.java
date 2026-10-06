@@ -968,7 +968,7 @@ const $=function(id){return document.getElementById(id)};
 let token=localStorage.getItem("piriToken")||"";
 let player=localStorage.getItem("piriPlayer")||"";
 let stateTimer=0,dataTimer=0,eventTimer=0,currentState=null,currentData=null,currentType="",busy=false;
-let motion=null,pendingState=null,nextGameAt=0,queuedLeverTimer=0,godPresentationUntil=0,godPresentation=null;
+let motion=null,pendingState=null,nextGameAt=0,queuedLeverTimer=0,godPresentationUntil=0,godPresentation=null,godBigAudioPending=false,godBigAudioActive=false;
 
 const fixed=[
 ["grape","replay","grape","seven","piero","grape","replay","grape","cherry","bar","grape","replay","grape","bell","seven","replay","grape","replay","grape","bar","cherry"],
@@ -1213,6 +1213,8 @@ function visualBusy(){
 }
 function applyState(j){
  currentState=j;currentType=j.machineType||currentType;
+ const firstGodBig=!!j.godFirstBigAudio&&(currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME");
+ if(firstGodBig)godBigAudioPending=true;
  const presentationEpoch=Number(j.godPresentationStartMs||0);
  if(presentationEpoch>0){
   godPresentationUntil=Math.max(godPresentationUntil,presentationEpoch+15000);
@@ -1281,14 +1283,20 @@ async function pollEvents(){
     else if(ev.type==="BONUS_START"){
      const type=p.bonusType||"BONUS";$("gameMessage").textContent=type+" START";
      if(type==="BIG"){
-      const godFirst=!!(currentState&&currentState.godFirstBigAudio)&&(currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME");
+      const godMachine=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME";
+      const godFirst=godMachine&&(godBigAudioPending||!!(currentState&&currentState.godFirstBigAudio));
+      godBigAudioPending=false;godBigAudioActive=godFirst;
       const start=godFirst?"juggler_god_god_bonus_start":machineSound("bonus_start");
       const fallback=machineSound("bonus_start");playNamed(start,fallback);
       setTimeout(function(){startLoopNamed(godFirst?"juggler_god_god_big_bgm":machineSound("big_bgm"),machineSound("big_bgm"))},4500);
-     }else if(type==="REG")startLoop("reg_bgm");
+     }else if(type==="REG"){godBigAudioPending=false;godBigAudioActive=false;startLoop("reg_bgm")}
     }else if(ev.type==="BONUS_END"){
      const type=p.bonusType||"BONUS";$("gameMessage").textContent=type+" END";stopLoop();
-     if(type==="BIG")playSound("bonus_end");
+     if(type==="BIG"){
+      const godFirstEnd=godBigAudioActive&&(currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME");
+      playNamed(godFirstEnd?"juggler_god_god_bonus_end":machineSound("bonus_end"),machineSound("bonus_end"));
+     }
+     godBigAudioPending=false;godBigAudioActive=false;
     }
    });
   }
@@ -1373,13 +1381,19 @@ async function cashPrizes(){
 }
 function startGame(j){
  show("game");resizeStage();currentType=j.machineType||"";renderState(j);pollData();stopTimers();
- const gs=String(j.gameState||"");if(gs.startsWith("BIG_"))startLoop(j.godFirstBigAudio?"god_big_bgm":"big_bgm");else if(gs.startsWith("REG_"))startLoop("reg_bgm");
+ const gs=String(j.gameState||"");
+ if(gs.startsWith("BIG_")){
+  godBigAudioActive=!!j.godFirstBigAudio&&(currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME");
+  godBigAudioPending=false;
+  startLoopNamed(godBigAudioActive?"juggler_god_god_big_bgm":machineSound("big_bgm"),machineSound("big_bgm"));
+ }else if(gs.startsWith("REG_")){godBigAudioPending=false;godBigAudioActive=false;startLoop("reg_bgm")}
+ else{godBigAudioPending=false;godBigAudioActive=false}
  stateTimer=setInterval(pollState,250);eventTimer=setInterval(pollEvents,100);dataTimer=setInterval(pollData,1500);
 }
 function stopTimers(){if(stateTimer)clearInterval(stateTimer);if(eventTimer)clearInterval(eventTimer);if(dataTimer)clearInterval(dataTimer);if(queuedLeverTimer)clearTimeout(queuedLeverTimer);stateTimer=0;eventTimer=0;dataTimer=0;queuedLeverTimer=0}
 async function leave(){
  try{await api("/api/leave","POST")}catch(e){$("gameMessage").textContent=errorText(e);return}
- stopTimers();stopAllAudio();motion=null;pendingState=null;currentState=null;show("lobby");loadMachines();
+ stopTimers();stopAllAudio();motion=null;pendingState=null;currentState=null;godBigAudioPending=false;godBigAudioActive=false;show("lobby");loadMachines();
 }
 function frame(now){
  if(!$("game").classList.contains("hidden")){
