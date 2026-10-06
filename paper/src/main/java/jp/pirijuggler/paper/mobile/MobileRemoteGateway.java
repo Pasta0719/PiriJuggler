@@ -913,7 +913,7 @@ const $=function(id){return document.getElementById(id)};
 let token=localStorage.getItem("piriToken")||"";
 let player=localStorage.getItem("piriPlayer")||"";
 let stateTimer=0,dataTimer=0,eventTimer=0,currentState=null,currentData=null,currentType="",busy=false;
-let motion=null,pendingState=null,nextGameAt=0,queuedLeverTimer=0,godPresentationUntil=0,godPresentation=null,godBigAudioPending=false,godBigAudioActive=false,pendingBigBgmAt=0,pendingBigBgmName="",pendingGodHitSound="",noticeOn=false,noticeBlink=false,noticeAt=0,resumeInFlight=false,lastResumeAt=0,lastEventAt=0,lastSnapshotAt=0;
+let motion=null,pendingState=null,nextGameAt=0,queuedLeverTimer=0,godPresentationUntil=0,godPresentation=null,godBigAudioPending=false,godBigAudioActive=false,pendingBigBgmAt=0,pendingBigBgmName="",pendingGodHitSound="",noticeOn=false,noticeBlink=false,noticeAt=0,resumeInFlight=false,lastResumeAt=0,lastEventAt=0,lastSnapshotAt=0,godFreezeVisual=false,godFreezeAt=-1,godRevealed=[false,false,false],godRevealAt=[-1,-1,-1],godImpactAt=-1;
 
 const fixed=[
 ["grape","replay","grape","seven","piero","grape","replay","grape","cherry","bar","grape","replay","grape","bell","seven","replay","grape","replay","grape","bar","cherry"],
@@ -1072,34 +1072,29 @@ function drawReels(now){
  for(let r=0;r<3;r++){
   const phase=currentPhase(r,now),middle=Math.floor(phase),frac=phase-middle,box=$("reel"+r),imgs=box.children;
   const scale=Math.max(.01,Math.min(box.clientWidth/270,box.clientHeight/390)),sy=scale;
-  const freeze=!!(motion&&motion.godFreeze),freezeMs=freeze?now-motion.at:-1;
-  if(freeze&&freezeMs>=120&&freezeMs<165)box.style.background="linear-gradient(to bottom,#141414 49%,#d8d8d8 49%,#d8d8d8 51%,#141414 51%)";
-  else if(freeze&&freezeMs>=35)box.style.background="#141414";
-  else box.style.background="";
+  const freeze=god&&godFreezeVisual,freezeMs=freeze?Math.max(0,now-godFreezeAt):-1;
+  box.style.background=freeze?"#141414":"";
   for(let row=-2;row<=2;row++){
-   const im=imgs[row+2],sym=symbolAt(r,middle+row),sz=symbolSize(sym);
-   const w=sz[0]*scale,h=sz[1]*scale;
-   const src=asset("symbols/"+sym+".png");if(im.getAttribute("src")!==src)im.setAttribute("src",src);
-   im.style.width=w+"px";im.style.height=h+"px";
-   im.style.left=((box.clientWidth-w)/2)+"px";
-   im.style.top=((130+(row-frac)*130)*sy-(h-130*sy)/2)+"px";
-   im.style.objectFit=god?"contain":"fill";
-   im.style.transformOrigin="50% 50%";
-   if(freeze&&freezeMs>=35&&freezeMs<120){
+   const im=imgs[row+2],sym=symbolAt(r,middle+row),sz=symbolSize(sym),w=sz[0]*scale,h=sz[1]*scale,src=asset("symbols/"+sym+".png");
+   if(im.getAttribute("src")!==src)im.setAttribute("src",src);
+   im.style.width=w+"px";im.style.height=h+"px";im.style.left=((box.clientWidth-w)/2)+"px";im.style.top=((130+(row-frac)*130)*sy-(h-130*sy)/2)+"px";
+   im.style.objectFit=god?"contain":"fill";im.style.transformOrigin="50% 50%";
+   if(freeze&&freezeMs<120){
     const p=Math.max(0,Math.min(1,(freezeMs-35)/85)),s=Math.max(.035,1-p*p);
     im.style.opacity=".34";im.style.transform="scaleY("+s+")";
-   }else if(freeze&&freezeMs>=120&&freezeMs<165){
+   }else if(freeze&&freezeMs<165){
     im.style.opacity="0";im.style.transform="none";
-   }else if(freeze&&freezeMs>=165){
+   }else if(freeze){
     im.style.opacity=".10";im.style.transform="none";
-   }else{
-    im.style.opacity="1";im.style.transform="none";
-   }
+   }else{im.style.opacity="1";im.style.transform="none"}
   }
-  const glow1=imgs[5],glow2=imgs[6],reveal=imgs[7],st=freeze&&motion?motion.stops[r]:null,revealed=!!(st&&now>=st.at+st.duration&&freezeMs>=165);
+  if(freeze&&freezeMs>=120&&freezeMs<165){
+   const p=(freezeMs-120)/45,half=135*(1-p),th=Math.max(1,5*(1-p));
+   box.style.background="linear-gradient(to right,#141414 calc(50% - "+half*scale+"px),#d8d8d8 calc(50% - "+half*scale+"px),#d8d8d8 calc(50% + "+half*scale+"px),#141414 calc(50% + "+half*scale+"px))";
+  }
+  const glow1=imgs[5],glow2=imgs[6],reveal=imgs[7],revealed=freeze&&godRevealed[r]&&godRevealAt[r]>=0&&now>=godRevealAt[r];
   if(god&&revealed){
-   const ox=(box.clientWidth-270*scale)/2,oy=(box.clientHeight-390*scale)/2,src=asset("symbols/bar.png"),age=Math.max(0,now-(st.at+st.duration));
-   const glow=age<120?Math.max(0,.24*(1-age/120)):0;
+   const ox=(box.clientWidth-270*scale)/2,oy=(box.clientHeight-390*scale)/2,src=asset("symbols/bar.png"),age=Math.max(0,now-godRevealAt[r]),glow=age<120?Math.max(0,.24*(1-age/120)):0;
    [[glow1,14,114,242,162,glow],[glow2,18,118,234,154,glow],[reveal,20,120,230,150,1]].forEach(function(v){
     const im=v[0];im.src=src;im.style.display=v[5]>0?"block":"none";im.style.opacity=String(v[5]);im.style.objectFit="contain";
     im.style.left=(ox+v[1]*scale)+"px";im.style.top=(oy+v[2]*scale)+"px";im.style.width=(v[3]*scale)+"px";im.style.height=(v[4]*scale)+"px";
@@ -1153,17 +1148,18 @@ function handleEvents(events){
    if(freeze){
     stopAllAudio();godBigAudioPending=true;pendingBigBgmAt=0;pendingBigBgmName="";pendingGodHitSound="";
    }
+   godFreezeVisual=freeze;godFreezeAt=freeze?(resumed?now-165:now):-1;godRevealed=[false,false,false];godRevealAt=[-1,-1,-1];godImpactAt=-1;
    motion={
     spinId:String(p.spinId||""),animation:String(p.animation||"NORMAL"),godFreeze:freeze,at:now,
     starts:[Number((p.startPhase||{}).left||0),Number((p.startPhase||{}).center||0),Number((p.startPhase||{}).right||0)],
     stopEnableAfterMs:Number(p.stopEnableAfterMs||0),hints:Object.assign({},p.stopHints||{}),
-    stops:[null,null,null],presses:[null,null,null],spinning:true,revealed:[false,false,false],revealAt:[-1,-1,-1],godImpactAt:-1
+    stops:[null,null,null],presses:[null,null,null],spinning:true
    };
    if(resumed&&currentState){
     const mask=Number(currentState.stoppedMask||0),ds=currentState.displayStops||{},vals=[Number(ds.left||0),Number(ds.center||0),Number(ds.right||0)];
     for(let r=0;r<3;r++)if((mask&(1<<r))!==0){
      motion.stops[r]={from:vals[r],end:vals[r],target:vals[r],at:now,duration:0};
-     if(freeze){motion.revealed[r]=true;motion.revealAt[r]=now-250}
+     if(freeze){godRevealed[r]=true;godRevealAt[r]=now-250}
     }
    }
    if(!resumed)playNamed(freeze?"juggler_god_god_freeze":machineSound("lever"),freeze?"god_freeze":"lever");
@@ -1185,12 +1181,12 @@ function handleEvents(events){
    }
    if(p.nextStopHints)motion.hints=Object.assign({},p.nextStopHints);
    if(motion.godFreeze){
-    motion.revealed[r]=true;
-    const st=motion.stops[r];motion.revealAt[r]=st?st.at+st.duration:now;
+    godRevealed[r]=true;
+    const st=motion.stops[r];godRevealAt[r]=st?st.at+st.duration:now;
    }
    if(motion.stops.filter(Boolean).length===3){
     nextGameAt=Math.max(nextGameAt,motion.at+2000);
-    motion.godImpactAt=Math.max.apply(null,[now].concat((motion.revealAt||[]).filter(function(v){return v>=0})));
+    godImpactAt=Math.max.apply(null,[now].concat(godRevealAt.filter(function(v){return v>=0})));
    }
    return;
   }
@@ -1229,7 +1225,7 @@ function reconcileStoppedFromSnapshot(j){
  const mask=Number(j.stoppedMask||0),ds=j.displayStops||{},vals=[Number(ds.left||0),Number(ds.center||0),Number(ds.right||0)],now=performance.now();
  for(let r=0;r<3;r++)if((mask&(1<<r))!==0&&!motion.stops[r]){
   motion.stops[r]={from:vals[r],end:vals[r],target:vals[r],at:now,duration:0};
-  if(motion.godFreeze){motion.revealed[r]=true;motion.revealAt[r]=now-250}
+  if(motion.godFreeze){godRevealed[r]=true;godRevealAt[r]=now-250}
  }
 }
 function needsResume(j){
@@ -1250,17 +1246,24 @@ function applyState(j){
  noticeOn=!!currentState.lampOn;
  const firstGodBig=!!currentState.godFirstBigAudio&&(currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME");
  if(firstGodBig)godBigAudioPending=true;
- const presentationEpoch=Number(currentState.godPresentationStartMs||0);
+ const gs=String(currentState.gameState||""),presentationEpoch=Number(currentState.godPresentationStartMs||0);
  if(presentationEpoch>0){
   godPresentationUntil=Math.max(godPresentationUntil,presentationEpoch+15000);
   if(!godPresentation||godPresentation.epoch!==presentationEpoch){
    const ds=currentState.displayStops||{},starts=[Number(ds.left||0),Number(ds.center||0),Number(ds.right||0)];
    let at=performance.now()-Math.max(0,Date.now()-presentationEpoch);
-   if(motion&&motion.godFreeze){for(const st of motion.stops)if(st)at=Math.max(at,st.at+st.duration)}
+   if(godFreezeVisual){for(const t of godRevealAt)if(t>=0)at=Math.max(at,t)}
    godPresentation={epoch:presentationEpoch,at:at,starts:starts};
   }
  }else if(Date.now()>=godPresentationUntil){godPresentationUntil=0;godPresentation=null}
  reconcileStoppedFromSnapshot(currentState);
+ const nowVisual=performance.now(),authoritativeGod=!!currentState.godFreeze,maskVisual=Number(currentState.stoppedMask||0),completedGod=gs==="BIG_READY";
+ if(authoritativeGod){
+  godFreezeVisual=true;if(godFreezeAt<0)godFreezeAt=nowVisual-165;
+  for(let r=0;r<3;r++)if(completedGod||((maskVisual&(1<<r))!==0)){godRevealed[r]=true;if(godRevealAt[r]<0)godRevealAt[r]=nowVisual-250}
+ }else if(!gs.includes("SPINNING")){
+  godFreezeVisual=false;godFreezeAt=-1;godRevealed=[false,false,false];godRevealAt=[-1,-1,-1];godImpactAt=-1;
+ }
  $("machineLabel").textContent="MACHINE "+currentState.machineId;
  $("credit").textContent=currentState.credit||0;$("bet").textContent=currentState.bet||0;$("pay").textContent=currentState.pay||0;$("medals").textContent=currentState.heldMedals||0;
  $("money").textContent=currentState.vaultBalance==null?"---":Number(currentState.vaultBalance).toLocaleString();
@@ -1268,7 +1271,6 @@ function applyState(j){
  const godlike=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME",skillstop=currentType==="SKILL_STOP";
  $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);$("stage").classList.toggle("skillstop",skillstop);
  $("skillChallenge").style.display=skillstop?"flex":"none";
- const gs=String(currentState.gameState||"");
  $("replayText").textContent=gs==="REPLAY_READY"?"REPLAY":"";
  $("countText").textContent=(gs.startsWith("BIG_")||gs.startsWith("REG_"))?(skillstop&&currentState.skillRemaining!=null?"残り "+currentState.skillRemaining+"G":"COUNT "+Number(currentState.bonusCount||0)):"";
  $("stockLamp").style.display=godlike?"flex":"none";$("stockLamp").classList.toggle("on",godlike&&!!currentState.stockLampOn);
