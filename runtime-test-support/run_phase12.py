@@ -265,8 +265,6 @@ try:
     wait(lambda:pcount(spec,"REMOTE_MACHINE_STOP")>=base["REMOTE_MACHINE_STOP"]+3,"remote three stops")
     pending_packets=[p for p in client(spec).get("packets",[]) if p["type"].startswith("REMOTE_MACHINE_")]
     check("BONUS_PENDING remote stream contains no hidden role/premium/setting state",not any(forbidden_remote_payload(p["payload"]) for p in pending_packets),{"remoteCounts":remote_counts(spec)})
-    wait(lambda:pcount(spec,"REMOTE_MACHINE_NOTICE")>=base["REMOTE_MACHINE_NOTICE"]+1,"remote public notice")
-    check("public notice is mirrored to spectator",pcount(spec,"REMOTE_MACHINE_NOTICE")>=base["REMOTE_MACHINE_NOTICE"]+1,remote_counts(spec))
 
     tap(owner,32);wait_state("BONUS_ENTRY_BETTED_REG");tap(owner,32);wait_stoppable(owner,"BONUS_ENTRY_SPINNING_REG")
     stop_reels(owner,[(263,1),(264,3),(262,7)])
@@ -279,6 +277,17 @@ try:
     wait(lambda:pcount(spec,"REMOTE_MACHINE_BONUS")>=base["REMOTE_MACHINE_BONUS"]+2,"remote bonus end")
     bonus_packets=packets(spec,"REMOTE_MACHINE_BONUS")[-2:]
     check("bonus start and end are mirrored only when public",bonus_packets[0].get("active") is True and bonus_packets[-1].get("active") is False,bonus_packets)
+
+    # A plain REG award has no guaranteed NOTICE packet. Exercise the production
+    # premium-B path instead: its first left STOP deterministically schedules NOTICE.
+    notice_before=pcount(spec,"REMOTE_MACHINE_NOTICE")
+    command(owner,"piritest force B","TEST_FORCE_ARMED")
+    tap(owner,32);wait_state("NORMAL_BETTED");tap(owner,32);wait_stoppable(owner,"NORMAL_SPINNING")
+    stop_reels(owner,[(263,1)])
+    wait(lambda:pcount(spec,"REMOTE_MACHINE_NOTICE")>=notice_before+1,"remote public notice")
+    check("public notice is mirrored to spectator",pcount(spec,"REMOTE_MACHINE_NOTICE")>=notice_before+1,remote_counts(spec))
+    stop_reels(owner,[(264,3),(262,7)])
+    wait_state("BONUS_PENDING_BIG")
     check("real owner SPIN/STOP/NOTICE/BONUS all reached spectator",
           pcount(spec,"REMOTE_MACHINE_SPIN")>=base["REMOTE_MACHINE_SPIN"]+1 and
           pcount(spec,"REMOTE_MACHINE_STOP")>=base["REMOTE_MACHINE_STOP"]+3 and
