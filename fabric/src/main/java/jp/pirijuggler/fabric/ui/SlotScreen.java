@@ -52,7 +52,7 @@ public final class SlotScreen extends Screen {
         c.getMatrices().push();c.getMatrices().translate(v.x(),v.y(),0);c.getMatrices().scale((float)v.scale(),(float)v.scale(),1);
 
         if(isJugglerGod(view.machineType()))godCabinetPanel(c,SlotLayout.CABINET);
-        else panel(c,SlotLayout.CABINET,color("CABINET_BG"));
+        else panel(c,SlotLayout.CABINET,color("SKILL_STOP".equals(view.machineType())?"SKILL_STOP_CABINET_BG":"CABINET_BG"));
         panel(c,SlotLayout.DATA,color("DISPLAY_BG"));
         panel(c,SlotLayout.DATA_LEFT,color("DISPLAY_BG"));
         panel(c,SlotLayout.DATA_RIGHT,color("DISPLAY_BG"));
