@@ -2,7 +2,7 @@ package jp.pirijuggler.paper.mobile;
 
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;\nimport java.nio.file.Files;\nimport java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
