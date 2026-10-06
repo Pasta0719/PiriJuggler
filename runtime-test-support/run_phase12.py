@@ -153,8 +153,8 @@ def clickpos(name,x,y,z,kind=None):
 
 def create_machine(name,x,z,index):
     command(name,f"tp @s {x+0.5} 65 2.5")
-    time.sleep(.05);action(name,"aimpos",x=x,y=66,z=z);time.sleep(.05)
-    before=machine_count();command(name,"piri machine create")
+    action(name,"aimpos",x=x,y=66,z=z);time.sleep(.15)
+    before=machine_count();command(name,"piri machine create","MACHINE_CREATED")
     wait(lambda:machine_count()==before+1,f"machine {index} committed")
 
 def forbidden_remote_payload(value):
