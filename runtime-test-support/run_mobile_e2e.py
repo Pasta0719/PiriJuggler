@@ -169,7 +169,7 @@ try:
     for stop in ("STOP_LEFT","STOP_CENTER","STOP_RIGHT"):
         for _ in range(30):
             try:
-                result=http("POST","/api/action?type="+stop,token,expect=200)
+                result=http("POST","/api/action?type="+stop+"&pressed=0",token,expect=200)
                 break
             except AssertionError as failure:
                 if "STOP_TOO_EARLY" not in str(failure): raise
