@@ -18,7 +18,11 @@ class Phase06GameTest extends GameFixture {
         for(var type:List.of(PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT))s=action(game,s,type,nano+1_000_000_000L);return s;
     }
     private Session enterBonus(NormalGame game,Session s,String type,long nano) throws Exception {
-        s=spin(game,s,nano);assertEquals(Session.GameState.valueOf("BONUS_PENDING_"+type),s.state());
+        if(s.state()==Session.GameState.SEATED_READY)s=action(game,s,PacketType.SPACE_ACTION,nano);
+        s=action(game,s,PacketType.SPACE_ACTION,nano);
+        for(var stop:List.of(PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT))
+            s=action(game,s,stop,nano+850_000_000L);
+        assertEquals(Session.GameState.valueOf("BONUS_PENDING_"+type),s.state());
         s=action(game,s,PacketType.SPACE_ACTION,nano+2_000_000_000L);assertEquals(Session.GameState.valueOf("BONUS_ENTRY_BETTED_"+type),s.state());
         s=action(game,s,PacketType.SPACE_ACTION,nano+2_100_000_000L);assertEquals(Session.GameState.valueOf("BONUS_ENTRY_SPINNING_"+type),s.state());
         s=stopAll(game,s,nano+2_100_000_000L);assertEquals(Session.GameState.valueOf(type+"_READY"),s.state());return s;
