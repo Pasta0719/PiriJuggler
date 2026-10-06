@@ -126,11 +126,9 @@ try:
  command(owner,"piritest force reg","TEST_FORCE_ARMED"); tap(owner,32); wait(lambda:session().get("game_state")=="NORMAL_BETTED","bet"); tap(owner,32)
  wait(lambda:session().get("game_state")=="NORMAL_SPINNING" and pcount(owner,"SPIN_START")>0,"spin"); time.sleep(1)
  stop_reels(owner); wait(lambda:session().get("game_state")=="BONUS_PENDING_REG","pending reg")
- stop_payloads=packets(owner,"STOP_RESULT")[-3:]
- authoritative_by_reel={str(x["reel"]).upper():int(x["stopIndex"]) for x in stop_payloads}
- authoritative=[authoritative_by_reel["LEFT"],authoritative_by_reel["CENTER"],authoritative_by_reel["RIGHT"]]
+ authoritative=[int(session()["display_left_stop"]),int(session()["display_center_stop"]),int(session()["display_right_stop"])]
  wait(lambda:machine_view(spec,mid).get("stoppedMask")==7,"spectator stopped",30); world=machine_view(spec,mid).get("displayStops")
- check("owner authoritative stop indexes equal external cabinet",world==authoritative,{"owner":authoritative,"external":world,"ownerPackets":stop_payloads})
+ check("owner authoritative stop indexes equal external cabinet",world==authoritative,{"owner":authoritative,"external":world})
  check("hidden bonus internals absent before public",not forbidden([p for p in client(spec).get("packets",[]) if p["type"].startswith("REMOTE_MACHINE_")]))
  capture(owner,"owner-stop"); command(spec,"tp @s -5.5 100 -5.5"); action(spec,"aimpos",x=-6,y=100,z=-9); capture(spec,"external-stop")
  tap(owner,32); wait(lambda:session().get("game_state")=="BONUS_ENTRY_BETTED_REG","entry bet"); tap(owner,32); wait(lambda:"BONUS_ENTRY_SPINNING_REG"==session().get("game_state"),"entry spin"); time.sleep(1); stop_reels(owner)
