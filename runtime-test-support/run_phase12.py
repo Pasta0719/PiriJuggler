@@ -172,6 +172,10 @@ def stop_client(name):
 def start_mismatch():
     name="mismatch";folder=OUT/name;folder.mkdir(parents=True,exist_ok=True);result=folder/"client-result.json"
     if result.exists():result.unlink()
+    directory=EVIDENCE/"work"/"client-mismatch"
+    if directory.exists(): shutil.rmtree(directory)
+    directory.mkdir(parents=True,exist_ok=True)
+    (directory/"options.txt").write_text("version:3953\nlang:en_us\nrenderDistance:4\nsimulationDistance:5\nmaxFps:20\npauseOnLostFocus:false\nsoundCategory_master:0.0\nskipMultiplayerWarning:true\nonboardAccessibility:false\n",encoding="utf-8")
     h=(folder/"client.log").open("w",encoding="utf-8");handles.append(h)
     cmd=GRADLE_CMD+["-PruntimeAcceptance=true","-PruntimeScenario=mismatch",
          f"-PruntimeRun={RUN}","-PruntimeEvidencePhase=PHASE_12",":runtime-test-client:runClient","--console=plain"]
