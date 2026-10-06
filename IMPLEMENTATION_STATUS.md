@@ -1,5 +1,14 @@
 # IMPLEMENTATION_STATUS.md
 
+## MOBILE REMOTE Unified Phase — 2026-10-06
+Status: IN_PROGRESS — production implementation present / final E2E acceptance required
+
+スマホ遠隔遊技、モバイル経済、景品交換/換金、Minecraft資産同期、モバイル表示を1つのPhaseへ統合。
+正本: `mobile/MOBILE_REMOTE_PHASE.md`
+
+現行実装には、離席後ロビーの景品交換所、着席中の景品交換/景品換金拒否、Minecraft↔mobileのメダル/景品同期、SKILL_STOP専用モバイルpresentation（cabinet background `#111015`）が存在する。
+ただしCOMPLETEは現行mainで統合mobile E2Eを通し、資産往復・離席制約・実停止入力・SKILL_STOP表示まで証跡化してから付与する。
+
 このファイルは各Phase終了時の現在状態を示す。
 
 ## SKILL STOP Phase 06 — 2026-10-03
