@@ -1207,6 +1207,39 @@ public final class MachineService implements Listener, CommandExecutor {
     }
 
     /**
+     * Moves real medal items from the quitting player's inventory into the durable
+     * mobile wallet before Bukkit persists the offline player data.
+     */
+    public void stashInventoryForMobile(Player player) {
+        main();
+        if (!ready() || player == null) return;
+        UUID owner = player.getUniqueId();
+        List<EconomyStore.InsertCandidate> candidates = new ArrayList<>();
+        for (int slot = 0; slot <= 35; slot++) {
+            MedalToken.Value value = MedalToken.read(player.getInventory().getItem(slot));
+            if (value != null) candidates.add(new EconomyStore.InsertCandidate(slot, value.bundleId(), value.amount()));
+        }
+        if (candidates.isEmpty()) return;
+        try {
+            EconomyStore.WalletStashPlan plan = plugin.executors().databaseBarrier(
+                    () -> new EconomyStore(database).stashInventoryToWallet(owner, candidates, System.currentTimeMillis()))
+                    .get(5, TimeUnit.SECONDS);
+            for (var candidate : plan.candidates()) {
+                MedalToken.Value current = MedalToken.read(player.getInventory().getItem(candidate.slot()));
+                if (current != null && current.bundleId().equals(candidate.bundleId()) && current.amount() == candidate.amount())
+                    player.getInventory().setItem(candidate.slot(), null);
+            }
+            player.updateInventory();
+            plugin.executors().databaseBarrier(() -> {
+                new EconomyStore(database).markWalletStashApplied(plan.transactionId(), System.currentTimeMillis());
+                return null;
+            }).get(5, TimeUnit.SECONDS);
+        } catch (Exception failure) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to move quitting player medals into mobile wallet for " + owner, failure);
+        }
+    }
+
+    /**
      * Delivers only mobile/offline wallet medals when the player joins Minecraft.
      * Resumable machine-session credit/held medals are deliberately left untouched.
      */
