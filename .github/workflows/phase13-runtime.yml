@@ -46,6 +46,8 @@ jobs:
           Invoke-WebRequest -Headers $headers -Uri $build.downloads.'server:default'.url -OutFile "runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar"
           $actual=(Get-FileHash "runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar" -Algorithm SHA256).Hash.ToLower()
           if ($actual -ne "ab9bb1afc3cea6978a0c03ce8448aa654fe8a9c4dddf341e7cbda1b0edaa73f5") { throw "Paper SHA256 mismatch: $actual" }
+      - name: Validate Phase13 runner syntax
+        run: python -m py_compile runtime-test-support/run_phase13.py
       - name: Run Phase13 real runtime acceptance
         run: xvfb-run -a -s "-screen 0 1280x720x24" python runtime-test-support/run_phase13.py
       - uses: actions/upload-artifact@v4
