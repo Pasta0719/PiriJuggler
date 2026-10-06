@@ -93,6 +93,22 @@ class EconomyStoreTest {
         assertEquals(11,((Number)db.rows("SELECT pending_medals FROM player_wallet WHERE player_uuid=?",player.toString()).getFirst().get("pending_medals")).longValue());
     }
 
+    @Test void offlineInventoryStashMovesRealMedalItemsIntoMobileWallet() throws Exception {
+        UUID first=UUID.randomUUID(),second=UUID.randomUUID();
+        db.sql("INSERT INTO medal_tokens(bundle_id,amount,state,created_at,updated_at) VALUES(?,30,'ACTIVE',?,?)",first.toString(),NOW,NOW);
+        db.sql("INSERT INTO medal_tokens(bundle_id,amount,state,created_at,updated_at) VALUES(?,70,'ACTIVE',?,?)",second.toString(),NOW,NOW);
+        var plan=store.stashInventoryToWallet(player,List.of(
+                new EconomyStore.InsertCandidate(4,first,30),
+                new EconomyStore.InsertCandidate(9,second,70)),NOW+1);
+        assertEquals(100,plan.amount());
+        assertEquals(100,store.pendingMedals(player));
+        assertEquals("RETIRED",db.rows("SELECT state FROM medal_tokens WHERE bundle_id=?",first.toString()).getFirst().get("state"));
+        assertEquals("RETIRED",db.rows("SELECT state FROM medal_tokens WHERE bundle_id=?",second.toString()).getFirst().get("state"));
+        assertEquals("LEDGER_COMMITTED",db.rows("SELECT status FROM medal_inventory_transactions WHERE transaction_id=?",plan.transactionId()).getFirst().get("status"));
+        store.markWalletStashApplied(plan.transactionId(),NOW+2);
+        assertEquals("APPLIED",db.rows("SELECT status FROM medal_inventory_transactions WHERE transaction_id=?",plan.transactionId()).getFirst().get("status"));
+    }
+
     @Test void mobileWalletRoundTripPreservesPlayerMedalsAndMachineCredit() throws Exception {
         // Machine/session -> mobile wallet (mobile cashout while no inventory delivery is available).
         db.sql("UPDATE player_sessions SET credit=17,held_medals=83");
