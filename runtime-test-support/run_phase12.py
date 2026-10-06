@@ -214,11 +214,14 @@ def forbidden_remote_payload(value):
 try:
     start_server()
     start_client("phase12-owner"); owner="phase12-owner"
-    # 42 machines in a compact 7x6 grid. Four-block spacing prevents the
-    # player's registration ray from intersecting an already-registered neighbor,
-    # while keeping the entire set inside the spectator's 32-block interest range.
+    # Build physical button fixtures, then register all 42 machines through the
+    # runtime-only direct DB helper. Registration ray-tracing is not part of Phase12.
     coords=[(x,z) for z in (-10,-6,-2,2,6,10) for x in (-12,-8,-4,0,4,8,12)]
-    for i,(x,z) in enumerate(coords,1): create_machine(owner,x,z,i)
+    for x,z in coords:
+        command(owner,f"setblock {x} 66 {z-1} stone")
+        command(owner,f"setblock {x} 66 {z} stone_button[face=wall,facing=south]")
+    command(owner,"piritest phase12grid","TEST_PHASE12_GRID")
+    wait(lambda:machine_count()==42,"42 direct runtime machines committed")
     check("42 physical registered machines exist",machine_count()==42,{"machines":machine_count()})
 
     start_client("phase12-spectator"); spec="phase12-spectator"
