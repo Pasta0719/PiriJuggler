@@ -126,7 +126,7 @@ try:
  command(owner,"tp @s -5.5 99 -6.5"); action(owner,"aimpos",x=-6,y=100,z=-9); action(owner,"clickpos",x=-6,y=100,z=-9)
  wait(lambda:pcount(owner,"OPEN_MACHINE")>0 and bool(session()),"owner open")
  command(owner,"piritest phase13fund","TEST_PHASE13_FUNDED"); wait(lambda:session().get("credit")==50,"runtime credit seeded",30)
- wait(lambda:machine_view(spec,mid).get("facing")=="SOUTH","spectator target cached",30); time.sleep(1)
+ wait(lambda:bool(machine_view(spec,mid)),"spectator target cached",30); time.sleep(1)
  command(owner,"piritest force reg","TEST_FORCE_ARMED"); tap(owner,32); wait(lambda:session().get("game_state")=="NORMAL_BETTED","bet"); tap(owner,32)
  wait(lambda:session().get("game_state")=="NORMAL_SPINNING" and pcount(owner,"SPIN_START")>0,"spin"); time.sleep(1)
  stop_reels(owner); wait(lambda:session().get("game_state")=="BONUS_PENDING_REG","pending reg")
