@@ -1,7 +1,7 @@
 # IMPLEMENTATION_STATUS.md
 
 ## MOBILE REMOTE Unified Phase — 2026-10-06
-Status: IN_PROGRESS — production implementation present / final E2E acceptance required
+Status: BUILD_READY — static parity audit applied / local build + final E2E acceptance pending
 
 スマホ遠隔遊技、モバイル経済、景品交換/換金、Minecraft資産同期、モバイル表示を1つのPhaseへ統合。
 正本: `mobile/MOBILE_REMOTE_PHASE.md`
