@@ -165,8 +165,42 @@ try:
     check("mobile BET uses production game state",bet.get("gameState")=="NORMAL_BETTED",bet)
     spin=http("POST","/api/action?type=SPACE_ACTION",token)
     check("mobile lever starts real production spin","SPINNING" in str(spin.get("gameState","")),spin)
+    spin_id=str(spin.get("spinId",""))
+    resumed=http("POST","/api/resume",token)
+    resume_events=resumed.get("events",[])
+    check("lost SPIN_START can self-heal through authoritative resume",
+          resumed.get("gameState","").endswith("SPINNING")
+          and str(resumed.get("spinId",""))==spin_id
+          and any(e.get("type")=="SPIN_START"
+                  and e.get("payload",{}).get("animation")=="RESUME_NORMAL"
+                  and str(e.get("payload",{}).get("spinId",""))==spin_id
+                  for e in resume_events),
+          resumed)
+
     time.sleep(.7)
-    for stop in ("STOP_LEFT","STOP_CENTER","STOP_RIGHT"):
+    for _ in range(30):
+        try:
+            first_stop=http("POST","/api/action?type=STOP_LEFT&pressed=0",token,expect=200)
+            break
+        except AssertionError as failure:
+            if "STOP_TOO_EARLY" not in str(failure): raise
+            time.sleep(.15)
+    else:
+        raise TimeoutError("mobile left stop never became available")
+    time.sleep(.15)
+
+    partial=http("POST","/api/resume",token)
+    partial_events=partial.get("events",[])
+    check("resume preserves an already-stopped reel and the same spin",
+          int(partial.get("stoppedMask",0))&1==1
+          and str(partial.get("spinId",""))==spin_id
+          and any(e.get("type")=="SPIN_START"
+                  and e.get("payload",{}).get("animation")=="RESUME_NORMAL"
+                  and str(e.get("payload",{}).get("spinId",""))==spin_id
+                  for e in partial_events),
+          partial)
+
+    for stop in ("STOP_CENTER","STOP_RIGHT"):
         for _ in range(30):
             try:
                 result=http("POST","/api/action?type="+stop+"&pressed=0",token,expect=200)
