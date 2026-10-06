@@ -709,7 +709,14 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #stage.skillstop .reelWindow{background:#F4F1E8!important}
 #stage.skillstop #statusPanel{background:#090B0E!important;border-color:#B68A42!important}
 #stage.skillstop #dataTop,#stage.skillstop #dataLeft,#stage.skillstop #dataRight{background:#090B0E!important;border-color:#B68A42!important}
-.sym{position:absolute;object-fit:contain;pointer-events:none}
+.sym{position:absolute;pointer-events:none}
+.godReveal{position:absolute;display:none;pointer-events:none;object-fit:contain;z-index:7}
+#stateText{position:absolute;left:960px;top:798px;width:300px;text-align:center;font-size:26px;font-weight:900;color:#F6F1E7;z-index:7}
+#stockLamp{position:absolute;left:1390px;top:835px;width:150px;height:58px;border-radius:14px;background:#34363b;color:#555861;display:none;align-items:center;justify-content:center;font-size:24px;font-weight:900;z-index:7;box-shadow:inset 0 0 0 6px #090B0E}
+#stockLamp.on{background:#58e36a;color:#58e36a;text-shadow:0 0 8px #58e36a}
+#cabinet.godlike{overflow:hidden}
+#cabinet.godlike:before{content:"";position:absolute;left:18px;right:18px;top:24px;height:18px;background:linear-gradient(#f7e7a5aa,#fff2b833);pointer-events:none}
+#cabinet.godlike:after{content:"";position:absolute;left:18px;right:18px;bottom:24px;height:10px;background:#4b2f09aa;pointer-events:none}
 
 #lamp{position:absolute;left:305px;top:360px;width:220px;height:125px;object-fit:contain;z-index:5}
 #skillChallenge{position:absolute;left:342px;top:483px;width:150px;height:117px;display:flex;align-items:center;justify-content:center;z-index:5}
@@ -795,6 +802,8 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
  #lamp{left:24px;top:398px;width:140px;height:78px;object-fit:contain}
  #skillChallenge{left:83px;top:454px;width:92px;height:72px}
  #skillRemaining{left:214px;top:528px;width:100px;font-size:12px}
+ #stateText{left:196px;top:520px;width:110px;font-size:12px}
+ #stockLamp{left:304px;top:506px;width:70px;height:30px;border-radius:7px;font-size:10px;box-shadow:inset 0 0 0 3px #090B0E}
 
  #statusPanel{
   left:24px;top:490px;width:342px;height:54px;
@@ -876,6 +885,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 <div id="reel0" class="reelWindow"></div><div id="reel1" class="reelWindow"></div><div id="reel2" class="reelWindow"></div>
 <img id="lamp" src="/assets/lamp/piri_chance_off.png" alt="">
 <div id="skillChallenge"><img id="skillChallengeImg" alt=""></div><div id="skillRemaining"></div>
+<div id="stateText"></div><div id="stockLamp">STOCK</div>
 <div id="statusPanel">
 <div><div class="statLabel">CREDIT</div><div id="credit" class="statValue">0</div></div>
 <div><div class="statLabel">BET</div><div id="bet" class="statValue">0</div></div>
@@ -915,7 +925,7 @@ const $=function(id){return document.getElementById(id)};
 let token=localStorage.getItem("piriToken")||"";
 let player=localStorage.getItem("piriPlayer")||"";
 let stateTimer=0,dataTimer=0,eventTimer=0,currentState=null,currentData=null,currentType="",busy=false;
-let motion=null,pendingState=null,nextGameAt=0,queuedLeverTimer=0,godPresentationUntil=0;
+let motion=null,pendingState=null,nextGameAt=0,queuedLeverTimer=0,godPresentationUntil=0,godPresentation=null;
 
 const fixed=[
 ["grape","replay","grape","seven","piero","grape","replay","grape","cherry","bar","grape","replay","grape","bell","seven","replay","grape","replay","grape","bar","cherry"],
@@ -1040,6 +1050,7 @@ function delta(profile,e){
 function endpoint(from,target){let e=target;while(e>from)e-=21;return e}
 function currentPhase(reel,now){
  if(!currentState)return 0;
+ if(!motion||!motion.spinning){const p=presentationPhase(reel,now);if(p!==null)return p}
  if(motion){
   const st=motion.stops[reel];
   if(st){
@@ -1059,13 +1070,30 @@ function symbolSize(sym){
  if(sym==="bar")return[230,150];if(sym==="seven")return[230,130];return[130,130];
 }
 function ensureReels(){
- for(let r=0;r<3;r++){const box=$("reel"+r);if(box.children.length===5)continue;box.textContent="";for(let i=0;i<5;i++){const im=document.createElement("img");im.className="sym";box.append(im)}}
+ for(let r=0;r<3;r++){
+  const box=$("reel"+r);if(box.children.length===6)continue;box.textContent="";
+  for(let i=0;i<5;i++){const im=document.createElement("img");im.className="sym";box.append(im)}
+  const reveal=document.createElement("img");reveal.className="godReveal";box.append(reveal);
+ }
+}
+function presentationPhase(reel,now){
+ if(!godPresentation)return null;
+ const elapsed=now-godPresentation.at,start=godPresentation.starts[reel];
+ if(elapsed<=400)return mod(start,21);if(elapsed>=12700)return 3;
+ let target=3;while(target<=start)target+=21;target+=42;
+ const t=Math.max(0,Math.min(1,(elapsed-400)/(12700-400))),eased=Math.sin(t*Math.PI/2);
+ return mod(start+(target-start)*eased,21);
 }
 function drawReels(now){
  ensureReels();
+ const god=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME";
  for(let r=0;r<3;r++){
   const phase=currentPhase(r,now),middle=Math.floor(phase),frac=phase-middle,box=$("reel"+r),imgs=box.children;
   const scale=Math.max(.01,Math.min(box.clientWidth/270,box.clientHeight/390)),sy=scale;
+  const freeze=!!(motion&&motion.godFreeze),freezeMs=freeze?now-motion.at:-1;
+  if(freeze&&freezeMs>=120&&freezeMs<165)box.style.background="linear-gradient(to bottom,#141414 49%,#d8d8d8 49%,#d8d8d8 51%,#141414 51%)";
+  else if(freeze&&freezeMs>=35)box.style.background="#141414";
+  else box.style.background="";
   for(let row=-2;row<=2;row++){
    const im=imgs[row+2],sym=symbolAt(r,middle+row),sz=symbolSize(sym);
    const w=sz[0]*scale,h=sz[1]*scale;
@@ -1073,7 +1101,24 @@ function drawReels(now){
    im.style.width=w+"px";im.style.height=h+"px";
    im.style.left=((box.clientWidth-w)/2)+"px";
    im.style.top=((130+(row-frac)*130)*sy-(h-130*sy)/2)+"px";
+   im.style.objectFit=god?"contain":"fill";
+   im.style.transformOrigin="50% 50%";
+   if(freeze&&freezeMs>=35&&freezeMs<120){
+    const p=Math.max(0,Math.min(1,(freezeMs-35)/85)),s=Math.max(.035,1-p*p);
+    im.style.opacity=".34";im.style.transform="scaleY("+s+")";
+   }else if(freeze&&freezeMs>=120&&freezeMs<165){
+    im.style.opacity="0";im.style.transform="none";
+   }else if(freeze&&freezeMs>=165){
+    im.style.opacity=".10";im.style.transform="none";
+   }else{
+    im.style.opacity="1";im.style.transform="none";
+   }
   }
+  const reveal=imgs[5],st=freeze&&motion?motion.stops[r]:null,revealed=!!(st&&now>=st.at+st.duration&&freezeMs>=165);
+  if(god&&revealed){
+   const w=230*scale,h=150*scale;reveal.src=asset("symbols/bar.png");reveal.style.display="block";
+   reveal.style.width=w+"px";reveal.style.height=h+"px";reveal.style.left=((box.clientWidth-w)/2)+"px";reveal.style.top=(120*sy)+"px";
+  }else reveal.style.display="none";
  }
 }
 function nextPendingReel(){
@@ -1121,14 +1166,26 @@ function visualBusy(){
 }
 function applyState(j){
  currentState=j;currentType=j.machineType||currentType;
- if(Number(j.godPresentationStartMs||0)>0)godPresentationUntil=Math.max(godPresentationUntil,Number(j.godPresentationStartMs)+15000);
+ const presentationEpoch=Number(j.godPresentationStartMs||0);
+ if(presentationEpoch>0){
+  godPresentationUntil=Math.max(godPresentationUntil,presentationEpoch+15000);
+  if(!godPresentation||godPresentation.epoch!==presentationEpoch){
+   const ds=j.displayStops||{},starts=[Number(ds.left||0),Number(ds.center||0),Number(ds.right||0)];
+   let at=performance.now()-Math.max(0,Date.now()-presentationEpoch);
+   if(motion&&motion.godFreeze){for(const st of motion.stops)if(st)at=Math.max(at,st.at+st.duration)}
+   godPresentation={epoch:presentationEpoch,at:at,starts:starts};
+  }
+ }else if(Date.now()>=godPresentationUntil){godPresentationUntil=0;godPresentation=null}
  $("machineLabel").textContent="MACHINE "+j.machineId;
  $("credit").textContent=j.credit||0;$("bet").textContent=j.bet||0;$("pay").textContent=j.pay||0;$("medals").textContent=j.heldMedals||0;
  $("money").textContent=j.vaultBalance==null?"---":Number(j.vaultBalance).toLocaleString();
  if(j.loanAmount!=null){$("loanBtn").querySelector("span").textContent="LOAN "+Number(j.loanAmount).toLocaleString();}
  const godlike=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME";
  $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);const skillstop=currentType==="SKILL_STOP";$("stage").classList.toggle("skillstop",skillstop);$("skillChallenge").style.display=skillstop?"flex":"none";$("skillRemaining").style.display=skillstop?"block":"none";
- $("lamp").src=asset("lamp/piri_chance_"+(j.lampOn?"on":"off")+".png");
+ $("lamp").src=asset("lamp/piri_chance_"+(j.lampOn?"on":"off")+".png");$("lamp").style.filter=j.lampOn?"drop-shadow(0 0 8px #fff7b0)":"none";
+ const gs=String(j.gameState||"");
+ $("stateText").textContent=gs==="REPLAY_READY"?"REPLAY":(gs.startsWith("BIG_")||gs.startsWith("REG_"))?(skillstop&&j.skillRemaining!=null?"残り "+j.skillRemaining+"G":"COUNT "+Number(j.bonusCount||0)):"";
+ $("stockLamp").style.display=godlike?"flex":"none";$("stockLamp").classList.toggle("on",godlike&&!!j.stockLampOn);
  if(currentType==="SKILL_STOP"){
   $("skillRemaining").textContent=(String(j.gameState||"").startsWith("BIG_")||String(j.gameState||"").startsWith("REG_"))&&j.skillRemaining!=null?"残り "+j.skillRemaining+"G":"";
   const challenge=j.skillChallenge&&j.skillChallenge!=="AUTO"?String(j.skillChallenge).toLowerCase():"";
@@ -1138,7 +1195,7 @@ function applyState(j){
   $("skillRemaining").textContent="";$("skillChallengeImg").removeAttribute("src");$("skillChallengeImg").style.display="none";
  }
  if(!String(j.gameState||"").includes("SPINNING")&&!visualBusy())motion=null;
- if(!Number(j.godPresentationStartMs||0)&&Date.now()>=godPresentationUntil)godPresentationUntil=0;
+ if(!Number(j.godPresentationStartMs||0)&&Date.now()>=godPresentationUntil){godPresentationUntil=0;godPresentation=null}
  updateControlState();
 }
 function renderState(j){
