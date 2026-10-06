@@ -361,12 +361,19 @@ public final class RemoteMachineSync {
 
     private void forEachViewer(int machineId, java.util.function.Consumer<Player> action) {
         PiriDatabase.State state = stateSupplier.get();
-        for (var entry : interests.entrySet()) {
-            if (!entry.getValue().contains(machineId)) continue;
-            Player viewer = Bukkit.getPlayer(entry.getKey());
-            if (viewer == null || !viewer.isOnline() || !compatible.test(entry.getKey())) continue;
-            Session own = state == null ? null : state.session(entry.getKey());
+        Machine machine = state == null ? null : state.machine(machineId);
+        if (machine == null || machine.deleted()) return;
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            UUID viewerId = viewer.getUniqueId();
+            if (!compatible.test(viewerId)) continue;
+            Session own = state.session(viewerId);
             if (own != null && own.machine() == machineId && own.lifecycle() == Session.Lifecycle.ACTIVE) continue;
+            Set<Integer> current = interests.computeIfAbsent(viewerId, ignored -> new HashSet<>());
+            if (!current.contains(machineId)) {
+                if (!inRange(viewer, machine)) continue;
+                current.add(machineId);
+                sendSnapshot(viewer, machine);
+            }
             action.accept(viewer);
         }
     }
