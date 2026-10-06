@@ -242,9 +242,9 @@ try:
 
     # World change rebuild.
     before_remove=pcount(spec,"REMOTE_MACHINE_REMOVE")
+    before_snap=pcount(spec,"REMOTE_MACHINE_SNAPSHOT")
     command(spec,"execute in minecraft:the_nether run tp @s 0 65 0")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_REMOVE")>=before_remove+42 and client(spec).get("remoteCacheSize")==0,"world change remove")
-    before_snap=pcount(spec,"REMOTE_MACHINE_SNAPSHOT")
     command(spec,"execute in minecraft:overworld run tp @s 0.5 65 0.5")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_SNAPSHOT")>=before_snap+42 and client(spec).get("remoteCacheSize")==42,"world change rebuild")
     check("world change drops old interest and rebuilds overworld interest",True,remote_counts(spec))
