@@ -336,8 +336,30 @@ public final class MobileRemoteGateway implements AutoCloseable, Listener {
                 onMain(ctx, done -> machines.mobileCashout(owner, done));
                 return;
             }
-            if (request.method().equals(HttpMethod.POST) && path.equals("/api/exchange")) {
-                onMain(ctx, done -> plugin.prizes().mobileExchange(owner, done));
+            if (request.method().equals(HttpMethod.GET) && path.equals("/api/prizes")) {
+                onMain(ctx, done -> plugin.prizes().mobilePrizeState(owner, done));
+                return;
+            }
+            if (request.method().equals(HttpMethod.POST) && path.equals("/api/prize/buy")) {
+                var type = jp.pirijuggler.paper.economy.PrizeItem.Type.parse(one(query, "type"));
+                Integer count = integer(one(query, "count"));
+                if (type == null || count == null || count < 1) {
+                    json(ctx, HttpResponseStatus.BAD_REQUEST, error("INVALID_STATE"));
+                    return;
+                }
+                onMain(ctx, done -> plugin.prizes().mobileBuyPrize(owner, type, count, done));
+                return;
+            }
+            if (request.method().equals(HttpMethod.POST) && path.equals("/api/prize/cash")) {
+                String rawType = one(query, "type");
+                var type = rawType == null || rawType.equalsIgnoreCase("all") ? null
+                        : jp.pirijuggler.paper.economy.PrizeItem.Type.parse(rawType);
+                Integer count = integer(one(query, "count"));
+                if (rawType != null && !rawType.equalsIgnoreCase("all") && type == null) {
+                    json(ctx, HttpResponseStatus.BAD_REQUEST, error("INVALID_STATE"));
+                    return;
+                }
+                onMain(ctx, done -> plugin.prizes().mobileCashPrizes(owner, type, type == null ? 0 : (count == null ? 1 : count), done));
                 return;
             }
             if (request.method().equals(HttpMethod.POST) && path.equals("/api/leave")) {
@@ -786,8 +808,8 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
  .stopText{bottom:-2px;font-size:10px}
  #leftBtn{left:18px}#centerBtn{left:147px}#rightBtn{left:276px}
 
- #loanBtn,#insertBtn,#cashBtn,#exchangeBtn{left:294px!important;width:80px;height:38px}
- #loanBtn{top:560px}#insertBtn{top:604px}#cashBtn{top:648px}#exchangeBtn{top:692px}
+ #loanBtn,#insertBtn,#cashBtn{left:294px!important;width:80px;height:38px}
+ #loanBtn{top:560px}#insertBtn{top:604px}#cashBtn{top:648px}
 
  #gameMessage{left:16px;top:680px;width:266px;font-size:11px;line-height:14px}
  #leaveBtn{right:10px;top:10px;padding:7px 9px;font-size:11px;z-index:100}
@@ -807,6 +829,18 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 </section>
 <section id="lobby" class="hidden">
 <div class="card top"><div><div class="muted">PLAYER</div><div id="player">-</div></div><button id="logout" class="normalBtn">接続解除</button></div>
+<div class="card" id="prizeShop">
+<div class="top"><b>景品交換所</b><button id="prizeRefresh" class="normalBtn">更新</button></div>
+<div class="muted">台から離席中のみ利用できます</div>
+<div style="margin-top:10px">所持メダル <b id="walletMedals">0</b>枚 / 所持金 <b id="lobbyMoney">---</b></div>
+<div class="dataGrid" style="margin-top:10px">
+<div class="metric"><div class="k">小景品</div><div id="smallPrizes" class="v">0</div><button id="buySmall" class="normalBtn">交換</button></div>
+<div class="metric"><div class="k">中景品</div><div id="mediumPrizes" class="v">0</div><button id="buyMedium" class="normalBtn">交換</button></div>
+<div class="metric"><div class="k">大景品</div><div id="largePrizes" class="v">0</div><button id="buyLarge" class="normalBtn">交換</button></div>
+</div>
+<div style="margin-top:10px"><button id="cashPrizes" class="normalBtn primary" style="width:100%">所持景品を換金</button></div>
+<div id="prizeMsg" class="muted" style="margin-top:8px"></div>
+</div>
 <div class="card"><div class="top"><b>台一覧</b><button id="refresh" class="normalBtn">更新</button></div><div id="machines"></div></div>
 </section>
 </div>
@@ -850,7 +884,6 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 <button id="loanBtn" class="machineControl sideBtn"><span>LOAN</span></button>
 <button id="insertBtn" class="machineControl sideBtn"><span>INSERT</span></button>
 <button id="cashBtn" class="machineControl sideBtn"><span>CASH OUT</span></button>
-<button id="exchangeBtn" class="machineControl sideBtn"><span>EXCHANGE</span></button>
 <div id="machineLabel" class="dataTitle">MACHINE -</div><div id="graphLabel" class="dataTitle">DIFF GRAPH</div>
 <div id="gameGraph" class="graphSurface"></div>
 <div id="currentBox" class="topMetric"><div class="t">CURRENT G</div><div id="gCurrent" class="n">0</div></div>
@@ -936,7 +969,7 @@ async function api(path,method){
  return j;
 }
 function errorText(e){
- const m={BUSY:"処理中です",INVALID_STATE:"今は操作できません",INVALID_MACHINE:"この台は利用できません",NOT_ENOUGH_CREDIT:"クレジットが足りません",NOT_ENOUGH_VAULT:"所持金が足りません",MACHINE_OCCUPIED:"ほかのプレイヤーが遊技中です",MACHINE_DISABLED:"この台は利用できません",STOP_TOO_EARLY:"まだ停止できません",ALREADY_STOPPED:"停止済みです",SESSION_MISMATCH:"台との接続状態が変わりました",VAULT_ERROR:"所持金処理に失敗しました",ECONOMY_UNAVAILABLE:"貸出を利用できません",AUTH_LOADING:"サーバー起動中です",NOT_ENOUGH_MEDALS:"投入できるメダルがありません"};
+ const m={BUSY:"処理中です",INVALID_STATE:"今は操作できません",INVALID_MACHINE:"この台は利用できません",NOT_ENOUGH_CREDIT:"クレジットが足りません",NOT_ENOUGH_VAULT:"所持金が足りません",MACHINE_OCCUPIED:"ほかのプレイヤーが遊技中です",MACHINE_DISABLED:"この台は利用できません",STOP_TOO_EARLY:"まだ停止できません",ALREADY_STOPPED:"停止済みです",SESSION_MISMATCH:"台との接続状態が変わりました",VAULT_ERROR:"所持金処理に失敗しました",ECONOMY_UNAVAILABLE:"貸出を利用できません",AUTH_LOADING:"サーバー起動中です",NOT_ENOUGH_MEDALS:"投入できるメダルがありません",NOT_ENOUGH_PRIZES:"景品が足りません",MUST_LEAVE_MACHINE:"景品交換・換金は台から離席してから利用してください"};
  return m[e.message]||e.message;
 }
 async function pairNow(){
@@ -951,6 +984,7 @@ function machineLabel(type){
  return type==="JUGGLER_GOD_EXTREME"?"JUGGLER GOD EXTREME":type==="JUGGLER_GOD"?"JUGGLER GOD":type==="SKILL_STOP"?"SKILL STOP":type;
 }
 async function loadMachines(){
+ loadPrizes();
  try{
   const j=await api("/api/machines");$("player").textContent=player||j.player||"-";const box=$("machines");box.textContent="";
   (j.machines||[]).forEach(function(m){
@@ -1205,7 +1239,27 @@ async function doAction(type,reel){
 async function loan(){unlockAudio();if(busy)return;busy=true;try{renderState(await api("/api/loan","POST"));$("gameMessage").textContent=""}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
 async function insertMedals(){unlockAudio();if(busy)return;busy=true;try{renderState(await api("/api/insert","POST"));$("gameMessage").textContent=""}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
 async function cashout(){unlockAudio();if(busy)return;busy=true;try{const j=await api("/api/cashout","POST");renderState(j);const pending=Number(j.cashoutPending||0);$("gameMessage").textContent=pending>0?("清算 "+j.cashoutAmount+"枚 / "+pending+"枚は回収待ち"):("清算 "+(j.cashoutAmount||0)+"枚")}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
-async function exchangeWallet(){unlockAudio();if(busy)return;busy=true;try{const j=await api("/api/exchange","POST");$("gameMessage").textContent="交換 "+j.exchangedMedals+"枚 → "+j.vaultAmount+" / 残 "+j.walletMedals+"枚"}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
+async function loadPrizes(){
+ try{
+  const j=await api("/api/prizes");
+  $("walletMedals").textContent=Number(j.walletMedals||0).toLocaleString();
+  $("lobbyMoney").textContent=j.vaultBalance==null?"---":Number(j.vaultBalance).toLocaleString();
+  $("smallPrizes").textContent=j.smallPrizes||0;$("mediumPrizes").textContent=j.mediumPrizes||0;$("largePrizes").textContent=j.largePrizes||0;
+  $("buySmall").textContent="交換 "+Number(j.smallCost||0).toLocaleString()+"枚";
+  $("buyMedium").textContent="交換 "+Number(j.mediumCost||0).toLocaleString()+"枚";
+  $("buyLarge").textContent="交換 "+Number(j.largeCost||0).toLocaleString()+"枚";
+ }catch(e){$("prizeMsg").textContent=errorText(e)}
+}
+async function buyPrize(type){
+ if(busy)return;busy=true;$("prizeMsg").textContent="";
+ try{await api("/api/prize/buy?type="+encodeURIComponent(type)+"&count=1","POST");$("prizeMsg").textContent="景品へ交換しました";await loadPrizes()}
+ catch(e){$("prizeMsg").textContent=errorText(e)}finally{busy=false}
+}
+async function cashPrizes(){
+ if(busy)return;busy=true;$("prizeMsg").textContent="";
+ try{const j=await api("/api/prize/cash?type=all","POST");$("prizeMsg").textContent="景品を換金しました"+(j.vaultAdded!=null?" +"+Number(j.vaultAdded).toLocaleString():"");await loadPrizes()}
+ catch(e){$("prizeMsg").textContent=errorText(e)}finally{busy=false}
+}
 function startGame(j){
  show("game");resizeStage();currentType=j.machineType||"";renderState(j);pollData();stopTimers();
  const gs=String(j.gameState||"");if(gs.startsWith("BIG_"))startLoop(j.godFirstBigAudio?"god_big_bgm":"big_bgm");else if(gs.startsWith("REG_"))startLoop("reg_bgm");
@@ -1227,7 +1281,8 @@ function frame(now){
 $("pairBtn").onclick=pairNow;$("refresh").onclick=loadMachines;$("dataClose").onclick=function(){show("lobby")};
 $("betBtn").onclick=function(){doAction("SPACE_ACTION",-1)};$("leverBtn").onclick=function(){doAction("SPACE_ACTION",-1)};
 document.querySelectorAll(".stopBtn").forEach(function(b){b.onclick=function(){doAction(b.dataset.action,Number(b.dataset.reel))}});
-$("loanBtn").onclick=loan;$("insertBtn").onclick=insertMedals;$("cashBtn").onclick=cashout;$("exchangeBtn").onclick=exchangeWallet;$("leaveBtn").onclick=leave;
+$("loanBtn").onclick=loan;$("insertBtn").onclick=insertMedals;$("cashBtn").onclick=cashout;$("leaveBtn").onclick=leave;
+$("prizeRefresh").onclick=loadPrizes;$("buySmall").onclick=function(){buyPrize("small")};$("buyMedium").onclick=function(){buyPrize("medium")};$("buyLarge").onclick=function(){buyPrize("large")};$("cashPrizes").onclick=cashPrizes;
 $("logout").onclick=async function(){try{await api("/api/revoke","POST")}catch(e){}token="";localStorage.removeItem("piriToken");localStorage.removeItem("piriPlayer");show("pair")};
 window.addEventListener("resize",resizeStage);window.addEventListener("orientationchange",function(){setTimeout(resizeStage,50)});
 requestAnimationFrame(frame);
