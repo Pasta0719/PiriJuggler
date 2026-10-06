@@ -93,6 +93,46 @@ class EconomyStoreTest {
         assertEquals(11,((Number)db.rows("SELECT pending_medals FROM player_wallet WHERE player_uuid=?",player.toString()).getFirst().get("pending_medals")).longValue());
     }
 
+    @Test void mobileWalletRoundTripPreservesPlayerMedalsAndMachineCredit() throws Exception {
+        // Machine/session -> mobile wallet (mobile cashout while no inventory delivery is available).
+        db.sql("UPDATE player_sessions SET credit=17,held_medals=83");
+        var session=db.state().session(player);
+        var firstCashout=store.prepareCashout(player,session.id(),machine,1,NOW+1);
+        assertEquals(100,firstCashout.amount());
+        store.finishCashout(player,firstCashout.transactionId(),Set.of(),NOW+2);
+        assertEquals(0,db.state().session(player).number("credit"));
+        assertEquals(0,db.state().session(player).number("held_medals"));
+        assertEquals(100,store.pendingMedals(player));
+
+        // Mobile wallet -> active machine CREDIT.
+        session=db.state().session(player);
+        var inserted=store.insertPending(player,session.id(),machine,2,NOW+3);
+        assertEquals(50,inserted.number("credit"));
+        assertEquals(50,store.pendingMedals(player));
+
+        // Cash the reinserted CREDIT back out. Undelivered mobile cashout must merge
+        // with the existing wallet balance instead of duplicating or losing medals.
+        var secondCashout=store.prepareCashout(player,inserted.id(),machine,3,NOW+4);
+        assertEquals(50,secondCashout.amount());
+        store.finishCashout(player,secondCashout.transactionId(),Set.of(),NOW+5);
+        assertEquals(100,store.pendingMedals(player));
+        assertEquals(0,db.state().session(player).number("credit"));
+        assertEquals(0,db.state().session(player).number("held_medals"));
+
+        // Mobile/offline wallet -> player-side medal token recovery.
+        var recovery=store.preparePendingWalletCashout(player,NOW+6);
+        assertEquals(100,recovery.amount());
+        assertEquals(1,recovery.bundles().size());
+        assertEquals(100,recovery.bundles().getFirst().amount());
+        assertEquals(0,store.pendingMedals(player));
+        UUID delivered=recovery.bundles().getFirst().id();
+        store.finishRecoveryCashout(player,recovery.transactionId(),Set.of(delivered),NOW+7);
+        assertTrue(store.validActiveBundle(delivered,100));
+
+        // Conservation check: exactly the original 100 medals survive the full round trip.
+        assertEquals(100,recovery.amount());
+    }
+
     @Test void insertionPartiallyConsumesLegacyTokenAndCreatesUnlimitedRemainder() throws Exception {
         UUID bundle=UUID.randomUUID();db.sql("INSERT INTO medal_tokens(bundle_id,amount,state,created_at,updated_at) VALUES(?,500,'ACTIVE',?,?)",bundle.toString(),NOW,NOW);
         var session=db.state().session(player);var plan=store.prepareInsert(player,session.id(),machine,1,List.of(new EconomyStore.InsertCandidate(0,bundle,500)),NOW+1);
