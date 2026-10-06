@@ -277,7 +277,7 @@ public final class DevFundCommand implements CommandExecutor {
         try{
             Field remoteField=production.machines().getClass().getDeclaredField("remote");remoteField.setAccessible(true);
             var remote=(jp.pirijuggler.paper.machine.RemoteMachineSync)remoteField.get(production.machines());
-            remote.broadcastSnapshot(session.machine());
+            for(Player viewer:Bukkit.getOnlinePlayers()) remote.viewerReady(viewer);
             sender.sendMessage("TEST_PHASE13_SNAPSHOT machine="+session.machine());
         }catch(ReflectiveOperationException error){sender.sendMessage("TEST_PHASE13_SNAPSHOT_FAILED "+error);}
         return true;
