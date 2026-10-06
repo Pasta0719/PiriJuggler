@@ -69,8 +69,8 @@ class SlotViewStateTest {
     }
     @Test void exactZeroPingStopUsesServerHintBeforeReplyAndAckDoesNotRetarget(){
         var time=new AtomicLong();var view=open(time);var b=start().payload();b.getAsJsonObject("startPhase").addProperty("left",8.7);
-        var hint=b.getAsJsonObject("stopHints").getAsJsonArray("left").get(5).getAsJsonObject();hint.addProperty("stopIndex",2);hint.addProperty("slip",3);hint.addProperty("durationMs",230);view.receive(Envelope.current(PacketType.SPIN_START,b));
-        time.set(500_000_000L);double atPress=view.phase(0);int pressed=view.localInput(PacketType.STOP_LEFT);assertEquals(5,pressed);
+        var hint=b.getAsJsonObject("stopHints").getAsJsonArray("left").get(3).getAsJsonObject();hint.addProperty("stopIndex",2);hint.addProperty("slip",1);hint.addProperty("durationMs",230);view.receive(Envelope.current(PacketType.SPIN_START,b));
+        time.set(500_000_000L);double atPress=view.phase(0);int pressed=view.localInput(PacketType.STOP_LEFT);assertEquals(3,pressed);
         time.addAndGet(40_000_000L);double beforeReply=view.phase(0);assertTrue(beforeReply<atPress);assertTrue(beforeReply>2,"the three-slip motion must already be underway before the reply");
         var stop=packet(PacketType.REEL_STOP,"{\"spinId\":\""+SPIN+"\",\"reel\":\"LEFT\",\"pressedIndex\":5,\"stopIndex\":2,\"slip\":3,\"durationMs\":230,\"nextStopHints\":{}}");view.receive(stop);
         assertEquals(beforeReply,view.phase(0),1e-9,"matching authoritative ack must not retarget or jump");time.addAndGet(500_000_000L);assertEquals(2,view.phase(0),1e-9);
