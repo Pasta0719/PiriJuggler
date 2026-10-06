@@ -7,6 +7,8 @@ import jp.pirijuggler.paper.game.RoleWeights;
 import jp.pirijuggler.paper.game.GameEngines;
 import jp.pirijuggler.paper.game.GameEngine;
 import jp.pirijuggler.paper.database.PiriDatabase;
+import jp.pirijuggler.paper.economy.MedalToken;
+import jp.pirijuggler.paper.economy.PrizeItem;
 import jp.pirijuggler.paper.game.JugglerGameEngine;
 import jp.pirijuggler.paper.game.JugglerGodGameEngine;
 import jp.pirijuggler.paper.machine.Machine;
@@ -59,12 +61,70 @@ public final class DevFundCommand implements CommandExecutor {
         if (args.length >= 1 && args[0].equalsIgnoreCase("skillreset")) return skillReset(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("remoteorphan")) return remoteOrphan(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("phase12grid")) return phase12Grid(sender,args);
+        if (args.length >= 1 && args[0].equalsIgnoreCase("mobilefund")) return mobileFund(sender,args);
+        if (args.length >= 1 && args[0].equalsIgnoreCase("mobilecheck")) return mobileCheck(sender,args);
         if (args.length == 1 && args[0].equalsIgnoreCase("clear")) {
             if (pendingForce == null) sender.sendMessage("NO_TEST_FORCE_PENDING");
             else restoreForce("TEST_FORCE_CLEARED");
             return true;
         }
-        sender.sendMessage("Usage: /piritest fund [player] | /piritest force <god|big|reg|A|B|C|D|E|F> [player] | /piritest heaven <1-32> [player] | /piritest skillreset [player] | /piritest clear");
+        sender.sendMessage("Usage: /piritest fund [player] | mobilefund [player] | mobilecheck [player] | force <god|big|reg|A|B|C|D|E|F> [player] | heaven <1-32> [player] | skillreset [player] | clear");
+        return true;
+    }
+
+    private boolean mobileFund(CommandSender sender,String[] args) {
+        if(args.length<1||args.length>2){sender.sendMessage("Usage: /piritest mobilefund [player]");return true;}
+        Player target=args.length==2?Bukkit.getPlayerExact(args[1]):sender instanceof Player p?p:null;
+        if(target==null){sender.sendMessage("PLAYER_REQUIRED");return true;}
+        var production=production(sender); if(production==null)return true;
+        UUID bundle=UUID.randomUUID(); int medals=600; long now=System.currentTimeMillis();
+        var dbPath=production.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
+        Bukkit.getScheduler().runTaskAsynchronously(helper,()->{
+            String result;
+            try{
+                Class.forName("org.sqlite.JDBC");
+                try(var connection=DriverManager.getConnection("jdbc:sqlite:"+dbPath)){
+                    try(var pragma=connection.createStatement()){pragma.execute("PRAGMA busy_timeout=5000");}
+                    try(var insert=connection.prepareStatement("INSERT INTO medal_tokens(bundle_id,amount,state,source_transaction_id,created_at,updated_at) VALUES(?,?,'ACTIVE',NULL,?,?)")){
+                        insert.setString(1,bundle.toString());insert.setInt(2,medals);insert.setLong(3,now);insert.setLong(4,now);insert.executeUpdate();
+                    }
+                }
+                result="OK";
+            }catch(Exception error){result="TEST_MOBILE_FUND_FAILED "+error;}
+            String done=result;
+            Bukkit.getScheduler().runTask(helper,()->{
+                if(!"OK".equals(done)){sender.sendMessage(done);return;}
+                target.getInventory().addItem(MedalToken.create(bundle,medals));
+                target.getInventory().addItem(PrizeItem.create(PrizeItem.Type.SMALL,2));
+                target.getInventory().addItem(PrizeItem.create(PrizeItem.Type.MEDIUM,1));
+                target.getInventory().addItem(PrizeItem.create(PrizeItem.Type.LARGE,1));
+                target.updateInventory();
+                sender.sendMessage("TEST_MOBILE_FUNDED medals=600 small=2 medium=1 large=1");
+                if(!sender.equals(target))target.sendMessage("TEST_MOBILE_FUNDED medals=600 small=2 medium=1 large=1");
+            });
+        });
+        return true;
+    }
+
+    private boolean mobileCheck(CommandSender sender,String[] args) {
+        if(args.length<1||args.length>2){sender.sendMessage("Usage: /piritest mobilecheck [player]");return true;}
+        Player target=args.length==2?Bukkit.getPlayerExact(args[1]):sender instanceof Player p?p:null;
+        if(target==null){sender.sendMessage("PLAYER_REQUIRED");return true;}
+        int medals=0,small=0,medium=0,large=0;
+        for(int slot=0;slot<36;slot++){
+            var item=target.getInventory().getItem(slot);
+            MedalToken.Value medal=MedalToken.read(item);
+            if(medal!=null)medals=Math.addExact(medals,medal.amount());
+            PrizeItem.Type type=PrizeItem.read(item);
+            if(type!=null){
+                switch(type){
+                    case SMALL -> small=Math.addExact(small,item.getAmount());
+                    case MEDIUM -> medium=Math.addExact(medium,item.getAmount());
+                    case LARGE -> large=Math.addExact(large,item.getAmount());
+                }
+            }
+        }
+        sender.sendMessage("TEST_MOBILE_INVENTORY medals="+medals+" small="+small+" medium="+medium+" large="+large);
         return true;
     }
 
