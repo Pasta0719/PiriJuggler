@@ -114,6 +114,10 @@ def stop_server():
 
 def start_client(name):
     folder=OUT/name; folder.mkdir(parents=True,exist_ok=True)
+    # A reconnect reuses the same evidence folder. Remove commands consumed by the
+    # previous client process before resetting the local sequence back to zero.
+    for stale in folder.glob("command-*.json"):
+        stale.unlink()
     result=folder/"client-result.json"
     if result.exists(): result.unlink()
     # A reconnect reuses the evidence folder. Remove stale commands (especially EXIT)
