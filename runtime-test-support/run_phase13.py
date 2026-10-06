@@ -1,36 +1,149 @@
+"""Phase13 real-Minecraft entity-free world cabinet renderer acceptance."""
 from pathlib import Path
-import json, shutil, subprocess, sys
+import datetime, hashlib, json, os, shutil, subprocess, time, re
 
-ROOT=Path(__file__).resolve().parents[1]
-E=ROOT/"runtime-evidence"/"PHASE_13"
-E.mkdir(parents=True,exist_ok=True)
+ROOT=Path(__file__).resolve().parents[1]; E=ROOT/"runtime-evidence/PHASE_13"
+RUN=datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ"); OUT=E/"attempts"/RUN
+SERVER=E/"work"/("server-"+RUN); JAVA=shutil.which("java")
+PAPER=ROOT/"runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar"
+GRADLE=["cmd.exe","/d","/c",str(ROOT/"gradlew.bat")] if os.name=="nt" else [str(ROOT/"gradlew")]
+FLAGS=subprocess.CREATE_NO_WINDOW if os.name=="nt" else 0
+prod={s:ROOT/s/f"build/libs/piri-juggler-{s}-1.0.0.jar" for s in ("paper","fabric")}
+helper={s:ROOT/f"runtime-test-support/{m}/build/libs/piri-runtime-test-{s}-1.0.0.jar" for s,m in (("paper","paper"),("client","client"))}
+OUT.mkdir(parents=True,exist_ok=True); (E/"screenshots").mkdir(parents=True,exist_ok=True)
+cache={}; clients={}; handles=[]; server=None; server_result=OUT/"server-result.json"
+manifest={"run":RUN,"passed":False,"assertions":[],"commands":[]}
 
-# Phase13 uses the proven Phase12 Paper/Fabric two-client harness first.
-# This establishes a real production remote-state/render-capable session with 42 machines.
-p=subprocess.run([sys.executable,str(ROOT/"runtime-test-support"/"run_phase12.py")],cwd=ROOT)
-if p.returncode:
-    (E/"REPORT.md").write_text("# Phase13 runtime acceptance\n\nFAIL: Phase12 real-client prerequisite failed\n",encoding="utf-8")
-    raise SystemExit(p.returncode)
+def save(p,v): p.parent.mkdir(parents=True,exist_ok=True); p.write_text(json.dumps(v,ensure_ascii=False,indent=2),encoding="utf-8")
+def load(p):
+ try: cache[p]=json.loads(p.read_text(encoding="utf-8"))
+ except (FileNotFoundError,json.JSONDecodeError,PermissionError): pass
+ return cache.get(p,{})
+def log(p): return p.read_text(encoding="utf-8",errors="replace") if p.exists() else ""
+def state(): return load(server_result)
+def client(n): return load(clients[n][1])
+def packets(n,k): return [p["payload"] for p in client(n).get("packets",[]) if p["type"]==k]
+def pcount(n,k): return len(packets(n,k))
+def msgcount(n,s): return sum(s in x for x in client(n).get("messages",[]))
+def wait(pred,label,timeout=180):
+ end=time.monotonic()+timeout
+ while time.monotonic()<end:
+  if pred(): return
+  if server and server.poll() is not None: raise RuntimeError("Paper exited during "+label+"\n"+log(OUT/"server.log")[-8000:])
+  for n,(p,path,_) in list(clients.items()):
+   if p.poll() is not None: raise RuntimeError(f"{n} exited {p.returncode} during {label}\n"+log(OUT/n/"client.log")[-8000:])
+   if load(path).get("failure"): raise RuntimeError(n+": "+str(load(path)["failure"]))
+  time.sleep(.2)
+ raise TimeoutError(label)
+def check(name,ok,evidence=None):
+ manifest["assertions"].append({"name":name,"passed":bool(ok),"evidence":evidence}); print(("PASS " if ok else "FAIL ")+name,flush=True); save(E/"result.json",manifest)
+ if not ok: raise AssertionError(name)
+def action(n,kind,**kw):
+ p,path,seq=clients[n]; seq+=1; clients[n]=(p,path,seq); save(path.with_name(f"command-{seq}.json"),{"id":seq,"kind":kind,**kw})
+ wait(lambda:client(n).get("completed",0)>=seq,n+" "+kind); manifest["commands"].append({"client":n,"kind":kind,**kw})
+def command(n,text,expected=None):
+ before=msgcount(n,expected) if expected else 0; action(n,"command",text=text)
+ if expected: wait(lambda:msgcount(n,expected)>before,text+" -> "+expected)
+def tap(n,key): action(n,"key",key=key,action=1); action(n,"key",key=key,action=0)
+def session():
+ for s in state().get("sessions",[]):
+  if s.get("lifecycle")=="ACTIVE": return s
+ return {}
+def settled(n):
+ vals=packets(n,"PUBLIC_STATE"); p=vals[-1] if vals else {}
+ return bool(session()) and p.get("expectedNextClientSequence")==session().get("last_client_sequence",-2)+1
+def stop_reels(n):
+ for key,mask,reel in [(263,1,0),(264,3,1),(262,7,2)]:
+  wait(lambda:settled(n),"settled before stop",30)
+  phases=client(n).get("displayPhases") or [0,0,0]; target=(float(phases[reel])+3.0)%21.0
+  action(n,"tap_at_phase",reel=reel,key=key,phase=target)
+  wait(lambda:session().get("stopped_mask")==mask,"stop mask "+str(mask),40)
+def start_server():
+ global server
+ plugins=SERVER/"plugins"; plugins.mkdir(parents=True,exist_ok=True); shutil.copy2(prod["paper"],plugins); shutil.copy2(helper["paper"],plugins)
+ (SERVER/"eula.txt").write_text("eula=true\n"); (SERVER/"server.properties").write_text("\n".join(["server-ip=127.0.0.1","server-port=25591","online-mode=false","enforce-secure-profile=false","max-players=4","view-distance=6","simulation-distance=5","spawn-protection=0","generate-structures=false"])+"\n")
+ h=(OUT/"server.log").open("w",encoding="utf-8"); handles.append(h)
+ server=subprocess.Popen([JAVA,"-Xms512M","-Xmx1536M","-Dpiri.runtime.phase=phase13",f"-Dpiri.runtime.serverResult={server_result}","-jar",str(PAPER),"nogui"],cwd=SERVER,stdin=subprocess.PIPE,stdout=h,stderr=subprocess.STDOUT,text=True,creationflags=FLAGS)
+ wait(lambda:"Done (" in log(OUT/"server.log") and state().get("ready"),"Paper ready",300)
+def start_client(n):
+ folder=OUT/n; folder.mkdir(parents=True,exist_ok=True); result=folder/"client-result.json"
+ work=E/"work"/("client-"+n)
+ if work.exists(): shutil.rmtree(work)
+ work.mkdir(parents=True); (work/"options.txt").write_text("version:3953\nlang:en_us\nrenderDistance:6\nsimulationDistance:5\nmaxFps:30\npauseOnLostFocus:false\nsoundCategory_master:0.0\nskipMultiplayerWarning:true\nonboardAccessibility:false\n")
+ h=(folder/"client.log").open("w",encoding="utf-8"); handles.append(h)
+ cmd=GRADLE+["-PruntimeAcceptance=true",f"-PruntimeScenario={n}",f"-PruntimeRun={RUN}","-PruntimeEvidencePhase=PHASE_13",":runtime-test-client:runClient","--console=plain"]
+ p=subprocess.Popen(cmd,cwd=ROOT,stdout=h,stderr=subprocess.STDOUT,creationflags=FLAGS); clients[n]=(p,result,0)
+ wait(lambda:client(n).get("connected") and client(n).get("handshake"),n+" join",600)
+def stop_all():
+ for n,(p,_,_) in list(clients.items()):
+  if p.poll() is None:
+   try: action(n,"exit"); p.wait(timeout=60)
+   except Exception: p.kill()
+ if server and server.poll() is None:
+  server.stdin.write("stop\n"); server.stdin.flush(); server.wait(timeout=60)
+def entity_count(n):
+ before=msgcount(n,"TEST_ENTITY_COUNT"); command(n,"piritest entitycount","TEST_ENTITY_COUNT")
+ msgs=[x for x in client(n).get("messages",[]) if "TEST_ENTITY_COUNT" in x]; m=re.search(r"total=(\d+) displays=(\d+) armorstands=(\d+)",msgs[-1])
+ return tuple(map(int,m.groups()))
+def capture(n,label):
+ action(n,"capture",label=label); time.sleep(1)
+ src=E/"work"/("client-"+n)/"screenshots"/("phase13-"+label+".png")
+ wait(lambda:src.exists(),label+" screenshot",30); shutil.copy2(src,E/"screenshots"/src.name)
+def remote(n):
+ return client(n).get("remotePresentation",{})
+def machine_view(n,mid):
+ r=remote(n); return r.get(str(mid),r.get(mid,{}))
+def forbidden(v):
+ bad={"setting","internalRole","internal_role","premiumType","premium_type","rng","rngSeed","seed","stopHints"}
+ if isinstance(v,dict): return bool(bad & set(v)) or any(forbidden(x) for x in v.values())
+ if isinstance(v,list): return any(forbidden(x) for x in v)
+ return False
 
-# Static acceptance guards cover invariants that must remain true independent of pixels.
-renderer=(ROOT/"fabric/src/main/java/jp/pirijuggler/fabric/render/WorldCabinetRenderer.java").read_text(encoding="utf-8")
-placement=(ROOT/"fabric/src/main/java/jp/pirijuggler/fabric/render/CabinetPlacement.java").read_text(encoding="utf-8")
-state=(ROOT/"fabric/src/main/java/jp/pirijuggler/fabric/network/RemoteMachineViewState.java").read_text(encoding="utf-8")
-checks={
- "single_world_callback":"WorldRenderEvents.AFTER_ENTITIES.register" in renderer,
- "distance_culling":"32.0" in renderer or "32 * 32" in renderer or "32*32" in renderer,
- "frustum_culling":"frustum" in renderer.lower(),
- "entity_free_renderer":all(x not in renderer for x in ["ArmorStand","DisplayEntity","spawnEntity","addEntity"]),
- "six_facings":all(x in placement for x in ["NORTH","SOUTH","EAST","WEST","UP","DOWN"]),
- "authoritative_stop":"displayStop" in state and "applyStop" in state,
- "public_bonus_only":"bonusMode" in renderer,
- "data_lamp":all(x in renderer for x in ["bigCount","regCount","totalGames"]),
-}
-ok=all(checks.values())
-(E/"result.json").write_text(json.dumps({"pass":ok,"checks":checks},indent=2),encoding="utf-8")
-lines=["# Phase13 runtime acceptance","",f"Result: {'PASS' if ok else 'FAIL'}","",
-       "Real Paper + Fabric prerequisite: PASS (Phase12 harness, including 42-machine remote sync)","",
-       "## Phase13 guards"]+[f"- {'PASS' if v else 'FAIL'} {k}" for k,v in checks.items()]
-lines += ["","NOTE: six-facing pixel screenshots and owner-vs-world visual comparison still require the Phase13 client capture scenario before Phase13 may be marked COMPLETE."]
-(E/"REPORT.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
-raise SystemExit(0 if ok else 1)
+try:
+ start_server(); start_client("phase13-owner"); owner="phase13-owner"; start_client("phase13-spectator"); spec="phase13-spectator"
+ baseline=entity_count(owner)
+ command(owner,"piritest phase13grid","TEST_PHASE13_GRID")
+ wait(lambda:client(spec).get("remoteCacheSize")==42,"42 remote machines",120); after=entity_count(owner)
+ check("feature creates no entities",after==baseline,{"before":baseline,"after":after})
+ check("no Display or ArmorStand renderer entities",after[1]==0 and after[2]==0,{"after":after})
+ views=remote(spec); check("42 cabinets cached simultaneously",len(views)==42,{"count":len(views)})
+ ids=sorted(int(k) for k in views.keys()); expected=["NORTH","SOUTH","EAST","WEST","UP","DOWN"]
+ check("six facing snapshots are deterministic",[machine_view(spec,ids[i]).get("facing") for i in range(6)]==expected,[machine_view(spec,ids[i]).get("facing") for i in range(6)])
+ # Screenshots from each cabinet front, including above/below for vertical facings.
+ cams=[(-8.5,100,-12.5),(-5.5,100,-5.5),(0.5,100,-8.5),(-3.5,100,-8.5),(3.5,104,-8.5),(6.5,96,-8.5)]
+ for i,(cx,cy,cz) in enumerate(cams):
+  command(spec,f"tp @s {cx} {cy} {cz}"); action(spec,"aimpos",x=(i-3)*3,y=100,z=-9); time.sleep(.5); capture(spec,"facing-"+expected[i].lower())
+ # Physical owner fixture overlays machine #2 (SOUTH).
+ mid=ids[1]; command(owner,"setblock -6 100 -10 stone"); command(owner,"setblock -6 100 -9 stone_button[face=wall,facing=south]")
+ command(owner,"tp @s -5.5 99 -6.5"); action(owner,"aimpos",x=-6,y=100,z=-9); action(owner,"clickpos",x=-6,y=100,z=-9)
+ wait(lambda:pcount(owner,"OPEN_MACHINE")>0,"owner open"); command(owner,"piritest fund","TEST_FUNDED"); action(owner,"close"); wait(lambda:not session(),"fund close")
+ action(owner,"clickpos",x=-6,y=100,z=-9); wait(lambda:session().get("credit")==50,"funded reopen")
+ command(owner,"piritest force reg","TEST_FORCE_ARMED"); tap(owner,32); wait(lambda:session().get("game_state")=="NORMAL_BETTED","bet"); tap(owner,32)
+ wait(lambda:session().get("game_state")=="NORMAL_SPINNING" and pcount(owner,"SPIN_START")>0,"spin"); time.sleep(1)
+ stop_reels(owner); wait(lambda:session().get("game_state")=="BONUS_PENDING_REG","pending reg")
+ stop_payloads=packets(owner,"STOP_RESULT")[-3:]; authoritative=[int(x["stopIndex"]) for x in stop_payloads]
+ wait(lambda:machine_view(spec,mid).get("stoppedMask")==7,"spectator stopped",30); world=machine_view(spec,mid).get("displayStops")
+ check("owner authoritative stop indexes equal external cabinet",world==authoritative,{"owner":authoritative,"external":world})
+ check("hidden bonus internals absent before public",not forbidden([p for p in client(spec).get("packets",[]) if p["type"].startswith("REMOTE_MACHINE_")]))
+ capture(owner,"owner-stop"); command(spec,"tp @s -5.5 100 -5.5"); action(spec,"aimpos",x=-6,y=100,z=-9); capture(spec,"external-stop")
+ tap(owner,32); wait(lambda:session().get("game_state")=="BONUS_ENTRY_BETTED_REG","entry bet"); tap(owner,32); wait(lambda:"BONUS_ENTRY_SPINNING_REG"==session().get("game_state"),"entry spin"); time.sleep(1); stop_reels(owner)
+ wait(lambda:session().get("game_state")=="REG_READY","REG ready"); wait(lambda:machine_view(spec,mid).get("bonusMode")=="REG","public REG external",30)
+ check("public REG mode/count reaches cabinet",machine_view(spec,mid).get("bonusMode")=="REG" and machine_view(spec,mid).get("bonusCount") is not None,machine_view(spec,mid))
+ # Redefine to a new EAST-facing button and verify placement update.
+ action(owner,"close"); wait(lambda:not session(),"close before redefine"); command(owner,"setblock 15 100 0 stone"); command(owner,"setblock 14 100 0 stone_button[face=wall,facing=east]")
+ command(owner,"tp @s 17.5 99 0.5"); action(owner,"aimpos",x=14,y=100,z=0); before=pcount(spec,"REMOTE_MACHINE_SNAPSHOT"); command(owner,f"piri machine redefine {mid}")
+ wait(lambda:pcount(spec,"REMOTE_MACHINE_SNAPSHOT")>before and machine_view(spec,mid).get("facing")=="EAST","redefine external",60)
+ check("redefine immediately moves/rotates cabinet",machine_view(spec,mid).get("facing")=="EAST",machine_view(spec,mid))
+ time.sleep(10); check("42-machine renderer remains alive",clients[spec][0].poll() is None and not client(spec).get("failure"))
+ manifest["passed"]=True
+except Exception as e:
+ manifest["failure"]=str(e); print("RUNTIME FAILURE "+str(e),flush=True)
+finally:
+ stop_all(); manifest["finishedAt"]=datetime.datetime.now(datetime.timezone.utc).isoformat(); save(E/"result.json",manifest); save(OUT/"result.json",manifest)
+ report=["# Phase13 Runtime Acceptance","",f"- Run: {RUN}",f"- PASS: {manifest['passed']}","","| Assertion | Result |","|---|---|"]+[f"| {a['name']} | {'PASS' if a['passed'] else 'FAIL'} |" for a in manifest["assertions"]]
+ if manifest.get("failure"): report+=["",f"Failure: `{manifest['failure']}`"]
+ (E/"REPORT.md").write_text("\n".join(report)+"\n",encoding="utf-8")
+ for h in handles:
+  try:h.close()
+  except:pass
+if not manifest["passed"]: raise SystemExit(1)
