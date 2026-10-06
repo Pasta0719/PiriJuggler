@@ -775,8 +775,9 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #statusPanel{position:absolute;left:670px;top:710px;width:900px;height:95px;background:#090B0E;border:4px solid #B68A42;border-radius:18px;z-index:5}
 #statusPanel>div{position:absolute;top:11px;width:170px}
 #statusPanel>div:nth-child(1){left:16px}#statusPanel>div:nth-child(2){left:214px}#statusPanel>div:nth-child(3){left:412px}#statusPanel>div:nth-child(4){left:610px}
-#statusPanel>div:nth-child(5){display:none}
 .statLabel{font-size:18px;line-height:18px;color:#F6F1E7}.statValue{font-size:27px;line-height:27px;font-weight:900;margin-top:15px}
+#mobileMoney{position:absolute;left:1664px;top:730px;width:220px;height:42px;text-align:center;color:#F6F1E7;z-index:7}
+#mobileMoney .statLabel{font-size:14px;line-height:14px}#mobileMoney .statValue{font-size:21px;line-height:21px;margin-top:5px}
 
 .machineControl{position:absolute;z-index:8;border-radius:14px;background:#666A72;padding:4px}
 .machineControl>span{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:10px;background:#C92734;font-size:22px;font-weight:900;text-shadow:2px 2px #190406}
@@ -881,8 +882,8 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 <div><div class="statLabel">BET</div><div id="bet" class="statValue">0</div></div>
 <div><div class="statLabel">PAY</div><div id="pay" class="statValue">0</div></div>
 <div><div class="statLabel">MEDALS</div><div id="medals" class="statValue">0</div></div>
-<div><div class="statLabel">MONEY</div><div id="money" class="statValue">---</div></div>
 </div>
+<div id="mobileMoney"><div class="statLabel">MONEY</div><div id="money" class="statValue">---</div></div>
 <button id="betBtn" class="machineControl"><span>BET</span></button>
 <button id="leverBtn" class="machineControl"><i id="leverStem"></i><i id="leverKnob"></i><b id="leverLabel">LEVER</b></button>
 <button id="leftBtn" class="machineControl stopBtn" data-action="STOP_LEFT" data-reel="0"><span></span><b class="stopText">LEFT</b></button>
