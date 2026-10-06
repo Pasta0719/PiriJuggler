@@ -17,7 +17,7 @@ import jp.pirijuggler.fabric.ui.*;
 public final class PiriJugglerClient implements ClientModInitializer {
     private static final ClientHandshake HANDSHAKE = new ClientHandshake();
     private static final ClientSession SESSION = new ClientSession();
-    private static final RemoteMachineRegistry REMOTE = new RemoteMachineRegistry();
+    private static final RemoteMachineRegistry REMOTE = new RemoteMachineRegistry();\n    private static net.minecraft.registry.RegistryKey<net.minecraft.world.World> LAST_WORLD;
 
     @Override public void onInitializeClient() {
         SlotKeys.register(); PiriSounds.register(); GodLcdTheme.register(); WorldCabinetRenderer.register();
@@ -33,7 +33,11 @@ public final class PiriJugglerClient implements ClientModInitializer {
         }));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> { HANDSHAKE.reset(); SESSION.reset(); REMOTE.reset(); HallAudio.reset(); SlotUi.reset(); }));
         ClientTickEvents.END_CLIENT_TICK.register(PiriJugglerClient::sendHelloWhenChannelAvailable);
-        ClientTickEvents.END_CLIENT_TICK.register(client -> { SlotUi.tick(); HallAudio.drain(REMOTE); });
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            var worldKey=client.world==null?null:client.world.getRegistryKey();
+            if(LAST_WORLD!=null&&worldKey!=null&&!LAST_WORLD.equals(worldKey)){REMOTE.reset();HallAudio.reset();}
+            LAST_WORLD=worldKey;SlotUi.tick();HallAudio.drain(REMOTE);
+        });
         ClientPlayNetworking.registerGlobalReceiver(PiriPayload.ID, (payload, context) -> context.client().execute(() -> {
             try {
                 var envelope = EnvelopeCodec.decode(payload.bytes());
