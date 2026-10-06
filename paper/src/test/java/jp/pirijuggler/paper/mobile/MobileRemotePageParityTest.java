@@ -8,9 +8,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 final class MobileRemotePageParityTest {
     private static String page() throws Exception {
-        Field field=MobileRemoteGateway.class.getDeclaredField("PAGE");
-        field.setAccessible(true);
-        return (String)field.get(null);
+        Path source=Path.of("paper/src/main/java/jp/pirijuggler/paper/mobile/MobileRemoteGateway.java");
+        String text=Files.readString(source, StandardCharsets.UTF_8);
+        String marker="private static final String PAGE = \"\"\"";
+        int start=text.indexOf(marker);
+        if(start<0) throw new IllegalStateException("PAGE text block not found");
+        start+=marker.length();
+        int end=text.indexOf("\"\"\";", start);
+        if(end<0) throw new IllegalStateException("PAGE text block terminator not found");
+        return text.substring(start,end);
     }
 
     @Test
