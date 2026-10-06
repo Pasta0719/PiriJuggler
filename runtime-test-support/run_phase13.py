@@ -64,7 +64,7 @@ def start_server():
  (SERVER/"eula.txt").write_text("eula=true\n"); (SERVER/"server.properties").write_text("\n".join(["server-ip=127.0.0.1","server-port=25591","online-mode=false","enforce-secure-profile=false","max-players=4","view-distance=6","simulation-distance=5","spawn-protection=0","generate-structures=false"])+"\n")
  h=(OUT/"server.log").open("w",encoding="utf-8"); handles.append(h)
  server=subprocess.Popen([JAVA,"-Xms512M","-Xmx1536M","-Dpiri.runtime.phase=phase13",f"-Dpiri.runtime.serverResult={server_result}","-jar",str(PAPER),"nogui"],cwd=SERVER,stdin=subprocess.PIPE,stdout=h,stderr=subprocess.STDOUT,text=True,creationflags=FLAGS)
- wait(lambda:"Done (" in log(OUT/"server.log") and state().get("ready"),"Paper ready",300)
+ wait(lambda:"Done (" in log(OUT/"server.log") and "PIRI_DATABASE_READY" in log(OUT/"server.log"),"Paper ready",300)
 def start_client(n):
  folder=OUT/n; folder.mkdir(parents=True,exist_ok=True); result=folder/"client-result.json"
  work=E/"work"/("client-"+n)
