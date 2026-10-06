@@ -1,6 +1,6 @@
 # MOBILE REMOTE — Unified Phase
 
-Status: IN_PROGRESS — production implementation present / final E2E acceptance required
+Status: BUILD_READY — full static parity audit applied / local build + final E2E acceptance pending
 
 Updated: 2026-10-06
 
@@ -92,3 +92,27 @@ UIスクリーンショットだけでもCOMPLETEにしない。
 - 通常定速は 28 symbols/sec
 - モバイルは Fabric と同じ加速・逆回転プロファイル、停止方向、停止速度上限、図柄サイズ比率を維持する
 - モバイル独自の非等方スケーリングで図柄サイズ比率を崩してはならない
+
+
+## 2026-10-06 full parity audit
+
+Static cross-check completed against current Fabric/Paper production behavior.
+
+- reel normal speed: 28 symbols/sec
+- NORMAL acceleration: 150ms hold + 350ms linear acceleration to -28
+- reverse premium: +12 symbols/sec for 500ms, then 300ms transition to -28
+- RESUME_NORMAL: -28 symbols/sec
+- stop interpolation cap: 28 symbols/sec
+- mobile pressed-index stop path retained
+- ordinary symbol boxes: seven 230x130, BAR 230x150, others 130x130
+- GOD symbol boxes: seven/grape/replay/BAR 230x150, others 130x130
+- portrait mobile reel viewport corrected to 96x139 and symbol scaling made uniform
+- SKILL_STOP cabinet background #111015 retained
+- machine label remains MACHINE <id> without machine type
+- in-machine EXCHANGE button absent
+- prize buy/cash restricted to lobby after leave
+- machine CASH OUT remains separate from prize cash
+- LOAN / INSERT / leave endpoints retained
+- mobile E2E harness already covers pairing, seat, BET/LEVER/STOP, CASH OUT, leave, prize exchange/cash, medal/prize Minecraft↔mobile restoration
+
+No COMPLETE claim is made until the current main is built locally and the E2E runtime is executed.
