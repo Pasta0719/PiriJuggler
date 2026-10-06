@@ -1,0 +1,35 @@
+name: Phase14 hall audio performance
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'fabric/src/main/java/jp/pirijuggler/fabric/ui/HallAudio.java'
+      - 'fabric/src/main/java/jp/pirijuggler/fabric/ui/PiriSounds.java'
+      - 'fabric/src/main/java/jp/pirijuggler/fabric/render/WorldCabinetRenderer.java'
+      - 'fabric/src/main/java/jp/pirijuggler/fabric/network/RemoteMachineRegistry.java'
+      - 'paper/src/main/java/jp/pirijuggler/paper/machine/RemoteMachineSync.java'
+      - 'runtime-test-support/run_phase14.py'
+      - 'runtime-test-support/client/**'
+      - 'runtime-test-support/paper/**'
+      - '.github/workflows/phase14-runtime.yml'
+jobs:
+  phase14:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21' }
+      - uses: gradle/actions/setup-gradle@v4
+      - run: .\gradlew.bat build -PruntimeAcceptance=true --console=plain
+      - shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force runtime-evidence/PHASE_01/work/downloads | Out-Null
+          Invoke-WebRequest https://api.papermc.io/v2/projects/paper/versions/1.21/builds/130/downloads/paper-1.21-130.jar -OutFile runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar
+      - run: python runtime-test-support/run_phase14.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase14-performance-evidence
+          path: runtime-evidence/PHASE_14/
