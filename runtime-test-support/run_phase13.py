@@ -120,8 +120,9 @@ try:
  # Physical owner fixture overlays machine #2 (SOUTH); owner is re-positioned before each reopen.
  mid=ids[1]; command(owner,"setblock -6 100 -10 stone"); command(owner,"setblock -6 100 -9 stone_button[face=wall,facing=south]")
  command(owner,"tp @s -5.5 99 -6.5"); action(owner,"aimpos",x=-6,y=100,z=-9); action(owner,"clickpos",x=-6,y=100,z=-9)
- wait(lambda:pcount(owner,"OPEN_MACHINE")>0,"owner open"); command(owner,"piritest fund","TEST_FUNDED"); wait(lambda:session().get("credit",0)>0,"funded active session")
- check("funded owner session active",session().get("credit",0)>0,session())
+ wait(lambda:pcount(owner,"OPEN_MACHINE")>0,"owner open"); command(owner,"piritest fund","TEST_FUNDED"); action(owner,"close"); wait(lambda:not session(),"fund close")
+ command(owner,"tp @s -5.5 99 -6.5"); action(owner,"aimpos",x=-6,y=100,z=-9); action(owner,"clickpos",x=-6,y=100,z=-9); wait(lambda:session().get("credit")==50,"funded reopen",60)
+ check("funded owner session active",session().get("credit")==50,session())
  command(owner,"piritest force reg","TEST_FORCE_ARMED"); tap(owner,32); wait(lambda:session().get("game_state")=="NORMAL_BETTED","bet"); tap(owner,32)
  wait(lambda:session().get("game_state")=="NORMAL_SPINNING" and pcount(owner,"SPIN_START")>0,"spin"); time.sleep(1)
  stop_reels(owner); wait(lambda:session().get("game_state")=="BONUS_PENDING_REG","pending reg")
