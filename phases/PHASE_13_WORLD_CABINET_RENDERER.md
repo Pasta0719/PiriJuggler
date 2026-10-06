@@ -1,6 +1,6 @@
 # PHASE 13 — Entity-Free World Cabinet Renderer
 
-Status: IN_PROGRESS — IMPLEMENTATION
+Status: COMPLETE
 Depends on: Phase12 COMPLETE
 
 ## 読むもの
@@ -127,3 +127,12 @@ IMPLEMENTATION_STATUS の Phase13 を COMPLETE にし、Phase14 は NOT_STARTED 
 - COMPLETE: lamp OFF/ON/FAST_BLINK_1S, bonus public state, and redefine placement/facing verified through the production remote-state path consumed by WorldCabinetRenderer
 - Verifier-owned fixture/CI/timing failures are classified HARNESS_ERROR/SKIP and are not product failures
 - Phase14 remains NOT_STARTED; do not auto-start it
+
+
+## Completion evidence
+- Real runtime: entity count unchanged; Display/ArmorStand zero; 42 cabinets observed; six facings observed; authoritative owner stop indexes matched external cabinet; hidden bonus internals absent before public; public REG mode/count observed
+- Deterministic production-state tests: lamp OFF/ON/FAST_BLINK_1S, redefine placement/facing, remote spin/stop/snapshot behavior
+- WorldCabinetRenderer consumes the verified RemoteMachineViewState lamp/bonus/placement values directly
+- Normal project build/test PASS on commit 0797b2c7418d82db494021fed84edeccf3442a23 (Piri build run 37429804006)
+- Verifier-owned fixture/CI failures are classified as HARNESS_ERROR/SKIP and are not Phase13 implementation failures
+- Phase14 was not started
