@@ -27,12 +27,13 @@ public final class PiriJugglerClient implements ClientModInitializer {
             HANDSHAKE.reset();
             SESSION.reset();
             REMOTE.reset();
+            HallAudio.reset();
             SlotUi.reset();
             sendHelloWhenChannelAvailable(client);
         }));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> { HANDSHAKE.reset(); SESSION.reset(); REMOTE.reset(); SlotUi.reset(); }));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> { HANDSHAKE.reset(); SESSION.reset(); REMOTE.reset(); HallAudio.reset(); SlotUi.reset(); }));
         ClientTickEvents.END_CLIENT_TICK.register(PiriJugglerClient::sendHelloWhenChannelAvailable);
-        ClientTickEvents.END_CLIENT_TICK.register(client -> SlotUi.tick());
+        ClientTickEvents.END_CLIENT_TICK.register(client -> { SlotUi.tick(); HallAudio.drain(REMOTE); });
         ClientPlayNetworking.registerGlobalReceiver(PiriPayload.ID, (payload, context) -> context.client().execute(() -> {
             try {
                 var envelope = EnvelopeCodec.decode(payload.bytes());
@@ -43,7 +44,7 @@ public final class PiriJugglerClient implements ClientModInitializer {
                         Integer success=REMOTE.pollSkillSuccessSound();
                         if(success!=null){
                             var machine=REMOTE.view(success);
-                            if(machine!=null)jp.pirijuggler.fabric.ui.PiriSounds.playAt("notice",machine.x()+.5,machine.y()+.5,machine.z()+.5);
+                            if(machine!=null)HallAudio.publicNotice(machine,"notice");
                         }
                         return;
                     }
@@ -52,7 +53,7 @@ public final class PiriJugglerClient implements ClientModInitializer {
                     SlotUi.receive(envelope, SESSION, outbound);
                 }
             } catch (RuntimeException exception) {
-                HANDSHAKE.reject(); SESSION.reset(); REMOTE.reset();
+                HANDSHAKE.reject(); SESSION.reset(); REMOTE.reset(); HallAudio.reset();
                 if (SlotUi.hidesHud() || AdminUi.isOpen()) context.client().setScreen(null);
                 SlotUi.reset();
             }
