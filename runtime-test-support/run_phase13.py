@@ -130,6 +130,9 @@ try:
  wait(lambda:machine_view(spec,mid).get("stoppedMask")==7,"spectator stopped",30); world=machine_view(spec,mid).get("displayStops")
  check("owner authoritative stop indexes equal external cabinet",world==authoritative,{"owner":authoritative,"external":world})
  check("hidden bonus internals absent before public",not forbidden([p for p in client(spec).get("packets",[]) if p["type"].startswith("REMOTE_MACHINE_")]))
+ # Lamp must be off in the ordinary pending-REG state.
+ wait(lambda:machine_view(spec,mid).get("lampVisible") is False,"external lamp off",15)
+ check("external lamp OFF matches public state",machine_view(spec,mid).get("lampVisible") is False,machine_view(spec,mid))
  capture(owner,"owner-stop"); command(spec,"tp @s -5.5 100 -5.5"); action(spec,"aimpos",x=-6,y=100,z=-9); capture(spec,"external-stop")
  tap(owner,32); wait(lambda:session().get("game_state")=="BONUS_ENTRY_BETTED_REG","entry bet"); tap(owner,32); wait(lambda:"BONUS_ENTRY_SPINNING_REG"==session().get("game_state"),"entry spin"); time.sleep(1); stop_reels(owner)
  wait(lambda:session().get("game_state")=="REG_READY","REG ready"); wait(lambda:machine_view(spec,mid).get("bonusMode")=="REG","public REG external",30)
