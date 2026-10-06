@@ -8,7 +8,7 @@ import java.util.*;
 public final class HallAudio {
     static final double SE_RADIUS=16.0, BGM_RADIUS=12.0;
     static final float NORMAL_VOLUME=.35f, NOTICE_VOLUME=.45f, BGM_VOLUME=.18f;
-    private record LoopState(String sound,int x,int y,int z,String dimension) {}
+    private record LoopState(String bonusType,String machineType,int x,int y,int z,String dimension) {}
     private static final Map<Integer,LoopState> bonusLoops=new HashMap<>();
 
     public static void publicNotice(RemoteMachineViewState machine,String sound){
@@ -31,21 +31,20 @@ public final class HallAudio {
             if(machine!=null&&inRange(machine,BGM_RADIUS))start(event.machineId(),machine,event.bonusType());
         }
 
-        for(var entry:registry.viewsSnapshot().entrySet()){
-            int id=entry.getKey();
-            RemoteMachineViewState machine=entry.getValue();
+        registry.forEachView((id,machine)->{
             String mode=machine.bonusMode();
-            if("NONE".equals(mode)||!inRange(machine,BGM_RADIUS)){
-                stop(id);
-                continue;
-            }
-            LoopState wanted=loopState(machine,mode);
-            if(!wanted.equals(bonusLoops.get(id)))start(id,machine,mode);
-        }
+            if("NONE".equals(mode)||!inRange(machine,BGM_RADIUS)){stop(id);return;}
+            LoopState current=bonusLoops.get(id);
+            if(!matches(current,machine,mode))start(id,machine,mode);
+        });
 
-        for(int id:new ArrayList<>(bonusLoops.keySet())){
-            RemoteMachineViewState machine=registry.view(id);
-            if(machine==null||"NONE".equals(machine.bonusMode())||!inRange(machine,BGM_RADIUS))stop(id);
+        for(var iterator=bonusLoops.entrySet().iterator();iterator.hasNext();){
+            var entry=iterator.next();
+            RemoteMachineViewState machine=registry.view(entry.getKey());
+            if(machine==null||"NONE".equals(machine.bonusMode())||!inRange(machine,BGM_RADIUS)){
+                PiriSounds.stopRemoteLoop(entry.getKey());
+                iterator.remove();
+            }
         }
     }
 
@@ -53,12 +52,13 @@ public final class HallAudio {
         String sound="BIG".equals(bonusType)?"big_bgm":"reg_bgm";
         String resolved=PiriSounds.forMachine(machine.machineType(),sound);
         PiriSounds.startRemoteLoop(machineId,resolved,machine.x()+.5,machine.y()+1.5,machine.z()+.5);
-        bonusLoops.put(machineId,new LoopState(resolved,machine.x(),machine.y(),machine.z(),machine.dimension()));
+        bonusLoops.put(machineId,new LoopState(bonusType,machine.machineType(),machine.x(),machine.y(),machine.z(),machine.dimension()));
     }
 
-    private static LoopState loopState(RemoteMachineViewState machine,String bonusType){
-        String sound="BIG".equals(bonusType)?"big_bgm":"reg_bgm";
-        return new LoopState(PiriSounds.forMachine(machine.machineType(),sound),machine.x(),machine.y(),machine.z(),machine.dimension());
+    private static boolean matches(LoopState state,RemoteMachineViewState machine,String bonusType){
+        return state!=null&&state.x()==machine.x()&&state.y()==machine.y()&&state.z()==machine.z()
+                &&Objects.equals(state.dimension(),machine.dimension())&&Objects.equals(state.machineType(),machine.machineType())
+                &&Objects.equals(state.bonusType(),bonusType);
     }
 
     private static boolean inRange(RemoteMachineViewState machine,double radius){

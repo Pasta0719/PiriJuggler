@@ -214,6 +214,7 @@ public final class RemoteMachineRegistry {
         return views.get(machineId);
     }
     public Map<Integer,RemoteMachineViewState> viewsSnapshot(){return Map.copyOf(views);}
+    public void forEachView(java.util.function.BiConsumer<Integer,RemoteMachineViewState> consumer){views.forEach(consumer);}
     public Integer pollSkillSuccessSound(){Integer value=skillSuccessSound;skillSuccessSound=null;return value;}
     public AudioEvent pollAudioEvent(){AudioEvent e=soundEvents.poll();return e!=null?e:audioEvents.poll();}
 
