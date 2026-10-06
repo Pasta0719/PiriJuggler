@@ -117,7 +117,7 @@ try:
  cams=[(-8.5,100,-12.5),(-5.5,100,-5.5),(0.5,100,-8.5),(-3.5,100,-8.5),(3.5,104,-8.5),(6.5,96,-8.5)]
  for i,(cx,cy,cz) in enumerate(cams):
   command(spec,f"tp @s {cx} {cy} {cz}"); action(spec,"aimpos",x=(i-3)*3,y=100,z=-9); time.sleep(.5); capture(spec,"facing-"+expected[i].lower())
- # Physical owner fixture overlays machine #2 (SOUTH).
+ # Physical owner fixture overlays machine #2 (SOUTH); owner is re-positioned before each reopen.
  mid=ids[1]; command(owner,"setblock -6 100 -10 stone"); command(owner,"setblock -6 100 -9 stone_button[face=wall,facing=south]")
  command(owner,"tp @s -5.5 99 -6.5"); action(owner,"aimpos",x=-6,y=100,z=-9); action(owner,"clickpos",x=-6,y=100,z=-9)
  wait(lambda:pcount(owner,"OPEN_MACHINE")>0,"owner open"); command(owner,"piritest fund","TEST_FUNDED"); wait(lambda:session().get("credit",0)>0,"funded active session")
