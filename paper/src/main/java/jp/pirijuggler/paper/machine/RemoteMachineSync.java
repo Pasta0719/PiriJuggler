@@ -154,12 +154,18 @@ public final class RemoteMachineSync {
                 copyInt(source, body, "durationMs");
                 broadcast(machineId, PacketType.REMOTE_MACHINE_STOP, body);
             }
+            case TENPAI_SOUND -> {
+                JsonObject sound=base(machineId);sound.addProperty("sound","TENPAI");broadcast(machineId,PacketType.REMOTE_MACHINE_SOUND,sound);
+            }
             case NOTICE -> {
                 JsonObject body = base(machineId);
                 copyString(source, body, "spinId");
                 copyString(source, body, "lamp");
                 copyString(source, body, "pattern");
                 broadcast(machineId, PacketType.REMOTE_MACHINE_NOTICE, body);
+                if(source.has("lamp")&&"ON".equals(source.get("lamp").getAsString())&&!(source.has("skillChallengeSuccess")&&source.get("skillChallengeSuccess").getAsBoolean())){
+                    JsonObject sound=base(machineId);sound.addProperty("sound","NOTICE");broadcast(machineId,PacketType.REMOTE_MACHINE_SOUND,sound);
+                }
                 if(source.has("skillChallengeSuccess")&&source.get("skillChallengeSuccess").getAsBoolean()){
                     JsonObject sound=base(machineId);copyString(source,sound,"spinId");
                     sound.addProperty("skillChallengeSuccess",true);sound.addProperty("sound","NOTICE");
