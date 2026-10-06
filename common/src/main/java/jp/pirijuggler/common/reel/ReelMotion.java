@@ -1,7 +1,7 @@
 package jp.pirijuggler.common.reel;
 /** Shared visual formulas only; the Paper receiver supplies its own time and ping. */
 public final class ReelMotion {
-    public static final double NORMAL_SPEED = 28.0;
+    public static final double NORMAL_SPEED = 21.0;
     public enum Profile {
         // Client gate opens exactly 200 ms after full speed: NORMAL full speed at .500 s,
         // reverse-premium full forward speed at .800 s, and RESUME_NORMAL starts at full speed.
@@ -15,8 +15,8 @@ public final class ReelMotion {
     public static double effectiveMillis(long startNanos,long receiveNanos,int ping){return Math.max(0,(receiveNanos-startNanos)/1_000_000.0-Math.clamp(ping,0,250));}
     public static double delta(Profile profile,double seconds){
         if(!Double.isFinite(seconds))throw new IllegalArgumentException("Non-finite elapsed time");double e=Math.max(0,seconds);
-        return switch(profile){case NORMAL ->e<=.150?0:e<.500?-.5*(NORMAL_SPEED/.350)*(e-.150)*(e-.150):-4.9-NORMAL_SPEED*(e-.500);
-            case REVERSE_500MS ->e<.500?12*e:e<.800?6-.5*(NORMAL_SPEED/.300)*(e-.500)*(e-.500):1.8-NORMAL_SPEED*(e-.800);
+        return switch(profile){case NORMAL ->e<=.150?0:e<.500?-.5*(NORMAL_SPEED/.350)*(e-.150)*(e-.150):-3.675-NORMAL_SPEED*(e-.500);
+            case REVERSE_500MS ->e<.500?12*e:e<.800?6-.5*(NORMAL_SPEED/.300)*(e-.500)*(e-.500):2.85-NORMAL_SPEED*(e-.800);
             case RESUME_NORMAL ->-NORMAL_SPEED*e;};
     }
     public static double phase(Profile profile,double start,double elapsedSec){if(!Double.isFinite(start))throw new IllegalArgumentException("Non-finite phase");return wrap(start+delta(profile,elapsedSec));}
