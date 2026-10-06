@@ -31,10 +31,10 @@ public final class Phase02Observer implements Listener {
             button.setAttachedFace(FaceAttachable.AttachedFace.WALL); button.setFacing(org.bukkit.block.BlockFace.SOUTH);
             world.getBlockAt(x,66,0).setBlockData(button,false);
         }
-        if (java.util.Set.of("phase12","god02","skill02","skill03","skill05","skill06").contains(System.getProperty("piri.runtime.phase", ""))) {
+        if (java.util.Set.of("phase12","phase13","god02","skill02","skill03","skill05","skill06").contains(System.getProperty("piri.runtime.phase", ""))) {
             // Deterministic test platform: keep the automated client at y=65 so its
             // raytrace cannot fall into generated terrain and hit gravel/stone.
-            boolean phase12 = "phase12".equals(System.getProperty("piri.runtime.phase", ""));
+            boolean phase12 = java.util.Set.of("phase12","phase13").contains(System.getProperty("piri.runtime.phase", ""));
             int minZ = phase12 ? -13 : -3, maxZ = phase12 ? 13 : 3;
             // Phase12's compact 7x6 grid spans z=-10..10. Clear the whole
             // player-to-button ray corridor and provide a flat floor under it.
