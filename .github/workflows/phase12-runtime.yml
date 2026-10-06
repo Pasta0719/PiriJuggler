@@ -7,6 +7,7 @@ on:
     paths:
       - 'paper/src/main/java/jp/pirijuggler/paper/mobile/MobileRemoteGateway.java'
       - 'runtime-test-support/run_phase12.py'
+      - 'runtime-test-support/client/build.gradle.kts'
       - 'runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/DevFundCommand.java'
       - 'runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/Phase02Observer.java'
       - '.github/workflows/phase12-runtime.yml'
