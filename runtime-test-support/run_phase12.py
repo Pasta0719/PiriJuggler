@@ -199,7 +199,7 @@ def create_machine(name,x,z,index):
     # Build a deterministic wall-button fixture facing the client before registration.
     command(name,f"setblock {x} 66 {z-1} stone")
     command(name,f"setblock {x} 66 {z} stone_button[face=wall,facing=south]")
-    command(name,f"tp @s {x+0.5} 66 {z+1.8}")
+    command(name,f"tp @s {x+0.5} 65 {z+1.8}")
     action(name,"aimpos",x=x,y=66,z=z);time.sleep(.15)
     before=machine_count();command(name,"piri machine create","MACHINE_CREATED")
     wait(lambda:machine_count()==before+1,f"machine {index} committed")
