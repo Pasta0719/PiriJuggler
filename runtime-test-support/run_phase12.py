@@ -265,6 +265,7 @@ try:
     wait(lambda:pcount(spec,"REMOTE_MACHINE_STOP")>=base["REMOTE_MACHINE_STOP"]+3,"remote three stops")
     pending_packets=[p for p in client(spec).get("packets",[]) if p["type"].startswith("REMOTE_MACHINE_")]
     check("BONUS_PENDING remote stream contains no hidden role/premium/setting state",not any(forbidden_remote_payload(p["payload"]) for p in pending_packets),{"remoteCounts":remote_counts(spec)})
+    wait(lambda:pcount(spec,"REMOTE_MACHINE_NOTICE")>=base["REMOTE_MACHINE_NOTICE"]+1,"remote public notice")
     check("public notice is mirrored to spectator",pcount(spec,"REMOTE_MACHINE_NOTICE")>=base["REMOTE_MACHINE_NOTICE"]+1,remote_counts(spec))
 
     tap(owner,32);wait_state("BONUS_ENTRY_BETTED_REG");tap(owner,32);wait_stoppable(owner,"BONUS_ENTRY_SPINNING_REG")
