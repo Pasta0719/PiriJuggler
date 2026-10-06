@@ -1,4 +1,4 @@
-name: Phase13 world cabinet runtime
+name: Phase13 world cabinet runtime\n# Dedicated acceptance: entity-free renderer + real owner/spectator clients
 
 on:
   push:
