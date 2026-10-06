@@ -960,6 +960,15 @@ function startLoopNamed(name,fallback){
 }
 function startLoop(base){startLoopNamed(machineSound(base),base)}
 function stopAllAudio(){stopLoop()}
+function resetSlotRuntime(){
+ if(queuedLeverTimer){clearTimeout(queuedLeverTimer);queuedLeverTimer=0}
+ stopAllAudio();
+ motion=null;pendingState=null;nextGameAt=0;godPresentationUntil=0;godPresentation=null;
+ godBigAudioPending=false;godBigAudioActive=false;pendingBigBgmAt=0;pendingBigBgmName="";pendingGodHitSound="";
+ noticeOn=false;noticeBlink=false;noticeAt=0;resumeInFlight=false;lastResumeAt=0;lastEventAt=0;lastSnapshotAt=0;
+ godFreezeVisual=false;godFreezeAt=-1;godRevealed=[false,false,false];godRevealAt=[-1,-1,-1];godImpactAt=-1;
+ skillNoticePlayed=[];
+}
 
 function show(name){
  $("pair").classList.toggle("hidden",name!=="pair");
@@ -1443,8 +1452,8 @@ async function cashPrizes(){
  catch(e){$("prizeMsg").textContent=errorText(e)}finally{busy=false}
 }
 function startGame(j){
- show("game");resizeStage();currentType=j.machineType||"";pendingState=null;motion=null;noticeOn=!!j.lampOn;noticeBlink=false;noticeAt=performance.now();lastEventAt=performance.now();skillNoticePlayed=[];
- applyState(j);handleEvents(j.events);pollData();stopTimers();
+ stopTimers();resetSlotRuntime();currentState=null;currentData=null;currentType=j.machineType||"";noticeOn=!!j.lampOn;noticeAt=performance.now();lastEventAt=performance.now();show("game");resizeStage();
+ applyState(j);handleEvents(j.events);pollData();
  const gs=String(j.gameState||"");
  if(gs.startsWith("BIG_")){
   godBigAudioActive=!!j.godFirstBigAudio&&(currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME");godBigAudioPending=false;
@@ -1457,7 +1466,7 @@ function startGame(j){
 function stopTimers(){if(stateTimer)clearInterval(stateTimer);if(eventTimer)clearInterval(eventTimer);if(dataTimer)clearInterval(dataTimer);if(queuedLeverTimer)clearTimeout(queuedLeverTimer);stateTimer=0;eventTimer=0;dataTimer=0;queuedLeverTimer=0}
 async function leave(){
  try{await api("/api/leave","POST")}catch(e){$("gameMessage").textContent=errorText(e);return}
- stopTimers();stopAllAudio();motion=null;pendingState=null;currentState=null;godBigAudioPending=false;godBigAudioActive=false;skillNoticePlayed=[];show("lobby");loadMachines();
+ stopTimers();resetSlotRuntime();currentState=null;currentData=null;currentType="";show("lobby");loadMachines();
 }
 function frame(now){
  if(!$("game").classList.contains("hidden")){
@@ -1480,7 +1489,7 @@ $("betBtn").onclick=function(){doAction("SPACE_ACTION",-1)};$("leverBtn").onclic
 document.querySelectorAll(".stopBtn").forEach(function(b){b.onclick=function(){doAction(b.dataset.action,Number(b.dataset.reel))}});
 $("loanBtn").onclick=loan;$("insertBtn").onclick=insertMedals;$("cashBtn").onclick=cashout;$("leaveBtn").onclick=leave;
 $("prizeRefresh").onclick=loadPrizes;$("buySmall").onclick=function(){buyPrize("small")};$("buyMedium").onclick=function(){buyPrize("medium")};$("buyLarge").onclick=function(){buyPrize("large")};$("cashPrizes").onclick=cashPrizes;
-$("logout").onclick=async function(){try{await api("/api/revoke","POST")}catch(e){}token="";localStorage.removeItem("piriToken");localStorage.removeItem("piriPlayer");show("pair")};
+$("logout").onclick=async function(){try{await api("/api/revoke","POST")}catch(e){}stopTimers();resetSlotRuntime();currentState=null;currentData=null;currentType="";token="";localStorage.removeItem("piriToken");localStorage.removeItem("piriPlayer");show("pair")};
 window.addEventListener("resize",resizeStage);window.addEventListener("orientationchange",function(){setTimeout(resizeStage,50)});
 window.addEventListener("online",function(){pollState(true)});
 window.addEventListener("pageshow",function(){pollState(true)});
