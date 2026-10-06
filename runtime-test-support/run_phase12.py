@@ -116,6 +116,10 @@ def start_client(name):
     folder=OUT/name; folder.mkdir(parents=True,exist_ok=True)
     result=folder/"client-result.json"
     if result.exists(): result.unlink()
+    # A reconnect reuses the evidence folder. Remove stale commands (especially EXIT)
+    # so the fresh runtime client cannot replay instructions from the previous process.
+    for stale in folder.glob("command-*.json"):
+        stale.unlink()
     directory=EVIDENCE/"work"/("client-"+name)
     if directory.exists(): shutil.rmtree(directory)
     directory.mkdir(parents=True,exist_ok=True)
