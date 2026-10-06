@@ -167,11 +167,16 @@ try:
     check("mobile lever starts real production spin","SPINNING" in str(spin.get("gameState","")),spin)
     time.sleep(.7)
     for stop in ("STOP_LEFT","STOP_CENTER","STOP_RIGHT"):
-        for _ in range(20):
-            result=http("POST","/api/action?type="+stop,token,expect=200)
-            if result.get("ok",True): break
-            time.sleep(.15)
-        time.sleep(.1)
+        for _ in range(30):
+            try:
+                result=http("POST","/api/action?type="+stop,token,expect=200)
+                break
+            except AssertionError as failure:
+                if "STOP_TOO_EARLY" not in str(failure): raise
+                time.sleep(.15)
+        else:
+            raise TimeoutError("mobile stop never became available: "+stop)
+        time.sleep(.15)
     after=http("GET","/api/state",token)
     check("mobile third stop commits a non-spinning production state","SPINNING" not in str(after.get("gameState","")),after)
 
