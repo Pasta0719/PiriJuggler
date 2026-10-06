@@ -74,8 +74,12 @@ def settled(name):
     s=session(); p=public(name)
     return bool(s) and p.get("expectedNextClientSequence")==s.get("last_client_sequence",-2)+1
 def wait_stoppable(name,state_name):
-    wait(lambda:settled(name) and session().get("game_state")==state_name and client(name).get("stopEnabled") is True,
+    # Phase12's lightweight observer does not export SlotScreen.stopEnabled.
+    # PUBLIC_STATE sequence convergence proves the production client has consumed
+    # the authoritative spin state; allow one render tick before physical key edges.
+    wait(lambda:settled(name) and session().get("game_state")==state_name,
          "stoppable "+state_name)
+    time.sleep(.25)
 def stop_reels(name,sequence):
     for key,mask in sequence:
         tap(name,key)
