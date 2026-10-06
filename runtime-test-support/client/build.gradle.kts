@@ -23,7 +23,7 @@ val player = when {
     scenario == "pachinko10-peer" -> "PiriRuntimeTest2"
     scenario == "skill06-spectator" || scenario == "skill05-spectator" -> "PiriRuntimeTest2"
     scenario == "phase02-other" || scenario == "phase12-spectator" -> "PiriRuntimeTest2"
-    phase == "PHASE_12" && scenario == "mismatch" -> "PiriRuntimeMismatch"
+    phase == "PHASE_12" && scenario == "mismatch" -> "PiriMismatch"
     else -> "PiriRuntimeTest"
 }
 val port = when (phase) {
