@@ -206,9 +206,7 @@ public final class RemoteMachineRegistry {
         return List.copyOf(views.values());
     }
 
-    public RemoteMachineViewState view(int machineId) {
-        return views.get(machineId);
-    }
+    public RemoteMachineViewState view(int machineId) {\n        return views.get(machineId);\n    }\n    public Map<Integer,RemoteMachineViewState> viewsSnapshot(){return Map.copyOf(views);}
     public Integer pollSkillSuccessSound(){Integer value=skillSuccessSound;skillSuccessSound=null;return value;}\n    public AudioEvent pollAudioEvent(){AudioEvent e=soundEvents.poll();return e!=null?e:audioEvents.poll();}
 
     public void reset() {
