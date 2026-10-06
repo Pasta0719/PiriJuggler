@@ -913,7 +913,7 @@ const $=function(id){return document.getElementById(id)};
 let token=localStorage.getItem("piriToken")||"";
 let player=localStorage.getItem("piriPlayer")||"";
 let stateTimer=0,dataTimer=0,eventTimer=0,currentState=null,currentData=null,currentType="",busy=false;
-let motion=null,pendingState=null,nextGameAt=0,queuedLeverTimer=0,godPresentationUntil=0,godPresentation=null,godBigAudioPending=false,godBigAudioActive=false;
+let motion=null,pendingState=null,nextGameAt=0,queuedLeverTimer=0,godPresentationUntil=0,godPresentation=null,godBigAudioPending=false,godBigAudioActive=false,pendingBigBgmAt=0,pendingBigBgmName="",pendingGodHitSound="",noticeOn=false,noticeBlink=false,noticeAt=0,resumeInFlight=false,lastResumeAt=0,lastEventAt=0,lastSnapshotAt=0;
 
 const fixed=[
 ["grape","replay","grape","seven","piero","grape","replay","grape","cherry","bar","grape","replay","grape","bell","seven","replay","grape","replay","grape","bar","cherry"],
@@ -1034,16 +1034,14 @@ function delta(profile,e){
 function endpoint(from,target){let e=target;while(e>from)e-=21;return e}
 function currentPhase(reel,now){
  if(!currentState)return 0;
- if(!motion||!motion.spinning){const p=presentationPhase(reel,now);if(p!==null)return p}
+ if((!motion||!motion.spinning)&&godPresentation){const p=presentationPhase(reel,now);if(p!==null)return p}
  if(motion){
   const st=motion.stops[reel];
   if(st){
-   let p=st.duration<=0?1:Math.min(1,Math.max(0,(now-st.at)/st.duration));
-   return mod(st.from+(st.end-st.from)*p,21);
+   const p=st.duration<=0?1:Math.min(1,Math.max(0,(now-st.at)/st.duration));
+   return p>=1?mod(st.target,21):mod(st.from+(st.end-st.from)*p,21);
   }
-  if(motion.spinning){
-   return mod(motion.starts[reel]+delta(motion.animation,(now-motion.at)/1000),21);
-  }
+  if(motion.spinning)return mod(motion.starts[reel]+delta(motion.animation,(now-motion.at)/1000),21);
  }
  const names=["left","center","right"],stops=currentState.displayStops||{};
  return Number(stops[names[reel]]||0);
@@ -1110,99 +1108,210 @@ function drawReels(now){
  }
 }
 function nextPendingReel(){
- if(!currentState)return-1;const mask=Number(currentState.stoppedMask||0);for(let r=0;r<3;r++)if((mask&(1<<r))===0)return r;return-1;
+ if(!motion||!motion.spinning)return-1;
+ const names=["left","center","right"];
+ for(let r=0;r<3;r++)if(!motion.stops[r]&&motion.hints&&motion.hints[names[r]])return r;
+ return-1;
 }
 function canStop(reel){
- if(!motion||!motion.spinning||reel<0)return false;
- const lock=Math.max(Number(motion.stopEnableAfterMs||0),motion.godFreeze?1200:0);if(performance.now()-motion.at<lock)return false;
- if(motion.stops[reel])return false;
- const names=["left","center","right"];return !!(motion.hints&&motion.hints[names[reel]]);
+ if(!motion||!motion.spinning||reel<0||Date.now()<godPresentationUntil)return false;
+ if((motion.presses||[]).some(Boolean))return false;
+ const lock=Math.max(Number(motion.stopEnableAfterMs||0),motion.godFreeze?1200:0);
+ if(performance.now()-motion.at<lock||motion.stops[reel])return false;
+ const names=["left","center","right"];
+ return !!(motion.hints&&motion.hints[names[reel]]);
 }
 function localStop(reel,pressed){
- if(!canStop(reel))return;
- const names=["left","center","right"],list=motion.hints[names[reel]],hint=list&&list[pressed];if(!hint)return;
- const now=performance.now(),from=currentPhase(reel,now),end=endpoint(from,Number(hint.stopIndex)),exact=(from-end)/28*1000,duration=Math.max(Number(hint.durationMs||0),Math.ceil(exact-1e-9));
- motion.stops[reel]={from:from,end:end,target:Number(hint.stopIndex),at:now,duration:duration};
- motion.hints=Object.assign({},motion.hints);delete motion.hints[names[reel]];
+ if(!canStop(reel))return null;
+ const names=["left","center","right"],list=motion.hints[names[reel]],hint=list&&list[pressed];
+ if(!hint)return null;
+ const now=performance.now(),from=currentPhase(reel,now),target=Number(hint.stopIndex),end=endpoint(from,target);
+ const exact=(from-end)/28*1000,duration=Math.max(Number(hint.durationMs||0),Math.ceil(exact-1e-9));
+ motion.stops[reel]={from:from,end:end,target:target,at:now,duration:duration};
+ motion.presses[reel]={pressedIndex:pressed,stopIndex:target,at:now};
  if(motion.godFreeze){
   const n=motion.stops.filter(Boolean).length;
   playNamed("juggler_god_god_stop_"+Math.max(1,Math.min(3,n)),machineSound("stop"));
  }else playSound("stop");
- if(motion.stops.filter(Boolean).length===3)nextGameAt=Math.max(nextGameAt,motion.at+2000);
+ if(motion.stops.filter(Boolean).length===3){
+  nextGameAt=Math.max(nextGameAt,motion.at+2000);
+  motion.godImpactAt=Math.max.apply(null,[now].concat((motion.revealAt||[]).filter(function(v){return v>=0})));
+ }
+ return pressed;
 }
 function handleEvents(events){
  (events||[]).forEach(function(ev){
-  const p=ev.payload||{};
-  if(ev.type==="SPIN_START"){
-   const freeze=!!p.godFreeze;
+  const p=ev.payload||{},type=ev.type||"",now=performance.now();
+  lastEventAt=now;
+  if(type==="PUBLIC_STATE"){
+   applyState(Object.assign({},currentState||{},p,{seated:true,machineType:currentType}));
+   return;
+  }
+  if(type==="SPIN_START"){
+   const freeze=!!p.godFreeze,resumed=p.animation==="RESUME_NORMAL";
    if(queuedLeverTimer){clearTimeout(queuedLeverTimer);queuedLeverTimer=0}
-   if(freeze)stopAllAudio();
-   motion={spinId:p.spinId||"",animation:p.animation||"NORMAL",godFreeze:freeze,at:performance.now(),starts:[Number(p.startPhase.left),Number(p.startPhase.center),Number(p.startPhase.right)],stopEnableAfterMs:Number(p.stopEnableAfterMs||0),hints:p.stopHints||{},stops:[null,null,null],spinning:true};
-   if(p.animation!=="RESUME_NORMAL")playNamed(freeze?"juggler_god_god_freeze":machineSound("lever"),freeze?"god_freeze":"lever");
-  }else if(ev.type==="REEL_STOP"&&motion){
-   const map={LEFT:0,CENTER:1,RIGHT:2},r=map[p.reel];if(r===undefined)return;
-   if(!motion.stops[r]){
-    const now=performance.now(),from=currentPhase(r,now),end=endpoint(from,Number(p.stopIndex)),duration=Math.max(Number(p.durationMs||0),Math.ceil((from-end)/28*1000-1e-9));
-    motion.stops[r]={from:from,end:end,target:Number(p.stopIndex),at:now,duration:duration};
+   if(freeze){
+    stopAllAudio();godBigAudioPending=true;pendingBigBgmAt=0;pendingBigBgmName="";pendingGodHitSound="";
    }
-   motion.hints=p.nextStopHints||motion.hints;
+   motion={
+    spinId:String(p.spinId||""),animation:String(p.animation||"NORMAL"),godFreeze:freeze,at:now,
+    starts:[Number((p.startPhase||{}).left||0),Number((p.startPhase||{}).center||0),Number((p.startPhase||{}).right||0)],
+    stopEnableAfterMs:Number(p.stopEnableAfterMs||0),hints:Object.assign({},p.stopHints||{}),
+    stops:[null,null,null],presses:[null,null,null],spinning:true,revealed:[false,false,false],revealAt:[-1,-1,-1],godImpactAt:-1
+   };
+   if(resumed&&currentState){
+    const mask=Number(currentState.stoppedMask||0),ds=currentState.displayStops||{},vals=[Number(ds.left||0),Number(ds.center||0),Number(ds.right||0)];
+    for(let r=0;r<3;r++)if((mask&(1<<r))!==0){
+     motion.stops[r]={from:vals[r],end:vals[r],target:vals[r],at:now,duration:0};
+     if(freeze){motion.revealed[r]=true;motion.revealAt[r]=now-250}
+    }
+   }
+   if(!resumed)playNamed(freeze?"juggler_god_god_freeze":machineSound("lever"),freeze?"god_freeze":"lever");
+   if(godBigAudioActive&&currentState&&String(currentState.gameState||"")==="BIG_SPINNING")
+    startLoopNamed("juggler_god_god_big_bgm",machineSound("big_bgm"));
+   return;
+  }
+  if(type==="REEL_STOP"){
+   if(!motion||!motion.spinning||!p.spinId||String(p.spinId)!==String(motion.spinId))return;
+   const map={LEFT:0,CENTER:1,RIGHT:2},r=map[p.reel];if(r===undefined)return;
+   const target=Number(p.stopIndex),pressed=p.pressedIndex==null?-1:Number(p.pressedIndex),press=motion.presses[r];
+   if(press&&press.pressedIndex===pressed&&press.stopIndex===target){
+    motion.presses[r]=null;
+    if(motion.stops[r])motion.stops[r].target=target;
+   }else{
+    motion.presses[r]=null;
+    const from=currentPhase(r,now),end=endpoint(from,target),duration=Math.max(Number(p.durationMs||0),Math.ceil((from-end)/28*1000-1e-9));
+    motion.stops[r]={from:from,end:end,target:target,at:now,duration:duration};
+   }
+   if(p.nextStopHints)motion.hints=Object.assign({},p.nextStopHints);
+   if(motion.godFreeze){
+    motion.revealed[r]=true;
+    const st=motion.stops[r];motion.revealAt[r]=st?st.at+st.duration:now;
+   }
+   if(motion.stops.filter(Boolean).length===3){
+    nextGameAt=Math.max(nextGameAt,motion.at+2000);
+    motion.godImpactAt=Math.max.apply(null,[now].concat((motion.revealAt||[]).filter(function(v){return v>=0})));
+   }
+   return;
+  }
+  if(type==="NOTICE"){
+   if(motion&&p.spinId&&String(p.spinId)!==String(motion.spinId))return;
+   noticeOn=p.lamp==="ON";noticeBlink=p.pattern==="FAST_BLINK_1S";noticeAt=now;
+   if(currentState)currentState=Object.assign({},currentState,{lampOn:noticeOn});
+   return;
+  }
+  if(type==="ACTION_REJECTED"||type==="ERROR"){
+   if(motion){
+    for(let r=0;r<3;r++)if(motion.presses[r]){motion.presses[r]=null;motion.stops[r]=null}
+   }
+   return;
   }
  });
 }
 function visualBusy(){
  if(!motion)return false;const now=performance.now();for(let r=0;r<3;r++){const st=motion.stops[r];if(st&&now<st.at+st.duration)return true}return false;
 }
+function effectiveLampOn(now){
+ if(!noticeOn)return false;
+ if(!noticeBlink)return true;
+ const e=now-noticeAt;
+ return e>=1000||Math.floor(e/100)%2===0;
+}
+function renderLamp(){
+ const on=effectiveLampOn(performance.now()),godlike=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME",img=$("lamp");
+ const src=asset("lamp/piri_chance_"+(on?"on":"off")+".png");if(img.getAttribute("src")!==src)img.setAttribute("src",src);
+ img.style.objectFit=godlike?"contain":"fill";
+ img.style.filter=on?"drop-shadow(-4px 0 rgba(255,255,255,.18)) drop-shadow(4px 0 rgba(255,255,255,.18)) drop-shadow(0 4px rgba(255,255,255,.18))":"none";
+}
+function reconcileStoppedFromSnapshot(j){
+ if(!motion||!motion.spinning||!j||!String(j.gameState||"").includes("SPINNING"))return;
+ if(j.spinId&&String(j.spinId)!==String(motion.spinId))return;
+ const mask=Number(j.stoppedMask||0),ds=j.displayStops||{},vals=[Number(ds.left||0),Number(ds.center||0),Number(ds.right||0)],now=performance.now();
+ for(let r=0;r<3;r++)if((mask&(1<<r))!==0&&!motion.stops[r]){
+  motion.stops[r]={from:vals[r],end:vals[r],target:vals[r],at:now,duration:0};
+  if(motion.godFreeze){motion.revealed[r]=true;motion.revealAt[r]=now-250}
+ }
+}
+function needsResume(j){
+ return !!j&&String(j.gameState||"").includes("SPINNING")&&(!motion||!motion.spinning||!j.spinId||String(j.spinId)!==String(motion.spinId));
+}
+async function requestResume(reason){
+ if(resumeInFlight||!currentState||!String(currentState.gameState||"").includes("SPINNING"))return;
+ const now=performance.now();if(now-lastResumeAt<300)return;lastResumeAt=now;resumeInFlight=true;
+ try{
+  const j=await api("/api/resume","POST");
+  if(j&&j.seated){applyState(j);handleEvents(j.events);reconcileStoppedFromSnapshot(j);$("gameMessage").textContent=""}
+ }catch(e){$("gameMessage").textContent=errorText(e)}
+ finally{resumeInFlight=false}
+}
 function applyState(j){
- currentState=j;currentType=j.machineType||currentType;
- const firstGodBig=!!j.godFirstBigAudio&&(currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME");
+ if(!j)return;
+ currentState=Object.assign({},currentState||{},j);currentType=currentState.machineType||currentType;lastSnapshotAt=performance.now();
+ noticeOn=!!currentState.lampOn;
+ const firstGodBig=!!currentState.godFirstBigAudio&&(currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME");
  if(firstGodBig)godBigAudioPending=true;
- const presentationEpoch=Number(j.godPresentationStartMs||0);
+ const presentationEpoch=Number(currentState.godPresentationStartMs||0);
  if(presentationEpoch>0){
   godPresentationUntil=Math.max(godPresentationUntil,presentationEpoch+15000);
   if(!godPresentation||godPresentation.epoch!==presentationEpoch){
-   const ds=j.displayStops||{},starts=[Number(ds.left||0),Number(ds.center||0),Number(ds.right||0)];
+   const ds=currentState.displayStops||{},starts=[Number(ds.left||0),Number(ds.center||0),Number(ds.right||0)];
    let at=performance.now()-Math.max(0,Date.now()-presentationEpoch);
    if(motion&&motion.godFreeze){for(const st of motion.stops)if(st)at=Math.max(at,st.at+st.duration)}
    godPresentation={epoch:presentationEpoch,at:at,starts:starts};
   }
  }else if(Date.now()>=godPresentationUntil){godPresentationUntil=0;godPresentation=null}
- $("machineLabel").textContent="MACHINE "+j.machineId;
- $("credit").textContent=j.credit||0;$("bet").textContent=j.bet||0;$("pay").textContent=j.pay||0;$("medals").textContent=j.heldMedals||0;
- $("money").textContent=j.vaultBalance==null?"---":Number(j.vaultBalance).toLocaleString();
- if(j.loanAmount!=null){$("loanBtn").querySelector("span").textContent="LOAN "+Number(j.loanAmount).toLocaleString();}
- const godlike=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME";
- $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);const skillstop=currentType==="SKILL_STOP";$("stage").classList.toggle("skillstop",skillstop);$("skillChallenge").style.display=skillstop?"flex":"none";$("skillRemaining").style.display="none";
- $("lamp").src=asset("lamp/piri_chance_"+(j.lampOn?"on":"off")+".png");$("lamp").style.objectFit=godlike?"contain":"fill";$("lamp").style.filter=j.lampOn?"drop-shadow(-4px 0 rgba(255,255,255,.18)) drop-shadow(4px 0 rgba(255,255,255,.18)) drop-shadow(0 4px rgba(255,255,255,.18))":"none";
- const gs=String(j.gameState||"");
- $("stateText").textContent=gs==="REPLAY_READY"?"REPLAY":(gs.startsWith("BIG_")||gs.startsWith("REG_"))?(skillstop&&j.skillRemaining!=null?"残り "+j.skillRemaining+"G":"COUNT "+Number(j.bonusCount||0)):"";
- $("stockLamp").style.display=godlike?"flex":"none";$("stockLamp").classList.toggle("on",godlike&&!!j.stockLampOn);
- if(currentType==="SKILL_STOP"){
-  $("skillRemaining").textContent="";
-  const challenge=j.skillChallenge&&j.skillChallenge!=="AUTO"?String(j.skillChallenge).toLowerCase():"";
-  const challengeImg=$("skillChallengeImg");
-  if(challenge){challengeImg.src=asset("symbols/"+challenge+".png");challengeImg.style.display="block"}else{challengeImg.removeAttribute("src");challengeImg.style.display="none"}
- }else{
-  $("skillRemaining").textContent="";$("skillChallengeImg").removeAttribute("src");$("skillChallengeImg").style.display="none";
- }
- if(!String(j.gameState||"").includes("SPINNING")&&!visualBusy())motion=null;
- if(!Number(j.godPresentationStartMs||0)&&Date.now()>=godPresentationUntil){godPresentationUntil=0;godPresentation=null}
- updateControlState();
+ reconcileStoppedFromSnapshot(currentState);
+ $("machineLabel").textContent="MACHINE "+currentState.machineId;
+ $("credit").textContent=currentState.credit||0;$("bet").textContent=currentState.bet||0;$("pay").textContent=currentState.pay||0;$("medals").textContent=currentState.heldMedals||0;
+ $("money").textContent=currentState.vaultBalance==null?"---":Number(currentState.vaultBalance).toLocaleString();
+ if(currentState.loanAmount!=null)$("loanBtn").querySelector("span").textContent="LOAN "+Number(currentState.loanAmount).toLocaleString();
+ const godlike=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME",skillstop=currentType==="SKILL_STOP";
+ $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);$("stage").classList.toggle("skillstop",skillstop);
+ $("skillChallenge").style.display=skillstop?"flex":"none";
+ const gs=String(currentState.gameState||"");
+ $("replayText").textContent=gs==="REPLAY_READY"?"REPLAY":"";
+ $("countText").textContent=(gs.startsWith("BIG_")||gs.startsWith("REG_"))?(skillstop&&currentState.skillRemaining!=null?"残り "+currentState.skillRemaining+"G":"COUNT "+Number(currentState.bonusCount||0)):"";
+ $("stockLamp").style.display=godlike?"flex":"none";$("stockLamp").classList.toggle("on",godlike&&!!currentState.stockLampOn);
+ if(skillstop){
+  const challenge=currentState.skillChallenge&&currentState.skillChallenge!=="AUTO"?String(currentState.skillChallenge).toLowerCase():"",img=$("skillChallengeImg");
+  if(challenge){img.src=asset("symbols/"+challenge+".png");img.style.display="block"}else{img.removeAttribute("src");img.style.display="none"}
+ }else{$("skillChallengeImg").removeAttribute("src");$("skillChallengeImg").style.display="none"}
+ if(!gs.includes("SPINNING")&&!visualBusy()&&(!godPresentation||Date.now()>=godPresentationUntil)){if(motion)motion.spinning=false}
+ if(!presentationEpoch&&Date.now()>=godPresentationUntil){godPresentationUntil=0;godPresentation=null}
+ renderLamp();updateControlState();
 }
 function renderState(j){
- handleEvents(j.events);
- if(visualBusy()&&currentState&&String(currentState.gameState||"").includes("SPINNING")&&!String(j.gameState||"").includes("SPINNING"))pendingState=j;
- else applyState(j);
+ const events=j&&j.events||[];
+ if(!currentState||events.length===0)applyState(j);
+ else{
+  currentState=Object.assign({},currentState,{
+   loanAmount:j.loanAmount,loanMedals:j.loanMedals,loanAvailable:j.loanAvailable,vaultBalance:j.vaultBalance
+  });
+ }
+ if(events.length)handleEvents(events);
+ if(j&&needsResume(j)){applyState(j);requestResume("render")}
 }
 function updateControlState(){
- const spinning=currentState&&String(currentState.gameState||"").includes("SPINNING");
- const presentation=Date.now()<godPresentationUntil;
- $("betBtn").disabled=presentation;
- $("leverBtn").disabled=presentation;
+ const spinning=currentState&&String(currentState.gameState||"").includes("SPINNING"),presentation=Date.now()<godPresentationUntil;
+ const leverReady=currentState&&["NORMAL_BETTED","REPLAY_READY","BONUS_ENTRY_BETTED_BIG","BONUS_ENTRY_BETTED_REG","BIG_BETTED","REG_BETTED"].includes(String(currentState.gameState||""));
+ $("betBtn").disabled=presentation||spinning;
+ $("leverBtn").disabled=presentation||spinning||(!leverReady&&currentState&&String(currentState.gameState||"")!=="SEATED_READY");
  $("loanBtn").disabled=presentation||!currentState||currentState.loanAvailable===false;
  [["leftBtn",0],["centerBtn",1],["rightBtn",2]].forEach(function(x){$(x[0]).disabled=presentation||(spinning?!canStop(x[1]):true)});
 }
-async function pollState(){
- try{const j=await api("/api/state");if(!j.seated){stopTimers();show("lobby");loadMachines();return}if(!visualBusy())renderState(j)}catch(e){$("gameMessage").textContent=errorText(e)}
+async function pollState(force){
+ try{
+  const j=await api("/api/state");
+  if(!j.seated){stopTimers();stopAllAudio();motion=null;currentState=null;show("lobby");loadMachines();return}
+  const now=performance.now();
+  if(!currentState){applyState(j);if(needsResume(j))requestResume("initial");return}
+  currentState=Object.assign({},currentState,{loanAmount:j.loanAmount,loanMedals:j.loanMedals,loanAvailable:j.loanAvailable,vaultBalance:j.vaultBalance});
+  if(needsResume(j)){applyState(j);requestResume("snapshot");return}
+  reconcileStoppedFromSnapshot(j);
+  const mismatch=String(currentState.gameState||"")!==String(j.gameState||"")||String(currentState.spinId||"")!==String(j.spinId||"");
+  if(force||(mismatch&&!visualBusy()&&now-lastEventAt>750))applyState(j);
+  else{renderLamp();updateControlState()}
+ }catch(e){$("gameMessage").textContent=errorText(e)}
 }
 async function pollEvents(){
  try{
@@ -1210,30 +1319,30 @@ async function pollEvents(){
   if(j.events&&j.events.length){
    handleEvents(j.events);
    j.events.forEach(function(ev){
-    const p=ev.payload||{};
-    if(ev.type==="PUBLIC_STATE")applyState(Object.assign({},currentState||{},p,{seated:true,machineType:currentType}));
-    else if(ev.type==="NOTICE"){
-     if(p.lamp==="ON"&&currentState){currentState=Object.assign({},currentState,{lampOn:true});$("lamp").src=asset("lamp/piri_chance_on.png")}
-     if(p.lamp==="OFF"&&currentState){currentState=Object.assign({},currentState,{lampOn:false});$("lamp").src=asset("lamp/piri_chance_off.png")}
-     const snd=p.sound||"";
-     if(snd==="NOTICE")playSound("notice");
-     else if(snd==="NOTICE_STRONG")playSound("notice_strong");
-     else if(snd==="NOTICE_X5"){for(let n=0;n<5;n++)setTimeout(function(){playSound("notice")},n*100)}
-    }else if(ev.type==="TENPAI_SOUND")playSound("tenpai");
-    else if(ev.type==="PAYOUT")playSound("payout");
-    else if(ev.type==="BONUS_START"){
-     const type=p.bonusType||"BONUS";$("gameMessage").textContent=type+" START";
-     if(type==="BIG"){
-      const godMachine=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME";
-      const godFirst=godMachine&&(godBigAudioPending||!!(currentState&&currentState.godFirstBigAudio));
-      godBigAudioPending=false;godBigAudioActive=godFirst;
-      const start=godFirst?"juggler_god_god_bonus_start":machineSound("bonus_start");
-      const fallback=machineSound("bonus_start");playNamed(start,fallback);
-      setTimeout(function(){startLoopNamed(godFirst?"juggler_god_god_big_bgm":machineSound("big_bgm"),machineSound("big_bgm"))},4500);
-     }else if(type==="REG"){godBigAudioPending=false;godBigAudioActive=false;startLoop("reg_bgm")}
-    }else if(ev.type==="BONUS_END"){
-     const type=p.bonusType||"BONUS";$("gameMessage").textContent=type+" END";stopLoop();
-     if(type==="BIG"){
+    const p=ev.payload||{},type=ev.type||"";
+    if(type==="NOTICE"){
+     const snd=p.sound||"";if(snd==="NOTICE")playSound("notice");else if(snd==="NOTICE_STRONG")playSound("notice_strong");else if(snd==="NOTICE_X5")for(let n=0;n<5;n++)setTimeout(function(){playSound("notice")},n*100);
+    }else if(type==="TENPAI_SOUND"){
+     if(!motion||!p.spinId||String(p.spinId)===String(motion.spinId))playSound("tenpai");
+    }else if(type==="PAYOUT")playSound("payout");
+    else if(type==="BONUS_START"){
+     const bonus=p.bonusType||"BONUS";$("gameMessage").textContent=bonus+" START";
+     if(bonus==="BIG"){
+      const godMachine=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME",godBig=godMachine&&(godBigAudioPending||!!(currentState&&currentState.godFirstBigAudio));
+      godBigAudioPending=false;godBigAudioActive=godBig;
+      const start=godBig?"juggler_god_god_bonus_start":machineSound("bonus_start"),fallback=machineSound("bonus_start");
+      if(godBig){
+       pendingBigBgmAt=0;pendingBigBgmName="";
+       if(godPresentation){
+        const delay=Math.max(0,godPresentation.at-performance.now());setTimeout(function(){playNamed(start,fallback)},delay);
+       }else pendingGodHitSound=start;
+      }else{
+       playNamed(start,fallback);pendingBigBgmName=machineSound("big_bgm");pendingBigBgmAt=performance.now()+4500;
+      }
+     }else if(bonus==="REG"){godBigAudioPending=false;godBigAudioActive=false;pendingBigBgmAt=0;pendingBigBgmName="";startLoop("reg_bgm")}
+    }else if(type==="BONUS_END"){
+     const bonus=p.bonusType||"BONUS";$("gameMessage").textContent=bonus+" END";pendingBigBgmAt=0;pendingBigBgmName="";pendingGodHitSound="";stopLoop();
+     if(bonus==="BIG"){
       const godFirstEnd=godBigAudioActive&&(currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME");
       playNamed(godFirstEnd?"juggler_god_god_bonus_end":machineSound("bonus_end"),machineSound("bonus_end"));
      }
@@ -1275,17 +1384,16 @@ async function doAction(type,reel){
  if(busy||!currentState)return;
  unlockAudio();
  if(Date.now()<godPresentationUntil)return;
- const beforeState=String(currentState.gameState||"");
- const leverReady=["NORMAL_BETTED","REPLAY_READY","BONUS_ENTRY_BETTED_BIG","BONUS_ENTRY_BETTED_REG","BIG_BETTED","REG_BETTED"].includes(beforeState);
+ const beforeState=String(currentState.gameState||""),leverReady=["NORMAL_BETTED","REPLAY_READY","BONUS_ENTRY_BETTED_BIG","BONUS_ENTRY_BETTED_REG","BIG_BETTED","REG_BETTED"].includes(beforeState);
  if(type==="SPACE_ACTION"&&!beforeState.includes("SPINNING")&&leverReady&&performance.now()<nextGameAt){
   if(!queuedLeverTimer)queuedLeverTimer=setTimeout(function(){queuedLeverTimer=0;doAction("SPACE_ACTION",-1)},Math.max(0,nextGameAt-performance.now()));
   return;
  }
  let pressed=null;
  if(type.indexOf("STOP_")===0){
-  if(!canStop(reel))return;pressed=Math.floor(currentPhase(reel,performance.now()));localStop(reel,pressed);
- }else if(type==="SPACE_ACTION"&&String(currentState.gameState||"").includes("SPINNING")){
-  reel=nextPendingReel();if(!canStop(reel))return;pressed=Math.floor(currentPhase(reel,performance.now()));localStop(reel,pressed);
+  if(!canStop(reel))return;pressed=Math.floor(currentPhase(reel,performance.now()));if(localStop(reel,pressed)===null)return;
+ }else if(type==="SPACE_ACTION"&&beforeState.includes("SPINNING")){
+  reel=nextPendingReel();if(!canStop(reel))return;pressed=Math.floor(currentPhase(reel,performance.now()));if(localStop(reel,pressed)===null)return;
  }
  busy=true;
  try{
@@ -1293,8 +1401,10 @@ async function doAction(type,reel){
   const j=await api(path,"POST");
   if(type==="SPACE_ACTION"&&!beforeState.includes("SPINNING")&&!beforeState.includes("BETTED")&&beforeState!=="REPLAY_READY")playSound("bet");
   renderState(j);$("gameMessage").textContent="";
- }catch(e){playSound("error");$("gameMessage").textContent=errorText(e);await pollState()}
- finally{busy=false}
+ }catch(e){
+  if(motion)for(let r=0;r<3;r++)if(motion.presses[r]){motion.presses[r]=null;motion.stops[r]=null}
+  playSound("error");$("gameMessage").textContent=errorText(e);await pollState(true);
+ }finally{busy=false}
 }
 async function loan(){unlockAudio();if(busy)return;busy=true;try{renderState(await api("/api/loan","POST"));$("gameMessage").textContent=""}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
 async function insertMedals(){unlockAudio();if(busy)return;busy=true;try{renderState(await api("/api/insert","POST"));$("gameMessage").textContent=""}catch(e){$("gameMessage").textContent=errorText(e)}finally{busy=false}}
@@ -1321,15 +1431,16 @@ async function cashPrizes(){
  catch(e){$("prizeMsg").textContent=errorText(e)}finally{busy=false}
 }
 function startGame(j){
- show("game");resizeStage();currentType=j.machineType||"";renderState(j);pollData();stopTimers();
+ show("game");resizeStage();currentType=j.machineType||"";pendingState=null;motion=null;noticeOn=!!j.lampOn;noticeBlink=false;noticeAt=performance.now();lastEventAt=performance.now();
+ applyState(j);handleEvents(j.events);pollData();stopTimers();
  const gs=String(j.gameState||"");
  if(gs.startsWith("BIG_")){
-  godBigAudioActive=!!j.godFirstBigAudio&&(currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME");
-  godBigAudioPending=false;
+  godBigAudioActive=!!j.godFirstBigAudio&&(currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME");godBigAudioPending=false;
   startLoopNamed(godBigAudioActive?"juggler_god_god_big_bgm":machineSound("big_bgm"),machineSound("big_bgm"));
  }else if(gs.startsWith("REG_")){godBigAudioPending=false;godBigAudioActive=false;startLoop("reg_bgm")}
  else{godBigAudioPending=false;godBigAudioActive=false}
- stateTimer=setInterval(pollState,250);eventTimer=setInterval(pollEvents,100);dataTimer=setInterval(pollData,1500);
+ if(needsResume(j))requestResume("start");
+ stateTimer=setInterval(function(){pollState(false)},250);eventTimer=setInterval(pollEvents,100);dataTimer=setInterval(pollData,1500);
 }
 function stopTimers(){if(stateTimer)clearInterval(stateTimer);if(eventTimer)clearInterval(eventTimer);if(dataTimer)clearInterval(dataTimer);if(queuedLeverTimer)clearTimeout(queuedLeverTimer);stateTimer=0;eventTimer=0;dataTimer=0;queuedLeverTimer=0}
 async function leave(){
@@ -1338,9 +1449,16 @@ async function leave(){
 }
 function frame(now){
  if(!$("game").classList.contains("hidden")){
+  if(pendingGodHitSound&&godPresentation){
+   const hit=pendingGodHitSound;pendingGodHitSound="";
+   const delay=Math.max(0,godPresentation.at-now);setTimeout(function(){playNamed(hit,machineSound("bonus_start"))},delay);
+  }
+  if(pendingBigBgmAt>0&&now>=pendingBigBgmAt){
+   pendingBigBgmAt=0;const name=pendingBigBgmName;pendingBigBgmName="";if(name)startLoopNamed(name,"big_bgm");
+  }
   drawReels(now);
   if(pendingState&&!visualBusy()){const j=pendingState;pendingState=null;applyState(j)}
-  updateControlState();
+  renderLamp();updateControlState();
  }
  requestAnimationFrame(frame);
 }
@@ -1351,6 +1469,10 @@ $("loanBtn").onclick=loan;$("insertBtn").onclick=insertMedals;$("cashBtn").oncli
 $("prizeRefresh").onclick=loadPrizes;$("buySmall").onclick=function(){buyPrize("small")};$("buyMedium").onclick=function(){buyPrize("medium")};$("buyLarge").onclick=function(){buyPrize("large")};$("cashPrizes").onclick=cashPrizes;
 $("logout").onclick=async function(){try{await api("/api/revoke","POST")}catch(e){}token="";localStorage.removeItem("piriToken");localStorage.removeItem("piriPlayer");show("pair")};
 window.addEventListener("resize",resizeStage);window.addEventListener("orientationchange",function(){setTimeout(resizeStage,50)});
+window.addEventListener("online",function(){pollState(true)});
+window.addEventListener("pageshow",function(){pollState(true)});
+document.addEventListener("visibilitychange",function(){if(!document.hidden)pollState(true)});
+window.addEventListener("focus",function(){pollState(true)});
 requestAnimationFrame(frame);
 if(token){
  $("player").textContent=player;
