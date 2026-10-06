@@ -729,24 +729,22 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #game{position:fixed;inset:0;background:#000000;z-index:30;overflow:hidden;touch-action:manipulation}
 #stageWrap{position:absolute;inset:0;overflow:hidden}
 #stage{position:absolute;width:1920px;height:1080px;transform-origin:0 0;background:#000000;color:#F6F1E7;font-family:Arial,sans-serif;user-select:none}
-.panel{position:absolute;background:#090B0E;border:2px solid #B68A42}
+.panel{position:absolute;background:#090B0E;border:4px solid #B68A42;border-radius:18px}
 #dataTop{left:20px;top:12px;width:1880px;height:270px}
 #dataLeft{left:18px;top:325px;width:275px;height:430px}
 #dataRight{left:1645px;top:325px;width:257px;height:430px}
 
-#cabinet{position:absolute;left:290px;top:205px;width:1340px;height:835px;background:#3C0A10;border:6px solid #B68A42;box-shadow:inset 0 0 0 4px #E4C174}
+#cabinet{position:absolute;left:290px;top:205px;width:1340px;height:835px;background:#3C0A10;border:4px solid #B68A42;border-radius:18px;overflow:hidden}
 #cabinet.godlike{
- background:
-  linear-gradient(to bottom,
-   transparent 0,transparent 24px,
-   rgba(255,241,184,.40) 24px,rgba(255,241,184,.40) 34px,
-   transparent 34px,transparent 38px,
-   rgba(255,247,214,.14) 38px,rgba(255,247,214,.14) 42px,
-   transparent 42px,transparent 656px,
-   rgba(74,44,8,.23) 656px,rgba(74,44,8,.23) 666px,
-   transparent 666px),
-  linear-gradient(to bottom,#E9D07A,#64410D);
+ background:linear-gradient(to bottom,#E9D07A,#64410D);
  border-color:#E4C174
+}
+#cabinet.godlike:before{
+ content:"";position:absolute;left:14px;right:14px;top:20px;height:18px;pointer-events:none;
+ background:linear-gradient(to bottom,rgba(255,241,184,.40) 0 10px,transparent 10px 14px,rgba(255,247,214,.14) 14px 18px)
+}
+#cabinet.godlike:after{
+ content:"";position:absolute;left:14px;right:14px;bottom:20px;height:10px;pointer-events:none;background:rgba(74,44,8,.23)
 }
 
 #reelBacking{position:absolute;left:670px;top:300px;width:900px;height:390px;background:#8A8175}
@@ -760,11 +758,11 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #stage.skillstop #dataTop,#stage.skillstop #dataLeft,#stage.skillstop #dataRight{background:#090B0E!important;border-color:#B68A42!important}
 .sym{position:absolute;pointer-events:none}
 .godReveal{position:absolute;display:none;pointer-events:none;object-fit:contain;z-index:7}
-#replayText{position:absolute;left:950px;top:810px;width:200px;text-align:center;font-size:32px;font-weight:900;color:#F6F1E7;z-index:7}
-#countText{position:absolute;left:990px;top:810px;width:200px;text-align:center;font-size:32px;font-weight:900;color:#F6F1E7;z-index:7}
+#replayText{position:absolute;left:1050px;top:816px;transform:translateX(-50%);font-size:18px;line-height:18px;font-weight:900;color:#F6F1E7;z-index:7;white-space:nowrap}
+#countText{position:absolute;left:1090px;top:816px;transform:translateX(-50%);font-size:18px;line-height:18px;font-weight:900;color:#F6F1E7;z-index:7;white-space:nowrap}
 #stockLamp{position:absolute;left:1390px;top:835px;width:150px;height:58px;border-radius:14px;background:#34363b;display:none;align-items:center;justify-content:center;z-index:7;padding:6px}
 #stockInner{width:138px;height:46px;border-radius:10px;background:#090B0E;display:flex;align-items:center;justify-content:center}
-#stockText{font-size:29px;font-weight:900;color:#555861}
+#stockText{font-size:16px;line-height:16px;font-weight:900;color:#190406}
 #stockLamp.on{background:#58e36a}
 #stockLamp.on #stockText{color:#58e36a;text-shadow:0 0 8px #58e36a}
 #cabinet.godlike{overflow:hidden}
@@ -774,9 +772,11 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #skillChallengeImg{display:none;max-width:100%;max-height:100%;object-fit:contain}
 #skillRemaining{display:none}
 
-#statusPanel{position:absolute;left:670px;top:710px;width:900px;height:95px;background:#090B0E;border:2px solid #B68A42;display:grid;grid-template-columns:repeat(4,198px);column-gap:0;padding:10px 18px;z-index:5}
+#statusPanel{position:absolute;left:670px;top:710px;width:900px;height:95px;background:#090B0E;border:4px solid #B68A42;border-radius:18px;z-index:5}
+#statusPanel>div{position:absolute;top:11px;width:170px}
+#statusPanel>div:nth-child(1){left:16px}#statusPanel>div:nth-child(2){left:214px}#statusPanel>div:nth-child(3){left:412px}#statusPanel>div:nth-child(4){left:610px}
 #statusPanel>div:nth-child(5){display:none}
-.statLabel{font-size:24px;color:#B9BCC2}.statValue{font-size:36px;font-weight:900;margin-top:4px}
+.statLabel{font-size:18px;line-height:18px;color:#F6F1E7}.statValue{font-size:27px;line-height:27px;font-weight:900;margin-top:15px}
 
 .machineControl{position:absolute;z-index:8;border-radius:14px;background:#666A72;padding:4px}
 .machineControl>span{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:10px;background:#C92734;font-size:22px;font-weight:900;text-shadow:2px 2px #190406}
