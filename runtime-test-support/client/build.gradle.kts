@@ -13,12 +13,12 @@ dependencies {
 }
 
 val scenario = providers.gradleProperty("runtimeScenario").orElse("normal").get()
-require(scenario in setOf("normal", "mismatch", "phase02-create", "phase02-owner", "phase02-other", "phase03-ui", "phase04-reels", "phase05-game", "phase12-owner", "phase12-spectator", "god02-main", "next02-main", "next04-main", "next05-game", "skill02-main", "skill03-main", "skill05-main", "skill05-spectator", "skill06-main", "skill06-spectator", "pachinko10-owner", "pachinko10-peer"))
+require(scenario in setOf("normal", "mismatch", "phase02-create", "phase02-owner", "phase02-other", "phase03-ui", "phase04-reels", "phase05-game", "phase12-owner", "phase12-spectator", "god02-main", "next02-main", "next04-main", "next05-game", "skill02-main", "skill03-main", "skill05-main", "skill05-spectator", "skill06-main", "skill06-spectator", "pachinko10-owner", "pachinko10-peer", "mobile-e2e"))
 val phase = providers.gradleProperty("runtimeEvidencePhase").orElse(if (scenario.startsWith("phase02")) "PHASE_02" else "PHASE_01").get()
-require(phase in setOf("PHASE_01", "PHASE_02", "PHASE_02_PHASE01_REGRESSION", "PHASE_03", "PHASE_03_PHASE01_REGRESSION", "PHASE_04", "PHASE_04_PHASE01_REGRESSION", "PHASE_05", "PHASE_05_PHASE01_REGRESSION", "PHASE_05_REEL_REGRESSION", "PHASE_05_BAR_BIG", "PHASE_05_BAR_REG", "PHASE_12", "GOD_PHASE_02", "NEXT_PHASE_02", "NEXT_PHASE_04", "NEXT_PHASE_05", "SKILL_STOP_PHASE_02", "SKILL_STOP_PHASE_03", "SKILL_STOP_PHASE_05", "SKILL_STOP_PHASE_06", "PACHINKO_PHASE_10"))
+require(phase in setOf("PHASE_01", "PHASE_02", "PHASE_02_PHASE01_REGRESSION", "PHASE_03", "PHASE_03_PHASE01_REGRESSION", "PHASE_04", "PHASE_04_PHASE01_REGRESSION", "PHASE_05", "PHASE_05_PHASE01_REGRESSION", "PHASE_05_REEL_REGRESSION", "PHASE_05_BAR_BIG", "PHASE_05_BAR_REG", "PHASE_12", "GOD_PHASE_02", "NEXT_PHASE_02", "NEXT_PHASE_04", "NEXT_PHASE_05", "SKILL_STOP_PHASE_02", "SKILL_STOP_PHASE_03", "SKILL_STOP_PHASE_05", "SKILL_STOP_PHASE_06", "PACHINKO_PHASE_10", "MOBILE_E2E"))
 val runtimeRun = providers.gradleProperty("runtimeRun").orElse("current").get()
 require(runtimeRun.matches(Regex("[a-zA-Z0-9_-]+")))
-val evidenceDirectory = rootProject.file(if (phase == "PACHINKO_PHASE_10") "runtime-evidence/$phase/attempts/$runtimeRun/$scenario" else if (phase == "SKILL_STOP_PHASE_06" || phase == "SKILL_STOP_PHASE_05" || phase == "SKILL_STOP_PHASE_03" || phase == "SKILL_STOP_PHASE_02" || phase == "GOD_PHASE_02" || phase == "NEXT_PHASE_02" || phase == "NEXT_PHASE_04" || phase == "NEXT_PHASE_05") "runtime-evidence/$phase/attempts/$runtimeRun" else if (phase == "PHASE_02" || phase == "PHASE_03" || phase == "PHASE_12" || (phase == "PHASE_04" || phase == "PHASE_05_REEL_REGRESSION") || (phase == "PHASE_05" || phase.startsWith("PHASE_05_BAR_"))) "runtime-evidence/$phase/attempts/$runtimeRun/$scenario" else "runtime-evidence/$phase/$scenario")
+val evidenceDirectory = rootProject.file(if (phase == "MOBILE_E2E") "runtime-evidence/$phase/attempts/$runtimeRun/$scenario" else if (phase == "PACHINKO_PHASE_10") "runtime-evidence/$phase/attempts/$runtimeRun/$scenario" else if (phase == "SKILL_STOP_PHASE_06" || phase == "SKILL_STOP_PHASE_05" || phase == "SKILL_STOP_PHASE_03" || phase == "SKILL_STOP_PHASE_02" || phase == "GOD_PHASE_02" || phase == "NEXT_PHASE_02" || phase == "NEXT_PHASE_04" || phase == "NEXT_PHASE_05") "runtime-evidence/$phase/attempts/$runtimeRun" else if (phase == "PHASE_02" || phase == "PHASE_03" || phase == "PHASE_12" || (phase == "PHASE_04" || phase == "PHASE_05_REEL_REGRESSION") || (phase == "PHASE_05" || phase.startsWith("PHASE_05_BAR_"))) "runtime-evidence/$phase/attempts/$runtimeRun/$scenario" else "runtime-evidence/$phase/$scenario")
 val player = when {
     scenario == "pachinko10-peer" -> "PiriRuntimeTest2"
     scenario == "skill06-spectator" || scenario == "skill05-spectator" -> "PiriRuntimeTest2"
@@ -27,6 +27,7 @@ val player = when {
     else -> "PiriRuntimeTest"
 }
 val port = when (phase) {
+    "MOBILE_E2E" -> "25605"
     "PACHINKO_PHASE_10" -> "25604"
     "SKILL_STOP_PHASE_06" -> "25603"
     "SKILL_STOP_PHASE_05" -> "25602"
