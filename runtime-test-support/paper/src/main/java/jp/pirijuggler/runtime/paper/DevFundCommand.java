@@ -57,6 +57,7 @@ public final class DevFundCommand implements CommandExecutor {
         }
         if (args.length >= 1 && args[0].equalsIgnoreCase("fund")) return fund(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("phase13fund")) return phase13Fund(sender,args);
+        if (args.length >= 1 && args[0].equalsIgnoreCase("phase13snapshot")) return phase13Snapshot(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("force")) return force(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("heaven")) return heaven(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("skillreset")) return skillReset(sender,args);
@@ -266,6 +267,21 @@ public final class DevFundCommand implements CommandExecutor {
         return true;
     }
 
+
+    private boolean phase13Snapshot(CommandSender sender,String[] args) {
+        Player target=sender instanceof Player player?player:null;
+        if(target==null){sender.sendMessage("PLAYER_REQUIRED");return true;}
+        var production=production(sender);if(production==null)return true;
+        Session session=production.machines().snapshot().session(target.getUniqueId());
+        if(session==null){sender.sendMessage("TEST_PHASE13_SNAPSHOT_NO_SESSION");return true;}
+        try{
+            Field remoteField=production.machines().getClass().getDeclaredField("remote");remoteField.setAccessible(true);
+            var remote=(jp.pirijuggler.paper.machine.RemoteMachineSync)remoteField.get(production.machines());
+            remote.broadcastSnapshot(session.machine());
+            sender.sendMessage("TEST_PHASE13_SNAPSHOT machine="+session.machine());
+        }catch(ReflectiveOperationException error){sender.sendMessage("TEST_PHASE13_SNAPSHOT_FAILED "+error);}
+        return true;
+    }
 
     private boolean phase13Fund(CommandSender sender,String[] args) {
         Player target=sender instanceof Player player?player:null;
