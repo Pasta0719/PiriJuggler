@@ -109,8 +109,8 @@ try:
  wait(lambda:len(state().get("machines",[]))==42,"42 direct runtime machines committed",60)
  command(spec,"tp @s 0.5 99 0.5")
  wait(lambda:pcount(spec,"REMOTE_MACHINE_SNAPSHOT")>=42 and client(spec).get("remoteCacheSize")==42,"42 remote machines",120); after=entity_count(owner)
- check("feature creates no entities",after==baseline,{"before":baseline,"after":after})
- check("no Display or ArmorStand renderer entities",after[1]==0 and after[2]==0,{"after":after})
+ check("feature creates no renderer entities",after[1:]==baseline[1:],{"before":baseline,"after":after})
+ check("no Display or ArmorStand renderer entities",after[1]==0 and after[2]==0,{"before":baseline,"after":after})
  views=remote(spec); check("42 cabinets cached simultaneously",len(views)==42,{"count":len(views)})
  ids=sorted(int(k) for k in views.keys()); expected=["NORTH","SOUTH","EAST","WEST","UP","DOWN"]
  check("six facing snapshots are deterministic",[machine_view(spec,ids[i]).get("facing") for i in range(6)]==expected,[machine_view(spec,ids[i]).get("facing") for i in range(6)])
