@@ -26,6 +26,7 @@ public final class EconomyStore {
         public RecoveryCashoutPlan { bundles=List.copyOf(bundles); }
     }
     public record InsertCandidate(int slot, UUID bundleId, int amount) { }
+    public record WalletStashPlan(String transactionId, long amount, List<InsertCandidate> candidates) { public WalletStashPlan { candidates = List.copyOf(candidates); } }
     public record InsertReplacement(int slot, UUID oldBundleId, int oldAmount, UUID newBundleId, int newAmount, int consumed) { }
     public record InsertPlan(String transactionId, int inserted, int creditBefore, long sequenceBefore,
                              List<InsertReplacement> replacements, Session session) {
@@ -241,6 +242,43 @@ public final class EconomyStore {
             db.sql("UPDATE cashout_transactions SET delivered_amount=?,pending_amount=?,status='COMPLETED',updated_at=? WHERE transaction_id=?",deliveredAmount,pendingAmount,now,transactionId);
             return null;
         });
+    }
+
+    /**
+     * Converts the player's real inventory medal bundles into the durable mobile wallet.
+     * Called while the quitting player's inventory is still available. Bundle retirement
+     * and wallet credit happen atomically in SQLite before the Bukkit inventory is cleared.
+     */
+    public WalletStashPlan stashInventoryToWallet(UUID player, List<InsertCandidate> candidates, long now) throws Exception {
+        Objects.requireNonNull(candidates);
+        return db.transaction(() -> {
+            ensureUnlimitedTable();
+            if (candidates.isEmpty()) return new WalletStashPlan(null, 0, List.of());
+            Set<UUID> seen = new HashSet<>();
+            JsonArray beforeJson = new JsonArray();
+            long total = 0;
+            for (InsertCandidate candidate : candidates) {
+                if (candidate.slot() < 0 || candidate.slot() > 35 || candidate.amount() < 1
+                        || candidate.amount() > MedalToken.MAX_AMOUNT || !seen.add(candidate.bundleId()))
+                    throw new DomainException("INVALID_ITEM");
+                requireUsableBundle(candidate.bundleId(), candidate.amount());
+                total = Math.addExact(total, candidate.amount());
+                beforeJson.add(bundleJson(candidate.bundleId(), candidate.amount(), candidate.slot()));
+            }
+            String tx = UUID.randomUUID().toString();
+            for (InsertCandidate candidate : candidates)
+                setBundleState(candidate.bundleId(), "ACTIVE", "RETIRED", now);
+            addPending(player, total, now);
+            db.sql("INSERT INTO medal_inventory_transactions(transaction_id,player_uuid,operation,before_bundle_json,after_bundle_json,container_snapshot_json,status,created_at,updated_at) VALUES(?,?,'MOBILE_WALLET_STASH',?,?,'{\"container\":\"PLAYER_INVENTORY\"}','LEDGER_COMMITTED',?,?)",
+                    tx, player.toString(), beforeJson.toString(), "[]", now, now);
+            return new WalletStashPlan(tx, total, candidates);
+        });
+    }
+
+    public void markWalletStashApplied(String transactionId, long now) throws Exception {
+        if (transactionId == null) return;
+        db.sql("UPDATE medal_inventory_transactions SET status='APPLIED',updated_at=? WHERE transaction_id=? AND status='LEDGER_COMMITTED'",
+                now, transactionId);
     }
 
     public InsertPlan prepareInsert(UUID player, UUID sessionId, int machine, long sequence,
