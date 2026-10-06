@@ -124,7 +124,7 @@ public final class WorldCabinetRenderer {
                     UiConstants.color("JUGGLER_GOD_GOLD_HIGHLIGHT"),0,0,1,1);
         }else{
             quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.015,CabinetPlacement.HEIGHT-.015,.0006,
-                    UiConstants.color("CABINET_BG"),0,0,1,1);
+                    UiConstants.color("SKILL_STOP".equals(state.machineType())?"SKILL_STOP_CABINET_BG":"CABINET_BG"),0,0,1,1);
         }
 
         // SlotScreen reel separator: (670,300)-(1570,690), mapped inside CABINET.
