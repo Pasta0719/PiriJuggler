@@ -4506,9 +4506,9 @@ e = effectiveElapsedSec
 if e <= 0.150: d=0
 if 0.150 < e < 0.500:
   a=e-0.150
-  d=-0.5*(18/0.350)*a*a
+  d=-0.5*(28/0.350)*a*a
 if e >=0.500:
-  d=-3.15 - 18*(e-0.500)
+  d=-4.9 - 28*(e-0.500)
 phase=(startPhase+d) mod21
 ```
 
@@ -4523,15 +4523,15 @@ REVERSE_500MS:
 0<=e<0.500: d=12*e
 0.500<=e<0.800:
   a=e-0.500
-  d=6 - 0.5*(18/0.300)*a*a
+  d=6 - 0.5*(28/0.300)*a*a
  e>=0.800:
-  d=3.3 - 18*(e-0.800)
+  d=1.8 - 28*(e-0.800)
 ```
 STOP server threshold750ms(client spec800ms with50ms tolerance)。
 
 RESUME_NORMAL:
 - startPhase = suspend snapshot phase
-- packet receive直後から通常方向へ28 symbols/sec定速（index減少、`d=-18*e`）
+- packet receive直後から通常方向へ28 symbols/sec定速（index減少、`d=-28*e`）
 - client STOP enabled200ms
 - server threshold150ms
 - premium animation/soundを再実行しない
