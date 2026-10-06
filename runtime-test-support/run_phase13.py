@@ -126,6 +126,7 @@ try:
  wait(lambda:session().get("game_state")=="NORMAL_SPINNING" and pcount(owner,"SPIN_START")>0,"spin"); time.sleep(1)
  stop_reels(owner); wait(lambda:session().get("game_state")=="BONUS_PENDING_REG","pending reg")
  authoritative=[int(session()["display_left_stop"]),int(session()["display_center_stop"]),int(session()["display_right_stop"])]
+ command(spec,"tp @s -5.5 100 -5.5"); action(spec,"aimpos",x=-6,y=100,z=-9)
  wait(lambda:machine_view(spec,mid).get("stoppedMask")==7,"spectator stopped",30); world=machine_view(spec,mid).get("displayStops")
  check("owner authoritative stop indexes equal external cabinet",world==authoritative,{"owner":authoritative,"external":world})
  check("hidden bonus internals absent before public",not forbidden([p for p in client(spec).get("packets",[]) if p["type"].startswith("REMOTE_MACHINE_")]))
