@@ -226,10 +226,12 @@ juggler_god_extreme:
     }
 
     @EventHandler public void onQuit(PlayerQuitEvent event) {
-        handshake.disconnect(event.getPlayer().getUniqueId());
+        Player player = event.getPlayer();
+        handshake.disconnect(player.getUniqueId());
         if (machines != null) {
-            machines.remoteViewerGone(event.getPlayer().getUniqueId());
-            machines.disconnect(event.getPlayer().getUniqueId());
+            machines.stashInventoryForMobile(player);
+            machines.remoteViewerGone(player.getUniqueId());
+            machines.disconnect(player.getUniqueId());
         }
     }
 
