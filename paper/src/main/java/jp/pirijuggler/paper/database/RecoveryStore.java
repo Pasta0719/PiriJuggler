@@ -7,6 +7,7 @@ import jp.pirijuggler.common.reel.Reel;
 import jp.pirijuggler.paper.game.GameRules;
 import jp.pirijuggler.paper.game.JugglerGodRuntime;
 import jp.pirijuggler.paper.game.JugglerGodTransitions;
+import jp.pirijuggler.paper.game.SkillStopBonus;
 import jp.pirijuggler.paper.game.god.GodMachineRuntime;
 import jp.pirijuggler.paper.game.PremiumPolicy;
 import jp.pirijuggler.paper.game.RoleWeights;
@@ -164,6 +165,75 @@ public final class RecoveryStore {
         db.sql("INSERT INTO economy_transactions(transaction_id,player_uuid,operation,vault_amount,item_snapshot_json,balance_before,status,created_at,updated_at) VALUES(?,?,'FORCE_SETTLEMENT',0,?,NULL,'APPLIED',?,?)",
                 settlementId,before.player().toString(),before.state().name(),now,now);
         return new Session(values);
+    }
+
+    /**
+     * Explicit forced settlement used only when a mobile/REMOTE owner joins Minecraft.
+     * Normal recovery keeps preserving unfinished SKILL_STOP; this path intentionally
+     * converts the already-confirmed SKILL_STOP entitlement to medals so the machine
+     * can be released immediately without deleting earned rights.
+     */
+    public Session settleRemoteLogin(Session before,long now) throws Exception {
+        if(before.ready())return before;
+        String machineType=String.valueOf(row("SELECT machine_type FROM machines WHERE machine_id=?",before.machine()).get("machine_type"));
+        if(!"SKILL_STOP".equals(machineType))return settle(before,now);
+
+        String settlementId=settlementTransactionId(before);
+        var prior=db.rows("SELECT transaction_id FROM economy_transactions WHERE transaction_id=?",settlementId);
+        if(!prior.isEmpty()){
+            var current=db.rows("SELECT * FROM player_sessions WHERE session_id=?",before.id().toString());
+            if(current.size()!=1)throw new IllegalStateException("Settled session missing: "+before.id());
+            Session settled=new Session(current.getFirst());
+            if(!settled.ready())throw new IllegalStateException("Settlement marker exists for unresolved session: "+before.id());
+            return settled;
+        }
+
+        int machine=before.machine();
+        String period=before.text("source_business_period_id");
+        Stats stats=new Stats(row("SELECT * FROM machine_period_stats WHERE machine_id=? AND business_period_id=?",machine,period));
+        Map<String,Object> values=new LinkedHashMap<>(before.snapshot());
+        settleSkillStopRemoteLogin(before,values,stats,now);
+        finish(values,now);
+
+        db.sql("UPDATE player_sessions SET game_state=?,credit=?,held_medals=?,spin_id=?,internal_role=?,premium_type=?,notice_state=?,lamp_on=?,bonus_type=?,bonus_payout_count=?,current_bet=?,pay_display=?,display_left_stop=?,display_center_stop=?,display_right_stop=?,stopped_mask=?,phase_left=?,phase_center=?,phase_right=?,motion_profile=?,machine_state_json=?,last_activity=? WHERE session_id=?",
+                values.get("game_state"),values.get("credit"),values.get("held_medals"),values.get("spin_id"),values.get("internal_role"),values.get("premium_type"),values.get("notice_state"),values.get("lamp_on"),values.get("bonus_type"),values.get("bonus_payout_count"),values.get("current_bet"),values.get("pay_display"),values.get("display_left_stop"),values.get("display_center_stop"),values.get("display_right_stop"),values.get("stopped_mask"),values.get("phase_left"),values.get("phase_center"),values.get("phase_right"),values.get("motion_profile"),values.get("machine_state_json"),values.get("last_activity"),before.id().toString());
+        db.sql("UPDATE machine_period_stats SET total_games=?,big_count=?,reg_count=?,current_games=?,today_difference=?,today_max_difference=?,last_bonus_type=?,last_bonus_at=? WHERE machine_id=? AND business_period_id=?",
+                stats.total,stats.big,stats.reg,stats.current,stats.difference,stats.max,stats.lastBonus,stats.lastBonusAt,machine,period);
+        db.sql("UPDATE machines SET last_left_stop=?,last_center_stop=?,last_right_stop=?,updated_at=? WHERE machine_id=?",
+                values.get("display_left_stop"),values.get("display_center_stop"),values.get("display_right_stop"),now,machine);
+        db.sql("INSERT INTO economy_transactions(transaction_id,player_uuid,operation,vault_amount,item_snapshot_json,balance_before,status,created_at,updated_at) VALUES(?,?,'FORCE_SETTLEMENT',0,?,NULL,'APPLIED',?,?)",
+                settlementId,before.player().toString(),"REMOTE_LOGIN_SKILL_STOP",now,now);
+        return new Session(values);
+    }
+
+    private void settleSkillStopRemoteLogin(Session before,Map<String,Object> values,Stats stats,long now) throws Exception {
+        long currentBet=before.number("current_bet");
+        switch(before.state()){
+            case NORMAL_BETTED -> {
+                addAssets(values,currentBet);stats.addDifference(currentBet);
+            }
+            case NORMAL_SPINNING -> {
+                addAssets(values,currentBet);stats.addDifference(currentBet);
+                if(stats.total>0)stats.total--;
+                if(stats.current>0)stats.current--;
+            }
+            case REPLAY_READY -> {
+                addAssets(values,3);stats.addDifference(3);graph(values,stats,now);
+            }
+            case BONUS_PENDING_BIG,BONUS_PENDING_REG,BONUS_ENTRY_BETTED_BIG,BONUS_ENTRY_BETTED_REG,
+                    BONUS_ENTRY_SPINNING_BIG,BONUS_ENTRY_SPINNING_REG -> {
+                String type=before.state().name().contains("BIG")?"BIG":"REG";
+                long games=SkillStopBonus.initial(type);
+                long net=Math.addExact(currentBet,Math.multiplyExact(games,12L));
+                addAssets(values,net);stats.addDifference(net);addBonus(stats,values,type,now);stats.current=0;graph(values,stats,now);
+            }
+            case BIG_READY,BIG_BETTED,BIG_SPINNING,REG_READY,REG_BETTED,REG_SPINNING -> {
+                int remaining=SkillStopBonus.read(before).remaining();
+                long net=Math.addExact(currentBet,Math.multiplyExact((long)remaining,12L));
+                addAssets(values,net);stats.addDifference(net);stats.current=0;graph(values,stats,now);
+            }
+            case SEATED_READY -> { }
+        }
     }
 
     static String settlementTransactionId(Session session){
