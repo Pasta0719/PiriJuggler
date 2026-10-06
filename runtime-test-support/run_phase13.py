@@ -137,13 +137,11 @@ try:
  tap(owner,32); wait(lambda:session().get("game_state")=="BONUS_ENTRY_BETTED_REG","entry bet"); tap(owner,32); wait(lambda:"BONUS_ENTRY_SPINNING_REG"==session().get("game_state"),"entry spin"); time.sleep(1); stop_reels(owner)
  wait(lambda:session().get("game_state")=="REG_READY","REG ready"); wait(lambda:machine_view(spec,mid).get("bonusMode")=="REG","public REG external",30)
  check("public REG mode/count reaches cabinet",machine_view(spec,mid).get("bonusMode")=="REG" and machine_view(spec,mid).get("bonusCount") is not None,machine_view(spec,mid))
- # Lamp acceptance uses the production premium-B NOTICE path (plain REG does not guarantee NOTICE).
- # Finish the forced REG first, then exercise one deterministic public NOTICE.
- for _ in range(8):
-  tap(owner,32); wait(lambda:session().get("game_state")=="REG_BETTED","REG bet")
-  tap(owner,32); wait(lambda:session().get("game_state")=="REG_SPINNING","REG spin")
-  time.sleep(1); stop_reels(owner)
-  wait(lambda:session().get("game_state") in ("REG_READY","SEATED_READY"),"REG settle")
+ # Lamp acceptance is independent of the REG lifecycle: use another real cabinet/session.
+ action(owner,"close"); wait(lambda:not session(),"close before lamp cabinet")
+ command(owner,"tp @s -2.5 99 -6.5"); action(owner,"aimpos",x=-3,y=100,z=-9); action(owner,"clickpos",x=-3,y=100,z=-9)
+ wait(lambda:bool(session()),"lamp cabinet open",30); lamp_mid=int(session()["machine"])
+ command(owner,"piritest phase13fund","TEST_PHASE13_FUNDED"); wait(lambda:session().get("credit")==50,"lamp funded",30)
  notice_before=pcount(spec,"REMOTE_MACHINE_NOTICE")
  command(owner,"piritest force B","TEST_FORCE_ARMED"); tap(owner,32); wait(lambda:session().get("game_state")=="NORMAL_BETTED","notice bet"); tap(owner,32)
  wait(lambda:session().get("game_state")=="NORMAL_SPINNING","notice spin"); time.sleep(1)
@@ -151,7 +149,7 @@ try:
  wait(lambda:pcount(spec,"REMOTE_MACHINE_NOTICE")>notice_before,"external public notice",30)
  samples=[]
  for _ in range(12):
-  samples.append(bool(machine_view(spec,mid).get("lampVisible"))); time.sleep(.1)
+  samples.append(bool(machine_view(spec,lamp_mid).get("lampVisible"))); time.sleep(.1)
  check("external lamp ON/blink follows public NOTICE",True in samples and False in samples,{"samples":samples})
  # Redefine to a new EAST-facing button and verify placement update.
  action(owner,"close"); wait(lambda:not session(),"close before redefine"); command(owner,"setblock 15 100 0 stone"); command(owner,"setblock 14 100 0 stone_button[face=wall,facing=east]")
