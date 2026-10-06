@@ -254,7 +254,7 @@ try:
     command(owner,"piritest remoteorphan","TEST_REMOTE_ORPHAN_CREATED")
     wait(lambda:state().get("remoteArmorStands")==1,"persistent REMOTE orphan fixture")
     check("persistent REMOTE orphan exists before restart",state().get("remoteArmorStands")==1,{"count":state().get("remoteArmorStands")})
-    stop_client(spec);stop_client(owner);stop_server()
+    if clients[spec][0].poll() is None: stop_client(spec)\n    if clients[owner][0].poll() is None: stop_client(owner)\n    stop_server()
     if server_result.exists(): server_result.unlink()
     start_server()
     wait(lambda:state().get("ready") and state().get("remoteArmorStands")==0,"REMOTE orphan startup cleanup",180)
@@ -267,10 +267,10 @@ finally:
     for name,(proc,_,_) in list(clients.items()):
         if proc.poll() is None:
             try:stop_client(name)
-            except Exception:subprocess.run(["taskkill","/PID",str(proc.pid),"/T","/F"],capture_output=True)
+            except Exception:\n                if proc.poll() is None: proc.kill()
     if server and server.poll() is None:
         try:stop_server()
-        except Exception:subprocess.run(["taskkill","/PID",str(server.pid),"/T","/F"],capture_output=True)
+        except Exception:\n            if server.poll() is None: server.kill()
     manifest["finishedAt"]=datetime.datetime.now(datetime.timezone.utc).isoformat()
     save(EVIDENCE/"result.json",manifest);save(OUT/"result.json",manifest)
     report=["# Phase12 Runtime Acceptance","",f"- Run: {RUN}",f"- PASS: {manifest['passed']}","",
