@@ -1228,13 +1228,13 @@ function applyState(j){
  $("money").textContent=j.vaultBalance==null?"---":Number(j.vaultBalance).toLocaleString();
  if(j.loanAmount!=null){$("loanBtn").querySelector("span").textContent="LOAN "+Number(j.loanAmount).toLocaleString();}
  const godlike=currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME";
- $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);const skillstop=currentType==="SKILL_STOP";$("stage").classList.toggle("skillstop",skillstop);$("skillChallenge").style.display=skillstop?"flex":"none";$("skillRemaining").style.display=skillstop?"block":"none";
- $("lamp").src=asset("lamp/piri_chance_"+(j.lampOn?"on":"off")+".png");$("lamp").style.filter=j.lampOn?"drop-shadow(0 0 8px #fff7b0)":"none";
+ $("cabinet").classList.toggle("godlike",godlike);for(let r=0;r<3;r++)$("reel"+r).classList.toggle("godlike",godlike);const skillstop=currentType==="SKILL_STOP";$("stage").classList.toggle("skillstop",skillstop);$("skillChallenge").style.display=skillstop?"flex":"none";$("skillRemaining").style.display="none";
+ $("lamp").src=asset("lamp/piri_chance_"+(j.lampOn?"on":"off")+".png");$("lamp").style.objectFit=godlike?"contain":"fill";$("lamp").style.filter=j.lampOn?"drop-shadow(-4px 0 rgba(255,255,255,.18)) drop-shadow(4px 0 rgba(255,255,255,.18)) drop-shadow(0 4px rgba(255,255,255,.18))":"none";
  const gs=String(j.gameState||"");
  $("stateText").textContent=gs==="REPLAY_READY"?"REPLAY":(gs.startsWith("BIG_")||gs.startsWith("REG_"))?(skillstop&&j.skillRemaining!=null?"残り "+j.skillRemaining+"G":"COUNT "+Number(j.bonusCount||0)):"";
  $("stockLamp").style.display=godlike?"flex":"none";$("stockLamp").classList.toggle("on",godlike&&!!j.stockLampOn);
  if(currentType==="SKILL_STOP"){
-  $("skillRemaining").textContent=(String(j.gameState||"").startsWith("BIG_")||String(j.gameState||"").startsWith("REG_"))&&j.skillRemaining!=null?"残り "+j.skillRemaining+"G":"";
+  $("skillRemaining").textContent="";
   const challenge=j.skillChallenge&&j.skillChallenge!=="AUTO"?String(j.skillChallenge).toLowerCase():"";
   const challengeImg=$("skillChallengeImg");
   if(challenge){challengeImg.src=asset("symbols/"+challenge+".png");challengeImg.style.display="block"}else{challengeImg.removeAttribute("src");challengeImg.style.display="none"}
