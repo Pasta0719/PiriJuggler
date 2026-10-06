@@ -11,6 +11,10 @@ on:
       - 'runtime-test-support/client/**'
       - 'runtime-test-support/paper/**'
       - '.github/workflows/phase14-runtime.yml'
+concurrency:
+  group: phase14-runtime
+  cancel-in-progress: true
+
 jobs:
   phase14:
     runs-on: ubuntu-latest
