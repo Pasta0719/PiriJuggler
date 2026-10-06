@@ -45,6 +45,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -85,6 +86,8 @@ public final class MobileRemoteGateway implements AutoCloseable, Listener {
     private final Map<String, Pairing> pairings = new ConcurrentHashMap<>();
     /** SHA-256(token) -> player UUID. Raw browser tokens are never stored server-side. */
     private final Map<String, UUID> tokenHashes = new ConcurrentHashMap<>();
+    /** Owners whose authoritative seat originated from mobile, including an in-flight seat request. */
+    private final Set<UUID> remoteOwners = ConcurrentHashMap.newKeySet();
     private final RemoteNpcService npcs = new RemoteNpcService();
 
     private EventLoopGroup httpGroup;
@@ -167,7 +170,29 @@ public final class MobileRemoteGateway implements AutoCloseable, Listener {
     private void revokeLocal(UUID owner) {
         pairings.entrySet().removeIf(e -> e.getValue().owner().equals(owner));
         tokenHashes.entrySet().removeIf(e -> e.getValue().equals(owner));
+        remoteOwners.remove(owner);
         npcs.remove(owner);
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player=event.getPlayer();UUID owner=player.getUniqueId();
+        if(!remoteOwners.remove(owner))return;
+        npcs.remove(owner);
+        forceRemoteExitAfterJoin(player,0);
+    }
+
+    private void forceRemoteExitAfterJoin(Player player,int attempt) {
+        machines.mobileForceExitForOnline(player,failure->{
+            if("BUSY".equals(failure)&&attempt<100){
+                plugin.getServer().getScheduler().runTaskLater(plugin,()->forceRemoteExitAfterJoin(player,attempt+1),1L);
+                return;
+            }
+            if(failure!=null){
+                plugin.getLogger().warning("REMOTE login force-exit failed player="+player.getUniqueId()+" code="+failure);
+                if(player.isOnline())player.sendMessage(Component.text("REMOTE遊技の強制清算に失敗しました: "+failure));
+            }
+        });
     }
 
     @EventHandler
@@ -284,7 +309,7 @@ public final class MobileRemoteGateway implements AutoCloseable, Listener {
             if (request.method().equals(HttpMethod.GET) && path.equals("/api/state")) {
                 onMain(ctx, done -> {
                     JsonObject state = machines.mobileState(owner);
-                    if (!state.has("seated") || !state.get("seated").getAsBoolean()) npcs.remove(owner);
+                    if (!state.has("seated") || !state.get("seated").getAsBoolean()) {npcs.remove(owner);remoteOwners.remove(owner);}
                     done.accept(state, null);
                 });
                 return;
@@ -305,10 +330,17 @@ public final class MobileRemoteGateway implements AutoCloseable, Listener {
                         done.accept(null, "MINECRAFT_ONLINE");
                         return;
                     }
+                    remoteOwners.add(owner);
                     machines.mobileSeat(owner, machineId, (state, failure) -> {
-                        if (failure == null) {
-                            Machine machine = machines.mobileMachine(machineId);
-                            if (machine != null) npcs.seat(owner, machine);
+                        if (failure != null) remoteOwners.remove(owner);
+                        else if(remoteOwners.contains(owner)) {
+                            Player nowOnline=Bukkit.getPlayer(owner);
+                            if(nowOnline!=null&&nowOnline.isOnline()){
+                                remoteOwners.remove(owner);npcs.remove(owner);forceRemoteExitAfterJoin(nowOnline,0);
+                            }else{
+                                Machine machine = machines.mobileMachine(machineId);
+                                if (machine != null) npcs.seat(owner, machine);
+                            }
                         }
                         done.accept(state, failure);
                     });
@@ -371,7 +403,7 @@ public final class MobileRemoteGateway implements AutoCloseable, Listener {
             }
             if (request.method().equals(HttpMethod.POST) && path.equals("/api/leave")) {
                 onMain(ctx, done -> machines.mobileLeave(owner, (state, failure) -> {
-                    if (failure == null) npcs.remove(owner);
+                    if (failure == null) {npcs.remove(owner);remoteOwners.remove(owner);}
                     done.accept(state, failure);
                 }));
                 return;
@@ -523,6 +555,7 @@ public final class MobileRemoteGateway implements AutoCloseable, Listener {
         closed = true;
         pairings.clear();
         tokenHashes.clear();
+        remoteOwners.clear();
         npcs.clear();
         Channel server = httpServerChannel;
         httpServerChannel = null;
