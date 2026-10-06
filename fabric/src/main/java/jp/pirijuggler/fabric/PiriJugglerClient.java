@@ -17,7 +17,8 @@ import jp.pirijuggler.fabric.ui.*;
 public final class PiriJugglerClient implements ClientModInitializer {
     private static final ClientHandshake HANDSHAKE = new ClientHandshake();
     private static final ClientSession SESSION = new ClientSession();
-    private static final RemoteMachineRegistry REMOTE = new RemoteMachineRegistry();\n    private static net.minecraft.registry.RegistryKey<net.minecraft.world.World> LAST_WORLD;
+    private static final RemoteMachineRegistry REMOTE = new RemoteMachineRegistry();
+    private static net.minecraft.registry.RegistryKey<net.minecraft.world.World> LAST_WORLD;
 
     @Override public void onInitializeClient() {
         SlotKeys.register(); PiriSounds.register(); GodLcdTheme.register(); WorldCabinetRenderer.register();
