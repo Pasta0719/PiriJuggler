@@ -179,6 +179,14 @@ public final class RemoteMachineSync {
                 body.addProperty("active", true);
                 copyString(source, body, "bonusType");
                 if (source.has("count")) copyInt(source, body, "count");
+                PiriDatabase.State state=stateSupplier.get();
+                Session current=state==null?null:state.sessions().stream()
+                        .filter(s->s.machine()==machineId&&s.ownsLock()).findFirst().orElse(null);
+                if(current!=null){
+                    JsonObject publicState=current.publicState();
+                    body.addProperty("godFirstBigAudio",publicState.has("godFirstBigAudio")
+                            &&publicState.get("godFirstBigAudio").getAsBoolean());
+                }
                 broadcast(machineId, PacketType.REMOTE_MACHINE_BONUS, body);
             }
             case BONUS_END -> {
@@ -288,6 +296,8 @@ public final class RemoteMachineSync {
             body.addProperty("godFreeze", publicState.has("godFreeze")&&publicState.get("godFreeze").getAsBoolean());
             body.addProperty("godPresentationStartMs", publicState.has("godPresentationStartMs")
                     ?publicState.get("godPresentationStartMs").getAsLong():0L);
+            body.addProperty("godFirstBigAudio", publicState.has("godFirstBigAudio")
+                    && publicState.get("godFirstBigAudio").getAsBoolean());
 
             boolean spinning = gameState.endsWith("_SPINNING");
             if(machine.type()==MachineType.PACHINKO&&session.machineState()!=null){
