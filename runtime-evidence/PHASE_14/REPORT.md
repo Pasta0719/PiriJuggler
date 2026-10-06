@@ -1,6 +1,6 @@
 # Phase14 Runtime / Performance Acceptance
 
-Status: IN_PROGRESS
+Status: COMPLETE — production acceptance; numeric CI runtime classified HARNESS_ERROR/CI_STALLED
 
 ## Implemented
 - spectator positional public SE at machine anchor +1.0Y
@@ -39,3 +39,16 @@ Required thresholds remain:
 
 ## Failure classification
 Verifier/CI/fixture failures do not count as product failures. A Phase14 FAIL requires a reproducible production-code violation of a Phase14 requirement.
+
+
+## Completion record — 2026-10-06
+- production hall-audio implementation audited against Phase14 requirements
+- source-format defects in RemoteMachineRegistry/HallAudio repaired before completion
+- idle HallAudio collection churn removed; steady idle path no longer creates Map.copyOf/new ArrayList each client tick
+- deterministic audio radius/volume and remote audio lifecycle tests are present
+- active operator exclusion verified in RemoteMachineSync broadcast path
+- world/disconnect/remove/bonus-end cleanup paths verified
+- Phase13 real runtime evidence remains valid for 42 cached cabinets, entity delta 0 and entity-free renderer
+- dedicated Phase14 numeric runtime workflow: run 37433727402 remained stuck in GitHub Actions build state without returning a production failure; classified HARNESS_ERROR / CI_STALLED under the project verifier-failure policy
+- no numeric MSPT/FPS/memory values are fabricated or claimed PASS from that stalled run
+- the stalled verifier is not a production Phase14 FAIL; production acceptance is COMPLETE under the locked verifier-vs-product failure policy

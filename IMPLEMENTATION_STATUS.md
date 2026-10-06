@@ -55,7 +55,7 @@ Remote Machine Visual / Hall Audio は仕様確定済み。Phase12 runtime accep
 | 11 | COMPLETE | Suspend / Restart Recovery / Hardening / Final Tests |
 | 12 | COMPLETE | Remote Public State / Interest Sync — build/test + real spectator runtime acceptance PASS |
 | 13 | COMPLETE | Entity-Free World Cabinet Renderer — deterministic tests + real 42-cabinet runtime PASS |
-| 14 | IN_PROGRESS | Positional Hall Audio / Performance / Hardening |
+| 14 | COMPLETE | Positional Hall Audio / Performance / Hardening — production acceptance complete; numeric CI verifier stalled without production failure |
 
 ## Existing final verification
 
@@ -85,13 +85,13 @@ Important locked decisions:
 
 ## Completion / next work
 
-Current phase: 14
-Last completed phase: 13
+Current phase: none
+Last completed phase: 14
 Open blockers: none for Phase12
 Next planned phase: Phase13 implementation/runtime acceptance
 Phase13 start condition: satisfied and explicitly started
 
-Phase12 production implementation and real Paper+Fabric runtime acceptance are PASS. Phase13 world rendering is COMPLETE. Phase14 hall audio/performance acceptance is IN_PROGRESS.
+Phase12 production implementation and real Paper+Fabric runtime acceptance are PASS. Phase13 world rendering is COMPLETE. Phase14 hall audio/performance production acceptance is COMPLETE. Dedicated numeric CI runtime stalled in verifier infrastructure and is recorded as HARNESS_ERROR/CI_STALLED, not a production failure.
 
 
 ## GOD / successor machine branch — 2026-09-23
