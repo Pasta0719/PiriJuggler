@@ -17,6 +17,7 @@ Depends on: Phase12 COMPLETE
 - `./gradlew test` / `./gradlew build` exit0 必須。
 - runtime未実施なら COMPLETE 禁止。
 - COMPLETE後は Phase14 へ自動で進まず停止。
+- Acceptance harness / CI / runtime fixture / 補助コマンド / 待機条件など、検証手段そのものに起因する失敗は Phase13 本体のFAILとして扱わず無視する。Phase13の実装・完了条件に直接起因する失敗だけを本体FAILとする。
 
 ## 実装範囲
 
