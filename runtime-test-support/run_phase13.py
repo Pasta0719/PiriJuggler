@@ -65,7 +65,7 @@ def start_server():
  h=(OUT/"server.log").open("w",encoding="utf-8"); handles.append(h)
  server=subprocess.Popen([JAVA,"-Xms512M","-Xmx1536M","-Dpiri.runtime.phase=phase13",f"-Dpiri.runtime.serverResult={server_result}","-jar",str(PAPER),"nogui"],cwd=SERVER,stdin=subprocess.PIPE,stdout=h,stderr=subprocess.STDOUT,text=True,creationflags=FLAGS)
  wait(lambda:"Done (" in log(OUT/"server.log") and "PIRI_DATABASE_READY" in log(OUT/"server.log"),"Paper ready",300)
-def start_client(n):
+def console(text):\n server.stdin.write(text+"\\n"); server.stdin.flush(); time.sleep(.3)\ndef start_client(n):
  folder=OUT/n; folder.mkdir(parents=True,exist_ok=True); result=folder/"client-result.json"
  work=E/"work"/("client-"+n)
  if work.exists(): shutil.rmtree(work)
@@ -100,7 +100,7 @@ def forbidden(v):
  return False
 
 try:
- start_server(); start_client("phase13-owner"); owner="phase13-owner"; command(owner,"op PiriRuntimeTest"); start_client("phase13-spectator"); spec="phase13-spectator"; command(owner,"op PiriRuntimeTest2")
+ start_server(); start_client("phase13-owner"); owner="phase13-owner"; console("op PiriRuntimeTest"); start_client("phase13-spectator"); spec="phase13-spectator"; console("op PiriRuntimeTest2")
  baseline=entity_count(owner)
  command(owner,"piritest phase13grid","TEST_PHASE13_GRID")
  wait(lambda:client(spec).get("remoteCacheSize")==42,"42 remote machines",120); after=entity_count(owner)
