@@ -152,7 +152,11 @@ def start_mismatch():
     wait(lambda:load(result).get("passed") is True,"protocol mismatch rejection",600)
     proc.wait(timeout=60);check("old protocol client is rejected",load(result).get("gameplayAllowed") is False,load(result))
 
-def tap(name,key): action(name,"tap",key=key)
+def tap(name,key):
+    # Use distinct physical key edges. A synthetic same-tick tap can be
+    # coalesced by Minecraft's screen/input path and lose reel-stop input.
+    action(name,"key",key=key,action=1)
+    action(name,"key",key=key,action=0)
 def wait_state(expected): wait(lambda:session().get("game_state")==expected,"state "+expected)
 def clickpos(name,x,y,z,kind=None):
     before=pcount(name,kind) if kind else 0
