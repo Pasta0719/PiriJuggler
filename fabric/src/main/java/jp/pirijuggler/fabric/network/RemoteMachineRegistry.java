@@ -26,6 +26,7 @@ public final class RemoteMachineRegistry {
     );
     private final Map<Integer, JsonObject> machines = new HashMap<>();
     private final Map<Integer, RemoteMachineViewState> views = new HashMap<>();
+    private final Collection<RemoteMachineViewState> liveViews = Collections.unmodifiableCollection(views.values());
     private final Map<Integer,SkillStopPresentation.NoticeGate> skillNotices=new HashMap<>();
     private Integer skillSuccessSound;
     private final ArrayDeque<AudioEvent> soundEvents=new ArrayDeque<>();
@@ -209,6 +210,9 @@ public final class RemoteMachineRegistry {
     public List<RemoteMachineViewState> viewSnapshot() {
         return List.copyOf(views.values());
     }
+
+    /** Live read-only view for the single render callback; avoids a collection copy every frame. */
+    public Iterable<RemoteMachineViewState> liveViews() { return liveViews; }
 
     public RemoteMachineViewState view(int machineId) {
         return views.get(machineId);
