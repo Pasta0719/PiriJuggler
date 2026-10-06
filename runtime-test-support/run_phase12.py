@@ -67,6 +67,19 @@ def state(): return load(server_result)
 def client(name): return load(clients[name][1])
 def packets(name,kind): return [p["payload"] for p in client(name).get("packets",[]) if p["type"]==kind]
 def pcount(name,kind): return len(packets(name,kind))
+def public(name):
+    values=packets(name,"PUBLIC_STATE")
+    return values[-1] if values else {}
+def settled(name):
+    s=session(); p=public(name)
+    return bool(s) and p.get("expectedNextClientSequence")==s.get("last_client_sequence",-2)+1
+def wait_stoppable(name,state_name):
+    wait(lambda:settled(name) and session().get("game_state")==state_name and client(name).get("stopEnabled") is True,
+         "stoppable "+state_name)
+def stop_reels(name,sequence):
+    for key,mask in sequence:
+        tap(name,key)
+        wait(lambda:settled(name) and session().get("stopped_mask")==mask,"normal stop "+str(mask),40)
 def remote_counts(name):
     kinds=["REMOTE_MACHINE_SNAPSHOT","REMOTE_MACHINE_SPIN","REMOTE_MACHINE_STOP","REMOTE_MACHINE_NOTICE","REMOTE_MACHINE_BONUS","REMOTE_MACHINE_REMOVE","REMOTE_MACHINE_SOUND"]
     return {k:pcount(name,k) for k in kinds}
@@ -224,23 +237,22 @@ try:
     clickpos(owner,x,66,z,"OPEN_MACHINE");wait(lambda:session().get("credit")==50,"funded session refresh")
     command(owner,"piritest force reg","TEST_FORCE_ARMED")
     base=remote_counts(spec)
-    tap(owner,32);wait_state("NORMAL_BETTED");tap(owner,32);wait_state("NORMAL_SPINNING")
+    tap(owner,32);wait_state("NORMAL_BETTED");tap(owner,32);wait_stoppable(owner,"NORMAL_SPINNING")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_SPIN")>=base["REMOTE_MACHINE_SPIN"]+1,"remote spin")
-    for key,mask in [(263,1),(264,3),(262,7)]:
-        tap(owner,key);wait(lambda:session().get("stopped_mask")==mask,"normal stop")
+    stop_reels(owner,[(263,1),(264,3),(262,7)])
     wait_state("BONUS_PENDING_REG")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_STOP")>=base["REMOTE_MACHINE_STOP"]+3,"remote three stops")
     pending_packets=[p for p in client(spec).get("packets",[]) if p["type"].startswith("REMOTE_MACHINE_")]
     check("BONUS_PENDING remote stream contains no hidden role/premium/setting state",not any(forbidden_remote_payload(p["payload"]) for p in pending_packets),{"remoteCounts":remote_counts(spec)})
     check("public notice is mirrored to spectator",pcount(spec,"REMOTE_MACHINE_NOTICE")>=base["REMOTE_MACHINE_NOTICE"]+1,remote_counts(spec))
 
-    tap(owner,32);wait_state("BONUS_ENTRY_BETTED_REG");tap(owner,32);wait_state("BONUS_ENTRY_SPINNING_REG")
-    for key in (263,264,262):tap(owner,key)
+    tap(owner,32);wait_state("BONUS_ENTRY_BETTED_REG");tap(owner,32);wait_stoppable(owner,"BONUS_ENTRY_SPINNING_REG")
+    stop_reels(owner,[(263,1),(264,3),(262,7)])
     wait_state("REG_READY")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_BONUS")>=base["REMOTE_MACHINE_BONUS"]+1,"remote bonus start")
     for i in range(8):
-        tap(owner,32);wait_state("REG_BETTED");tap(owner,32);wait_state("REG_SPINNING")
-        for key in (263,264,262):tap(owner,key)
+        tap(owner,32);wait_state("REG_BETTED");tap(owner,32);wait_stoppable(owner,"REG_SPINNING")
+        stop_reels(owner,[(263,1),(264,3),(262,7)])
         wait_state("SEATED_READY" if i==7 else "REG_READY")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_BONUS")>=base["REMOTE_MACHINE_BONUS"]+2,"remote bonus end")
     bonus_packets=packets(spec,"REMOTE_MACHINE_BONUS")[-2:]
