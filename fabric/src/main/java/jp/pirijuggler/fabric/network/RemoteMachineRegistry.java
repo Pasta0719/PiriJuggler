@@ -27,7 +27,7 @@ public final class RemoteMachineRegistry {
     private final Map<Integer, JsonObject> machines = new HashMap<>();
     private final Map<Integer, RemoteMachineViewState> views = new HashMap<>();
     private final Map<Integer,SkillStopPresentation.NoticeGate> skillNotices=new HashMap<>();
-    private Integer skillSuccessSound;
+    private Integer skillSuccessSound;\n    public record AudioEvent(int machineId,String kind,String bonusType){}\n    private final ArrayDeque<AudioEvent> audioEvents=new ArrayDeque<>();
     private final LongSupplier time,wallTimeMs;
 
     public RemoteMachineRegistry() {
@@ -155,6 +155,8 @@ public final class RemoteMachineRegistry {
                     });
                     RemoteMachineViewState view = views.get(machineId);
                     if (view != null) view.applyBonus(body);
+                    boolean active=body.get("active").getAsBoolean();
+                    audioEvents.add(new AudioEvent(machineId,active?"BONUS_START":"BONUS_END",active?body.get("bonusType").getAsString():null));
                 }
                 case PACHINKO_EVENT -> {
                     requireNumber(body,"ballSequenceId");requireString(body,"side");requireString(body,"outcome");requireNumber(body,"startTime");
@@ -165,7 +167,7 @@ public final class RemoteMachineRegistry {
                 case REMOTE_MACHINE_REMOVE -> {
                     machines.remove(machineId);
                     views.remove(machineId);
-                    skillNotices.remove(machineId);
+                    skillNotices.remove(machineId);\n                    audioEvents.add(new AudioEvent(machineId,"REMOVE",null));
                 }
                 case REMOTE_MACHINE_SOUND -> {
                     // Only the explicitly public SKILL_STOP challenge success is audible here.
@@ -206,12 +208,12 @@ public final class RemoteMachineRegistry {
     public RemoteMachineViewState view(int machineId) {
         return views.get(machineId);
     }
-    public Integer pollSkillSuccessSound(){Integer value=skillSuccessSound;skillSuccessSound=null;return value;}
+    public Integer pollSkillSuccessSound(){Integer value=skillSuccessSound;skillSuccessSound=null;return value;}\n    public AudioEvent pollAudioEvent(){return audioEvents.poll();}
 
     public void reset() {
         machines.clear();
         views.clear();
-        skillNotices.clear();skillSuccessSound=null;
+        skillNotices.clear();\n        audioEvents.clear();skillSuccessSound=null;
     }
 
     private void applySnapshot(int machineId, JsonObject body) {
