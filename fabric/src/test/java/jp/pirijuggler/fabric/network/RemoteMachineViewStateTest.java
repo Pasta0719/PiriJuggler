@@ -75,7 +75,7 @@ class RemoteMachineViewStateTest {
         now.addAndGet(100_000_000L); assertFalse(view.lampVisible(now.get()));
         now.addAndGet(100_000_000L); assertTrue(view.lampVisible(now.get()));
         now.addAndGet(800_000_000L); assertTrue(view.lampVisible(now.get()));
-        JsonObject off = id(13); off.addProperty("lamp","OFF"); off.addProperty("pattern","NONE");
+        JsonObject off = id(13); off.addProperty("lamp","OFF"); off.addProperty("pattern","STEADY");
         registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_NOTICE, off));
         assertFalse(view.lampVisible(now.get()));
     }
