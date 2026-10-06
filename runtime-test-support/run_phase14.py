@@ -42,7 +42,7 @@ try:
  cmd("tp PiriRuntimeTest 0.5 99 0.5");wait(lambda:load(cr).get("remoteCacheSize")==42,"42 cache",120);idleStart=packets();idle=sample(30);idleTraffic=packets()-idleStart
  action("phase14_spin_all");spinStart=packets();spinning=sample(30);spinTraffic=packets()-spinStart
  steadyStartPackets=packets();steady=sample(300);steadyTraffic=packets()-steadyStartPackets
- views=load(cr).get("remotePresentation",{});near=sorted((int(k) for k,v in views.items() if (v.get("x",99)+.5)**2+(v.get("y",99)-97.5)**2+(v.get("z",99)+.5)**2<=100)
+ views=load(cr).get("remotePresentation",{});near=sorted(int(k) for k,v in views.items() if (v.get("x",99)+.5)**2+(v.get("y",99)-97.5)**2+(v.get("z",99)+.5)**2<=100)
  audioTwo=False;audioMatchingEnd=False;audioRangeExit=False
  if len(near)>=2:
   action("phase14_bonus",machineId=near[0],active=True,bonusType="BIG");action("phase14_bonus",machineId=near[1],active=True,bonusType="REG")
