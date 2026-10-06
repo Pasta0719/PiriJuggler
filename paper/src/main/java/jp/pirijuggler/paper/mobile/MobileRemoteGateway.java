@@ -552,7 +552,7 @@ public final class MobileRemoteGateway implements AutoCloseable, Listener {
                 npc.setCollidable(false);
                 npc.setBasePlate(false);
                 npc.setArms(true);
-                npc.setCustomNameVisible(true);
+                npc.setCustomNameVisible(false);
                 npc.customName(Component.text(playerName(owner) + " [REMOTE]"));
                 npc.setBodyPose(new EulerAngle(0.18, 0, 0));
                 npc.setLeftLegPose(new EulerAngle(-1.10, 0, 0));
