@@ -318,6 +318,10 @@ public final class MobileRemoteGateway implements AutoCloseable, Listener {
                 onMain(ctx, done -> done.accept(machines.mobileDrainEvents(owner), null));
                 return;
             }
+            if (request.method().equals(HttpMethod.POST) && path.equals("/api/resume")) {
+                onMain(ctx, done -> machines.mobileResume(owner, done));
+                return;
+            }
             if (request.method().equals(HttpMethod.POST) && path.equals("/api/seat")) {
                 Integer machineId = integer(one(query, "id"));
                 if (machineId == null) {
