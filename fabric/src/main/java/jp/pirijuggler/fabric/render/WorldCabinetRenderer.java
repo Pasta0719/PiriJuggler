@@ -28,12 +28,16 @@ public final class WorldCabinetRenderer {
     private static final Identifier LAMP_OFF = Identifier.of("piri", "textures/lamp/piri_chance_off.png");
 
     private static final double CAB_X=290, CAB_Y=205, CAB_W=1340, CAB_H=835;
+    private static long metricWindow=System.nanoTime(),metricFrames,metricNanos;private static double lastFps,lastFrameMs;
 
     private WorldCabinetRenderer(){}
 
     public static void register(){ WorldRenderEvents.AFTER_ENTITIES.register(WorldCabinetRenderer::render); }
 
+    public static double measuredFps(){return lastFps;}
+    public static double measuredFrameMs(){return lastFrameMs;}
     private static void render(WorldRenderContext context){
+        long metricStart=System.nanoTime();
         MinecraftClient client=MinecraftClient.getInstance();
         if(client.world==null||context.world()==null||context.camera()==null||context.consumers()==null)return;
         Vec3d camera=context.camera().getPos();
@@ -54,6 +58,8 @@ public final class WorldCabinetRenderer {
             }
             draw(context,state,basis,camera,now,client);
         }
+        long end=System.nanoTime();metricFrames++;metricNanos+=end-metricStart;
+        long span=end-metricWindow;if(span>=1_000_000_000L){lastFps=metricFrames*1_000_000_000.0/span;lastFrameMs=metricFrames==0?0:metricNanos/1_000_000.0/metricFrames;metricFrames=0;metricNanos=0;metricWindow=end;}
     }
 
     private static void drawPachinko(VertexConsumerProvider consumers,RemoteMachineViewState state,CabinetPlacement.Basis basis,Vec3d camera,MinecraftClient client){
