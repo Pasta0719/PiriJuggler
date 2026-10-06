@@ -152,6 +152,10 @@ def clickpos(name,x,y,z,kind=None):
     if kind:wait(lambda:pcount(name,kind)>before,name+" receive "+kind)
 
 def create_machine(name,x,z,index):
+    # Production machine registration requires ray-tracing an actual button.
+    # Build a deterministic wall-button fixture facing the client before registration.
+    command(name,f"setblock {x} 66 {z-1} stone")
+    command(name,f"setblock {x} 66 {z} stone_button[face=wall,facing=south]")
     command(name,f"tp @s {x+0.5} 65 2.5")
     action(name,"aimpos",x=x,y=66,z=z);time.sleep(.15)
     before=machine_count();command(name,"piri machine create","MACHINE_CREATED")
