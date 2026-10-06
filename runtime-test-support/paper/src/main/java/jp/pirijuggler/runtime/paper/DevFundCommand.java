@@ -65,6 +65,7 @@ public final class DevFundCommand implements CommandExecutor {
         if (args.length >= 1 && args[0].equalsIgnoreCase("phase12grid")) return phase12Grid(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("phase13grid")) return phase13Grid(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("entitycount")) return entityCount(sender,args);
+        if (args.length >= 1 && args[0].equalsIgnoreCase("phase14perf")) return phase14Perf(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("mobilefund")) return mobileFund(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("mobilecheck")) return mobileCheck(sender,args);
         if (args.length == 1 && args[0].equalsIgnoreCase("clear")) {
@@ -73,6 +74,18 @@ public final class DevFundCommand implements CommandExecutor {
             return true;
         }
         sender.sendMessage("Usage: /piritest fund [player] | mobilefund [player] | mobilecheck [player] | force <god|big|reg|A|B|C|D|E|F> [player] | heaven <1-32> [player] | skillreset [player] | clear");
+        return true;
+    }
+
+    private boolean phase14Perf(CommandSender sender,String[] args) {
+        if(args.length!=1){sender.sendMessage("Usage: /piritest phase14perf");return true;}
+        try{
+            Object server=Bukkit.getServer();
+            double mspt=((Number)server.getClass().getMethod("getAverageTickTime").invoke(server)).doubleValue();
+            double[] tps=(double[])server.getClass().getMethod("getTPS").invoke(server);
+            long used=Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
+            sender.sendMessage(String.format(java.util.Locale.ROOT,"TEST_PHASE14_PERF mspt=%.4f tps=%.4f heapMiB=%.3f",mspt,tps.length==0?0.0:tps[0],used/1048576.0));
+        }catch(ReflectiveOperationException|ClassCastException error){sender.sendMessage("TEST_PHASE14_PERF_FAILED "+error);}
         return true;
     }
 
