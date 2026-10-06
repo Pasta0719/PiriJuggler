@@ -1092,7 +1092,7 @@ LEVER ON:
 2. 500ms経過時に通常方向へ切替
 3. 切替瞬間Piri Chance点灯
 4. 告知音なし
-5. 300msで通常方向（index減少・画面下向き）へ加速し、速度は18 symbols/sec（符号付き速度-18）
+5. 300msで通常方向（index減少・画面下向き）へ加速し、速度は28 symbols/sec（符号付き速度-28）
 6. LEVER ONから800ms後にSTOP入力解禁
 
 AだけstopEnableAfterMs=800。
@@ -1234,7 +1234,7 @@ Codexは効果音・BGM・告知音等の音声内容を生成・推測・代替
 
 通常motion:
 - client受信後150msは表示開始待ち
-- 150msから350msかけて線形加速 0→-18 symbols/sec（index減少・画面下向き）
+- 150msから350msかけて線形加速 0→-28 symbols/sec（index減少・画面下向き）
 - STOP解禁はclient受信から400ms
 
 serverはSTOP packet受信時に132章のping補正式を使い、clientで見えていた位相を近似してpressedIndexを求める。
@@ -4531,7 +4531,7 @@ STOP server threshold750ms(client spec800ms with50ms tolerance)。
 
 RESUME_NORMAL:
 - startPhase = suspend snapshot phase
-- packet receive直後から通常方向へ18 symbols/sec定速（index減少、`d=-18*e`）
+- packet receive直後から通常方向へ28 symbols/sec定速（index減少、`d=-18*e`）
 - client STOP enabled200ms
 - server threshold150ms
 - premium animation/soundを再実行しない
