@@ -299,13 +299,20 @@ public final class MobileRemoteGateway implements AutoCloseable, Listener {
                     json(ctx, HttpResponseStatus.BAD_REQUEST, error("INVALID_MACHINE"));
                     return;
                 }
-                onMain(ctx, done -> machines.mobileSeat(owner, machineId, (state, failure) -> {
-                    if (failure == null) {
-                        Machine machine = machines.mobileMachine(machineId);
-                        if (machine != null) npcs.seat(owner, machine);
+                onMain(ctx, done -> {
+                    Player online = Bukkit.getPlayer(owner);
+                    if (online != null && online.isOnline()) {
+                        done.accept(null, "MINECRAFT_ONLINE");
+                        return;
                     }
-                    done.accept(state, failure);
-                }));
+                    machines.mobileSeat(owner, machineId, (state, failure) -> {
+                        if (failure == null) {
+                            Machine machine = machines.mobileMachine(machineId);
+                            if (machine != null) npcs.seat(owner, machine);
+                        }
+                        done.accept(state, failure);
+                    });
+                });
                 return;
             }
             if (request.method().equals(HttpMethod.POST) && path.equals("/api/action")) {
@@ -969,7 +976,7 @@ async function api(path,method){
  return j;
 }
 function errorText(e){
- const m={BUSY:"処理中です",INVALID_STATE:"今は操作できません",INVALID_MACHINE:"この台は利用できません",NOT_ENOUGH_CREDIT:"クレジットが足りません",NOT_ENOUGH_VAULT:"所持金が足りません",MACHINE_OCCUPIED:"ほかのプレイヤーが遊技中です",MACHINE_DISABLED:"この台は利用できません",STOP_TOO_EARLY:"まだ停止できません",ALREADY_STOPPED:"停止済みです",SESSION_MISMATCH:"台との接続状態が変わりました",VAULT_ERROR:"所持金処理に失敗しました",ECONOMY_UNAVAILABLE:"貸出を利用できません",AUTH_LOADING:"サーバー起動中です",NOT_ENOUGH_MEDALS:"投入できるメダルがありません",NOT_ENOUGH_PRIZES:"景品が足りません",MUST_LEAVE_MACHINE:"景品交換・換金は台から離席してから利用してください"};
+ const m={BUSY:"処理中です",INVALID_STATE:"今は操作できません",INVALID_MACHINE:"この台は利用できません",NOT_ENOUGH_CREDIT:"クレジットが足りません",NOT_ENOUGH_VAULT:"所持金が足りません",MACHINE_OCCUPIED:"ほかのプレイヤーが遊技中です",MACHINE_DISABLED:"この台は利用できません",STOP_TOO_EARLY:"まだ停止できません",ALREADY_STOPPED:"停止済みです",SESSION_MISMATCH:"台との接続状態が変わりました",VAULT_ERROR:"所持金処理に失敗しました",ECONOMY_UNAVAILABLE:"貸出を利用できません",AUTH_LOADING:"サーバー起動中です",NOT_ENOUGH_MEDALS:"投入できるメダルがありません",NOT_ENOUGH_PRIZES:"景品が足りません",MUST_LEAVE_MACHINE:"景品交換・換金は台から離席してから利用してください",MINECRAFT_ONLINE:"Minecraftにログイン中のため、リモート着席できません。ゲームからログアウトしてからお試しください"};
  return m[e.message]||e.message;
 }
 async function pairNow(){
