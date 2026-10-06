@@ -1343,6 +1343,81 @@ public final class MachineService implements Listener, CommandExecutor {
                 });
     }
 
+    /**
+     * A Minecraft login always wins over an active mobile/REMOTE seat.
+     * The unresolved game is settled first, then all session medals are moved through
+     * the crash-safe recovery cashout path and delivered to the now-online player.
+     */
+    public void mobileForceExitForOnline(Player player, Consumer<String> callback) {
+        main();
+        Objects.requireNonNull(player);Objects.requireNonNull(callback);
+        UUID owner=player.getUniqueId();
+        if(!ready()){callback.accept("DB_ERROR");return;}
+        Session session=state.session(owner);
+        if(session==null||session.lifecycle()!=Session.Lifecycle.ACTIVE){callback.accept(null);return;}
+        Machine machine=state.machine(session.machine());
+        if(machine==null||!mobileSupported(machine.type())){callback.accept(null);return;}
+        int machineId=session.machine();
+        if(pendingPlayers.contains(owner)||pendingMachines.contains(machineId)){callback.accept("BUSY");return;}
+
+        pendingPlayers.add(owner);pendingMachines.add(machineId);
+        Session motion=engine(machineId).capture(session,System.nanoTime());
+        long now=System.currentTimeMillis();
+        plugin.executors().database(()->{
+            final EconomyStore.RecoveryCashoutPlan plan;
+            database.transaction(()->{
+                if(motion!=null)new GameStore(database).saveMotion(motion);
+                Session current=database.state().session(owner);
+                if(current!=null&&current.lifecycle()==Session.Lifecycle.ACTIVE){
+                    if(!current.ready())new RecoveryStore(database,config,plugin.reels().solver()).settleRemoteLogin(current,now);
+                    database.sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL,last_activity=? WHERE player_uuid=?",now,owner.toString());
+                }
+                return null;
+            });
+            try{
+                plan=new EconomyStore(database).prepareRecoveryCashout(owner,new RecoveryStore(database,config,plugin.reels().solver()),now);
+            }catch(DomainException noAssets){
+                if(!"NOT_ENOUGH_MEDALS".equals(noAssets.getMessage()))throw noAssets;
+                database.transaction(()->{database.sql("DELETE FROM player_sessions WHERE player_uuid=? AND lifecycle='SUSPENDED_SAFE'",owner.toString());return null;});
+                return new Saved<EconomyStore.RecoveryCashoutPlan>(null,database.state());
+            }
+            return new Saved<>(plan,database.state());
+        },(prepared,error)->{
+            if(prepared!=null)state=prepared.state;
+            if(stopped){releaseEconomy(owner,machineId);return;}
+            if(error!=null){releaseEconomy(owner,machineId);logMobileFailure(error);callback.accept(mobileFailureCode(error));return;}
+
+            engine(machineId).forget(session.id());
+            mobileDelayedEvents.remove(owner);
+            EconomyStore.RecoveryCashoutPlan plan=prepared.value;
+            if(plan==null){
+                releaseEconomy(owner,machineId);remote.broadcastSnapshot(machineId);
+                tell(player,"REMOTE遊技を終了しました。台を空席にしました。");
+                callback.accept(null);return;
+            }
+
+            Set<UUID> delivered=new HashSet<>();long deliveredAmount=0;
+            for(var bundle:plan.bundles()){
+                int slot=player.getInventory().firstEmpty();if(slot<0)break;
+                player.getInventory().setItem(slot,MedalToken.create(bundle.id(),bundle.amount()));
+                delivered.add(bundle.id());deliveredAmount=Math.addExact(deliveredAmount,bundle.amount());
+            }
+            long finalDelivered=deliveredAmount;
+            plugin.executors().database(()->{
+                new EconomyStore(database).finishRecoveryCashout(owner,plan.transactionId(),delivered,System.currentTimeMillis());
+                return new Saved<>(Boolean.TRUE,database.state());
+            },(finished,finishError)->{
+                if(finished!=null)state=finished.state;
+                releaseEconomy(owner,machineId);remote.broadcastSnapshot(machineId);
+                if(finishError!=null){
+                    removeBundleItems(player,delivered);logMobileFailure(finishError);callback.accept(mobileFailureCode(finishError));return;
+                }
+                tell(player,"REMOTE遊技を終了して清算しました。メダル "+finalDelivered+"枚を返却しました。");
+                callback.accept(null);
+            });
+        });
+    }
+
     private boolean mobileSupported(MachineType type) {
         return type == MachineType.JUGGLER || type == MachineType.JUGGLER_GOD
                 || type == MachineType.JUGGLER_GOD_EXTREME || type == MachineType.SKILL_STOP;
