@@ -50,9 +50,9 @@ try:
  audioTwo=False;audioMatchingEnd=False;audioRangeExit=False
  if len(near)>=2:
   action("phase14_bonus",machineId=near[0],active=True,bonusType="BIG");action("phase14_bonus",machineId=near[1],active=True,bonusType="REG")
-  wait(lambda:load(cr).get("remoteLoopCount")==2,"two independent bonus loops",15);audioTwo=True
-  action("phase14_bonus",machineId=near[0],active=False);wait(lambda:load(cr).get("remoteLoopCount")==1,"matching bonus end",15);audioMatchingEnd=True
-  cmd("tp PiriRuntimeTest 200 100 200");wait(lambda:load(cr).get("remoteLoopCount")==0,"range exit stops loop",15);audioRangeExit=True
+  wait(lambda:load(cr).get("hallAudioLoopCount")==2,"two independent bonus loops",15);audioTwo=True
+  action("phase14_bonus",machineId=near[0],active=False);wait(lambda:load(cr).get("hallAudioLoopCount")==1,"matching bonus end",15);audioMatchingEnd=True
+  cmd("tp PiriRuntimeTest 200 100 200");wait(lambda:load(cr).get("hallAudioLoopCount")==0,"range exit stops loop",15);audioRangeExit=True
  entityAfter=load(sr).get("totalEntities")
  b={k:avg(baseline,k) for k in ("mspt","tps","serverHeap","fps","frameMs","clientHeap")};i={k:avg(idle,k) for k in b};sp={k:avg(spinning,k) for k in b}
  first=steady[:30];last=steady[-30:];serverGrowth=avg(last,"serverHeap")-avg(first,"serverHeap");clientGrowth=avg(last,"clientHeap")-avg(first,"clientHeap")
