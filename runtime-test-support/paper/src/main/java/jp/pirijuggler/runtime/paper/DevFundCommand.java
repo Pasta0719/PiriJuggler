@@ -61,6 +61,8 @@ public final class DevFundCommand implements CommandExecutor {
         if (args.length >= 1 && args[0].equalsIgnoreCase("skillreset")) return skillReset(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("remoteorphan")) return remoteOrphan(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("phase12grid")) return phase12Grid(sender,args);
+        if (args.length >= 1 && args[0].equalsIgnoreCase("phase13grid")) return phase13Grid(sender,args);
+        if (args.length >= 1 && args[0].equalsIgnoreCase("entitycount")) return entityCount(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("mobilefund")) return mobileFund(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("mobilecheck")) return mobileCheck(sender,args);
         if (args.length == 1 && args[0].equalsIgnoreCase("clear")) {
@@ -163,6 +165,44 @@ public final class DevFundCommand implements CommandExecutor {
                 }catch(IllegalAccessException setError){sender.sendMessage("TEST_PHASE12_GRID_FAILED "+setError);}
             });
         }catch(ReflectiveOperationException error){sender.sendMessage("TEST_PHASE12_GRID_FAILED "+error);}
+        return true;
+    }
+
+    private boolean entityCount(CommandSender sender,String[] args) {
+        if(args.length!=1){sender.sendMessage("Usage: /piritest entitycount");return true;}
+        Player target=sender instanceof Player player?player:null;
+        if(target==null){sender.sendMessage("PLAYER_REQUIRED");return true;}
+        long displays=target.getWorld().getEntities().stream().filter(e->e instanceof org.bukkit.entity.Display).count();
+        sender.sendMessage("TEST_ENTITY_COUNT total="+target.getWorld().getEntities().size()+" displays="+displays+" armorstands="+target.getWorld().getEntitiesByClass(ArmorStand.class).size());
+        return true;
+    }
+
+    private boolean phase13Grid(CommandSender sender,String[] args) {
+        if(args.length!=1){sender.sendMessage("Usage: /piritest phase13grid");return true;}
+        Player target=sender instanceof Player player?player:null;
+        if(target==null){sender.sendMessage("PLAYER_REQUIRED");return true;}
+        var production=production(sender);if(production==null)return true;
+        var service=production.machines();
+        try{
+            Field dbField=service.getClass().getDeclaredField("database");dbField.setAccessible(true);
+            PiriDatabase database=(PiriDatabase)dbField.get(service);
+            Field stateField=service.getClass().getDeclaredField("state");stateField.setAccessible(true);
+            UUID worldId=target.getWorld().getUID();String worldName=target.getWorld().getName();
+            String[] facings={"NORTH","SOUTH","EAST","WEST","UP","DOWN"};
+            production.executors().database(()->{
+                long now=System.currentTimeMillis();
+                for(int i=0;i<42;i++){
+                    int x=(i%7-3)*3,z=(i/7-3)*3;
+                    String facing=i<6?facings[i]:"SOUTH";
+                    database.create(new Machine.Location(worldId,worldName,x,66,z,facing),MachineType.JUGGLER,now+i);
+                }
+                return database.state();
+            },(fresh,error)->{
+                if(error!=null){sender.sendMessage("TEST_PHASE13_GRID_FAILED "+error);return;}
+                try{stateField.set(service,fresh);sender.sendMessage("TEST_PHASE13_GRID count="+fresh.machines().stream().filter(m->!m.deleted()).count());}
+                catch(IllegalAccessException setError){sender.sendMessage("TEST_PHASE13_GRID_FAILED "+setError);}
+            });
+        }catch(ReflectiveOperationException error){sender.sendMessage("TEST_PHASE13_GRID_FAILED "+error);}
         return true;
     }
 
