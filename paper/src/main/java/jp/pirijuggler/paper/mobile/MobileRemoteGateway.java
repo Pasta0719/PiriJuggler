@@ -805,17 +805,19 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #graphLabel{left:55px;top:55px}
 #gameGraph{position:absolute;left:55px;top:88px;width:825px;height:146px;background:#090b0e!important}
 
-.topMetric{position:absolute;top:25px;width:180px;text-align:center}.topMetric .t{font-size:18px;font-weight:900}.topMetric .n{font-size:31px;font-weight:900;margin-top:4px}
-#currentBox{left:820px}#totalBox{left:1085px}#maxBox{left:1340px}
-#bigBox{left:970px;top:105px;color:#ff4242}#regBox{left:1240px;top:105px;color:#3a78ff}
+.topMetric{position:absolute;width:205px;text-align:center}.topMetric .t{font-size:23px;font-weight:900}.topMetric .n{font-size:36px;font-weight:900;margin-top:6px}
+#currentBox{left:958px;top:43px}#totalBox{left:1268px;top:43px}#maxBox{left:1578px;top:43px}
+#bigBox{left:1108px;top:145px;color:#ff4242}#regBox{left:1438px;top:145px;color:#3a78ff}
 
-#diffTitle{left:24px;top:282px}.sideLarge{position:absolute;left:24px;width:175px;text-align:center;font-size:32px;font-weight:900}
-#diffValue{top:318px}
-#historyTitle{left:24px;top:390px}.historyList{position:absolute;left:24px;top:426px;width:178px;font-size:15px}
-.historyItem{display:flex;justify-content:space-between;height:21px}.big{color:#ff4242}.reg{color:#3a78ff}.god{color:#58e36a}
-#oddsTitle{left:1396px;top:282px}.odds{position:absolute;left:1396px;width:176px;font-size:17px}.odds b{float:right;font-size:21px}
-#bigOdds{top:320px;color:#ff4242}#regOdds{top:374px;color:#3a78ff}#allOdds{top:428px}
-#chain{position:absolute;left:1395px;top:500px;width:180px;height:88px;border:4px solid #58e36a;border-radius:10px;text-align:center;padding-top:12px;font-size:19px;font-weight:900;color:#58e36a}
+#graphStart{position:absolute;left:55px;top:241px;font-size:17px;font-weight:900}
+#graphEnd{position:absolute;left:820px;top:241px;width:120px;text-align:center;font-size:17px;font-weight:900}
+#diffTitle{left:42px;top:345px}.sideLarge{position:absolute;left:62px;width:188px;text-align:center;font-size:42px;font-weight:900}
+#diffValue{top:382px}
+#historyTitle{left:42px;top:465px}.historyList{position:absolute;left:44px;top:521px;width:210px;height:220px;font-size:17px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.historyItem{display:flex;justify-content:space-between;height:22px}.big{color:#ff4242}.reg{color:#3a78ff}.god{color:#58e36a}
+#oddsTitle{left:1672px;top:345px}.odds{position:absolute;left:1672px;width:210px;font-size:19px}.odds b{float:right;font-size:24px}
+#bigOdds{top:385px;color:#ff4242}#regOdds{top:455px;color:#3a78ff}#allOdds{top:525px}
+#chain{position:absolute;left:1664px;top:615px;width:220px;height:102px;border:4px solid #58e36a;border-radius:12px;text-align:center;padding-top:14px;font-size:21px;font-weight:900;color:#58e36a}
 @media(max-width:700px){
  #normal{padding:12px 10px 30px}.machine{grid-template-columns:minmax(0,1fr) auto auto}.normalBtn{padding:8px 10px;font-size:14px}.dataGrid{grid-template-columns:repeat(2,1fr)}
 }
@@ -890,7 +892,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 <button id="insertBtn" class="machineControl sideBtn"><span>INSERT</span></button>
 <button id="cashBtn" class="machineControl sideBtn"><span>CASH OUT</span></button>
 <div id="machineLabel" class="dataTitle">MACHINE -</div><div id="graphLabel" class="dataTitle">DIFF GRAPH</div>
-<div id="gameGraph" class="graphSurface"></div>
+<div id="gameGraph" class="graphSurface"></div><div id="graphStart">1G</div><div id="graphEnd">-</div>
 <div id="currentBox" class="topMetric"><div class="t">CURRENT G</div><div id="gCurrent" class="n">0</div></div>
 <div id="totalBox" class="topMetric"><div class="t">TOTAL G</div><div id="gTotal" class="n">0</div></div>
 <div id="maxBox" class="topMetric"><div class="t">MAX DIFF</div><div id="gMax" class="n">0</div></div>
@@ -1360,7 +1362,8 @@ async function pollData(){
 function renderGameData(d){
  $("gCurrent").textContent=d.currentGames||0;$("gTotal").textContent=d.totalGames||0;$("gMax").textContent=signed(d.todayMaxDifference);$("gBig").textContent=d.bigCount||0;$("gReg").textContent=d.regCount||0;$("diffValue").textContent=signed(d.todayDifference);
  $("bigOdds").querySelector("b").textContent=odds(d.totalGames,d.bigCount);$("regOdds").querySelector("b").textContent=odds(d.totalGames,d.regCount);$("allOdds").querySelector("b").textContent=odds(d.totalGames,Number(d.bigCount||0)+Number(d.regCount||0));
- const h=$("gameHistory");h.textContent="";(d.history||[]).slice(0,10).forEach(function(x){const row=document.createElement("div");row.className="historyItem";let c=x.type==="BIG"?"big":x.type==="REG"?"reg":x.type==="GOD"?"god":"";row.innerHTML='<span class="'+c+'">'+x.type+'</span><span>'+x.games+'G</span>';h.append(row)});
+ $("graphEnd").textContent=Number(d.totalGames||0)>0?Number(d.totalGames).toLocaleString()+"G":"-";
+ const h=$("gameHistory");h.textContent="";(d.history||[]).forEach(function(x){const row=document.createElement("div");row.className="historyItem";let c=x.type==="BIG"?"big":x.type==="REG"?"reg":x.type==="GOD"?"god":"";row.innerHTML='<span class="'+c+'">'+x.type+'</span><span>'+x.games+'G</span>';h.append(row)});
  $("chain").classList.toggle("hidden",!d.piriChain);$("chainCount").textContent="CHAIN x"+Math.max(1,Number(d.piriChainCount||1));
  drawGraph($("gameGraph"),d.graph||[],d.totalGames||0);
 }
