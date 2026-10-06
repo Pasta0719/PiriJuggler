@@ -107,21 +107,15 @@ Piri GOD専用開発フローは **RETIRED_BY_USER**。
 
 後続方式のPhase正本は `NEXT_MACHINE_PHASE_MAP.json` と `next-machine-phases/README.md`。
 
-Current successor phase: NEXT Phase 01 — COMPLETE
-Next successor work: NEXT Phase 02 — run dedicated real Paper+Fabric acceptance; core implementation is present
-Successor Phase 01 design lock is COMPLETE. NEXT Phase 02 is unblocked. Economy fitting values remain intentionally deferred to NEXT Phase 03; they are not a Phase 02 blocker.
+Current successor status: COMPLETE through NEXT Phase 05 final runtime acceptance.
 
-## NEXT Phase 02 core implementation
+The obsolete dedicated NEXT Phase 02 runtime workflow/runner was retired by user decision on 2026-10-06. This does not remove JUGGLER_GOD production code or core tests.
 
-Status: IN_PROGRESS — core code implemented and dedicated runtime acceptance pending.
+Canonical successor runtime protection is now NEXT Phase 05 final runtime, which validates real Paper+Fabric GOD play, BIG transition, payout/result agreement, persisted recovery, and JUGGLER_GOD machine-type persistence.
 
-Implemented: JUGGLER_GOD machine family, GOD BAR role/result, GOD freeze presentation contract, five-BIG GOD chain, setting continuation structure, <=32G heaven state, persistence/history, and isolated replaceable successor assets.
+## JUGGLER_GOD current verification
 
-Dedicated acceptance command: `run-next-phase02-runtime.bat`.
-
-### NEXT Phase 02 hardening
-
-- Direct-entry GOD-chain BIG counter regression fixed and covered by test.
-- Heaven pre-target natural BIG/REG pre-emption removed; target game is now authoritative.
-- NEXT Phase 02 runtime helper scenario/phase/port/probe wiring added and CI-validated.
-- Runtime runner extended through all five guaranteed BIGs and fixed for production third-stop state clearing.
+- Core gameplay tests remain in `JugglerGodCoreTest`.
+- NEXT Phase 05 real runtime remains the canonical end-to-end acceptance.
+- The old `run-next-phase02-runtime.bat`, `runtime-test-support/run_next_phase02.py`, and dedicated Phase02 workflow were removed.
+- Direct-entry GOD-chain counter, authoritative heaven target, GOD freeze/result, payout, and persistence remain covered by current tests/runtime acceptance.
