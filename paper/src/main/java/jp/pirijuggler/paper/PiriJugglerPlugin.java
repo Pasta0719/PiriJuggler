@@ -222,12 +222,14 @@ juggler_god_extreme:
         Player player = event.getPlayer();
         getServer().getScheduler().runTaskLater(this, () -> {
             if (machines != null && machines.ready() && player.isOnline()) machines.recoverPendingWallet(player);
+            if (prizes != null && player.isOnline()) prizes.recoverMobilePrizes(player);
         }, 20L);
     }
 
     @EventHandler public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         handshake.disconnect(player.getUniqueId());
+        if (prizes != null) prizes.stashPrizesForMobile(player);
         if (machines != null) {
             machines.stashInventoryForMobile(player);
             machines.remoteViewerGone(player.getUniqueId());
