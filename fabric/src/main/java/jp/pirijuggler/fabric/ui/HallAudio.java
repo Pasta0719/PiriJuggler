@@ -36,8 +36,9 @@ public final class HallAudio {
         MinecraftClient client=MinecraftClient.getInstance();
         if(client.player==null||client.world==null)return false;
         double dx=client.player.getX()-(machine.x()+.5),dy=client.player.getY()-(machine.y()+1.5),dz=client.player.getZ()-(machine.z()+.5);
-        return dx*dx+dy*dy+dz*dz<=radius*radius;
+        return withinRadius(dx,dy,dz,radius);
     }
+    static boolean withinRadius(double dx,double dy,double dz,double radius){return dx*dx+dy*dy+dz*dz<=radius*radius;}
     private static void stop(int machineId){bonusLoops.remove(machineId);PiriSounds.stopRemoteLoop(machineId);}
     public static void reset(){bonusLoops.clear();PiriSounds.stopRemoteLoops();}
     public static int activeBonusLoops(){return bonusLoops.size();}
