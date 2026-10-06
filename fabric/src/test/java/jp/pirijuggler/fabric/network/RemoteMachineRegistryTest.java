@@ -150,6 +150,26 @@ class RemoteMachineRegistryTest {
         assertEquals(8,registry.view(51).pachinkoBallSequenceId());
     }
 
+
+    @Test void phase14QueuesOnlyPublicAudioLifecyclePerMachine() {
+        RemoteMachineRegistry registry=new RemoteMachineRegistry();
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,snapshot(61)));
+        JsonObject notice=id(61);notice.addProperty("sound","NOTICE");
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SOUND,notice));
+        var sound=registry.pollAudioEvent();assertNotNull(sound);assertEquals(61,sound.machineId());assertEquals("SOUND",sound.kind());assertEquals("NOTICE",sound.bonusType());
+
+        JsonObject start=id(61);start.addProperty("active",true);start.addProperty("bonusType","BIG");start.addProperty("count",1);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_BONUS,start));
+        var begin=registry.pollAudioEvent();assertNotNull(begin);assertEquals("BONUS_START",begin.kind());assertEquals("BIG",begin.bonusType());
+
+        JsonObject end=id(61);end.addProperty("active",false);end.addProperty("bonusType","BIG");end.addProperty("finalCount",8);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_BONUS,end));
+        assertEquals("BONUS_END",registry.pollAudioEvent().kind());
+
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_REMOVE,id(61)));
+        assertEquals("REMOVE",registry.pollAudioEvent().kind());
+    }
+
     private static JsonObject snapshot(int id) {
         JsonObject body = id(id);
         body.addProperty("world", UUID.randomUUID().toString());
