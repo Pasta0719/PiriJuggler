@@ -27,7 +27,7 @@ public final class RemoteMachineRegistry {
     private final Map<Integer, JsonObject> machines = new HashMap<>();
     private final Map<Integer, RemoteMachineViewState> views = new HashMap<>();
     private final Map<Integer,SkillStopPresentation.NoticeGate> skillNotices=new HashMap<>();
-    private Integer skillSuccessSound;\n    public record AudioEvent(int machineId,String kind,String bonusType){}\n    private final ArrayDeque<AudioEvent> audioEvents=new ArrayDeque<>();
+    private Integer skillSuccessSound;\n    private final ArrayDeque<AudioEvent> soundEvents=new ArrayDeque<>();\n    public record AudioEvent(int machineId,String kind,String bonusType){}\n    private final ArrayDeque<AudioEvent> audioEvents=new ArrayDeque<>();
     private final LongSupplier time,wallTimeMs;
 
     public RemoteMachineRegistry() {
@@ -170,14 +170,15 @@ public final class RemoteMachineRegistry {
                     skillNotices.remove(machineId);\n                    audioEvents.add(new AudioEvent(machineId,"REMOVE",null));
                 }
                 case REMOTE_MACHINE_SOUND -> {
-                    // Only the explicitly public SKILL_STOP challenge success is audible here.
-                    if(!body.has("skillChallengeSuccess"))break;
-                    requireBoolean(body,"skillChallengeSuccess");requireString(body,"sound");requireString(body,"spinId");
-                    UUID.fromString(body.get("spinId").getAsString());
-                    RemoteMachineViewState view=views.get(machineId);
-                    if(!body.get("skillChallengeSuccess").getAsBoolean()||!"NOTICE".equals(body.get("sound").getAsString())||view==null||!"SKILL_STOP".equals(view.machineType()))break;
-                    if(view.spinId()!=null&&!view.spinId().toString().equals(body.get("spinId").getAsString()))break;
-                    if(skillNotices.computeIfAbsent(machineId,k->new SkillStopPresentation.NoticeGate()).accept(body.get("spinId").getAsString()))skillSuccessSound=machineId;
+                    requireString(body,"sound");String sound=body.get("sound").getAsString();
+                    if(!Set.of("NOTICE","TENPAI").contains(sound))break;
+                    RemoteMachineViewState view=views.get(machineId);if(view==null)break;
+                    if(body.has("skillChallengeSuccess")){
+                        requireBoolean(body,"skillChallengeSuccess");requireString(body,"spinId");UUID.fromString(body.get("spinId").getAsString());
+                        if(!body.get("skillChallengeSuccess").getAsBoolean()||!"NOTICE".equals(sound)||!"SKILL_STOP".equals(view.machineType()))break;
+                        if(view.spinId()!=null&&!view.spinId().toString().equals(body.get("spinId").getAsString()))break;
+                        if(skillNotices.computeIfAbsent(machineId,k->new SkillStopPresentation.NoticeGate()).accept(body.get("spinId").getAsString()))skillSuccessSound=machineId;
+                    } else soundEvents.add(new AudioEvent(machineId,"SOUND",sound));
                 }
                 default -> { }
             }
@@ -208,12 +209,12 @@ public final class RemoteMachineRegistry {
     public RemoteMachineViewState view(int machineId) {
         return views.get(machineId);
     }
-    public Integer pollSkillSuccessSound(){Integer value=skillSuccessSound;skillSuccessSound=null;return value;}\n    public AudioEvent pollAudioEvent(){return audioEvents.poll();}
+    public Integer pollSkillSuccessSound(){Integer value=skillSuccessSound;skillSuccessSound=null;return value;}\n    public AudioEvent pollAudioEvent(){AudioEvent e=soundEvents.poll();return e!=null?e:audioEvents.poll();}
 
     public void reset() {
         machines.clear();
         views.clear();
-        skillNotices.clear();\n        audioEvents.clear();skillSuccessSound=null;
+        skillNotices.clear();\n        audioEvents.clear();\n        soundEvents.clear();skillSuccessSound=null;
     }
 
     private void applySnapshot(int machineId, JsonObject body) {
