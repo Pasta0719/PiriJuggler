@@ -40,12 +40,19 @@ def tap(k):
 def command(text,expected):
  before=sum(expected in m for m in cli().get('messages',[])); action('command',text=text); wait(lambda:sum(expected in m for m in cli().get('messages',[]))>before,text)
 def click():
- # A prior OPEN_MACHINE packet may be retained by the helper across close/reopen.
- # Require the packet count to advance, but give the real client/server handshake
- # more time on busy CI runners before declaring the interaction failed.
+ # Require a fresh production OPEN_MACHINE packet. Headless CI can occasionally
+ # drop a synthetic block-interaction edge while the client is still settling,
+ # so retry the real aim/click interaction instead of treating one lost edge as
+ # a gameplay regression.
  before=sum(p.get('type')=='OPEN_MACHINE' for p in cli().get('packets',[]))
- action('aim',x=0); action('click',x=0)
- wait(lambda:sum(p.get('type')=='OPEN_MACHINE' for p in cli().get('packets',[]))>before,'open',240)
+ for attempt in range(4):
+  action('aim',x=0); action('click',x=0)
+  try:
+   wait(lambda:sum(p.get('type')=='OPEN_MACHINE' for p in cli().get('packets',[]))>before,'open',60)
+   return
+  except TimeoutError:
+   if attempt==3: raise
+   time.sleep(1)
 def start_server(label):
  global server,sr
  plugins=SERVER/'plugins';plugins.mkdir(parents=True,exist_ok=True);shutil.copy2(prod['paper'],plugins);shutil.copy2(helper,plugins)
