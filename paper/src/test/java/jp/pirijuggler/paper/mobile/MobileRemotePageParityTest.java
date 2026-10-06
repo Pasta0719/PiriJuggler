@@ -10,7 +10,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 final class MobileRemotePageParityTest {
     private static String page() throws Exception {
-        Path source=Path.of("paper/src/main/java/jp/pirijuggler/paper/mobile/MobileRemoteGateway.java");
+        Path source=Path.of("src/main/java/jp/pirijuggler/paper/mobile/MobileRemoteGateway.java");
+        if(!Files.exists(source)) source=Path.of("paper/src/main/java/jp/pirijuggler/paper/mobile/MobileRemoteGateway.java");
         String text=Files.readString(source, StandardCharsets.UTF_8);
         String marker="private static final String PAGE = \"\"\"";
         int start=text.indexOf(marker);
