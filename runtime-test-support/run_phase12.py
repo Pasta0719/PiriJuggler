@@ -199,7 +199,7 @@ def create_machine(name,x,z,index):
     # Build a deterministic wall-button fixture facing the client before registration.
     command(name,f"setblock {x} 66 {z-1} stone")
     command(name,f"setblock {x} 66 {z} stone_button[face=wall,facing=south]")
-    command(name,f"tp @s {x+0.5} 65 2.5")
+    command(name,f"tp @s {x+0.5} 65 {z+2.5}")
     action(name,"aimpos",x=x,y=66,z=z);time.sleep(.15)
     before=machine_count();command(name,"piri machine create","MACHINE_CREATED")
     wait(lambda:machine_count()==before+1,f"machine {index} committed")
@@ -214,7 +214,10 @@ def forbidden_remote_payload(value):
 try:
     start_server()
     start_client("phase12-owner"); owner="phase12-owner"
-    coords=[(x,0) for x in range(-20,22)]
+    # 42 machines in a compact 7x6 grid. Four-block spacing prevents the
+    # player's registration ray from intersecting an already-registered neighbor,
+    # while keeping the entire set inside the spectator's 32-block interest range.
+    coords=[(x,z) for z in (-10,-6,-2,2,6,10) for x in (-12,-8,-4,0,4,8,12)]
     for i,(x,z) in enumerate(coords,1): create_machine(owner,x,z,i)
     check("42 physical registered machines exist",machine_count()==42,{"machines":machine_count()})
 
@@ -249,7 +252,7 @@ try:
     check("spectator reconnect starts from fresh 42-machine snapshot",pcount(spec,"REMOTE_MACHINE_REMOVE")==0,remote_counts(spec))
 
     # Real gameplay remote transitions including notice and bonus start/end.
-    x,z=coords[0];command(owner,f"tp @s {x+0.5} 65 2.5");clickpos(owner,x,66,z,"OPEN_MACHINE")
+    x,z=coords[0];command(owner,f"tp @s {x+0.5} 65 {z+2.5}");clickpos(owner,x,66,z,"OPEN_MACHINE")
     command(owner,"piritest fund", "TEST_FUNDED")
     action(owner,"close");wait(lambda:not session(),"funded close")
     clickpos(owner,x,66,z,"OPEN_MACHINE");wait(lambda:session().get("credit")==50,"funded session refresh")
@@ -286,9 +289,11 @@ try:
     before_remove=pcount(spec,"REMOTE_MACHINE_REMOVE")
     command(owner,"piri machine remove 42")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_REMOVE")>=before_remove+1 and client(spec).get("remoteCacheSize")==41,"immediate machine remove")
-    rx,rz=coords[-1];command(owner,f"tp @s {rx+0.5} 65 2.5");action(owner,"aimpos",x=rx,y=66,z=rz)
+    rx,rz=coords[-1];command(owner,f"tp @s {rx+0.5} 65 {rz+2.5}");action(owner,"aimpos",x=rx,y=66,z=rz)
     before_snap=pcount(spec,"REMOTE_MACHINE_SNAPSHOT");command(owner,"piri machine create")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_SNAPSHOT")>=before_snap+1 and client(spec).get("remoteCacheSize")==42,"immediate machine create")
+    command(owner,"setblock 22 66 -1 stone")
+    command(owner,"setblock 22 66 0 stone_button[face=wall,facing=south]")
     command(owner,"tp @s 22.5 65 2.5");action(owner,"aimpos",x=22,y=66,z=0)
     before_snap=pcount(spec,"REMOTE_MACHINE_SNAPSHOT");command(owner,"piri machine redefine 43")
     wait(lambda:pcount(spec,"REMOTE_MACHINE_SNAPSHOT")>=before_snap+1 and client(spec).get("remoteCacheSize")==42,"immediate redefine snapshot")
