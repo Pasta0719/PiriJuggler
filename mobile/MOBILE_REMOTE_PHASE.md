@@ -86,3 +86,9 @@ COMPLETEにするには以下をすべて満たす。
 古いPhaseのPASSや、別機種のruntime PASSをこのPhaseのPASSとして代用しない。
 UIスクリーンショットだけでもCOMPLETEにしない。
 上記E2Eを現行mainで通し、証跡を保存してからStatusをCOMPLETEへ変更する。
+
+### Reel presentation parity
+- Fabric/Minecraft の確定表示を正本とする
+- 通常定速は 28 symbols/sec
+- モバイルは Fabric と同じ加速・逆回転プロファイル、停止方向、停止速度上限、図柄サイズ比率を維持する
+- モバイル独自の非等方スケーリングで図柄サイズ比率を崩してはならない
