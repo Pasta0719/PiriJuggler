@@ -169,8 +169,8 @@ class RemoteMachineViewStateTest {
         assertEquals("NONE", view.bonusMode());
 
         JsonObject notice = id(13);
-        notice.addProperty("on", true);
-        notice.addProperty("blinkMs", 200);
+        notice.addProperty("lamp", "ON");
+        notice.addProperty("pattern", "FAST_BLINK_1S");
         registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_NOTICE, notice));
         assertTrue(view.lampVisible(now.get()));
         now.addAndGet(250_000_000L);
@@ -178,8 +178,8 @@ class RemoteMachineViewStateTest {
 
         JsonObject bonus = id(13);
         bonus.addProperty("active", true);
-        bonus.addProperty("mode", "REG");
-        bonus.addProperty("bonusCount", 4);
+        bonus.addProperty("bonusType", "REG");
+        bonus.addProperty("count", 4);
         registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_BONUS, bonus));
         assertEquals("REG", view.bonusMode());
         assertEquals(4, view.bonusCount());
