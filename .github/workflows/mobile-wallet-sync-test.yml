@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'paper/src/main/java/jp/pirijuggler/paper/economy/EconomyStore.java'
+      - 'paper/src/main/java/jp/pirijuggler/paper/machine/MachineService.java'
+      - 'paper/src/main/java/jp/pirijuggler/paper/PiriJugglerPlugin.java'
       - 'paper/src/test/java/jp/pirijuggler/paper/economy/EconomyStoreTest.java'
       - '.github/workflows/mobile-wallet-sync-test.yml'
   workflow_dispatch:
@@ -20,4 +22,4 @@ jobs:
           java-version: '21'
           cache: gradle
       - name: Run mobile wallet round-trip test
-        run: .\\gradlew.bat :paper:test --tests "jp.pirijuggler.paper.economy.EconomyStoreTest.mobileWalletRoundTripPreservesPlayerMedalsAndMachineCredit" --console=plain
+        run: .\\gradlew.bat :paper:test --tests "jp.pirijuggler.paper.economy.EconomyStoreTest.mobileWalletRoundTripPreservesPlayerMedalsAndMachineCredit" --tests "jp.pirijuggler.paper.economy.EconomyStoreTest.offlineInventoryStashMovesRealMedalItemsIntoMobileWallet" --console=plain
