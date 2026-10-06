@@ -80,6 +80,21 @@ class RemoteMachineViewStateTest {
         assertFalse(view.lampVisible(now.get()));
     }
 
+    @Test void redefineSnapshotImmediatelyReplacesPlacementAndFacing() {
+        RemoteMachineRegistry registry = new RemoteMachineRegistry();
+        JsonObject first = snapshot(21);
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, first));
+        assertEquals("NORTH", registry.view(21).facing());
+        assertEquals(10, registry.view(21).x());
+        JsonObject moved = snapshot(21);
+        moved.addProperty("x", 14); moved.addProperty("y", 100); moved.addProperty("z", 0); moved.addProperty("facing", "EAST");
+        registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, moved));
+        assertEquals(14, registry.view(21).x());
+        assertEquals(100, registry.view(21).y());
+        assertEquals(0, registry.view(21).z());
+        assertEquals("EAST", registry.view(21).facing());
+    }
+
     @Test void resetClearsTypedViewCache() {
         RemoteMachineRegistry registry = new RemoteMachineRegistry();
         registry.receive(new Envelope(Protocol.VERSION, PacketType.REMOTE_MACHINE_SNAPSHOT, snapshot(9)));
