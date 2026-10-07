@@ -936,17 +936,30 @@ function symbolAt(reel,index){
 function asset(path){
  return "/assets/"+((currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME")?"juggler_god/":"")+path;
 }
-let audioLoop=null,audioLoopName="",audioUnlocked=false;
+let audioLoop=null,audioLoopName="",audioUnlocked=false;const audioOneShots=new Set(),audioTimers=new Set();
 function soundUrl(name){return "/assets/sounds/"+name+".ogg"}
 function machineSound(base){
  return (currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME")?"juggler_god_"+base:base;
 }
 function unlockAudio(){audioUnlocked=true}
+function trackOneShot(a){
+ audioOneShots.add(a);
+ const clear=function(){audioOneShots.delete(a)};
+ a.addEventListener("ended",clear,{once:true});a.addEventListener("abort",clear,{once:true});
+ return a;
+}
 function playNamed(name,fallback){
  if(!audioUnlocked)return;
- const a=new Audio(soundUrl(name));a.preload="auto";a.volume=1;
- if(fallback&&fallback!==name)a.addEventListener("error",function(){const b=new Audio(soundUrl(fallback));b.volume=1;b.play().catch(function(){})},{once:true});
- a.play().catch(function(){});
+ const a=trackOneShot(new Audio(soundUrl(name)));a.preload="auto";a.volume=1;
+ if(fallback&&fallback!==name)a.addEventListener("error",function(){
+  audioOneShots.delete(a);
+  const b=trackOneShot(new Audio(soundUrl(fallback)));b.preload="auto";b.volume=1;b.play().catch(function(){audioOneShots.delete(b)});
+ },{once:true});
+ a.play().catch(function(){audioOneShots.delete(a)});
+}
+function playLater(name,fallback,delay){
+ if(!audioUnlocked)return;
+ const timer=setTimeout(function(){audioTimers.delete(timer);playNamed(name,fallback)},Math.max(0,delay||0));audioTimers.add(timer);
 }
 function playSound(base){playNamed(machineSound(base),base)}
 function stopLoop(){
@@ -959,7 +972,11 @@ function startLoopNamed(name,fallback){
  a.play().catch(function(){});
 }
 function startLoop(base){startLoopNamed(machineSound(base),base)}
-function stopAllAudio(){stopLoop()}
+function stopAllAudio(){
+ for(const timer of audioTimers)clearTimeout(timer);audioTimers.clear();
+ for(const a of audioOneShots){try{a.pause();a.currentTime=0}catch(e){}}audioOneShots.clear();
+ stopLoop();
+}
 function resetSlotRuntime(){
  if(queuedLeverTimer){clearTimeout(queuedLeverTimer);queuedLeverTimer=0}
  stopAllAudio();
@@ -1341,7 +1358,7 @@ async function pollEvents(){
     if(type==="NOTICE"){
      const snd=p.sound||"",skillSuccess=!!p.skillChallengeSuccess;
      if(skillSuccess&&!acceptSkillSuccess(p))return;
-     if(snd==="NOTICE")playSound("notice");else if(snd==="NOTICE_STRONG")playSound("notice_strong");else if(snd==="NOTICE_X5")for(let n=0;n<5;n++)setTimeout(function(){playSound("notice")},n*100);
+     if(snd==="NOTICE")playSound("notice");else if(snd==="NOTICE_STRONG")playSound("notice_strong");else if(snd==="NOTICE_X5")for(let n=0;n<5;n++)playLater(machineSound("notice"),"notice",n*100);
     }else if(type==="TENPAI_SOUND"){
      if(!motion||!p.spinId||String(p.spinId)===String(motion.spinId))playSound("tenpai");
     }else if(type==="PAYOUT")playSound("payout");
@@ -1354,7 +1371,7 @@ async function pollEvents(){
       if(godBig){
        pendingBigBgmAt=0;pendingBigBgmName="";
        if(godPresentation){
-        const delay=Math.max(0,godPresentation.at-performance.now());setTimeout(function(){playNamed(start,fallback)},delay);
+        const delay=Math.max(0,godPresentation.at-performance.now());playLater(start,fallback,delay);
        }else pendingGodHitSound=start;
       }else{
        playNamed(start,fallback);pendingBigBgmName=machineSound("big_bgm");pendingBigBgmAt=performance.now()+4500;
@@ -1472,7 +1489,7 @@ function frame(now){
  if(!$("game").classList.contains("hidden")){
   if(pendingGodHitSound&&godPresentation){
    const hit=pendingGodHitSound;pendingGodHitSound="";
-   const delay=Math.max(0,godPresentation.at-now);setTimeout(function(){playNamed(hit,machineSound("bonus_start"))},delay);
+   const delay=Math.max(0,godPresentation.at-now);playLater(hit,machineSound("bonus_start"),delay);
   }
   if(pendingBigBgmAt>0&&now>=pendingBigBgmAt){
    pendingBigBgmAt=0;const name=pendingBigBgmName;pendingBigBgmName="";if(name)startLoopNamed(name,"big_bgm");
