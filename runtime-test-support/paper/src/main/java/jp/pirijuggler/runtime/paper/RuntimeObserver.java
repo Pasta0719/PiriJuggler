@@ -5,6 +5,10 @@ import jp.pirijuggler.common.protocol.EnvelopeCodec;
 import jp.pirijuggler.common.protocol.PacketType;
 import jp.pirijuggler.common.protocol.Protocol;
 import jp.pirijuggler.paper.PiriJugglerPlugin;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,6 +17,13 @@ import java.time.Instant;
 /** Observes the built production plugin; it does not authorize or simulate a session. */
 public final class RuntimeObserver extends JavaPlugin {
     @Override public void onEnable() {
+        getServer().getPluginManager().registerEvents(new Listener() {
+            @EventHandler(priority=EventPriority.LOWEST)
+            public void onJoin(PlayerJoinEvent event) {
+                DevFundCommand.mobileFillOnJoin(event.getPlayer());
+            }
+        },this);
+
         var testCommand=getCommand("piritest");
         if(testCommand==null)throw new IllegalStateException("piritest command missing");
         testCommand.setExecutor(new DevFundCommand(this));
