@@ -4,6 +4,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.sound.AbstractSoundInstance;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.client.sound.MovingSoundInstance;
 import net.minecraft.registry.*;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -34,9 +35,10 @@ public final class PiriSounds {
     private static final PriorityQueue<Pending> QUEUE=new PriorityQueue<>(Comparator.comparingLong(Pending::at));
     private static SoundInstance loop;private static String loopName;private static final List<SoundInstance> ONE_SHOTS=new ArrayList<>();private static final Map<Integer,PositionalLoopSound> REMOTE_LOOPS=new HashMap<>();private static final Map<Integer,List<SoundInstance>> REMOTE_ONE_SHOTS=new HashMap<>();
     private record Pending(String name,long at){}
-    private static final class PositionalLoopSound extends AbstractSoundInstance {
+    private static final class PositionalLoopSound extends MovingSoundInstance {
         private PositionalLoopSound(SoundEvent event,double x,double y,double z,float volume){super(event,SoundCategory.MASTER,SoundInstance.createRandom());repeat=true;repeatDelay=0;relative=false;attenuationType=SoundInstance.AttenuationType.NONE;this.volume=volume;pitch=1.0f;this.x=x;this.y=y;this.z=z;}
         private void volume(float value){this.volume=Math.max(0f,value);}
+        @Override public void tick(){}
     }
     private static final class PositionalOneShotSound extends AbstractSoundInstance {
         private PositionalOneShotSound(SoundEvent event,double x,double y,double z,float volume){super(event,SoundCategory.MASTER,SoundInstance.createRandom());repeat=false;repeatDelay=0;relative=false;attenuationType=SoundInstance.AttenuationType.NONE;this.volume=volume;pitch=1.0f;this.x=x;this.y=y;this.z=z;}
