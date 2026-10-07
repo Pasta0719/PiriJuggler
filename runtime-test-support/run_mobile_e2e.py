@@ -67,6 +67,52 @@ def prizes():
     try: rows=db_rows("SELECT prize_type,amount FROM mobile_prizes")
     except sqlite3.OperationalError: return {}
     return {r["prize_type"]:int(r["amount"]) for r in rows}
+def mobile_stop(path,pressed,token):
+    for _ in range(40):
+        try:
+            return http("POST",f"/api/action?type={path}&pressed={pressed}",token,expect=200)
+        except AssertionError as failure:
+            if "STOP_TOO_EARLY" not in str(failure): raise
+            time.sleep(.15)
+    raise TimeoutError("mobile stop never became available: "+path)
+
+def browser_skillstop_check(token,expected_remaining,expected_challenge):
+    from selenium import webdriver
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.support.ui import WebDriverWait
+    options=Options()
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--window-size=1280,720")
+    driver=webdriver.Chrome(options=options)
+    try:
+        driver.get("http://127.0.0.1:10271/")
+        driver.execute_script(
+            "localStorage.setItem('piriToken',arguments[0]);localStorage.setItem('piriPlayer','PiriRuntimeTest');",
+            token)
+        driver.refresh()
+        wait_browser=WebDriverWait(driver,20)
+        wait_browser.until(lambda d:d.execute_script("return document.getElementById('game') && !document.getElementById('game').classList.contains('hidden')"))
+        wait_browser.until(lambda d:"skillstop" in (d.find_element("id","stage").get_attribute("class") or ""))
+        cabinet=driver.find_element("id","cabinet")
+        bg=driver.execute_script("return getComputedStyle(arguments[0]).backgroundColor",cabinet)
+        count=driver.find_element("id","countText").text
+        image=driver.find_element("id","skillChallengeImg")
+        display=driver.execute_script("return getComputedStyle(arguments[0]).display",image)
+        src=image.get_attribute("src") or ""
+        shot=OUT/"screenshots"/"mobile-skillstop-browser.png";shot.parent.mkdir(parents=True,exist_ok=True)
+        driver.save_screenshot(str(shot))
+        evidence={"background":bg,"count":count,"challengeDisplay":display,"challengeSrc":src,"screenshot":str(shot.relative_to(E))}
+        check("real browser shows canonical SKILL_STOP background",
+              bg in ("rgb(17, 16, 21)","rgba(17, 16, 21, 1)"),evidence)
+        check("real browser shows SKILL_STOP remaining games",
+              count==f"残り {expected_remaining}G",evidence)
+        check("real browser shows production challenge PNG",
+              display!="none" and src.endswith("/assets/symbols/"+expected_challenge.lower()+".png"),evidence)
+    finally:
+        driver.quit()
+
 def http(method,path,token=None,expect=200):
     req=urllib.request.Request("http://127.0.0.1:10271"+path,method=method)
     if token:req.add_header("X-Piri-Token",token)
@@ -268,6 +314,37 @@ try:
     command("testvault get PiriRuntimeTest","TEST_VAULT_BALANCE")
     check("loan then prize cash leaves Vault balance conserved at 5000",
           any("TEST_VAULT_BALANCE PiriRuntimeTest 5000.0" in m for m in messages()),messages()[-10:])
+
+    # Real-browser SKILL_STOP presentation acceptance. Build the state through production gameplay,
+    # then open the actual mobile page in Chrome and inspect the rendered DOM/CSS.
+    command("piri machine type 1 SKILL_STOP","MACHINE_TYPE id=1")
+    command("piri skillrole 1 BIG NONE","SKILL_ROLE_READY id=1")
+    stop_client()
+    skill_seated=http("POST","/api/seat?id=1",token)
+    check("mobile seats at production SKILL_STOP machine",
+          skill_seated.get("machineType")=="SKILL_STOP" and skill_seated.get("seated") is True,skill_seated)
+    if int(skill_seated.get("credit",0))<3:
+        http("POST","/api/loan",token)
+        skill_seated=http("POST","/api/insert",token)
+    skill_bet=http("POST","/api/action?type=SPACE_ACTION",token)
+    check("SKILL_STOP mobile BET enters production bet state",skill_bet.get("gameState")=="NORMAL_BETTED",skill_bet)
+    skill_spin=http("POST","/api/action?type=SPACE_ACTION",token)
+    check("forced SKILL_STOP BIG uses production spinning state",
+          skill_spin.get("gameState")=="NORMAL_SPINNING",skill_spin)
+    mobile_stop("STOP_CENTER",2,token)
+    mobile_stop("STOP_LEFT",12,token)
+    skill_big=mobile_stop("STOP_RIGHT",2,token)
+    check("forced SKILL_STOP BIG reaches BIG_READY",skill_big.get("gameState")=="BIG_READY",skill_big)
+    skill_bonus_bet=http("POST","/api/action?type=SPACE_ACTION",token)
+    check("SKILL_STOP bonus BET reaches BIG_BETTED",skill_bonus_bet.get("gameState")=="BIG_BETTED",skill_bonus_bet)
+    skill_bonus_spin=http("POST","/api/action?type=SPACE_ACTION",token)
+    challenge=str(skill_bonus_spin.get("skillChallenge",""))
+    remaining=int(skill_bonus_spin.get("skillRemaining",-1))
+    check("SKILL_STOP bonus lever exposes fixed production challenge",
+          skill_bonus_spin.get("gameState")=="BIG_SPINNING" and remaining==20 and challenge not in ("","AUTO"),
+          skill_bonus_spin)
+    browser_skillstop_check(token,remaining,challenge)
+    http("POST","/api/leave",token)
 
     manifest["passed"]=True
 except Exception as e:
