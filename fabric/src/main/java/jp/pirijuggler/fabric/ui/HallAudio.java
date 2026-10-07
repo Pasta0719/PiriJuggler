@@ -5,6 +5,7 @@ import jp.pirijuggler.fabric.network.RemoteMachineViewState;
 import net.minecraft.client.MinecraftClient;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 public final class HallAudio {
     static final double SE_RADIUS=16.0, BGM_RADIUS=12.0;
@@ -96,18 +97,18 @@ public final class HallAudio {
         bonusLoops.put(machineId,new LoopState(sound,machine.machineType(),machine.x(),machine.y(),machine.z(),machine.dimension()));
     }
 
-    private static String resolve(RemoteMachineViewState machine,String logical){
-        String type=machine.machineType();
+    private static String resolve(RemoteMachineViewState machine,String logical){return resolveLogical(machine.machineType(),logical,PiriSounds::available);}
+    static String resolveLogical(String type,String logical,Predicate<String> available){
         return switch(logical){
-            case "god_freeze" -> PiriSounds.available("juggler_god_god_freeze")?"juggler_god_god_freeze":"god_freeze";
+            case "god_freeze" -> available.test("juggler_god_god_freeze")?"juggler_god_god_freeze":"god_freeze";
             case "god_stop_1","god_stop_2","god_stop_3" -> {
                 String dedicated="juggler_god_"+logical;
-                yield PiriSounds.available(dedicated)?dedicated:PiriSounds.forMachine(type,"stop");
+                yield available.test(dedicated)?dedicated:PiriSounds.resolveForMachine(type,"stop",available);
             }
-            case "god_bonus_start" -> PiriSounds.available("juggler_god_god_bonus_start")?"juggler_god_god_bonus_start":PiriSounds.forMachine(type,"bonus_start");
-            case "god_bonus_end" -> PiriSounds.available("juggler_god_god_bonus_end")?"juggler_god_god_bonus_end":PiriSounds.forMachine(type,"bonus_end");
-            case "god_big_bgm" -> PiriSounds.available("juggler_god_god_big_bgm")?"juggler_god_god_big_bgm":PiriSounds.forMachine(type,"big_bgm");
-            default -> PiriSounds.forMachine(type,logical);
+            case "god_bonus_start" -> available.test("juggler_god_god_bonus_start")?"juggler_god_god_bonus_start":PiriSounds.resolveForMachine(type,"bonus_start",available);
+            case "god_bonus_end" -> available.test("juggler_god_god_bonus_end")?"juggler_god_god_bonus_end":PiriSounds.resolveForMachine(type,"bonus_end",available);
+            case "god_big_bgm" -> available.test("juggler_god_god_big_bgm")?"juggler_god_god_big_bgm":PiriSounds.resolveForMachine(type,"big_bgm",available);
+            default -> PiriSounds.resolveForMachine(type,logical,available);
         };
     }
 
