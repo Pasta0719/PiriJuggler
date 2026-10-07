@@ -37,6 +37,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
+          python -m pip install "selenium>=4.20,<5"
+          google-chrome --version || chromium --version || true
           chmod +x gradlew
       - name: Build production and runtime helpers
         run: |
