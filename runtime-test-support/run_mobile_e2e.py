@@ -319,6 +319,7 @@ try:
     # then open the actual mobile page in Chrome and inspect the rendered DOM/CSS.
     command("piri machine type 1 SKILL_STOP","MACHINE_TYPE id=1")
     command("piri skillrole 1 BIG NONE","SKILL_ROLE_READY id=1")
+    command("piri skillbonus 1 BAR","SKILL_BONUS_READY id=1")
     stop_client()
     skill_seated=http("POST","/api/seat?id=1",token)
     check("mobile seats at production SKILL_STOP machine",
