@@ -9,6 +9,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import java.util.*;
+import java.util.function.Predicate;
 
 /** Accepts user-supplied OGG resources. No synthesis, encoding or replacement audio. */
 public final class PiriSounds {
@@ -44,10 +45,11 @@ public final class PiriSounds {
     public static void queueAfter(String name,int count,long spacingNanos,long delayNanos){if(!EVENTS.containsKey(name))throw new IllegalArgumentException(name);long now=System.nanoTime()+Math.max(0L,delayNanos);for(int i=0;i<count;i++)QUEUE.add(new Pending(name,now+spacingNanos*i));}
     public static void tick(){long now=System.nanoTime();while(!QUEUE.isEmpty()&&QUEUE.peek().at<=now)play(QUEUE.remove().name);}
     public static boolean available(String name){return NAMES.contains(name)&&MinecraftClient.getInstance().getResourceManager().getResource(Identifier.of("piri","sounds/"+name+".ogg")).isPresent();}
-    public static String forMachine(String machineType,String base){
+    public static String forMachine(String machineType,String base){return resolveForMachine(machineType,base,PiriSounds::available);}
+    static String resolveForMachine(String machineType,String base,Predicate<String> available){
         if("JUGGLER_GOD".equals(machineType)||"JUGGLER_GOD_EXTREME".equals(machineType)){
             String dedicated="juggler_god_"+base;
-            if(available(dedicated))return dedicated;
+            if(available.test(dedicated))return dedicated;
         }
         return base;
     }
