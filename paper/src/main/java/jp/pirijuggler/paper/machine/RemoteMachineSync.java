@@ -381,8 +381,10 @@ public final class RemoteMachineSync {
             body.addProperty("godFreeze", publicState.has("godFreeze")&&publicState.get("godFreeze").getAsBoolean());
             body.addProperty("godPresentationStartMs", publicState.has("godPresentationStartMs")
                     ?publicState.get("godPresentationStartMs").getAsLong():0L);
-            body.addProperty("godFirstBigAudio", publicState.has("godFirstBigAudio")
-                    && publicState.get("godFirstBigAudio").getAsBoolean());
+            boolean firstGodBig=publicState.has("godFirstBigAudio")&&publicState.get("godFirstBigAudio").getAsBoolean();
+            body.addProperty("godFirstBigAudio",firstGodBig);
+            if(firstGodBig)godFirstBigAudioActive.put(machine.id(),true);
+            else if(!gameState.startsWith("BIG_"))godFirstBigAudioActive.remove(machine.id());
 
             boolean spinning = gameState.endsWith("_SPINNING");
             if(machine.type()==MachineType.PACHINKO&&session.machineState()!=null){
