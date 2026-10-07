@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 public final class HallAudio {
     static final double SE_RADIUS=16.0, BGM_RADIUS=12.0;
     static final float NORMAL_VOLUME=.35f, NOTICE_VOLUME=.45f, BGM_VOLUME=.18f;
+    // Keep the original audible cutoff; only reshape in-range distance falloff and add wall occlusion.
     static final float WALL_OCCLUSION=.55f;
 
     private record LoopState(String sound,String machineType,int x,int y,int z,String dimension) {}
