@@ -64,10 +64,11 @@ class UiResourcesTest {
         String world=Files.readString(ROOT.resolve("fabric/src/main/java/jp/pirijuggler/fabric/render/WorldCabinetRenderer.java"));
         assertTrue(slot.contains("JugglerGodAssets.texture(view.machineType(),path)"));
         assertTrue(world.contains("JugglerGodAssets.texture(state.machineType()"));
-        String sounds=Files.readString(ROOT.resolve("fabric/src/main/java/jp/pirijuggler/fabric/ui/PiriSounds.java"));
-        assertTrue(sounds.contains("\"JUGGLER_GOD\".equals(machineType)"));
-        assertTrue(sounds.contains("\"juggler_god_\"+base"));
-        assertTrue(sounds.contains("if(available.test(dedicated))return dedicated"));
+        assertEquals("juggler_god_bet",PiriSounds.resolveForMachine("JUGGLER_GOD","bet",id->id.equals("juggler_god_bet")));
+        assertEquals("juggler_god_bet",PiriSounds.resolveForMachine("JUGGLER_GOD_EXTREME","bet",id->id.equals("juggler_god_bet")));
+        assertEquals("bet",PiriSounds.resolveForMachine("JUGGLER","bet",id->true));
+        assertEquals("bet",PiriSounds.resolveForMachine("SKILL_STOP","bet",id->true));
+        assertEquals("bet",PiriSounds.resolveForMachine("JUGGLER_GOD","bet",id->false));
         String ui=Files.readString(ROOT.resolve("fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotUi.java"));
         assertTrue(ui.contains("juggler_god_god_freeze"));
         assertTrue(ui.contains("juggler_god_god_stop_"));
