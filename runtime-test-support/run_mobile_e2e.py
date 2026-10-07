@@ -246,6 +246,9 @@ try:
                   and str(e.get("payload",{}).get("spinId",""))==spin_id
                   for e in partial_events),
           partial)
+    check("resume preserves authoritative stopped reel position",
+          int(partial.get("displayStops",{}).get("left",-1))==int(first_stop.get("displayStops",{}).get("left",-2)),
+          {"firstStop":first_stop,"resume":partial})
 
     for stop in ("STOP_CENTER","STOP_RIGHT"):
         for _ in range(30):
