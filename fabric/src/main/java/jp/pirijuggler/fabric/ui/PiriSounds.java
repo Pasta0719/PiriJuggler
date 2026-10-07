@@ -83,7 +83,7 @@ public final class PiriSounds {
     public static void startRemoteLoop(int machineId,String name,double x,double y,double z){startRemoteLoop(machineId,name,x,y,z,0.18f);}
     public static void startRemoteLoop(int machineId,String name,double x,double y,double z,float volume){
         stopRemoteLoop(machineId);if(!available(name))return;
-        SoundInstance sound=new PositionalLoopSound(EVENTS.get(name),x,y,z,volume);REMOTE_LOOPS.put(machineId,sound);MinecraftClient.getInstance().getSoundManager().play(sound);
+        PositionalLoopSound sound=new PositionalLoopSound(EVENTS.get(name),x,y,z,volume);REMOTE_LOOPS.put(machineId,sound);MinecraftClient.getInstance().getSoundManager().play(sound);
     }
     public static void updateRemoteLoopVolume(int machineId,float volume){PositionalLoopSound sound=REMOTE_LOOPS.get(machineId);if(sound!=null)sound.volume(volume);}
     public static void stopRemoteLoop(int machineId){SoundInstance sound=REMOTE_LOOPS.remove(machineId);if(sound!=null)MinecraftClient.getInstance().getSoundManager().stop(sound);}
