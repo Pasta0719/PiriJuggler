@@ -291,7 +291,9 @@ public final class RecoveryStore {
             }
             case SEATED_READY -> {}
         }
-        return runtime.clearPresentation("RECOVERY_SETTLED").toJsonString();
+        String settledEvent=runtime.lastEvent().startsWith("RECOVERY_STOCK_PRIORITY_")
+                ?runtime.lastEvent():"RECOVERY_SETTLED";
+        return runtime.clearPresentation(settledEvent).toJsonString();
     }
 
     private JugglerGodRuntime loadJugglerGodRuntime(Session before) throws Exception {
