@@ -104,7 +104,7 @@ final class MobileRemotePageParityTest {
         assertTrue(page.contains("for(const a of audioOneShots){try{a.pause();a.currentTime=0}catch(e){}}"));
         assertTrue(page.contains("audioOneShots.clear()"));
         assertTrue(page.contains("stopLoop();"));
-        assertTrue(page.contains("if(godFreeze){"));
+        assertTrue(page.contains("if(freeze){"));
         assertTrue(page.contains("stopAllAudio();"));
         assertTrue(page.contains("playLater(machineSound(\"notice\"),\"notice\",n*100)"));
     }
