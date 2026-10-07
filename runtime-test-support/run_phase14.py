@@ -2,7 +2,7 @@
 from pathlib import Path
 import datetime,json,os,re,shutil,subprocess,time
 ROOT=Path(__file__).resolve().parents[1];E=ROOT/"runtime-evidence/PHASE_14";RUN=datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ");OUT=E/"attempts"/RUN;SERVER=E/"work"/("server-"+RUN)
-JAVA=shutil.which("java");PAPER=ROOT/"runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar";GRADLE=["cmd.exe","/d","/c",str(ROOT/"gradlew.bat")] if os.name=="nt" else [str(ROOT/"gradlew")]
+JAVA=shutil.which("java");JCMD=shutil.which("jcmd");PAPER=ROOT/"runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar";GRADLE=["cmd.exe","/d","/c",str(ROOT/"gradlew.bat")] if os.name=="nt" else [str(ROOT/"gradlew")]
 prod={s:ROOT/s/f"build/libs/piri-juggler-{s}-1.0.0.jar" for s in ("paper","fabric")};helper={s:ROOT/f"runtime-test-support/{m}/build/libs/piri-runtime-test-{s}-1.0.0.jar" for s,m in (("paper","paper"),("client","client"))}
 OUT.mkdir(parents=True,exist_ok=True);sr=OUT/"server-result.json";cr=OUT/"phase14-perf"/"client-result.json";cache={};server=client=None;handles=[];manifest={"run":RUN,"passed":False,"metrics":{},"assertions":[]}
 def load(p):
@@ -30,6 +30,14 @@ def sample(seconds):
  return vals
 def avg(v,k):
  a=[x[k] for x in v if isinstance(x.get(k),(int,float)) and x[k]>=0];return sum(a)/len(a) if a else 0
+def retained_server_heap(label):
+ if not JCMD: raise RuntimeError("jcmd missing for retained-heap measurement")
+ result=subprocess.run([JCMD,str(server.pid),"GC.run"],capture_output=True,text=True,timeout=30)
+ if result.returncode!=0: raise RuntimeError(f"GC.run failed ({label}): {result.stdout} {result.stderr}")
+ time.sleep(2)
+ value=load(sr).get("heapMiB")
+ if not isinstance(value,(int,float)): raise RuntimeError("Missing server heap after GC.run: "+label)
+ return value
 def packets():
  kinds={"REMOTE_MACHINE_SPIN","REMOTE_MACHINE_STOP","REMOTE_MACHINE_NOTICE","REMOTE_MACHINE_BONUS","REMOTE_MACHINE_SOUND"}
  return sum(1 for p in load(cr).get("packets",[]) if p.get("type") in kinds)
@@ -53,7 +61,7 @@ try:
  cmd("tp PiriRuntimeTest 200 100 200");wait(lambda:load(cr).get("remoteCacheSize",0)==0,"baseline out of range",60);entityBefore=entity_count();baseline=sample(20)
  cmd("tp PiriRuntimeTest 0.5 99 0.5");wait(lambda:load(cr).get("remoteCacheSize")==42,"42 cache",120);idleStart=packets();idle=sample(30);idleTraffic=packets()-idleStart
  action("phase14_spin_all");spinStart=packets();spinning=sample(30);spinTraffic=packets()-spinStart
- steadyStartPackets=packets();steady=sample(300);steadyTraffic=packets()-steadyStartPackets
+ serverHeapStart=retained_server_heap("steady start");steadyStartPackets=packets();steady=sample(300);steadyTraffic=packets()-steadyStartPackets;serverHeapEnd=retained_server_heap("steady end")
  views=load(cr).get("remotePresentation",{});near=sorted(int(k) for k,v in views.items() if (v.get("x",99)+.5)**2+(v.get("y",99)-97.5)**2+(v.get("z",99)+.5)**2<=100)
  audioTwo=False;audioMatchingEnd=False;audioRangeExit=False
  if len(near)>=2:
@@ -63,8 +71,8 @@ try:
   cmd("tp PiriRuntimeTest 200 100 200");wait(lambda:load(cr).get("hallAudioLoopCount")==0,"range exit stops loop",15);audioRangeExit=True
  entityAfter=entity_count()
  b={k:avg(baseline,k) for k in ("mspt","tps","serverHeap","fps","frameMs","clientHeap")};i={k:avg(idle,k) for k in b};sp={k:avg(spinning,k) for k in b}
- first=steady[:30];last=steady[-30:];serverGrowth=avg(last,"serverHeap")-avg(first,"serverHeap");clientGrowth=avg(last,"clientHeap")-avg(first,"clientHeap")
- metrics={"baseline":b,"idle42":i,"spinning42":sp,"idleGameplayPackets":idleTraffic,"spinningSteadyPacketGrowth":steadyTraffic,"msptIncrease":sp["mspt"]-b["mspt"],"fpsDegradationPct":0 if b["fps"]<=0 else max(0,(b["fps"]-sp["fps"])/b["fps"]*100),"serverSteadyHeapGrowthMiB":serverGrowth,"clientSteadyHeapGrowthMiB":clientGrowth,"entityBefore":entityBefore[0],"entityAfter":entityAfter[0],"displayBefore":entityBefore[1],"displayAfter":entityAfter[1],"armorStandBefore":entityBefore[2],"armorStandAfter":entityAfter[2]}
+ first=steady[:30];last=steady[-30:];serverGrowth=serverHeapEnd-serverHeapStart;clientGrowth=avg(last,"clientHeap")-avg(first,"clientHeap")
+ metrics={"baseline":b,"idle42":i,"spinning42":sp,"idleGameplayPackets":idleTraffic,"spinningSteadyPacketGrowth":steadyTraffic,"msptIncrease":sp["mspt"]-b["mspt"],"fpsDegradationPct":0 if b["fps"]<=0 else max(0,(b["fps"]-sp["fps"])/b["fps"]*100),"serverRetainedHeapStartMiB":serverHeapStart,"serverRetainedHeapEndMiB":serverHeapEnd,"serverSteadyHeapGrowthMiB":serverGrowth,"clientSteadyHeapGrowthMiB":clientGrowth,"entityBefore":entityBefore[0],"entityAfter":entityAfter[0],"displayBefore":entityBefore[1],"displayAfter":entityAfter[1],"armorStandBefore":entityBefore[2],"armorStandAfter":entityAfter[2]}
  manifest["metrics"]=metrics
  checks={"42Cached":len(views)==42,"idleGameplayTrafficZero":idleTraffic==0,"msptIncreaseLe3":metrics["msptIncrease"]<=3.0,"fpsDegradationLe15":metrics["fpsDegradationPct"]<=15.0,"serverMemoryGrowthLe64":serverGrowth<=64.0,"clientMemoryGrowthLe64":clientGrowth<=64.0,"noPacketGrowthWithRenderFps":steadyTraffic==0,"entityDeltaZero":entityBefore[1:]==(0,0) and entityAfter[1:]==(0,0),"twoBonusLoopsIndependent":audioTwo,"bonusEndStopsMatchingOnly":audioMatchingEnd,"rangeExitStopsLoop":audioRangeExit}
  manifest["assertions"]=[{"name":k,"passed":v} for k,v in checks.items()];manifest["passed"]=all(checks.values());(E/"result.json").write_text(json.dumps(manifest,indent=2));print(json.dumps(manifest,indent=2));raise SystemExit(0 if manifest["passed"] else 1)
