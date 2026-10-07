@@ -35,6 +35,14 @@ class HallAudioTest {
         assertEquals("juggler_god_god_big_bgm",HallAudio.resolveLogical("JUGGLER_GOD_EXTREME","god_big_bgm",all));
         assertEquals("big_bgm",HallAudio.resolveLogical("JUGGLER_GOD_EXTREME","god_big_bgm",none));
     }
+    @Test void distanceAttenuationIsGentlerButKeepsSameCutoff() {
+        assertEquals(1.0f,HallAudio.distanceGain(0,HallAudio.SE_RADIUS),1e-6f);
+        assertEquals(.75f,HallAudio.distanceGain(8,HallAudio.SE_RADIUS),1e-6f);
+        assertEquals(0f,HallAudio.distanceGain(16,HallAudio.SE_RADIUS),1e-6f);
+        assertEquals(0f,HallAudio.distanceGain(17,HallAudio.SE_RADIUS),1e-6f);
+        assertTrue(HallAudio.distanceGain(8,HallAudio.SE_RADIUS)>.5f);
+        assertEquals(.55f,HallAudio.WALL_OCCLUSION,1e-6f);
+    }
     @Test void phase14VolumesAreLocked() {
         assertEquals(.35f,HallAudio.NORMAL_VOLUME);
         assertEquals(.45f,HallAudio.NOTICE_VOLUME);
