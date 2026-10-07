@@ -324,8 +324,8 @@ try:
     check("mobile seats at production SKILL_STOP machine",
           skill_seated.get("machineType")=="SKILL_STOP" and skill_seated.get("seated") is True,skill_seated)
     if int(skill_seated.get("credit",0))<3:
-        http("POST","/api/loan",token)
-        skill_seated=http("POST","/api/insert",token)
+        skill_seated=http("POST","/api/loan",token)
+    check("SKILL_STOP remote seat has playable credit",int(skill_seated.get("credit",0))>=3,skill_seated)
     skill_bet=http("POST","/api/action?type=SPACE_ACTION",token)
     check("SKILL_STOP mobile BET enters production bet state",skill_bet.get("gameState")=="NORMAL_BETTED",skill_bet)
     skill_spin=http("POST","/api/action?type=SPACE_ACTION",token)
