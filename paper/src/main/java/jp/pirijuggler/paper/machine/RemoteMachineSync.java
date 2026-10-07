@@ -238,8 +238,8 @@ public final class RemoteMachineSync {
                         godFirstBigAudioActive.put(machineId,first);
                         if(first){
                             long start=publicState!=null&&publicState.has("godPresentationStartMs")?publicState.get("godPresentationStartMs").getAsLong():0L;
-                            long delay=start>0?Math.max(0L,start-System.currentTimeMillis()):0L;
-                            audio(machineId,"PLAY","god_bonus_start",delay,1,0,null);
+                            JsonObject timing=new JsonObject();if(start>0)timing.addProperty("atEpochMs",start);
+                            audio(machineId,"PLAY","god_bonus_start",0,1,0,timing);
                         }else{
                             audio(machineId,"PLAY","bonus_start",0,1,0,null);
                             audio(machineId,"LOOP_START","big_bgm",4500,1,0,null);
