@@ -1,6 +1,6 @@
 # MOBILE REMOTE — Unified Phase
 
-Status: BUILD_READY — full static parity audit applied / local build + final E2E acceptance pending
+Status: RUNTIME_PASS — production build + mobile real E2E PASS / final SKILL_STOP real-browser presentation evidence pending
 
 Updated: 2026-10-06
 
@@ -126,4 +126,22 @@ Static cross-check completed against current Fabric/Paper production behavior.
 - LOAN / INSERT / leave endpoints retained
 - mobile E2E harness already covers pairing, seat, BET/LEVER/STOP, CASH OUT, leave, prize exchange/cash, medal/prize Minecraft↔mobile restoration
 
-No COMPLETE claim is made until the current main is built locally and the E2E runtime is executed.
+Current main production build and mobile real E2E are PASS. COMPLETE remains blocked only by the explicit real-browser SKILL_STOP presentation evidence required above.
+
+
+## 2026-10-07 runtime result
+
+- Piri build: GitHub Actions run 37555580549 SUCCESS
+- Runtime helper build: GitHub Actions run 37555580705 SUCCESS
+- Mobile real E2E: GitHub Actions run 37555156875 SUCCESS
+- real pairing / seat / BET / LEVER / STOP / leave PASS
+- mobile pressed index -> authoritative Paper stop result PASS
+- LOAN / INSERT / machine CASH OUT PASS
+- seated prize exchange/cash rejection PASS
+- lobby prize exchange/cash PASS
+- Minecraft -> mobile -> Minecraft medal/prize round trip PASS
+- full-inventory recovery leaves undeliverable mobile assets pending PASS
+- later recovery after inventory space is available PASS
+- Fabric machine geometry/palette anchors locked by MobileRemotePageParityTest
+- mobile audio stop-all semantics aligned to Fabric PiriSounds/SlotUi including one-shots, delayed sounds and loops
+- remaining COMPLETE blocker: actual browser runtime evidence for SKILL_STOP #111015 / challenge PNG / remaining-G rendering
