@@ -68,12 +68,14 @@ public final class DevFundCommand implements CommandExecutor {
         if (args.length >= 1 && args[0].equalsIgnoreCase("phase14perf")) return phase14Perf(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("mobilefund")) return mobileFund(sender,args);
         if (args.length >= 1 && args[0].equalsIgnoreCase("mobilecheck")) return mobileCheck(sender,args);
+        if (args.length >= 1 && args[0].equalsIgnoreCase("mobilefill")) return mobileFill(sender,args);
+        if (args.length >= 1 && args[0].equalsIgnoreCase("mobileclearfill")) return mobileClearFill(sender,args);
         if (args.length == 1 && args[0].equalsIgnoreCase("clear")) {
             if (pendingForce == null) sender.sendMessage("NO_TEST_FORCE_PENDING");
             else restoreForce("TEST_FORCE_CLEARED");
             return true;
         }
-        sender.sendMessage("Usage: /piritest fund [player] | mobilefund [player] | mobilecheck [player] | force <god|big|reg|A|B|C|D|E|F> [player] | heaven <1-32> [player] | skillreset [player] | clear");
+        sender.sendMessage("Usage: /piritest fund [player] | mobilefund [player] | mobilecheck [player] | mobilefill [player] | mobileclearfill [player] | force <god|big|reg|A|B|C|D|E|F> [player] | heaven <1-32> [player] | skillreset [player] | clear");
         return true;
     }
 
@@ -123,6 +125,39 @@ public final class DevFundCommand implements CommandExecutor {
                 if(!sender.equals(target))target.sendMessage("TEST_MOBILE_FUNDED medals=600 small=2 medium=1 large=1");
             });
         });
+        return true;
+    }
+
+    private boolean mobileFill(CommandSender sender,String[] args) {
+        if(args.length<1||args.length>2){sender.sendMessage("Usage: /piritest mobilefill [player]");return true;}
+        Player target=args.length==2?Bukkit.getPlayerExact(args[1]):sender instanceof Player p?p:null;
+        if(target==null){sender.sendMessage("PLAYER_REQUIRED");return true;}
+        int filled=0;
+        for(int slot=0;slot<36;slot++){
+            if(target.getInventory().getItem(slot)==null){
+                target.getInventory().setItem(slot,new org.bukkit.inventory.ItemStack(org.bukkit.Material.DIRT,64));
+                filled++;
+            }
+        }
+        target.updateInventory();
+        sender.sendMessage("TEST_MOBILE_FILL filled="+filled);
+        return true;
+    }
+
+    private boolean mobileClearFill(CommandSender sender,String[] args) {
+        if(args.length<1||args.length>2){sender.sendMessage("Usage: /piritest mobileclearfill [player]");return true;}
+        Player target=args.length==2?Bukkit.getPlayerExact(args[1]):sender instanceof Player p?p:null;
+        if(target==null){sender.sendMessage("PLAYER_REQUIRED");return true;}
+        int cleared=0;
+        for(int slot=0;slot<36;slot++){
+            var item=target.getInventory().getItem(slot);
+            if(item!=null&&item.getType()==org.bukkit.Material.DIRT){
+                target.getInventory().setItem(slot,null);
+                cleared++;
+            }
+        }
+        target.updateInventory();
+        sender.sendMessage("TEST_MOBILE_CLEAR_FILL cleared="+cleared);
         return true;
     }
 
