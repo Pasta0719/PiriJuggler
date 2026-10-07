@@ -1,13 +1,13 @@
 # IMPLEMENTATION_STATUS.md
 
 ## MOBILE REMOTE Unified Phase — 2026-10-06
-Status: RUNTIME_PASS — production build + mobile real E2E PASS / final SKILL_STOP real-browser presentation evidence pending
+Status: COMPLETE — production build + mobile real E2E + SKILL_STOP real-browser presentation acceptance PASS
 
 スマホ遠隔遊技、モバイル経済、景品交換/換金、Minecraft資産同期、モバイル表示を1つのPhaseへ統合。
 正本: `mobile/MOBILE_REMOTE_PHASE.md`
 
 現行実装には、離席後ロビーの景品交換所、着席中の景品交換/景品換金拒否、Minecraft↔mobileのメダル/景品同期、SKILL_STOP専用モバイルpresentation（cabinet background `#111015`）が存在する。
-現行mainで production build と統合mobile E2EはPASS。資産往復・離席制約・実停止入力・inventory不足時の資産保持まで証跡化済み。COMPLETEはSKILL_STOPの実ブラウザ表示（#111015・challenge PNG・残G）の証跡化後に付与する。
+現行mainで production build、統合mobile E2E、SKILL_STOP実ブラウザ表示までPASS。実pressed index、資産往復、離席制約、inventory不足時の資産保持、#111015背景、challenge PNG、残Gを最終受入済み。GitHub Actions: Piri build 37556801821 SUCCESS / Runtime helper build 37556801804 SUCCESS / Mobile real E2E 37556801817 SUCCESS。
 
 このファイルは各Phase終了時の現在状態を示す。
 
