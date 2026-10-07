@@ -16,6 +16,7 @@ public final class HallAudio {
     }
 
     private static final Map<Integer,LoopState> bonusLoops=new HashMap<>();
+    private static final Map<Integer,String> desiredLoops=new HashMap<>();
     private static final PriorityQueue<Pending> pending=new PriorityQueue<>();
     private static final Map<Integer,Integer> generations=new HashMap<>();
 
@@ -36,6 +37,7 @@ public final class HallAudio {
                 case "STOP_ALL" -> stopAll(event.machineId());
                 case "LOOP_STOP" -> {
                     cancelLoopStarts(event.machineId());
+                    desiredLoops.remove(event.machineId());
                     stopLoop(event.machineId());
                 }
                 case "PLAY","LOOP_START" -> {
@@ -58,24 +60,23 @@ public final class HallAudio {
             RemoteMachineViewState machine=registry.view(next.machineId());
             if(machine==null)continue;
             if("PLAY".equals(next.op()))play(next.machineId(),machine,next.sound());
-            else if("LOOP_START".equals(next.op()))startLoop(next.machineId(),machine,next.sound());
+            else if("LOOP_START".equals(next.op())){desiredLoops.put(next.machineId(),next.sound());startLoop(next.machineId(),machine,next.sound());}
         }
 
-        for(var iterator=bonusLoops.entrySet().iterator();iterator.hasNext();){
-            var entry=iterator.next();
-            RemoteMachineViewState machine=registry.view(entry.getKey());
-            if(machine==null||"NONE".equals(machine.bonusMode())||!inRange(machine,BGM_RADIUS)){
-                PiriSounds.stopRemoteLoop(entry.getKey());
-                iterator.remove();
-            }
+        for(var entry:new ArrayList<>(desiredLoops.entrySet())){
+            int id=entry.getKey();RemoteMachineViewState machine=registry.view(id);
+            if(machine==null||"NONE".equals(machine.bonusMode())){desiredLoops.remove(id);stopLoop(id);continue;}
+            if(inRange(machine,BGM_RADIUS))startLoop(id,machine,entry.getValue());
+            else stopLoop(id);
         }
     }
 
     private static void sync(RemoteMachineViewState machine){
         if("BIG".equals(machine.bonusMode())){
-            startLoop(machine.machineId(),machine,machine.godFirstBigAudio()?"god_big_bgm":"big_bgm");
+            String sound=machine.godFirstBigAudio()?"god_big_bgm":"big_bgm";
+            desiredLoops.put(machine.machineId(),sound);startLoop(machine.machineId(),machine,sound);
         }else if("REG".equals(machine.bonusMode())){
-            startLoop(machine.machineId(),machine,"reg_bgm");
+            desiredLoops.put(machine.machineId(),"reg_bgm");startLoop(machine.machineId(),machine,"reg_bgm");
         }
     }
 
@@ -139,12 +140,12 @@ public final class HallAudio {
     private static void stopAll(int machineId){
         generations.merge(machineId,1,Integer::sum);
         pending.removeIf(p->p.machineId()==machineId);
-        bonusLoops.remove(machineId);
+        desiredLoops.remove(machineId);bonusLoops.remove(machineId);
         PiriSounds.stopRemoteAudio(machineId);
     }
 
     public static void reset(){
-        pending.clear();bonusLoops.clear();generations.clear();PiriSounds.stopRemoteAudioAll();
+        pending.clear();desiredLoops.clear();bonusLoops.clear();generations.clear();PiriSounds.stopRemoteAudioAll();
     }
     public static int activeBonusLoops(){return bonusLoops.size();}
     static int pendingEvents(){return pending.size();}
