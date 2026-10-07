@@ -173,6 +173,23 @@ class RemoteMachineRegistryTest {
         assertEquals("REMOVE",registry.pollAudioEvent().op());
     }
 
+    @Test void absoluteAudioTimeIsConvertedOnReceiptWithoutNetworkDrift() {
+        java.util.concurrent.atomic.AtomicLong nanos=new java.util.concurrent.atomic.AtomicLong();
+        java.util.concurrent.atomic.AtomicLong wallMs=new java.util.concurrent.atomic.AtomicLong(10_000);
+        RemoteMachineRegistry registry=new RemoteMachineRegistry(nanos::get,wallMs::get);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,snapshot(62)));
+        assertEquals("SYNC",registry.pollAudioEvent().op());
+
+        JsonObject timed=id(62);timed.addProperty("op","PLAY");timed.addProperty("sound","god_bonus_start");timed.addProperty("atEpochMs",10_750L);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SOUND,timed));
+        var event=registry.pollAudioEvent();assertNotNull(event);assertEquals(750,event.delayMs());
+
+        wallMs.set(11_000);
+        JsonObject late=id(62);late.addProperty("op","PLAY");late.addProperty("sound","god_bonus_start");late.addProperty("atEpochMs",10_750L);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SOUND,late));
+        assertEquals(0,registry.pollAudioEvent().delayMs());
+    }
+
     private static JsonObject snapshot(int id) {
         JsonObject body = id(id);
         body.addProperty("world", UUID.randomUUID().toString());
