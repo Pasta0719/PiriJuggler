@@ -264,7 +264,7 @@ try:
           and int(after.get("stoppedMask",0))==7,
           after)
     check("partial resume keeps the same production spin through final stop",
-          str(after.get("spinId",""))==spin_id and int(after.get("stoppedMask",0))==7,
+          any(e.get("type")=="REEL_STOP" and str(e.get("payload",{}).get("spinId",""))==spin_id for e in result.get("events",[])) and int(after.get("stoppedMask",0))==7,
           {"initialSpinId":spin_id,"after":after})
     first_events=first_stop.get("events",[])
     first_reel=next((e for e in first_events if e.get("type")=="REEL_STOP"),None)
