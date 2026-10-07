@@ -108,6 +108,15 @@ public final class RemoteMachineSync {
         if (!next.equals(previous)) broadcastSnapshot(machineId);
     }
 
+    public void publishOwnerError(UUID owner){
+        requireMain();
+        PiriDatabase.State state=stateSupplier.get();
+        Session session=state==null?null:state.session(owner);
+        if(session==null||session.lifecycle()!=Session.Lifecycle.ACTIVE)return;
+        Machine machine=state.machine(session.machine());
+        if(machine!=null&&slotAudioMachine(machine.type()))audio(machine.id(),"PLAY","error",0,1,0,null);
+    }
+
     /** Sends a fresh public state to current interested spectators only. */
     public void broadcastSnapshot(int machineId) {
         requireMain();
