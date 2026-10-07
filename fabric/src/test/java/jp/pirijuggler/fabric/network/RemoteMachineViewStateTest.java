@@ -17,11 +17,13 @@ class RemoteMachineViewStateTest {
         snap.addProperty("gameState","BIG_SPINNING");snap.addProperty("bonusMode","BIG");snap.addProperty("skillRemaining",1);snap.addProperty("skillChallenge","PIERO");
         registry.receive(Envelope.current(PacketType.REMOTE_MACHINE_SNAPSHOT,snap));
         assertNotNull(registry.view(7));assertEquals("symbols/piero.png",registry.view(7).skillChallengeTexture());assertEquals(1,registry.view(7).skillRemaining());
+        assertEquals("SYNC",registry.pollAudioEvent().op());
         var sound=id(7);sound.addProperty("spinId",UUID.randomUUID().toString());sound.addProperty("skillChallengeSuccess",true);sound.addProperty("sound","NOTICE");
-        registry.receive(Envelope.current(PacketType.REMOTE_MACHINE_SOUND,sound));assertEquals(7,registry.pollSkillSuccessSound());assertNull(registry.pollSkillSuccessSound());
+        registry.receive(Envelope.current(PacketType.REMOTE_MACHINE_SOUND,sound));
+        var success=registry.pollAudioEvent();assertNotNull(success);assertEquals(7,success.machineId());assertEquals("PLAY",success.op());assertEquals("notice",success.sound());assertNull(registry.pollAudioEvent());
         snap.addProperty("skillRemaining",3);snap.addProperty("skillChallenge","AUTO");registry.receive(Envelope.current(PacketType.REMOTE_MACHINE_SNAPSHOT,snap));
         assertNull(registry.view(7).skillChallengeTexture());assertEquals(3,registry.view(7).skillRemaining());
-        registry.receive(Envelope.current(PacketType.REMOTE_MACHINE_SOUND,sound));assertNull(registry.pollSkillSuccessSound());
+        registry.receive(Envelope.current(PacketType.REMOTE_MACHINE_SOUND,sound));assertNull(registry.pollAudioEvent());
         snap.addProperty("skillChallenge","UNKNOWN");registry.receive(Envelope.current(PacketType.REMOTE_MACHINE_SNAPSHOT,snap));assertNull(registry.view(7));
     }
     @Test void snapshotSpinAndStopsProduceTypedPublicView() {
