@@ -1579,9 +1579,15 @@ public final class MachineService implements Listener, CommandExecutor {
     }
     private void error(CommandSender sender, String code) {
         tell(sender, friendlyError(code));
-        if (sender instanceof Player player) try { send(player, ErrorPackets.error(ErrorCode.valueOf(code))); } catch (IllegalArgumentException commandOnlyCode) { }
+        if (sender instanceof Player player) try {
+            send(player, ErrorPackets.error(ErrorCode.valueOf(code)));
+            remote.publishOwnerError(player.getUniqueId());
+        } catch (IllegalArgumentException commandOnlyCode) { }
     }
-    private void reject(Player player, long sequence, String code) { send(player, ErrorPackets.rejected(sequence, ErrorCode.valueOf(code))); }
+    private void reject(Player player, long sequence, String code) {
+        send(player, ErrorPackets.rejected(sequence, ErrorCode.valueOf(code)));
+        remote.publishOwnerError(player.getUniqueId());
+    }
     private void send(Player player, PacketType type, JsonObject body) { send(player, new Envelope(Protocol.VERSION, type, body)); }
     private void send(Player player, Envelope packet) {
         if (player.isOnline() && !stopped) {
