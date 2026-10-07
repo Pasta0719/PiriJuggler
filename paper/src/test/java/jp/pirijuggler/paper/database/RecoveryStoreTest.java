@@ -251,12 +251,12 @@ class RecoveryStoreTest {
         UUID player=UUID.randomUUID();
         db.seat(player,machine,NOW);
 
-        // A HEAVEN BIG has one confirmed REG stock. Recovery may finish the BIG, but must
-        // not lose that 0G REG or perform the HEAVEN 50% transition before the stock ends.
+        // A HEAVEN BIG has a confirmed REG plus BIG stock. REG was already the recovery
+        // priority before the unfinished BIG is settled, so later/acquired BIG stock must not jump ahead.
         var runtime=new JugglerGodRuntime(
                 JugglerGodRuntime.Mode.HEAVEN,7,7,0,false,false,
                 "HEAVEN",0,false,"BONUS_STOCK_CONFIRMED",
-                0,1,"NONE","NONE",0,false,false);
+                1,1,"NONE","NONE",0,false,false);
         db.setMachineRuntimeJson(machine,runtime.toJsonString(),NOW);
         db.sql("UPDATE player_sessions SET game_state='BIG_READY',lifecycle='SUSPENDED_GRACE',lock_expires_at=?,bonus_type='BIG',bonus_payout_count=0,machine_state_json=?,last_client_sequence=31 WHERE player_uuid=?",
                 NOW,runtime.toJsonString(),player.toString());
