@@ -30,7 +30,7 @@ public final class RemoteMachineRegistry {
     private final Map<Integer,SkillStopPresentation.NoticeGate> skillNotices=new HashMap<>();
     private Integer skillSuccessSound;
     private final ArrayDeque<AudioEvent> soundEvents=new ArrayDeque<>();
-    public record AudioEvent(int machineId,String kind,String bonusType){}
+    public record AudioEvent(int machineId,String op,String sound,long delayMs,int count,long spacingMs){}
     private final ArrayDeque<AudioEvent> audioEvents=new ArrayDeque<>();
     private final LongSupplier time,wallTimeMs;
 
@@ -160,7 +160,7 @@ public final class RemoteMachineRegistry {
                     RemoteMachineViewState view = views.get(machineId);
                     if (view != null) view.applyBonus(body);
                     boolean active=body.get("active").getAsBoolean();
-                    audioEvents.add(new AudioEvent(machineId,active?"BONUS_START":"BONUS_END",active?body.get("bonusType").getAsString():null));
+                    // REMOTE_MACHINE_BONUS carries presentation state only; audio is mirrored explicitly by REMOTE_MACHINE_SOUND.
                 }
                 case PACHINKO_EVENT -> {
                     requireNumber(body,"ballSequenceId");requireString(body,"side");requireString(body,"outcome");requireNumber(body,"startTime");
@@ -172,18 +172,31 @@ public final class RemoteMachineRegistry {
                     machines.remove(machineId);
                     views.remove(machineId);
                     skillNotices.remove(machineId);
-                    audioEvents.add(new AudioEvent(machineId,"REMOVE",null));
+                    audioEvents.add(new AudioEvent(machineId,"REMOVE",null,0,1,0));
                 }
                 case REMOTE_MACHINE_SOUND -> {
-                    requireString(body,"sound");String sound=body.get("sound").getAsString();
-                    if(!Set.of("NOTICE","TENPAI").contains(sound))break;
+                    String op=body.has("op")?requireString(body,"op").getAsString():"PLAY";
+                    if(!Set.of("PLAY","LOOP_START","LOOP_STOP","STOP_ALL").contains(op))throw new IllegalArgumentException("op");
+                    String sound=body.has("sound")?requireString(body,"sound").getAsString():null;
+                    if("PLAY".equals(op)||"LOOP_START".equals(op)){
+                        if(sound==null||sound.isBlank())throw new IllegalArgumentException("sound");
+                    }
+                    long delay=body.has("delayMs")?body.get("delayMs").getAsLong():0L;
+                    int count=body.has("count")?body.get("count").getAsInt():1;
+                    long spacing=body.has("spacingMs")?body.get("spacingMs").getAsLong():0L;
+                    if(delay<0||count<1||count>8||spacing<0)throw new IllegalArgumentException("audio timing");
+                    if(!body.has("op")&&sound!=null){
+                        sound=switch(sound){case "NOTICE"->"notice";case "TENPAI"->"tenpai";default->sound.toLowerCase(Locale.ROOT);};
+                    }
                     RemoteMachineViewState view=views.get(machineId);if(view==null)break;
+                    boolean accept=true;
                     if(body.has("skillChallengeSuccess")){
                         requireBoolean(body,"skillChallengeSuccess");requireString(body,"spinId");UUID.fromString(body.get("spinId").getAsString());
-                        if(!body.get("skillChallengeSuccess").getAsBoolean()||!"NOTICE".equals(sound)||!"SKILL_STOP".equals(view.machineType()))break;
-                        if(view.spinId()!=null&&!view.spinId().toString().equals(body.get("spinId").getAsString()))break;
-                        if(skillNotices.computeIfAbsent(machineId,k->new SkillStopPresentation.NoticeGate()).accept(body.get("spinId").getAsString()))skillSuccessSound=machineId;
-                    } else soundEvents.add(new AudioEvent(machineId,"SOUND",sound));
+                        accept=body.get("skillChallengeSuccess").getAsBoolean()&&"SKILL_STOP".equals(view.machineType())
+                                &&(view.spinId()==null||view.spinId().toString().equals(body.get("spinId").getAsString()))
+                                &&skillNotices.computeIfAbsent(machineId,k->new SkillStopPresentation.NoticeGate()).accept(body.get("spinId").getAsString());
+                    }
+                    if(accept)soundEvents.add(new AudioEvent(machineId,op,sound,delay,count,spacing));
                 }
                 default -> { }
             }
