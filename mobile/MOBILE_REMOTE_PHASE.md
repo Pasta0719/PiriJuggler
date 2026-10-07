@@ -1,6 +1,6 @@
 # MOBILE REMOTE — Unified Phase
 
-Status: RUNTIME_PASS — production build + mobile real E2E PASS / final SKILL_STOP real-browser presentation evidence pending
+Status: COMPLETE — production build + mobile real E2E + SKILL_STOP real-browser presentation acceptance PASS
 
 Updated: 2026-10-06
 
@@ -79,6 +79,26 @@ COMPLETEにするには以下をすべて満たす。
 - 遊技画面に EXCHANGE が存在しない
 - 既存Paper/Fabric遊技への回帰がない
 - evidenceを runtime-evidence/MOBILE_E2E/ に保存する
+
+## 2026-10-07 final acceptance
+
+現行mainで最終受入を完了。
+
+- Piri build: GitHub Actions run 37556801821 — SUCCESS
+- Runtime helper build: GitHub Actions run 37556801804 — SUCCESS
+- Mobile real E2E: GitHub Actions run 37556801817 — SUCCESS
+- 実pressed index → authoritative Paper stop result: PASS
+- inventory不足時の未配達メダル/景品保持: PASS
+- Minecraft ↔ mobile のメダル/景品往復: PASS
+- 着席中の景品交換/換金拒否、離席後の交換/換金: PASS
+- 実Chromeで SKILL_STOP cabinet background #111015: PASS
+- 実Chromeで SKILL_STOP 残G表示: PASS
+- 実Chromeで production challenge PNG表示: PASS
+- Chrome screenshot は mobile E2E artifact 内に保存
+- モバイルの主要台配置、REPLAY / COUNT / STOCK、図柄寸法・配色は Fabric SlotLayout / SlotScreen を正本として固定
+- モバイル音響は Fabric PiriSounds / SlotUi の lifecycle に合わせ、単発SE・予約SE・BGMの全停止、GOD freeze時停止、停止後fallback再生防止を実装
+
+この受入をもって MOBILE REMOTE Unified Phase を COMPLETE とする。
 
 ## 完了判定ルール
 
