@@ -925,6 +925,7 @@ public final class MachineService implements Listener, CommandExecutor {
             submitMobile(owner, machineId, () -> new GameStore(database).commit(transition), (saved, failure) -> {
                 if (failure != null) { callback.accept(null, failure); return; }
                 List<Envelope> committed = game.committed(transition, System.nanoTime());
+                for(Envelope packet:committed)remote.publishOwnerPacket(machineId,packet);
                 remote.broadcastSnapshot(machineId);
                 if (rejection != null) callback.accept(null, rejection);
                 else {
