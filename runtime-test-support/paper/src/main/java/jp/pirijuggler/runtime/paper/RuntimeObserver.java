@@ -20,7 +20,13 @@ public final class RuntimeObserver extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new Listener() {
             @EventHandler(priority=EventPriority.LOWEST)
             public void onJoin(PlayerJoinEvent event) {
-                DevFundCommand.mobileFillOnJoin(event.getPlayer());
+                var player=event.getPlayer();
+                DevFundCommand.mobileFillOnJoin(player);
+                for(long delay:new long[]{5L,10L,15L}) {
+                    getServer().getScheduler().runTaskLater(RuntimeObserver.this,()->{
+                        if(player.isOnline())DevFundCommand.mobileFillOnJoin(player);
+                    },delay);
+                }
             }
         },this);
 
