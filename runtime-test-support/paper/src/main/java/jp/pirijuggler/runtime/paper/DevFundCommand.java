@@ -29,7 +29,9 @@ import java.sql.DriverManager;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Runtime-test-only funding / Phase06 forcing command. This class is never packaged in the production Paper JAR.
@@ -37,6 +39,7 @@ import java.util.UUID;
  * normal-game role/premium draw long enough for a human runtime acceptance test to trigger it deterministically.
  */
 public final class DevFundCommand implements CommandExecutor {
+    private static final Set<UUID> MOBILE_FILL_ON_JOIN=ConcurrentHashMap.newKeySet();
     private final JavaPlugin helper;
     private ForceOverride pendingForce;
 
@@ -128,10 +131,12 @@ public final class DevFundCommand implements CommandExecutor {
         return true;
     }
 
-    private boolean mobileFill(CommandSender sender,String[] args) {
-        if(args.length<1||args.length>2){sender.sendMessage("Usage: /piritest mobilefill [player]");return true;}
-        Player target=args.length==2?Bukkit.getPlayerExact(args[1]):sender instanceof Player p?p:null;
-        if(target==null){sender.sendMessage("PLAYER_REQUIRED");return true;}
+    static void mobileFillOnJoin(Player target) {
+        if(!MOBILE_FILL_ON_JOIN.contains(target.getUniqueId()))return;
+        fillMobileInventory(target);
+    }
+
+    private static int fillMobileInventory(Player target) {
         int filled=0;
         for(int slot=0;slot<36;slot++){
             if(target.getInventory().getItem(slot)==null){
@@ -140,7 +145,16 @@ public final class DevFundCommand implements CommandExecutor {
             }
         }
         target.updateInventory();
-        sender.sendMessage("TEST_MOBILE_FILL filled="+filled);
+        return filled;
+    }
+
+    private boolean mobileFill(CommandSender sender,String[] args) {
+        if(args.length<1||args.length>2){sender.sendMessage("Usage: /piritest mobilefill [player]");return true;}
+        Player target=args.length==2?Bukkit.getPlayerExact(args[1]):sender instanceof Player p?p:null;
+        if(target==null){sender.sendMessage("PLAYER_REQUIRED");return true;}
+        MOBILE_FILL_ON_JOIN.add(target.getUniqueId());
+        int filled=fillMobileInventory(target);
+        sender.sendMessage("TEST_MOBILE_FILL filled="+filled+" persistOnJoin=true");
         return true;
     }
 
@@ -148,6 +162,7 @@ public final class DevFundCommand implements CommandExecutor {
         if(args.length<1||args.length>2){sender.sendMessage("Usage: /piritest mobileclearfill [player]");return true;}
         Player target=args.length==2?Bukkit.getPlayerExact(args[1]):sender instanceof Player p?p:null;
         if(target==null){sender.sendMessage("PLAYER_REQUIRED");return true;}
+        MOBILE_FILL_ON_JOIN.remove(target.getUniqueId());
         int cleared=0;
         for(int slot=0;slot<36;slot++){
             var item=target.getInventory().getItem(slot);
