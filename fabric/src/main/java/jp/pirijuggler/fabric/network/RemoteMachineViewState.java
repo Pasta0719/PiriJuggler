@@ -22,7 +22,7 @@ public final class RemoteMachineViewState {
     private int x, y, z;
     private String facing;
     private String machineType = "JUGGLER";
-    private boolean enabled, occupied, godFreeze;
+    private boolean enabled, occupied, godFreeze, godFirstBigAudio;
     private long godFreezeAt=Long.MIN_VALUE,godPresentationAt=Long.MIN_VALUE;
     private final double[] godPresentationStart={0,0,0};
     private static final long GOD_PRESENTATION_SPIN_NANOS=12_700_000_000L;
@@ -65,6 +65,7 @@ public final class RemoteMachineViewState {
         state.occupied = body.get("occupied").getAsBoolean();
         state.gameState = body.get("gameState").getAsString();
         state.godFreeze = body.has("godFreeze") && body.get("godFreeze").getAsBoolean();
+        state.godFirstBigAudio = body.has("godFirstBigAudio") && body.get("godFirstBigAudio").getAsBoolean();
         state.godFreezeAt = state.godFreeze ? now-165_000_000L : Long.MIN_VALUE;
         JsonObject ds = body.getAsJsonObject("displayStops");
         state.displayStops[0] = ds.get("left").getAsInt();
@@ -175,11 +176,13 @@ public final class RemoteMachineViewState {
         boolean active = body.get("active").getAsBoolean();
         if (active) {
             String type = body.get("bonusType").getAsString();
+            godFirstBigAudio=body.has("godFirstBigAudio")&&body.get("godFirstBigAudio").getAsBoolean();
             if (!Set.of("BIG", "REG").contains(type)) throw new IllegalArgumentException("bonusType");
             bonusMode = type;
             if (body.has("count")) bonusCount = body.get("count").getAsLong();
         } else {
             bonusMode = "NONE";
+            godFirstBigAudio=false;
             if (body.has("finalCount")) bonusCount = body.get("finalCount").getAsLong();
         }
     }
@@ -242,6 +245,7 @@ public final class RemoteMachineViewState {
     public String bonusMode() { return bonusMode; }
     public boolean spinning() { return spinning; }
     public boolean godFreeze() { return godFreeze; }
+    public boolean godFirstBigAudio(){return godFirstBigAudio;}
     public long godFreezeElapsedMillis(long now) {
         return !godFreeze||godFreezeAt==Long.MIN_VALUE?-1L:Math.max(0L,(now-godFreezeAt)/1_000_000L);
     }
