@@ -3,40 +3,63 @@ package jp.pirijuggler.fabric.ui;
 import jp.pirijuggler.fabric.network.RemoteMachineRegistry;
 import jp.pirijuggler.fabric.network.RemoteMachineViewState;
 import net.minecraft.client.MinecraftClient;
+
 import java.util.*;
 
 public final class HallAudio {
     static final double SE_RADIUS=16.0, BGM_RADIUS=12.0;
     static final float NORMAL_VOLUME=.35f, NOTICE_VOLUME=.45f, BGM_VOLUME=.18f;
-    private record LoopState(String bonusType,String machineType,int x,int y,int z,String dimension) {}
+
+    private record LoopState(String sound,String machineType,int x,int y,int z,String dimension) {}
+    private record Pending(int machineId,String op,String sound,long atNanos,int generation) implements Comparable<Pending>{
+        @Override public int compareTo(Pending other){return Long.compare(atNanos,other.atNanos);}
+    }
+
     private static final Map<Integer,LoopState> bonusLoops=new HashMap<>();
+    private static final PriorityQueue<Pending> pending=new PriorityQueue<>();
+    private static final Map<Integer,Integer> generations=new HashMap<>();
 
     public static void publicNotice(RemoteMachineViewState machine,String sound){
         if(machine==null||!inRange(machine,SE_RADIUS))return;
-        float volume=("notice".equals(sound)||"notice_strong".equals(sound)||"tenpai".equals(sound))?NOTICE_VOLUME:NORMAL_VOLUME;
-        PiriSounds.playAt(sound,machine.x()+.5,machine.y()+1.5,machine.z()+.5,volume);
+        play(machine.machineId(),machine,sound);
     }
 
     public static void drain(RemoteMachineRegistry registry){
         RemoteMachineRegistry.AudioEvent event;
         while((event=registry.pollAudioEvent())!=null){
-            if("REMOVE".equals(event.kind())||"BONUS_END".equals(event.kind())){stop(event.machineId());continue;}
-            if("SOUND".equals(event.kind())){
-                RemoteMachineViewState machine=registry.view(event.machineId());
-                if(machine!=null)publicNotice(machine,event.bonusType().toLowerCase(Locale.ROOT));
-                continue;
-            }
-            if(!"BONUS_START".equals(event.kind()))continue;
             RemoteMachineViewState machine=registry.view(event.machineId());
-            if(machine!=null&&inRange(machine,BGM_RADIUS))start(event.machineId(),machine,event.bonusType());
+            switch(event.op()){
+                case "REMOVE" -> stopAll(event.machineId());
+                case "SYNC" -> {
+                    if(machine!=null)sync(machine);
+                }
+                case "STOP_ALL" -> stopAll(event.machineId());
+                case "LOOP_STOP" -> {
+                    cancelLoopStarts(event.machineId());
+                    stopLoop(event.machineId());
+                }
+                case "PLAY","LOOP_START" -> {
+                    if(machine==null)break;
+                    int generation=generations.getOrDefault(event.machineId(),0);
+                    int count=Math.max(1,event.count());
+                    for(int i=0;i<count;i++){
+                        long delay=Math.max(0L,event.delayMs())+Math.max(0L,event.spacingMs())*i;
+                        pending.add(new Pending(event.machineId(),event.op(),event.sound(),System.nanoTime()+delay*1_000_000L,generation));
+                    }
+                }
+                default -> { }
+            }
         }
 
-        registry.forEachView((id,machine)->{
-            String mode=machine.bonusMode();
-            if("NONE".equals(mode)||!inRange(machine,BGM_RADIUS)){stop(id);return;}
-            LoopState current=bonusLoops.get(id);
-            if(!matches(current,machine,mode))start(id,machine,mode);
-        });
+        long now=System.nanoTime();
+        while(!pending.isEmpty()&&pending.peek().atNanos()<=now){
+            Pending next=pending.remove();
+            if(next.generation()!=generations.getOrDefault(next.machineId(),0))continue;
+            RemoteMachineViewState machine=registry.view(next.machineId());
+            if(machine==null)continue;
+            if("PLAY".equals(next.op()))play(next.machineId(),machine,next.sound());
+            else if("LOOP_START".equals(next.op()))startLoop(next.machineId(),machine,next.sound());
+        }
 
         for(var iterator=bonusLoops.entrySet().iterator();iterator.hasNext();){
             var entry=iterator.next();
@@ -48,35 +71,82 @@ public final class HallAudio {
         }
     }
 
-    private static void start(int machineId,RemoteMachineViewState machine,String bonusType){
-        String sound="BIG".equals(bonusType)?"big_bgm":"reg_bgm";
-        String resolved=PiriSounds.forMachine(machine.machineType(),sound);
-        PiriSounds.startRemoteLoop(machineId,resolved,machine.x()+.5,machine.y()+1.5,machine.z()+.5);
-        bonusLoops.put(machineId,new LoopState(bonusType,machine.machineType(),machine.x(),machine.y(),machine.z(),machine.dimension()));
+    private static void sync(RemoteMachineViewState machine){
+        if("BIG".equals(machine.bonusMode())){
+            startLoop(machine.machineId(),machine,machine.godFirstBigAudio()?"god_big_bgm":"big_bgm");
+        }else if("REG".equals(machine.bonusMode())){
+            startLoop(machine.machineId(),machine,"reg_bgm");
+        }
     }
 
-    private static boolean matches(LoopState state,RemoteMachineViewState machine,String bonusType){
+    private static void play(int machineId,RemoteMachineViewState machine,String logical){
+        if(!inRange(machine,SE_RADIUS))return;
+        String sound=resolve(machine,logical);
+        float volume=("notice".equals(logical)||"notice_strong".equals(logical)||"tenpai".equals(logical))?NOTICE_VOLUME:NORMAL_VOLUME;
+        PiriSounds.playRemoteAt(machineId,sound,machine.x()+.5,machine.y()+1.5,machine.z()+.5,volume);
+    }
+
+    private static void startLoop(int machineId,RemoteMachineViewState machine,String logical){
+        if(!inRange(machine,BGM_RADIUS))return;
+        String sound=resolve(machine,logical);
+        LoopState current=bonusLoops.get(machineId);
+        if(current!=null&&matches(current,machine,sound))return;
+        PiriSounds.startRemoteLoop(machineId,sound,machine.x()+.5,machine.y()+1.5,machine.z()+.5,BGM_VOLUME);
+        bonusLoops.put(machineId,new LoopState(sound,machine.machineType(),machine.x(),machine.y(),machine.z(),machine.dimension()));
+    }
+
+    private static String resolve(RemoteMachineViewState machine,String logical){
+        String type=machine.machineType();
+        return switch(logical){
+            case "god_freeze" -> PiriSounds.available("juggler_god_god_freeze")?"juggler_god_god_freeze":"god_freeze";
+            case "god_stop_1","god_stop_2","god_stop_3" -> {
+                String dedicated="juggler_god_"+logical;
+                yield PiriSounds.available(dedicated)?dedicated:PiriSounds.forMachine(type,"stop");
+            }
+            case "god_bonus_start" -> PiriSounds.available("juggler_god_god_bonus_start")?"juggler_god_god_bonus_start":PiriSounds.forMachine(type,"bonus_start");
+            case "god_bonus_end" -> PiriSounds.available("juggler_god_god_bonus_end")?"juggler_god_god_bonus_end":PiriSounds.forMachine(type,"bonus_end");
+            case "god_big_bgm" -> PiriSounds.available("juggler_god_god_big_bgm")?"juggler_god_god_big_bgm":PiriSounds.forMachine(type,"big_bgm");
+            default -> PiriSounds.forMachine(type,logical);
+        };
+    }
+
+    private static boolean matches(LoopState state,RemoteMachineViewState machine,String sound){
         return state!=null&&state.x()==machine.x()&&state.y()==machine.y()&&state.z()==machine.z()
                 &&Objects.equals(state.dimension(),machine.dimension())&&Objects.equals(state.machineType(),machine.machineType())
-                &&Objects.equals(state.bonusType(),bonusType);
+                &&Objects.equals(state.sound(),sound);
     }
 
     private static boolean inRange(RemoteMachineViewState machine,double radius){
         MinecraftClient client=MinecraftClient.getInstance();
         if(client.player==null||client.world==null)return false;
         String currentDimension=client.world.getRegistryKey().getValue().toString();
-        if(machine.dimension()!=null&&!machine.dimension().equals(currentDimension))return false;
+        if(machine.dimension()!=null&&!machine.dimension().isBlank()&&!machine.dimension().equals(currentDimension))return false;
         double dx=client.player.getX()-(machine.x()+.5),dy=client.player.getY()-(machine.y()+1.5),dz=client.player.getZ()-(machine.z()+.5);
         return withinRadius(dx,dy,dz,radius);
     }
 
     static boolean withinRadius(double dx,double dy,double dz,double radius){return dx*dx+dy*dy+dz*dz<=radius*radius;}
 
-    private static void stop(int machineId){
-        if(bonusLoops.remove(machineId)!=null)PiriSounds.stopRemoteLoop(machineId);
+    private static void cancelLoopStarts(int machineId){
+        pending.removeIf(p->p.machineId()==machineId&&"LOOP_START".equals(p.op()));
     }
 
-    public static void reset(){bonusLoops.clear();PiriSounds.stopRemoteLoops();}
+    private static void stopLoop(int machineId){
+        bonusLoops.remove(machineId);
+        PiriSounds.stopRemoteLoop(machineId);
+    }
+
+    private static void stopAll(int machineId){
+        generations.merge(machineId,1,Integer::sum);
+        pending.removeIf(p->p.machineId()==machineId);
+        bonusLoops.remove(machineId);
+        PiriSounds.stopRemoteAudio(machineId);
+    }
+
+    public static void reset(){
+        pending.clear();bonusLoops.clear();generations.clear();PiriSounds.stopRemoteAudioAll();
+    }
     public static int activeBonusLoops(){return bonusLoops.size();}
+    static int pendingEvents(){return pending.size();}
     private HallAudio(){}
 }
