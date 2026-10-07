@@ -32,6 +32,7 @@ public final class HallAudio {
     }
 
     public static void drain(RemoteMachineRegistry registry){
+        PiriSounds.pruneRemoteOneShots();
         RemoteMachineRegistry.AudioEvent event;
         while((event=registry.pollAudioEvent())!=null){
             RemoteMachineViewState machine=registry.view(event.machineId());
