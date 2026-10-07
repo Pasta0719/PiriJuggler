@@ -936,7 +936,7 @@ function symbolAt(reel,index){
 function asset(path){
  return "/assets/"+((currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME")?"juggler_god/":"")+path;
 }
-let audioLoop=null,audioLoopName="",audioUnlocked=false;const audioOneShots=new Set(),audioTimers=new Set();
+let audioLoop=null,audioLoopName="",audioUnlocked=false,audioEpoch=0;const audioOneShots=new Set(),audioTimers=new Set();
 function soundUrl(name){return "/assets/sounds/"+name+".ogg"}
 function machineSound(base){
  return (currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME")?"juggler_god_"+base:base;
@@ -950,9 +950,9 @@ function trackOneShot(a){
 }
 function playNamed(name,fallback){
  if(!audioUnlocked)return;
- const a=trackOneShot(new Audio(soundUrl(name)));a.preload="auto";a.volume=1;
+ const epoch=audioEpoch,a=trackOneShot(new Audio(soundUrl(name)));a.preload="auto";a.volume=1;
  if(fallback&&fallback!==name)a.addEventListener("error",function(){
-  audioOneShots.delete(a);
+  audioOneShots.delete(a);if(epoch!==audioEpoch)return;
   const b=trackOneShot(new Audio(soundUrl(fallback)));b.preload="auto";b.volume=1;b.play().catch(function(){audioOneShots.delete(b)});
  },{once:true});
  a.play().catch(function(){audioOneShots.delete(a)});
@@ -973,6 +973,7 @@ function startLoopNamed(name,fallback){
 }
 function startLoop(base){startLoopNamed(machineSound(base),base)}
 function stopAllAudio(){
+ audioEpoch++;
  for(const timer of audioTimers)clearTimeout(timer);audioTimers.clear();
  for(const a of audioOneShots){try{a.pause();a.currentTime=0}catch(e){}}audioOneShots.clear();
  stopLoop();
