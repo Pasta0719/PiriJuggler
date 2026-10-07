@@ -67,7 +67,7 @@ class UiResourcesTest {
         String sounds=Files.readString(ROOT.resolve("fabric/src/main/java/jp/pirijuggler/fabric/ui/PiriSounds.java"));
         assertTrue(sounds.contains("\"JUGGLER_GOD\".equals(machineType)"));
         assertTrue(sounds.contains("\"juggler_god_\"+base"));
-        assertTrue(sounds.contains("if(available(dedicated))return dedicated"));
+        assertTrue(sounds.contains("if(available.test(dedicated))return dedicated"));
         String ui=Files.readString(ROOT.resolve("fabric/src/main/java/jp/pirijuggler/fabric/ui/SlotUi.java"));
         assertTrue(ui.contains("juggler_god_god_freeze"));
         assertTrue(ui.contains("juggler_god_god_stop_"));
