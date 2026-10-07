@@ -32,10 +32,14 @@ public final class PiriSounds {
     }
     private static final Map<String,SoundEvent> EVENTS=new HashMap<>();
     private static final PriorityQueue<Pending> QUEUE=new PriorityQueue<>(Comparator.comparingLong(Pending::at));
-    private static SoundInstance loop;private static String loopName;private static final List<SoundInstance> ONE_SHOTS=new ArrayList<>();private static final Map<Integer,SoundInstance> REMOTE_LOOPS=new HashMap<>();private static final Map<Integer,List<SoundInstance>> REMOTE_ONE_SHOTS=new HashMap<>();
+    private static SoundInstance loop;private static String loopName;private static final List<SoundInstance> ONE_SHOTS=new ArrayList<>();private static final Map<Integer,PositionalLoopSound> REMOTE_LOOPS=new HashMap<>();private static final Map<Integer,List<SoundInstance>> REMOTE_ONE_SHOTS=new HashMap<>();
     private record Pending(String name,long at){}
     private static final class PositionalLoopSound extends AbstractSoundInstance {
-        private PositionalLoopSound(SoundEvent event,double x,double y,double z,float volume){super(event,SoundCategory.MASTER,SoundInstance.createRandom());repeat=true;repeatDelay=0;relative=false;attenuationType=SoundInstance.AttenuationType.LINEAR;this.volume=volume;pitch=1.0f;this.x=x;this.y=y;this.z=z;}
+        private PositionalLoopSound(SoundEvent event,double x,double y,double z,float volume){super(event,SoundCategory.MASTER,SoundInstance.createRandom());repeat=true;repeatDelay=0;relative=false;attenuationType=SoundInstance.AttenuationType.NONE;this.volume=volume;pitch=1.0f;this.x=x;this.y=y;this.z=z;}
+        private void volume(float value){this.volume=Math.max(0f,value);}
+    }
+    private static final class PositionalOneShotSound extends AbstractSoundInstance {
+        private PositionalOneShotSound(SoundEvent event,double x,double y,double z,float volume){super(event,SoundCategory.MASTER,SoundInstance.createRandom());repeat=false;repeatDelay=0;relative=false;attenuationType=SoundInstance.AttenuationType.NONE;this.volume=volume;pitch=1.0f;this.x=x;this.y=y;this.z=z;}
     }
     private static final class LoopSound extends AbstractSoundInstance {
         private LoopSound(SoundEvent event){super(event,SoundCategory.MASTER,SoundInstance.createRandom());repeat=true;repeatDelay=0;relative=true;attenuationType=SoundInstance.AttenuationType.NONE;volume=0.45f;pitch=1.0f;}
@@ -66,8 +70,8 @@ public final class PiriSounds {
         ONE_SHOTS.add(sound);MinecraftClient.getInstance().getSoundManager().play(sound);
     }
     public static void playRemoteAt(int machineId,String name,double x,double y,double z,float volume){
-        if(!available(name))return;
-        SoundInstance sound=new PositionedSoundInstance(EVENTS.get(name),SoundCategory.MASTER,volume,1,SoundInstance.createRandom(),x,y,z);
+        if(!available(name)||volume<=0f)return;
+        SoundInstance sound=new PositionalOneShotSound(EVENTS.get(name),x,y,z,volume);
         REMOTE_ONE_SHOTS.computeIfAbsent(machineId,ignored->new ArrayList<>()).add(sound);
         MinecraftClient.getInstance().getSoundManager().play(sound);
     }
@@ -81,6 +85,7 @@ public final class PiriSounds {
         stopRemoteLoop(machineId);if(!available(name))return;
         SoundInstance sound=new PositionalLoopSound(EVENTS.get(name),x,y,z,volume);REMOTE_LOOPS.put(machineId,sound);MinecraftClient.getInstance().getSoundManager().play(sound);
     }
+    public static void updateRemoteLoopVolume(int machineId,float volume){PositionalLoopSound sound=REMOTE_LOOPS.get(machineId);if(sound!=null)sound.volume(volume);}
     public static void stopRemoteLoop(int machineId){SoundInstance sound=REMOTE_LOOPS.remove(machineId);if(sound!=null)MinecraftClient.getInstance().getSoundManager().stop(sound);}
     public static void stopRemoteOneShots(int machineId){
         var manager=MinecraftClient.getInstance().getSoundManager();var sounds=REMOTE_ONE_SHOTS.remove(machineId);
