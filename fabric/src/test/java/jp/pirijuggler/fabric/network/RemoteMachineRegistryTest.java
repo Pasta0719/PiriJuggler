@@ -151,23 +151,26 @@ class RemoteMachineRegistryTest {
     }
 
 
-    @Test void phase14QueuesOnlyPublicAudioLifecyclePerMachine() {
+    @Test void hallAudioCarriesExactOperationsPerMachine() {
         RemoteMachineRegistry registry=new RemoteMachineRegistry();
         registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,snapshot(61)));
-        JsonObject notice=id(61);notice.addProperty("sound","NOTICE");
+        var sync=registry.pollAudioEvent();assertNotNull(sync);assertEquals("SYNC",sync.op());assertEquals(61,sync.machineId());
+
+        JsonObject notice=id(61);notice.addProperty("op","PLAY");notice.addProperty("sound","notice");
         registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SOUND,notice));
-        var sound=registry.pollAudioEvent();assertNotNull(sound);assertEquals(61,sound.machineId());assertEquals("SOUND",sound.kind());assertEquals("NOTICE",sound.bonusType());
+        var sound=registry.pollAudioEvent();assertNotNull(sound);assertEquals(61,sound.machineId());assertEquals("PLAY",sound.op());assertEquals("notice",sound.sound());
+        assertEquals(0,sound.delayMs());assertEquals(1,sound.count());assertEquals(0,sound.spacingMs());
 
-        JsonObject start=id(61);start.addProperty("active",true);start.addProperty("bonusType","BIG");start.addProperty("count",1);
-        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_BONUS,start));
-        var begin=registry.pollAudioEvent();assertNotNull(begin);assertEquals("BONUS_START",begin.kind());assertEquals("BIG",begin.bonusType());
+        JsonObject burst=id(61);burst.addProperty("op","PLAY");burst.addProperty("sound","notice");burst.addProperty("count",5);burst.addProperty("spacingMs",100);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SOUND,burst));
+        var repeated=registry.pollAudioEvent();assertNotNull(repeated);assertEquals(5,repeated.count());assertEquals(100,repeated.spacingMs());
 
-        JsonObject end=id(61);end.addProperty("active",false);end.addProperty("bonusType","BIG");end.addProperty("finalCount",8);
-        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_BONUS,end));
-        assertEquals("BONUS_END",registry.pollAudioEvent().kind());
+        JsonObject loop=id(61);loop.addProperty("op","LOOP_START");loop.addProperty("sound","big_bgm");loop.addProperty("delayMs",4500);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SOUND,loop));
+        var bgm=registry.pollAudioEvent();assertNotNull(bgm);assertEquals("LOOP_START",bgm.op());assertEquals("big_bgm",bgm.sound());assertEquals(4500,bgm.delayMs());
 
         registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_REMOVE,id(61)));
-        assertEquals("REMOVE",registry.pollAudioEvent().kind());
+        assertEquals("REMOVE",registry.pollAudioEvent().op());
     }
 
     private static JsonObject snapshot(int id) {
