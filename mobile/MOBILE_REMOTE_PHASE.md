@@ -87,6 +87,17 @@ COMPLETEにするには以下をすべて満たす。
 UIスクリーンショットだけでもCOMPLETEにしない。
 上記E2Eを現行mainで通し、証跡を保存してからStatusをCOMPLETEへ変更する。
 
+### Fabric実機完全同期
+- モバイル遊技画面の見た目・配置・表示条件・音響挙動は Fabric 実機を正本とする
+- 座標・寸法は `fabric/.../SlotLayout.java` と `SlotScreen.java` をそのまま1920x1080論理座標へ反映し、モバイル独自オフセットを追加しない
+- 色は `fabric/src/main/resources/assets/piri/client-ui.json` の値を正本とする
+- REPLAY は (1050,816)、COUNT/残G は (1090,816)、STOCK は (1390,835) 150x58 を正本とする
+- STOCK点灯、PIRIランプ、SKILL_STOPチャレンジ画像、残G、図柄寸法、GOD専用リール背景・金枠をFabricと同条件で表示する
+- 音源名・開始条件・停止条件・重複防止は `PiriSounds.java` / `SlotUi.java` と一致させる
+- GODフリーズ開始・離席・セッション終了・再接続リセット時は、ループBGMだけでなく再生中の単発SEと予約済みSEも停止する
+- 停止後にerror fallbackや遅延timerから音が再発火してはならない
+- Fabricと異なるモバイル専用のREPLAY/COUNT/STOCK位置、独自BGMライフサイクル、独自図柄比率を禁止する
+
 ### Reel presentation parity
 - Fabric/Minecraft の確定表示を正本とする
 - 通常定速は 28 symbols/sec
