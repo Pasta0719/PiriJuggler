@@ -52,6 +52,24 @@ final class MobileRemotePageParityTest {
     }
 
     @Test
+    void fabricPaletteAndMachineGeometryRemainCanonical() throws Exception {
+        String page=page();
+        assertTrue(page.contains("#stage{position:absolute;width:1920px;height:1080px"));
+        assertTrue(page.contains("background:#000000;color:#F6F1E7"));
+        assertTrue(page.contains("background:#3C0A10;border:4px solid #B68A42"));
+        assertTrue(page.contains("background:#8A8175"));
+        assertTrue(page.contains("background:#F4F1E8"));
+        assertTrue(page.contains("#stage.skillstop #cabinet{background:#111015!important"));
+        assertTrue(page.contains("background:linear-gradient(to bottom,#E9D07A,#64410D)"));
+        assertTrue(page.contains("#stockLamp.on{background:#58e36a}"));
+        assertTrue(page.contains("#stockLamp{position:absolute;left:1390px;top:835px;width:150px;height:58px"));
+        assertTrue(page.contains("#replayText{position:absolute;left:1050px;top:816px"));
+        assertTrue(page.contains("#countText{position:absolute;left:1090px;top:816px"));
+        assertTrue(page.contains("#skillChallenge{position:absolute;left:410px;top:580px;width:180px;height:140px"));
+        assertTrue(page.contains("#leftBtn{left:720px;top:865px}#centerBtn{left:990px;top:865px}#rightBtn{left:1260px;top:865px}"));
+    }
+
+    @Test
     void fabricStateRecoverySemanticsArePresent() throws Exception {
         String page=page();
         assertTrue(page.contains("/api/resume"));
