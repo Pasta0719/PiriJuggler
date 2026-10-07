@@ -31,6 +31,7 @@ public final class RemoteMachineSync {
     private record DataLamp(long totalGames,long bigCount,long regCount) {}
     private final Map<Integer, DataLamp> dataLamp = new HashMap<>();
     private final Map<UUID, Set<Integer>> interests = new HashMap<>();
+    private final Map<Integer,Boolean> godFirstBigAudioActive = new HashMap<>();
 
     public RemoteMachineSync(PiriJugglerPlugin plugin,
                              Supplier<PiriDatabase.State> stateSupplier,
@@ -74,7 +75,7 @@ public final class RemoteMachineSync {
         requireMain();
         PiriDatabase.State state = stateSupplier.get();
         Machine machine = state == null ? null : state.machine(machineId);
-        if (machine == null) dataLamp.remove(machineId);
+        if (machine == null) { dataLamp.remove(machineId); godFirstBigAudioActive.remove(machineId); }
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID viewer = player.getUniqueId();
             if (!compatible.test(viewer)) continue;
@@ -128,6 +129,18 @@ public final class RemoteMachineSync {
         JsonObject source = ownerPacket.payload();
         switch (ownerPacket.packetType()) {
             case PUBLIC_STATE -> broadcastSnapshot(machineId);
+            case ACTION_ACCEPTED -> {
+                Session current=currentSession(machineId);
+                Machine machine=currentMachine(machineId);
+                if(current!=null&&machine!=null&&slotAudioMachine(machine.type())
+                        &&source.has("action")&&"SPACE_ACTION".equals(source.get("action").getAsString())
+                        &&current.publicState().get("gameState").getAsString().endsWith("_BETTED"))
+                    audio(machineId,"PLAY","bet",0,1,0,null);
+            }
+            case ACTION_REJECTED, ERROR -> {
+                Machine machine=currentMachine(machineId);
+                if(machine!=null&&slotAudioMachine(machine.type()))audio(machineId,"PLAY","error",0,1,0,null);
+            }
             case SPIN_START -> {
                 JsonObject body = base(machineId);
                 copyString(source, body, "spinId");
@@ -147,6 +160,24 @@ public final class RemoteMachineSync {
                     body.addProperty("stoppedMask", 0);
                 }
                 broadcast(machineId, PacketType.REMOTE_MACHINE_SPIN, body);
+                Machine machine=currentMachine(machineId);
+                if(machine!=null&&slotAudioMachine(machine.type())){
+                    boolean resumed=source.has("animation")&&"RESUME_NORMAL".equals(source.get("animation").getAsString());
+                    boolean freeze=source.has("godFreeze")&&source.get("godFreeze").getAsBoolean();
+                    if(!resumed){
+                        if(freeze){
+                            audio(machineId,"STOP_ALL",null,0,1,0,null);
+                            audio(machineId,"PLAY","god_freeze",0,1,0,null);
+                        }else audio(machineId,"PLAY","lever",0,1,0,null);
+                    }
+                    Session live=currentSession(machineId);
+                    if(live!=null){
+                        JsonObject ps=live.publicState();
+                        boolean first=ps.has("godFirstBigAudio")&&ps.get("godFirstBigAudio").getAsBoolean();
+                        if(first&&"BIG_SPINNING".equals(ps.get("gameState").getAsString()))
+                            audio(machineId,"LOOP_START","god_big_bgm",0,1,0,null);
+                    }
+                }
             }
             case REEL_STOP -> {
                 JsonObject body = base(machineId);
@@ -155,9 +186,20 @@ public final class RemoteMachineSync {
                 copyInt(source, body, "stopIndex");
                 copyInt(source, body, "durationMs");
                 broadcast(machineId, PacketType.REMOTE_MACHINE_STOP, body);
+                Machine machine=currentMachine(machineId);
+                if(machine!=null&&slotAudioMachine(machine.type())){
+                    Session live=currentSession(machineId);JsonObject ps=live==null?null:live.publicState();
+                    boolean freeze=ps!=null&&ps.has("godFreeze")&&ps.get("godFreeze").getAsBoolean()
+                            &&(machine.type()==MachineType.JUGGLER_GOD||machine.type()==MachineType.JUGGLER_GOD_EXTREME);
+                    if(freeze){
+                        int ordinal=Math.max(1,Math.min(3,Integer.bitCount(ps.get("stoppedMask").getAsInt())));
+                        audio(machineId,"PLAY","god_stop_"+ordinal,0,1,0,null);
+                    }else audio(machineId,"PLAY","stop",0,1,0,null);
+                }
             }
             case TENPAI_SOUND -> {
-                JsonObject sound=base(machineId);sound.addProperty("sound","TENPAI");broadcast(machineId,PacketType.REMOTE_MACHINE_SOUND,sound);
+                Machine machine=currentMachine(machineId);
+                if(machine!=null&&slotAudioMachine(machine.type()))audio(machineId,"PLAY","tenpai",0,1,0,null);
             }
             case NOTICE -> {
                 JsonObject body = base(machineId);
@@ -165,13 +207,16 @@ public final class RemoteMachineSync {
                 copyString(source, body, "lamp");
                 copyString(source, body, "pattern");
                 broadcast(machineId, PacketType.REMOTE_MACHINE_NOTICE, body);
-                if(source.has("lamp")&&"ON".equals(source.get("lamp").getAsString())&&!(source.has("skillChallengeSuccess")&&source.get("skillChallengeSuccess").getAsBoolean())){
-                    JsonObject sound=base(machineId);sound.addProperty("sound","NOTICE");broadcast(machineId,PacketType.REMOTE_MACHINE_SOUND,sound);
-                }
-                if(source.has("skillChallengeSuccess")&&source.get("skillChallengeSuccess").getAsBoolean()){
-                    JsonObject sound=base(machineId);copyString(source,sound,"spinId");
-                    sound.addProperty("skillChallengeSuccess",true);sound.addProperty("sound","NOTICE");
-                    broadcast(machineId,PacketType.REMOTE_MACHINE_SOUND,sound);
+                Machine machine=currentMachine(machineId);
+                if(machine!=null&&slotAudioMachine(machine.type())&&source.has("sound")){
+                    String requested=source.get("sound").getAsString();
+                    JsonObject extra=new JsonObject();copyString(source,extra,"spinId");copyBoolean(source,extra,"skillChallengeSuccess");
+                    switch(requested){
+                        case "NOTICE" -> audio(machineId,"PLAY","notice",0,1,0,extra);
+                        case "NOTICE_STRONG" -> audio(machineId,"PLAY","notice_strong",0,1,0,extra);
+                        case "NOTICE_X5" -> audio(machineId,"PLAY","notice",0,5,100,extra);
+                        default -> { }
+                    }
                 }
             }
             case BONUS_START -> {
@@ -179,15 +224,31 @@ public final class RemoteMachineSync {
                 body.addProperty("active", true);
                 copyString(source, body, "bonusType");
                 if (source.has("count")) copyInt(source, body, "count");
-                PiriDatabase.State state=stateSupplier.get();
-                Session current=state==null?null:state.sessions().stream()
-                        .filter(s->s.machine()==machineId&&s.ownsLock()).findFirst().orElse(null);
-                if(current!=null){
-                    JsonObject publicState=current.publicState();
-                    body.addProperty("godFirstBigAudio",publicState.has("godFirstBigAudio")
-                            &&publicState.get("godFirstBigAudio").getAsBoolean());
-                }
+                Session current=currentSession(machineId);
+                JsonObject publicState=current==null?null:current.publicState();
+                boolean first=publicState!=null&&publicState.has("godFirstBigAudio")&&publicState.get("godFirstBigAudio").getAsBoolean();
+                body.addProperty("godFirstBigAudio",first);
+                if(publicState!=null&&publicState.has("godPresentationStartMs"))
+                    body.addProperty("godPresentationStartMs",publicState.get("godPresentationStartMs").getAsLong());
                 broadcast(machineId, PacketType.REMOTE_MACHINE_BONUS, body);
+                Machine machine=currentMachine(machineId);
+                if(machine!=null&&slotAudioMachine(machine.type())&&source.has("bonusType")){
+                    String type=source.get("bonusType").getAsString();
+                    if("BIG".equals(type)){
+                        godFirstBigAudioActive.put(machineId,first);
+                        if(first){
+                            long start=publicState!=null&&publicState.has("godPresentationStartMs")?publicState.get("godPresentationStartMs").getAsLong():0L;
+                            long delay=start>0?Math.max(0L,start-System.currentTimeMillis()):0L;
+                            audio(machineId,"PLAY","god_bonus_start",delay,1,0,null);
+                        }else{
+                            audio(machineId,"PLAY","bonus_start",0,1,0,null);
+                            audio(machineId,"LOOP_START","big_bgm",4500,1,0,null);
+                        }
+                    }else if("REG".equals(type)){
+                        godFirstBigAudioActive.put(machineId,false);
+                        audio(machineId,"LOOP_START","reg_bgm",0,1,0,null);
+                    }
+                }
             }
             case BONUS_END -> {
                 JsonObject body = base(machineId);
@@ -195,6 +256,20 @@ public final class RemoteMachineSync {
                 copyString(source, body, "bonusType");
                 if (source.has("finalCount")) copyInt(source, body, "finalCount");
                 broadcast(machineId, PacketType.REMOTE_MACHINE_BONUS, body);
+                Machine machine=currentMachine(machineId);
+                if(machine!=null&&slotAudioMachine(machine.type())&&source.has("bonusType")){
+                    String type=source.get("bonusType").getAsString();
+                    audio(machineId,"LOOP_STOP",null,0,1,0,null);
+                    if("BIG".equals(type)){
+                        boolean first=godFirstBigAudioActive.getOrDefault(machineId,false);
+                        audio(machineId,"PLAY",first?"god_bonus_end":"bonus_end",0,1,0,null);
+                    }
+                    godFirstBigAudioActive.remove(machineId);
+                }
+            }
+            case PAYOUT -> {
+                Machine machine=currentMachine(machineId);
+                if(machine!=null&&slotAudioMachine(machine.type()))audio(machineId,"PLAY","payout",0,1,0,null);
             }
             case PACHINKO_EVENT -> {
                 JsonObject body=base(machineId);
@@ -210,6 +285,7 @@ public final class RemoteMachineSync {
         requireMain();
         interests.clear();
         dataLamp.clear();
+        godFirstBigAudioActive.clear();
     }
 
     private void refreshViewer(Player player, boolean forceSnapshot) {
@@ -324,6 +400,30 @@ public final class RemoteMachineSync {
             }
         }
         send(viewer, PacketType.REMOTE_MACHINE_SNAPSHOT, body);
+    }
+
+    private Machine currentMachine(int machineId){
+        PiriDatabase.State state=stateSupplier.get();
+        return state==null?null:state.machine(machineId);
+    }
+
+    private Session currentSession(int machineId){
+        PiriDatabase.State state=stateSupplier.get();
+        return state==null?null:state.sessions().stream().filter(s->s.machine()==machineId&&s.ownsLock()).findFirst().orElse(null);
+    }
+
+    private static boolean slotAudioMachine(MachineType type){
+        return type==MachineType.JUGGLER||type==MachineType.JUGGLER_GOD||type==MachineType.JUGGLER_GOD_EXTREME||type==MachineType.SKILL_STOP;
+    }
+
+    private void audio(int machineId,String op,String sound,long delayMs,int count,long spacingMs,JsonObject extra){
+        JsonObject body=base(machineId);body.addProperty("op",op);
+        if(sound!=null)body.addProperty("sound",sound);
+        if(delayMs>0)body.addProperty("delayMs",delayMs);
+        if(count>1)body.addProperty("count",count);
+        if(spacingMs>0)body.addProperty("spacingMs",spacingMs);
+        if(extra!=null)for(String key:extra.keySet())body.add(key,extra.get(key).deepCopy());
+        broadcast(machineId,PacketType.REMOTE_MACHINE_SOUND,body);
     }
 
     private static long nonNegative(JsonObject body, String key) {
