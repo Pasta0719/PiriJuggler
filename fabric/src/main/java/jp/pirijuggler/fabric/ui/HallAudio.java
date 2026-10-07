@@ -3,6 +3,9 @@ package jp.pirijuggler.fabric.ui;
 import jp.pirijuggler.fabric.network.RemoteMachineRegistry;
 import jp.pirijuggler.fabric.network.RemoteMachineViewState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -10,6 +13,7 @@ import java.util.function.Predicate;
 public final class HallAudio {
     static final double SE_RADIUS=16.0, BGM_RADIUS=12.0;
     static final float NORMAL_VOLUME=.35f, NOTICE_VOLUME=.45f, BGM_VOLUME=.18f;
+    static final float WALL_OCCLUSION=.55f;
 
     private record LoopState(String sound,String machineType,int x,int y,int z,String dimension) {}
     private record Pending(int machineId,String op,String sound,long atNanos,int generation) implements Comparable<Pending>{
@@ -84,16 +88,18 @@ public final class HallAudio {
     private static void play(int machineId,RemoteMachineViewState machine,String logical){
         if(!inRange(machine,SE_RADIUS))return;
         String sound=resolve(machine,logical);
-        float volume=("notice".equals(logical)||"notice_strong".equals(logical)||"tenpai".equals(logical))?NOTICE_VOLUME:NORMAL_VOLUME;
+        float base=("notice".equals(logical)||"notice_strong".equals(logical)||"tenpai".equals(logical))?NOTICE_VOLUME:NORMAL_VOLUME;
+        float volume=attenuatedVolume(machine,base,SE_RADIUS);
         PiriSounds.playRemoteAt(machineId,sound,machine.x()+.5,machine.y()+1.5,machine.z()+.5,volume);
     }
 
     private static void startLoop(int machineId,RemoteMachineViewState machine,String logical){
         if(!inRange(machine,BGM_RADIUS))return;
         String sound=resolve(machine,logical);
+        float volume=attenuatedVolume(machine,BGM_VOLUME,BGM_RADIUS);
         LoopState current=bonusLoops.get(machineId);
-        if(current!=null&&matches(current,machine,sound))return;
-        PiriSounds.startRemoteLoop(machineId,sound,machine.x()+.5,machine.y()+1.5,machine.z()+.5,BGM_VOLUME);
+        if(current!=null&&matches(current,machine,sound)){PiriSounds.updateRemoteLoopVolume(machineId,volume);return;}
+        PiriSounds.startRemoteLoop(machineId,sound,machine.x()+.5,machine.y()+1.5,machine.z()+.5,volume);
         bonusLoops.put(machineId,new LoopState(sound,machine.machineType(),machine.x(),machine.y(),machine.z(),machine.dimension()));
     }
 
@@ -128,6 +134,34 @@ public final class HallAudio {
     }
 
     static boolean withinRadius(double dx,double dy,double dz,double radius){return dx*dx+dy*dy+dz*dz<=radius*radius;}
+
+    static float distanceGain(double distance,double radius){
+        if(radius<=0||distance>=radius)return 0f;
+        double t=Math.max(0.0,distance/radius);
+        return (float)Math.max(0.0,1.0-t*t);
+    }
+
+    private static float attenuatedVolume(RemoteMachineViewState machine,float base,double radius){
+        MinecraftClient client=MinecraftClient.getInstance();
+        if(client.player==null||client.world==null)return 0f;
+        Vec3d source=new Vec3d(machine.x()+.5,machine.y()+1.5,machine.z()+.5);
+        Vec3d ear=client.player.getEyePos();
+        double distance=source.distanceTo(ear);
+        float gain=distanceGain(distance,radius);
+        if(gain<=0f)return 0f;
+        if(blocked(client,source,ear))gain*=WALL_OCCLUSION;
+        return base*gain;
+    }
+
+    private static boolean blocked(MinecraftClient client,Vec3d source,Vec3d ear){
+        Vec3d delta=ear.subtract(source);
+        double length=delta.length();
+        if(length<=1.0)return false;
+        Vec3d start=source.add(delta.normalize().multiply(Math.min(.75,length*.25)));
+        HitResult hit=client.world.raycast(new RaycastContext(start,ear,RaycastContext.ShapeType.COLLIDER,RaycastContext.FluidHandling.NONE,client.player));
+        return hit.getType()==HitResult.Type.BLOCK&&hit.getPos().squaredDistanceTo(ear)>.04;
+    }
+
 
     private static void cancelLoopStarts(int machineId){
         pending.removeIf(p->p.machineId()==machineId&&"LOOP_START".equals(p.op()));
