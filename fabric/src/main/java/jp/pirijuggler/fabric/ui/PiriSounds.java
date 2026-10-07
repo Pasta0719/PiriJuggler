@@ -31,7 +31,7 @@ public final class PiriSounds {
     }
     private static final Map<String,SoundEvent> EVENTS=new HashMap<>();
     private static final PriorityQueue<Pending> QUEUE=new PriorityQueue<>(Comparator.comparingLong(Pending::at));
-    private static SoundInstance loop;private static String loopName;private static final List<SoundInstance> ONE_SHOTS=new ArrayList<>();private static final Map<Integer,SoundInstance> REMOTE_LOOPS=new HashMap<>();
+    private static SoundInstance loop;private static String loopName;private static final List<SoundInstance> ONE_SHOTS=new ArrayList<>();private static final Map<Integer,SoundInstance> REMOTE_LOOPS=new HashMap<>();private static final Map<Integer,List<SoundInstance>> REMOTE_ONE_SHOTS=new HashMap<>();
     private record Pending(String name,long at){}
     private static final class PositionalLoopSound extends AbstractSoundInstance {
         private PositionalLoopSound(SoundEvent event,double x,double y,double z,float volume){super(event,SoundCategory.MASTER,SoundInstance.createRandom());repeat=true;repeatDelay=0;relative=false;attenuationType=SoundInstance.AttenuationType.LINEAR;this.volume=volume;pitch=1.0f;this.x=x;this.y=y;this.z=z;}
@@ -63,22 +63,39 @@ public final class PiriSounds {
         SoundInstance sound=new PositionedSoundInstance(EVENTS.get(name),SoundCategory.MASTER,volume,1,SoundInstance.createRandom(),x,y,z);
         ONE_SHOTS.add(sound);MinecraftClient.getInstance().getSoundManager().play(sound);
     }
+    public static void playRemoteAt(int machineId,String name,double x,double y,double z,float volume){
+        if(!available(name))return;
+        SoundInstance sound=new PositionedSoundInstance(EVENTS.get(name),SoundCategory.MASTER,volume,1,SoundInstance.createRandom(),x,y,z);
+        REMOTE_ONE_SHOTS.computeIfAbsent(machineId,ignored->new ArrayList<>()).add(sound);
+        MinecraftClient.getInstance().getSoundManager().play(sound);
+    }
     public static void startLoop(String name){
         if(!name.equals("big_bgm")&&!name.equals("reg_bgm")&&!name.equals("juggler_god_big_bgm")&&!name.equals("juggler_god_reg_bgm")&&!name.equals("juggler_god_god_big_bgm"))throw new IllegalArgumentException(name);if(name.equals(loopName)&&loop!=null)return;stopLoop();
         if(!available(name))return;loopName=name;loop=new LoopSound(EVENTS.get(name));MinecraftClient.getInstance().getSoundManager().play(loop);
     }
     public static void stopLoop(){if(loop!=null)MinecraftClient.getInstance().getSoundManager().stop(loop);loop=null;loopName=null;}
-    public static void startRemoteLoop(int machineId,String name,double x,double y,double z){
+    public static void startRemoteLoop(int machineId,String name,double x,double y,double z){startRemoteLoop(machineId,name,x,y,z,0.18f);}
+    public static void startRemoteLoop(int machineId,String name,double x,double y,double z,float volume){
         stopRemoteLoop(machineId);if(!available(name))return;
-        SoundInstance sound=new PositionalLoopSound(EVENTS.get(name),x,y,z,0.18f);REMOTE_LOOPS.put(machineId,sound);MinecraftClient.getInstance().getSoundManager().play(sound);
+        SoundInstance sound=new PositionalLoopSound(EVENTS.get(name),x,y,z,volume);REMOTE_LOOPS.put(machineId,sound);MinecraftClient.getInstance().getSoundManager().play(sound);
     }
     public static void stopRemoteLoop(int machineId){SoundInstance sound=REMOTE_LOOPS.remove(machineId);if(sound!=null)MinecraftClient.getInstance().getSoundManager().stop(sound);}
+    public static void stopRemoteOneShots(int machineId){
+        var manager=MinecraftClient.getInstance().getSoundManager();var sounds=REMOTE_ONE_SHOTS.remove(machineId);
+        if(sounds!=null)for(SoundInstance sound:sounds)manager.stop(sound);
+    }
+    public static void stopRemoteAudio(int machineId){stopRemoteOneShots(machineId);stopRemoteLoop(machineId);}
     public static void stopRemoteLoops(){var manager=MinecraftClient.getInstance().getSoundManager();for(SoundInstance sound:REMOTE_LOOPS.values())manager.stop(sound);REMOTE_LOOPS.clear();}
+    public static void stopRemoteAudioAll(){
+        var manager=MinecraftClient.getInstance().getSoundManager();
+        for(var sounds:REMOTE_ONE_SHOTS.values())for(SoundInstance sound:sounds)manager.stop(sound);
+        REMOTE_ONE_SHOTS.clear();stopRemoteLoops();
+    }
     public static int remoteLoopCount(){return REMOTE_LOOPS.size();}
     public static void stopAll(){
         var manager=MinecraftClient.getInstance().getSoundManager();
         for(SoundInstance sound:ONE_SHOTS)manager.stop(sound);
-        ONE_SHOTS.clear();QUEUE.clear();stopLoop();stopRemoteLoops();
+        ONE_SHOTS.clear();QUEUE.clear();stopLoop();
     }
     public static void reset(){stopAll();}
     private PiriSounds(){}
