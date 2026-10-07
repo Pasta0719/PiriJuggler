@@ -143,7 +143,7 @@ public final class RemoteMachineSync {
                 Machine machine=currentMachine(machineId);
                 if(current!=null&&machine!=null&&slotAudioMachine(machine.type())
                         &&source.has("action")&&"SPACE_ACTION".equals(source.get("action").getAsString())
-                        &&current.publicState().get("gameState").getAsString().endsWith("_BETTED"))
+                        &&current.publicState().get("gameState").getAsString().contains("BETTED"))
                     audio(machineId,"PLAY","bet",0,1,0,null);
             }
             case ACTION_REJECTED, ERROR -> {
