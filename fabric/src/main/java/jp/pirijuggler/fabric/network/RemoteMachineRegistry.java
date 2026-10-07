@@ -184,6 +184,7 @@ public final class RemoteMachineRegistry {
                         if(sound==null||sound.isBlank())throw new IllegalArgumentException("sound");
                     }
                     long delay=body.has("delayMs")?body.get("delayMs").getAsLong():0L;
+                    if(body.has("atEpochMs")){requireNumber(body,"atEpochMs");long at=body.get("atEpochMs").getAsLong();if(at<0)throw new IllegalArgumentException("atEpochMs");delay=Math.max(0L,at-wallTimeMs.getAsLong());}
                     int count=body.has("count")?body.get("count").getAsInt():1;
                     long spacing=body.has("spacingMs")?body.get("spacingMs").getAsLong():0L;
                     if(delay<0||count<1||count>8||spacing<0)throw new IllegalArgumentException("audio timing");
