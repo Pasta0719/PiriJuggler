@@ -175,9 +175,9 @@ public final class RemoteMachineRegistry {
                     audioEvents.add(new AudioEvent(machineId,"REMOVE",null,0,1,0));
                 }
                 case REMOTE_MACHINE_SOUND -> {
-                    String op=body.has("op")?requireString(body,"op").getAsString():"PLAY";
+                    String op;if(body.has("op")){requireString(body,"op");op=body.get("op").getAsString();}else op="PLAY";
                     if(!Set.of("PLAY","LOOP_START","LOOP_STOP","STOP_ALL").contains(op))throw new IllegalArgumentException("op");
-                    String sound=body.has("sound")?requireString(body,"sound").getAsString():null;
+                    String sound=null;if(body.has("sound")){requireString(body,"sound");sound=body.get("sound").getAsString();}
                     if("PLAY".equals(op)||"LOOP_START".equals(op)){
                         if(sound==null||sound.isBlank())throw new IllegalArgumentException("sound");
                     }
