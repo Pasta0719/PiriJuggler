@@ -904,15 +904,15 @@ public final class MachineService implements Listener, CommandExecutor {
     public void mobileAction(UUID owner, PacketType action, Integer pressedIndex, BiConsumer<JsonObject, String> callback) {
         main();
         if (!Set.of(PacketType.SPACE_ACTION, PacketType.STOP_LEFT, PacketType.STOP_CENTER, PacketType.STOP_RIGHT).contains(action)) {
-            callback.accept(null, "INVALID_STATE"); return;
+            remote.publishOwnerError(owner); callback.accept(null, "INVALID_STATE"); return;
         }
-        if (!ready()) { callback.accept(null, "DB_ERROR"); return; }
+        if (!ready()) { remote.publishOwnerError(owner); callback.accept(null, "DB_ERROR"); return; }
         Session session = state.session(owner);
-        if (session == null || session.lifecycle() != Session.Lifecycle.ACTIVE) { callback.accept(null, "SESSION_MISMATCH"); return; }
+        if (session == null || session.lifecycle() != Session.Lifecycle.ACTIVE) { remote.publishOwnerError(owner); callback.accept(null, "SESSION_MISMATCH"); return; }
         int machineId = session.machine();
         Machine machine = state.machine(machineId);
-        if (machine == null || !mobileSupported(machine.type())) { callback.accept(null, "INVALID_STATE"); return; }
-        if (pendingPlayers.contains(owner) || pendingMachines.contains(machineId)) { callback.accept(null, "BUSY"); return; }
+        if (machine == null || !mobileSupported(machine.type())) { remote.publishOwnerError(owner); callback.accept(null, "INVALID_STATE"); return; }
+        if (pendingPlayers.contains(owner) || pendingMachines.contains(machineId)) { remote.publishOwnerError(owner); callback.accept(null, "BUSY"); return; }
         long sequence = session.sequence() + 1;
         try {
             GameEngine game = engine(machineId);
@@ -937,12 +937,12 @@ public final class MachineService implements Listener, CommandExecutor {
                 }
             });
         } catch (DomainException failure) {
-            callback.accept(null, failure.getMessage());
+            remote.publishOwnerError(owner); callback.accept(null, failure.getMessage());
         } catch (ArithmeticException failure) {
-            callback.accept(null, "INVALID_STATE");
+            remote.publishOwnerError(owner); callback.accept(null, "INVALID_STATE");
         } catch (RuntimeException failure) {
             plugin.getLogger().log(Level.WARNING, "Mobile game action failed", failure);
-            callback.accept(null, "DB_ERROR");
+            remote.publishOwnerError(owner); callback.accept(null, "DB_ERROR");
         }
     }
 
