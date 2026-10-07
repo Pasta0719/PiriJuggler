@@ -77,6 +77,21 @@ final class MobileRemotePageParityTest {
     }
 
     @Test
+    void mobileAudioLifecycleMatchesFabricStopAllSemantics() throws Exception {
+        String page=page();
+        assertTrue(page.contains("const audioOneShots=new Set(),audioTimers=new Set()"));
+        assertTrue(page.contains("function trackOneShot(a)"));
+        assertTrue(page.contains("audioOneShots.add(a)"));
+        assertTrue(page.contains("for(const timer of audioTimers)clearTimeout(timer)"));
+        assertTrue(page.contains("for(const a of audioOneShots){try{a.pause();a.currentTime=0}catch(e){}}"));
+        assertTrue(page.contains("audioOneShots.clear()"));
+        assertTrue(page.contains("stopLoop();"));
+        assertTrue(page.contains("if(godFreeze){"));
+        assertTrue(page.contains("stopAllAudio();"));
+        assertTrue(page.contains("playLater(machineSound(\"notice\"),\"notice\",n*100)"));
+    }
+
+    @Test
     void historyIsNotHardLimitedToTenRows() throws Exception {
         String page=page();
         assertFalse(page.contains(".slice(0,10)"));
