@@ -87,6 +87,13 @@ public final class PiriSounds {
     }
     public static void updateRemoteLoopVolume(int machineId,float volume){PositionalLoopSound sound=REMOTE_LOOPS.get(machineId);if(sound!=null)sound.volume(volume);}
     public static void stopRemoteLoop(int machineId){SoundInstance sound=REMOTE_LOOPS.remove(machineId);if(sound!=null)MinecraftClient.getInstance().getSoundManager().stop(sound);}
+    public static void pruneRemoteOneShots(){
+        var manager=MinecraftClient.getInstance().getSoundManager();
+        REMOTE_ONE_SHOTS.entrySet().removeIf(entry->{
+            entry.getValue().removeIf(sound->!manager.isPlaying(sound));
+            return entry.getValue().isEmpty();
+        });
+    }
     public static void stopRemoteOneShots(int machineId){
         var manager=MinecraftClient.getInstance().getSoundManager();var sounds=REMOTE_ONE_SHOTS.remove(machineId);
         if(sounds!=null)for(SoundInstance sound:sounds)manager.stop(sound);
