@@ -63,8 +63,10 @@ public final class RemoteMachineRegistry {
             if (machineId == null || machineId <= 0) throw new IllegalArgumentException("machineId");
             switch (envelope.packetType()) {
                 case REMOTE_MACHINE_SNAPSHOT -> {
+                    boolean fresh=!views.containsKey(machineId);
                     applySnapshot(machineId, body);
                     views.put(machineId, RemoteMachineViewState.fromSnapshot(machineId, body, time.getAsLong(), wallTimeMs.getAsLong()));
+                    if(fresh)audioEvents.add(new AudioEvent(machineId,"SYNC",null,0,1,0));
                 }
                 case REMOTE_MACHINE_SPIN -> {
                     mutate(machineId, current -> {
