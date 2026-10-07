@@ -127,6 +127,7 @@ try:
     command("testvault set PiriRuntimeTest 5000","TEST_VAULT_SET")
     command("piritest mobilefund","TEST_MOBILE_FUNDED")
     command("piritest mobilecheck","TEST_MOBILE_INVENTORY medals=600 small=2 medium=1 large=1")
+    command("piritest mobilefill","TEST_MOBILE_FILL")
     check("real Minecraft inventory seeded with medals and all prize sizes",
           any("TEST_MOBILE_INVENTORY medals=600 small=2 medium=1 large=1" in m for m in messages()),messages()[-10:])
 
@@ -216,6 +217,13 @@ try:
           "SPINNING" not in str(after.get("gameState",""))
           and int(after.get("stoppedMask",0))==7,
           after)
+    first_events=first_stop.get("events",[])
+    first_reel=next((e for e in first_events if e.get("type")=="REEL_STOP"),None)
+    check("mobile pressed index reaches authoritative Paper stop result",
+          first_reel is not None
+          and int(first_reel.get("payload",{}).get("pressedIndex",-1))==0
+          and int(first_reel.get("payload",{}).get("stopIndex",-1))==int(first_stop.get("displayStops",{}).get("left",-2)),
+          {"response":first_stop,"reelStop":first_reel})
 
     cash=http("POST","/api/cashout",token)
     pending=int(cash.get("cashoutPending",0))
@@ -241,6 +249,14 @@ try:
     check("medium/large prizes survive mobile small-prize cash",
           cashed.get("mediumPrizes")==1 and cashed.get("largePrizes")==1,cashed)
 
+    start_client()
+    time.sleep(2)
+    command("piritest mobilecheck","TEST_MOBILE_INVENTORY")
+    check("inventory shortage leaves undeliverable mobile assets safely pending",
+          wallet()==expected_medals and prizes().get("small")==2 and prizes().get("medium")==1 and prizes().get("large")==1,
+          {"wallet":wallet(),"prizes":prizes(),"messages":messages()[-10:]})
+    command("piritest mobileclearfill","TEST_MOBILE_CLEAR_FILL")
+    stop_client()
     start_client()
     expected=f"TEST_MOBILE_INVENTORY medals={expected_medals} small=2 medium=1 large=1"
     end=time.monotonic()+90
