@@ -16,6 +16,7 @@ public final class SlotUi {
     private static Envelope queuedLever;private static Consumer<Envelope> outbound;
 
     public static boolean hidesHud(){var screen=MinecraftClient.getInstance().currentScreen;return screen instanceof SlotScreen||screen instanceof GodScreen||screen instanceof PachinkoScreen||screen instanceof SlotChatScreen||screen instanceof AdminScreen;}
+    public static boolean seated(){return view!=null;}
 
     public static void receive(Envelope packet,ClientSession session,Consumer<Envelope> sender){
         var client=MinecraftClient.getInstance();var b=packet.payload();

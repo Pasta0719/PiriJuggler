@@ -35,8 +35,8 @@ class HallAudioTest {
         assertEquals("juggler_god_god_big_bgm",HallAudio.resolveLogical("JUGGLER_GOD_EXTREME","god_big_bgm",all));
         assertEquals("big_bgm",HallAudio.resolveLogical("JUGGLER_GOD_EXTREME","god_big_bgm",none));
     }
-    @Test void allFourMachinesResolveEveryOwnerAudioSourceIdentically() {
-        var base=java.util.List.of("notice","notice_strong","tenpai","bet","lever","stop","payout","error","bonus_start","bonus_end","big_bgm","reg_bgm");
+    @Test void allFourMachinesResolveEveryPublicHallAudioSourceIdentically() {
+        var base=java.util.List.of("notice","notice_strong","tenpai","bet","lever","stop","payout","bonus_start","bonus_end","big_bgm","reg_bgm");
         java.util.function.Predicate<String> all=name->true;
         java.util.function.Predicate<String> none=name->false;
         for(String sound:base){
@@ -49,13 +49,19 @@ class HallAudioTest {
         }
     }
 
-    @Test void distanceAttenuationIsGentlerButKeepsSameCutoff() {
+    @Test void distanceAttenuationFallsHardAndSmoothlyToTheSameCutoff() {
         assertEquals(1.0f,HallAudio.distanceGain(0,HallAudio.SE_RADIUS),1e-6f);
-        assertEquals(.75f,HallAudio.distanceGain(8,HallAudio.SE_RADIUS),1e-6f);
+        assertEquals(.5625f,HallAudio.distanceGain(4,HallAudio.SE_RADIUS),1e-6f);
+        assertEquals(.25f,HallAudio.distanceGain(8,HallAudio.SE_RADIUS),1e-6f);
+        assertEquals(.0625f,HallAudio.distanceGain(12,HallAudio.SE_RADIUS),1e-6f);
+        assertTrue(HallAudio.distanceGain(15,HallAudio.SE_RADIUS)<.004f);
         assertEquals(0f,HallAudio.distanceGain(16,HallAudio.SE_RADIUS),1e-6f);
         assertEquals(0f,HallAudio.distanceGain(17,HallAudio.SE_RADIUS),1e-6f);
-        assertTrue(HallAudio.distanceGain(8,HallAudio.SE_RADIUS)>.5f);
         assertEquals(.55f,HallAudio.WALL_OCCLUSION,1e-6f);
+    }
+    @Test void seatedPlayersHearNoHallAudio() {
+        assertFalse(HallAudio.remoteAudioAllowed(true));
+        assertTrue(HallAudio.remoteAudioAllowed(false));
     }
     @Test void phase14VolumesAreLocked() {
         assertEquals(.35f,HallAudio.NORMAL_VOLUME);

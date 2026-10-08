@@ -1,5 +1,6 @@
 package jp.pirijuggler.paper.machine;
 
+import jp.pirijuggler.common.protocol.PacketType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,5 +24,12 @@ class RemoteMachineSyncTest {
         assertFalse(RemoteInterestPolicy.contains(34.01 * 34.01, true));
         assertFalse(RemoteInterestPolicy.contains(33.0 * 33.0, false));
         assertTrue(RemoteInterestPolicy.contains(31.99 * 31.99, false));
+    }
+
+    @Test void rejectionAndErrorAudioStayWithTheMachineOwner() {
+        assertTrue(RemoteMachineSync.ownerOnlyAudio(PacketType.ACTION_REJECTED));
+        assertTrue(RemoteMachineSync.ownerOnlyAudio(PacketType.ERROR));
+        assertFalse(RemoteMachineSync.ownerOnlyAudio(PacketType.ACTION_ACCEPTED));
+        assertFalse(RemoteMachineSync.ownerOnlyAudio(PacketType.NOTICE));
     }
 }

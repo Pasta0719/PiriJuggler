@@ -110,11 +110,12 @@ public final class RemoteMachineSync {
 
     public void publishOwnerError(UUID owner){
         requireMain();
-        PiriDatabase.State state=stateSupplier.get();
-        Session session=state==null?null:state.session(owner);
-        if(session==null||session.lifecycle()!=Session.Lifecycle.ACTIVE)return;
-        Machine machine=state.machine(session.machine());
-        if(machine!=null&&slotAudioMachine(machine.type()))audio(machine.id(),"PLAY","error",0,1,0,null);
+        // Error/rejection beeps are private feedback for the machine operator.
+        // Never mirror them into hall REMOTE_MACHINE_SOUND traffic.
+    }
+
+    static boolean ownerOnlyAudio(PacketType type){
+        return type==PacketType.ACTION_REJECTED||type==PacketType.ERROR;
     }
 
     /** Sends a fresh public state to current interested spectators only. */
@@ -135,6 +136,7 @@ public final class RemoteMachineSync {
      */
     public void publishOwnerPacket(int machineId, Envelope ownerPacket) {
         requireMain();
+        if(ownerOnlyAudio(ownerPacket.packetType()))return;
         JsonObject source = ownerPacket.payload();
         switch (ownerPacket.packetType()) {
             case PUBLIC_STATE -> broadcastSnapshot(machineId);
@@ -145,10 +147,6 @@ public final class RemoteMachineSync {
                         &&source.has("action")&&"SPACE_ACTION".equals(source.get("action").getAsString())
                         &&current.publicState().get("gameState").getAsString().contains("BETTED"))
                     audio(machineId,"PLAY","bet",0,1,0,null);
-            }
-            case ACTION_REJECTED, ERROR -> {
-                Machine machine=currentMachine(machineId);
-                if(machine!=null&&slotAudioMachine(machine.type()))audio(machineId,"PLAY","error",0,1,0,null);
             }
             case SPIN_START -> {
                 JsonObject body = base(machineId);

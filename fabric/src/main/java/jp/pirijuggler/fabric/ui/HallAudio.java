@@ -25,14 +25,25 @@ public final class HallAudio {
     private static final Map<Integer,String> desiredLoops=new HashMap<>();
     private static final PriorityQueue<Pending> pending=new PriorityQueue<>();
     private static final Map<Integer,Integer> generations=new HashMap<>();
+    private static boolean mutedForSeat;
 
     public static void publicNotice(RemoteMachineViewState machine,String sound){
-        if(machine==null||!inRange(machine,SE_RADIUS))return;
+        if(machine==null||!remoteAudioAllowed(SlotUi.seated())||!inRange(machine,SE_RADIUS))return;
         play(machine.machineId(),machine,sound);
     }
 
     public static void drain(RemoteMachineRegistry registry){
         PiriSounds.pruneRemoteOneShots();
+        if(!remoteAudioAllowed(SlotUi.seated())){
+            if(!mutedForSeat)muteForSeat();
+            mutedForSeat=true;
+            while(registry.pollAudioEvent()!=null){}
+            return;
+        }
+        if(mutedForSeat){
+            mutedForSeat=false;
+            registry.forEachView((id,machine)->sync(machine));
+        }
         RemoteMachineRegistry.AudioEvent event;
         while((event=registry.pollAudioEvent())!=null){
             RemoteMachineViewState machine=registry.view(event.machineId());
@@ -140,8 +151,11 @@ public final class HallAudio {
     static float distanceGain(double distance,double radius){
         if(radius<=0||distance>=radius)return 0f;
         double t=Math.max(0.0,distance/radius);
-        return (float)Math.max(0.0,1.0-t*t);
+        double remaining=1.0-t;
+        return (float)(remaining*remaining);
     }
+
+    static boolean remoteAudioAllowed(boolean seated){return !seated;}
 
     private static float attenuatedVolume(RemoteMachineViewState machine,float base,double radius){
         MinecraftClient client=MinecraftClient.getInstance();
@@ -181,8 +195,12 @@ public final class HallAudio {
         PiriSounds.stopRemoteAudio(machineId);
     }
 
+    private static void muteForSeat(){
+        pending.clear();desiredLoops.clear();bonusLoops.clear();PiriSounds.stopRemoteAudioAll();
+    }
+
     public static void reset(){
-        pending.clear();desiredLoops.clear();bonusLoops.clear();generations.clear();PiriSounds.stopRemoteAudioAll();
+        pending.clear();desiredLoops.clear();bonusLoops.clear();generations.clear();mutedForSeat=false;PiriSounds.stopRemoteAudioAll();
     }
     public static int activeBonusLoops(){return bonusLoops.size();}
     static int pendingEvents(){return pending.size();}
