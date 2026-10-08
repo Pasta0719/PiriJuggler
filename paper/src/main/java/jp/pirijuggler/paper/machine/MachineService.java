@@ -744,7 +744,7 @@ public final class MachineService implements Listener, CommandExecutor {
         }
         pendingPlayers.add(player);pendingMachines.add(machine);
         long queuedAt=System.nanoTime();
-        plugin.executors().database(()->new GameStore(database).commit(transition),(saved,error)->{
+        plugin.executors().gameplayDatabase(()->new GameStore(database).commit(transition),(saved,error)->{
             long elapsed=System.nanoTime()-queuedAt;
             if(elapsed>=GAMEPLAY_DB_DEADLINE_NANOS)
                 plugin.getLogger().warning("PIRI_GAMEPLAY_DB_DEADLINE_MISS machine="+machine+" player="+player+" elapsedMs="+elapsed/1_000_000L);

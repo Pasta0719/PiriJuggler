@@ -129,7 +129,7 @@ public final class ProfitService implements Listener {
 
     private void showProfit(CommandSender sender, boolean sessionOnly) {
         long cutoff = sessionOnly ? startedAt : 0L;
-        plugin.executors().database(() -> queryProfit(cutoff, false), (profit, error) -> {
+        plugin.executors().readOnly(() -> queryProfit(cutoff, false), (profit, error) -> {
             if (error != null) {
                 plugin.getLogger().log(Level.SEVERE, "Profit query failed", error);
                 sender.sendMessage(Component.text("利益を取得できませんでした。"));
@@ -187,7 +187,7 @@ public final class ProfitService implements Listener {
             }
             if (plan == null) {
                 pendingDeposits.remove(owner);
-                plugin.executors().database(() -> queryProfit(0L, true), (available, queryError) -> {
+                plugin.executors().readOnly(() -> queryProfit(0L, true), (available, queryError) -> {
                     if (queryError != null) player.sendMessage("利益が不足しています。");
                     else player.sendMessage("利益が不足しています。現在の利益残高: " + money(available));
                 });

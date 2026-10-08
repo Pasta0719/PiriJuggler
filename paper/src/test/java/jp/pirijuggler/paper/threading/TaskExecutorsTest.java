@@ -58,6 +58,25 @@ class TaskExecutorsTest {
         }
     }
 
+    @Test void gameplayDatabaseJumpsAheadOfQueuedNormalDatabaseWork() throws Exception {
+        TestMain main=new TestMain();
+        try(TaskExecutors executors=new TaskExecutors(main)){
+            CountDownLatch started=new CountDownLatch(1),release=new CountDownLatch(1);
+            List<String> execution=java.util.Collections.synchronizedList(new ArrayList<>());
+            var first=executors.database(()->{
+                execution.add("running-normal");started.countDown();assertTrue(release.await(10,TimeUnit.SECONDS));return 1;
+            },(value,error)->assertNull(error));
+            assertTrue(started.await(10,TimeUnit.SECONDS));
+            var queuedNormal=executors.database(()->{execution.add("queued-normal");return 2;},(value,error)->assertNull(error));
+            var gameplayA=executors.gameplayDatabase(()->{execution.add("gameplay-a");return 3;},(value,error)->assertNull(error));
+            var gameplayB=executors.gameplayDatabase(()->{execution.add("gameplay-b");return 4;},(value,error)->assertNull(error));
+            release.countDown();
+            main.next();main.next();main.next();main.next();
+            first.join();queuedNormal.join();gameplayA.join();gameplayB.join();
+            assertEquals(List.of("running-normal","gameplay-a","gameplay-b","queued-normal"),execution);
+        }
+    }
+
     @Test void readOnlyWorkDoesNotQueueBehindGameplayDatabase() throws Exception {
         TestMain main=new TestMain();
         try(TaskExecutors executors=new TaskExecutors(main)){

@@ -53,7 +53,10 @@ public final class MachineDataSimulationService {
         catch(NumberFormatException error){sender.sendMessage(Component.text("INVALID_STATE"));return true;}
         var machine=state.machine(machineId);
         if(machine==null){sender.sendMessage(Component.text("INVALID_STATE"));return true;}
-        if(state.busy(machineId)){sender.sendMessage(Component.text("MACHINE_OCCUPIED"));return true;}
+        if(state.sessions().stream().anyMatch(session->session.ownsLock())){
+            sender.sendMessage(Component.text("LIVE_PLAY_ACTIVE"));
+            return true;
+        }
         if(!supported(machine)){
             sender.sendMessage(Component.text("SIM_UNSUPPORTED machine="+machineId+" type="+machine.type()));
             return true;
@@ -65,7 +68,7 @@ public final class MachineDataSimulationService {
         var random=new SplittableRandom(new SecureRandom().nextLong());
         running=true;
         sender.sendMessage(Component.text("SIMULATION_STARTED machine="+machineId+" setting="+setting+" targetSpins="+games+(machine.type()==jp.pirijuggler.paper.machine.MachineType.SKILL_STOP?" skill="+skillPercent+"%":"")));
-        plugin.executors().database(
+        plugin.executors().simulator(
                 ()->(machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD||machine.type()==jp.pirijuggler.paper.machine.MachineType.JUGGLER_GOD_EXTREME)
                         ?JugglerGodMachineDataSimulator.run(dbFile,weights,config,machineId,setting,games,period,random,System.currentTimeMillis())
                         :machine.type()==jp.pirijuggler.paper.machine.MachineType.SKILL_STOP
@@ -105,7 +108,7 @@ public final class MachineDataSimulationService {
         running=true;
         sender.sendMessage(Component.text("SIMULATION_ALL_STARTED machines="+machines.size()+" targetSpinsEach="+games+" skill="+skillPercent+"%"));
 
-        plugin.executors().database(()->{
+        plugin.executors().simulator(()->{
             List<MachineDataSimulator.Result> results=new ArrayList<>(machines.size());
             long now=System.currentTimeMillis();
             var masterRandom=new SplittableRandom(seed);
