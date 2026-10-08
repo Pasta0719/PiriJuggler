@@ -199,7 +199,7 @@ public final class RemoteMachineRegistry {
                                 &&(view.spinId()==null||view.spinId().toString().equals(body.get("spinId").getAsString()))
                                 &&skillNotices.computeIfAbsent(machineId,k->new SkillStopPresentation.NoticeGate()).accept(body.get("spinId").getAsString());
                     }
-                    if(accept)soundEvents.add(new AudioEvent(machineId,op,sound,delay,count,spacing));
+                    if(accept&&publicHallSoundAllowed(sound))soundEvents.add(new AudioEvent(machineId,op,sound,delay,count,spacing));
                 }
                 default -> { }
             }
@@ -237,6 +237,12 @@ public final class RemoteMachineRegistry {
     public void forEachView(java.util.function.BiConsumer<Integer,RemoteMachineViewState> consumer){views.forEach(consumer);}
     public Integer pollSkillSuccessSound(){Integer value=skillSuccessSound;skillSuccessSound=null;return value;}
     public AudioEvent pollAudioEvent(){AudioEvent e=soundEvents.poll();return e!=null?e:audioEvents.poll();}
+
+    static boolean publicHallSoundAllowed(String sound){
+        if(sound==null)return true;
+        String normalized=sound.toLowerCase(Locale.ROOT);
+        return !"error".equals(normalized)&&!"juggler_god_error".equals(normalized);
+    }
 
     public void reset() {
         machines.clear();

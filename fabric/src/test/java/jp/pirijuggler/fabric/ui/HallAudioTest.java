@@ -63,6 +63,14 @@ class HallAudioTest {
         assertFalse(HallAudio.remoteAudioAllowed(true));
         assertTrue(HallAudio.remoteAudioAllowed(false));
     }
+    @Test void errorBeepIsNeverA_publicHallSound() {
+        assertFalse(HallAudio.publicHallSoundAllowed("error"));
+        assertFalse(HallAudio.publicHallSoundAllowed("juggler_god_error"));
+        assertFalse(PiriSounds.remotePublicSoundAllowed("error"));
+        assertFalse(PiriSounds.remotePublicSoundAllowed("juggler_god_error"));
+        assertTrue(HallAudio.publicHallSoundAllowed("notice"));
+        assertTrue(PiriSounds.remotePublicSoundAllowed("notice"));
+    }
     @Test void phase14VolumesAreLocked() {
         assertEquals(.35f,HallAudio.NORMAL_VOLUME);
         assertEquals(.45f,HallAudio.NOTICE_VOLUME);

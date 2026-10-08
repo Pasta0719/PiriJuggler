@@ -72,7 +72,7 @@ public final class PiriSounds {
         ONE_SHOTS.add(sound);MinecraftClient.getInstance().getSoundManager().play(sound);
     }
     public static void playRemoteAt(int machineId,String name,double x,double y,double z,float volume){
-        if(!available(name)||volume<=0f)return;
+        if(!remotePublicSoundAllowed(name)||!available(name)||volume<=0f)return;
         SoundInstance sound=new PositionalOneShotSound(EVENTS.get(name),x,y,z,volume);
         REMOTE_ONE_SHOTS.computeIfAbsent(machineId,ignored->new ArrayList<>()).add(sound);
         MinecraftClient.getInstance().getSoundManager().play(sound);
@@ -96,6 +96,12 @@ public final class PiriSounds {
             return entry.getValue().isEmpty();
         });
     }
+    static boolean remotePublicSoundAllowed(String name){
+        if(name==null)return true;
+        String normalized=name.toLowerCase(Locale.ROOT);
+        return !"error".equals(normalized)&&!"juggler_god_error".equals(normalized);
+    }
+
     public static void stopRemoteOneShots(int machineId){
         var manager=MinecraftClient.getInstance().getSoundManager();var sounds=REMOTE_ONE_SHOTS.remove(machineId);
         if(sounds!=null)for(SoundInstance sound:sounds)manager.stop(sound);

@@ -59,7 +59,7 @@ public final class HallAudio {
                     stopLoop(event.machineId());
                 }
                 case "PLAY","LOOP_START" -> {
-                    if(machine==null)break;
+                    if(machine==null||!publicHallSoundAllowed(event.sound()))break;
                     int generation=generations.getOrDefault(event.machineId(),0);
                     int count=Math.max(1,event.count());
                     for(int i=0;i<count;i++){
@@ -99,7 +99,7 @@ public final class HallAudio {
     }
 
     private static void play(int machineId,RemoteMachineViewState machine,String logical){
-        if(!inRange(machine,SE_RADIUS))return;
+        if(!publicHallSoundAllowed(logical)||!inRange(machine,SE_RADIUS))return;
         String sound=resolve(machine,logical);
         float base=("notice".equals(logical)||"notice_strong".equals(logical)||"tenpai".equals(logical))?NOTICE_VOLUME:NORMAL_VOLUME;
         float volume=attenuatedVolume(machine,base,SE_RADIUS);
@@ -156,6 +156,11 @@ public final class HallAudio {
     }
 
     static boolean remoteAudioAllowed(boolean seated){return !seated;}
+    static boolean publicHallSoundAllowed(String sound){
+        if(sound==null)return true;
+        String normalized=sound.toLowerCase(Locale.ROOT);
+        return !"error".equals(normalized)&&!"juggler_god_error".equals(normalized);
+    }
 
     private static float attenuatedVolume(RemoteMachineViewState machine,float base,double radius){
         MinecraftClient client=MinecraftClient.getInstance();

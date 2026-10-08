@@ -173,6 +173,22 @@ class RemoteMachineRegistryTest {
         assertEquals("REMOVE",registry.pollAudioEvent().op());
     }
 
+    @Test void ownerErrorSoundCanNeverEnterSpectatorHallQueue() {
+        RemoteMachineRegistry registry=new RemoteMachineRegistry();
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,snapshot(63)));
+        assertEquals("SYNC",registry.pollAudioEvent().op());
+
+        for(String name:java.util.List.of("error","juggler_god_error")){
+            JsonObject body=id(63);body.addProperty("op","PLAY");body.addProperty("sound",name);
+            registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SOUND,body));
+            assertNull(registry.pollAudioEvent(),name);
+        }
+
+        JsonObject allowed=id(63);allowed.addProperty("op","PLAY");allowed.addProperty("sound","notice");
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SOUND,allowed));
+        assertEquals("notice",registry.pollAudioEvent().sound());
+    }
+
     @Test void absoluteAudioTimeIsConvertedOnReceiptWithoutNetworkDrift() {
         java.util.concurrent.atomic.AtomicLong nanos=new java.util.concurrent.atomic.AtomicLong();
         java.util.concurrent.atomic.AtomicLong wallMs=new java.util.concurrent.atomic.AtomicLong(10_000);
