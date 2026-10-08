@@ -105,6 +105,19 @@ class EconomyStoreTest {
         code("INVALID_STATE",()->store.forceLeaveSuspendedToWallet(player,new RecoveryStore(db,config,new StopSolver(new StopCatalogue())),NOW+1));
     }
 
+    @Test void forcedMobileLeaveConservesExistingWalletAndIsRetrySafe() throws Exception {
+        db.sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',credit=17,held_medals=83");
+        db.sql("INSERT INTO player_wallet(player_uuid,pending_medals,updated_at) VALUES(?,?,?)",player.toString(),23,NOW);
+        var recovery=new RecoveryStore(db,config,new StopSolver(new StopCatalogue()));
+        long first=store.forceLeaveSuspendedToWallet(player,recovery,NOW+1);
+        assertEquals(100,first);
+        assertNull(db.state().session(player));
+        assertEquals(123,store.pendingMedals(player));
+        long retry=store.forceLeaveSuspendedToWallet(player,recovery,NOW+2);
+        assertEquals(0,retry);
+        assertEquals(123,store.pendingMedals(player));
+    }
+
     @Test void offlineInventoryStashMovesRealMedalItemsIntoMobileWallet() throws Exception {
         UUID first=UUID.randomUUID(),second=UUID.randomUUID();
         db.sql("INSERT INTO medal_tokens(bundle_id,amount,state,created_at,updated_at) VALUES(?,30,'ACTIVE',?,?)",first.toString(),NOW,NOW);
