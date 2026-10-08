@@ -157,7 +157,8 @@ public class FirstStopAuditTest {
       for(int center=0;center<21;center++){
         Symbol target=family.equals("SKILL_STOP")?SkillStopReels.row(Reel.LEFT,center,0):FixedReels.row(Reel.LEFT,center,0);
         if(target!=Symbol.SEVEN&&target!=Symbol.BAR)continue;
-        List<Event> window=all.stream().filter(e->e.family().equals(family)&&e.reel()==Reel.LEFT&&Math.min(Math.floorMod(e.pressed()-center,21),Math.floorMod(center-e.pressed(),21))<=2).toList();
+        final int focus=center;
+        List<Event> window=all.stream().filter(e->e.family().equals(family)&&e.reel()==Reel.LEFT&&Math.min(Math.floorMod(e.pressed()-focus,21),Math.floorMod(focus-e.pressed(),21))<=2).toList();
         Set<String> nonbonusStops=new HashSet<>();
         for(var x:window)if(x.bonus().equals("NONE"))nonbonusStops.add(x.top()+"/"+x.middle()+"/"+x.bottom());
         Map<String,List<Event>> robust=new LinkedHashMap<>();
