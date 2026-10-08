@@ -35,6 +35,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.lang.management.ManagementFactory;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -52,8 +53,6 @@ public final class MachineService implements Listener, CommandExecutor {
     private final Set<UUID> pendingPlayers = new HashSet<>();
     private final Set<Integer> pendingMachines = new HashSet<>();
     private final Map<UUID, Runnable> deferredClose = new HashMap<>();
-    private final Map<UUID, ArrayDeque<Runnable>> deferredGameplay = new HashMap<>();
-    private static final int MAX_DEFERRED_GAMEPLAY = 8;
     private final Map<UUID, ArrayDeque<Envelope>> mobileDelayedEvents = new HashMap<>();
     private final Set<UUID> deferredDisconnect = new HashSet<>();
     private final long graceMs;
@@ -71,8 +70,6 @@ public final class MachineService implements Listener, CommandExecutor {
     private final GameEngines games;
     private final RemoteMachineSync remote;
     private record Saved<T>(T value, PiriDatabase.State state) {}
-    private static final long GAMEPLAY_DB_WARN_NANOS=250_000_000L;
-    private static final long GAMEPLAY_DB_DEADLINE_NANOS=2_000_000_000L;
 
     public MachineService(PiriJugglerPlugin plugin, Map<String, Object> config) {
         this.plugin = plugin;
@@ -686,19 +683,20 @@ public final class MachineService implements Listener, CommandExecutor {
         if(session==null||!session.id().equals(id)||session.machine()!=machine||session.lifecycle()!=Session.Lifecycle.ACTIVE){reject(player,sequence,"SESSION_MISMATCH");return;}
         if(sequence<=session.sequence()){reject(player,sequence,"SEQUENCE_OLD");return;}
         UUID owner=player.getUniqueId();
-        if(pendingPlayers.contains(owner)){
-            if(deferGameplay(owner,()->{if(player.isOnline())gameAction(player,id,machine,sequence,action,pressedIndex);} ))return;
-            reject(player,sequence,"BUSY");return;
-        }
-        if(pendingMachines.contains(machine)){reject(player,sequence,"BUSY");return;}
+        // Only non-gameplay/economy/admin mutations may reserve the player or machine.
+        // Ordinary spin persistence never enters these sets and therefore can never hold the next spin open.
+        if(pendingPlayers.contains(owner)||pendingMachines.contains(machine)){reject(player,sequence,"BUSY");return;}
         try {
             GameEngine game=engine(machine);
             var transition=game.plan(session,state.machine(machine),action,sequence,System.currentTimeMillis(),System.nanoTime(),player.getPing(),pressedIndex);
-            submitGameplay(owner,machine,transition,(saved,error)->{
-                if(error!=null){failureOrReject(player,sequence,error);return;}
-                for(var packet:game.committed(transition,System.nanoTime())){send(player,packet);remote.publishOwnerPacket(machine,packet);}
-                for(var event:game.scheduled(transition))schedule(player,id,machine,event);
-            });
+
+            // Gameplay is authoritative in memory immediately. Never wait for SQLite before publishing
+            // the accepted action / reel stop / next ready state.
+            applyGameplayMemory(transition.after(),transition);
+            List<Envelope> committed=game.committed(transition,System.nanoTime());
+            for(var packet:committed){send(player,packet);remote.publishOwnerPacket(machine,packet);}
+            for(var event:game.scheduled(transition))schedule(player,id,machine,event);
+            enqueueGameplayPersistence(transition);
         } catch(DomainException error){reject(player,sequence,error.getMessage());}
         catch(ArithmeticException overflow){reject(player,sequence,"INVALID_STATE");}
     }
@@ -736,31 +734,39 @@ public final class MachineService implements Listener, CommandExecutor {
         Session motion=engine(session.machine()).capture(session,System.nanoTime());
         submit(null, player, session.machine(), () -> { database.disconnect(player, System.currentTimeMillis(), graceMs, motion); return null; }, unused -> {engine(session.machine()).forget(session.id());remote.broadcastSnapshot(session.machine());});
     }
-    private void submitGameplay(UUID player,int machine,GameTransition transition,BiConsumer<Session,Throwable> completion){
-        main();
-        if(pendingPlayers.contains(player)||pendingMachines.contains(machine)){
-            completion.accept(null,new DomainException("BUSY"));
-            return;
-        }
-        pendingPlayers.add(player);pendingMachines.add(machine);
-        long queuedAt=System.nanoTime();
-        plugin.executors().gameplayDatabase(()->new GameStore(database).commit(transition),(saved,error)->{
-            long elapsed=System.nanoTime()-queuedAt;
-            if(elapsed>=GAMEPLAY_DB_DEADLINE_NANOS)
-                plugin.getLogger().warning("PIRI_GAMEPLAY_DB_DEADLINE_MISS machine="+machine+" player="+player+" elapsedMs="+elapsed/1_000_000L);
-            else if(elapsed>=GAMEPLAY_DB_WARN_NANOS)
-                plugin.getLogger().warning("PIRI_GAMEPLAY_DB_SLOW machine="+machine+" player="+player+" elapsedMs="+elapsed/1_000_000L);
-            if(saved!=null)applyCommittedGameplay(saved,transition);
-            try{
-                if(!stopped)completion.accept(saved,error);
-            }finally{
-                pendingPlayers.remove(player);pendingMachines.remove(machine);
-                if(!stopped)afterPlayerOperation(player);
-            }
+    /**
+     * Persist a transition after it is already live in memory and visible to the player.
+     * The single gameplay DB lane keeps every transition in order. Transient SQLite failures
+     * retry in-place, so later transitions cannot overtake an earlier one.
+     */
+    private void enqueueGameplayPersistence(GameTransition transition){
+        plugin.executors().gameplayDatabase(()->persistGameplayEventually(transition),(saved,error)->{
+            if(error!=null&&!stopped)
+                plugin.getLogger().log(Level.SEVERE,
+                        "PIRI_GAMEPLAY_PERSISTENCE_FATAL machine="+transition.after().machine()
+                                +" player="+transition.after().player()
+                                +" sequence="+transition.after().sequence(),error);
         });
     }
 
-    private void applyCommittedGameplay(Session committed,GameTransition transition){
+    private Session persistGameplayEventually(GameTransition transition) throws Exception {
+        long backoffMs=5L;
+        for(;;){
+            try{
+                return new GameStore(database).commit(transition);
+            }catch(SQLException transientFailure){
+                if(Thread.currentThread().isInterrupted())throw transientFailure;
+                try{Thread.sleep(backoffMs);}
+                catch(InterruptedException interrupted){
+                    Thread.currentThread().interrupt();
+                    throw transientFailure;
+                }
+                backoffMs=Math.min(250L,backoffMs*2L);
+            }
+        }
+    }
+
+    private void applyGameplayMemory(Session committed,GameTransition transition){
         if(state==null)return;
         var sessions=new ArrayList<>(state.sessions());
         boolean replaced=false;
@@ -799,30 +805,10 @@ public final class MachineService implements Listener, CommandExecutor {
             }
         });
     }
-    private boolean deferGameplay(UUID player,Runnable action){
-        ArrayDeque<Runnable> queue=deferredGameplay.computeIfAbsent(player,ignored->new ArrayDeque<>());
-        if(queue.size()>=MAX_DEFERRED_GAMEPLAY)return false;
-        queue.addLast(action);
-        return true;
-    }
-
     private void afterPlayerOperation(UUID player){
         Runnable close=deferredClose.remove(player);
-        if(close!=null){
-            deferredGameplay.remove(player);
-            close.run();
-            return;
-        }
-        if(deferredDisconnect.remove(player)){
-            deferredGameplay.remove(player);
-            disconnect(player);
-            return;
-        }
-        ArrayDeque<Runnable> queue=deferredGameplay.get(player);
-        if(queue==null)return;
-        Runnable next=queue.pollFirst();
-        if(queue.isEmpty())deferredGameplay.remove(player);
-        if(next!=null)next.run();
+        if(close!=null){close.run();return;}
+        if(deferredDisconnect.remove(player))disconnect(player);
     }
 
     private <T> void submitMany(CommandSender sender,List<Integer> machines,Callable<T> operation,Consumer<T> success) {
@@ -1035,11 +1021,9 @@ public final class MachineService implements Listener, CommandExecutor {
         int machineId = session.machine();
         Machine machine = state.machine(machineId);
         if (machine == null || !mobileSupported(machine.type())) { remote.publishOwnerError(owner); callback.accept(null, "INVALID_STATE"); return; }
-        if (pendingPlayers.contains(owner)) {
-            if (deferGameplay(owner, () -> mobileAction(owner, action, pressedIndex, callback))) return;
+        if (pendingPlayers.contains(owner) || pendingMachines.contains(machineId)) {
             remote.publishOwnerError(owner); callback.accept(null, "BUSY"); return;
         }
-        if (pendingMachines.contains(machineId)) { remote.publishOwnerError(owner); callback.accept(null, "BUSY"); return; }
         long sequence = session.sequence() + 1;
         try {
             GameEngine game = engine(machineId);
@@ -1049,24 +1033,19 @@ public final class MachineService implements Listener, CommandExecutor {
                     .filter(packet -> packet.packetType() == PacketType.ACTION_REJECTED)
                     .map(packet -> packet.payload().has("errorCode") ? packet.payload().get("errorCode").getAsString() : "INVALID_STATE")
                     .findFirst().orElse(null);
-            submitGameplay(owner,machineId,transition,(saved,failure)->{
-                if(failure!=null){
-                    logMobileFailure(failure);
-                    callback.accept(null,mobileFailureCode(failure));
-                    return;
-                }
-                List<Envelope> committed = game.committed(transition, System.nanoTime());
-                for(Envelope packet:committed)remote.publishOwnerPacket(machineId,packet);
-                remote.broadcastSnapshot(machineId);
-                if (rejection != null) callback.accept(null, rejection);
-                else {
-                    for (GameTransition.Scheduled event : game.scheduled(transition))
-                        scheduleMobile(owner, transition.after().id(), machineId, event);
-                    JsonObject response = mobileState(owner);
-                    response.add("events", mobileEvents(committed));
-                    callback.accept(response, null);
-                }
-            });
+            applyGameplayMemory(transition.after(),transition);
+            List<Envelope> committed = game.committed(transition, System.nanoTime());
+            for(Envelope packet:committed)remote.publishOwnerPacket(machineId,packet);
+            remote.broadcastSnapshot(machineId);
+            enqueueGameplayPersistence(transition);
+            if (rejection != null) callback.accept(null, rejection);
+            else {
+                for (GameTransition.Scheduled event : game.scheduled(transition))
+                    scheduleMobile(owner, transition.after().id(), machineId, event);
+                JsonObject response = mobileState(owner);
+                response.add("events", mobileEvents(committed));
+                callback.accept(response, null);
+            }
         } catch (DomainException failure) {
             remote.publishOwnerError(owner); callback.accept(null, failure.getMessage());
         } catch (ArithmeticException failure) {
