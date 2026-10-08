@@ -7,5 +7,9 @@ final class RemoteAudioPolicy {
         return type == PacketType.ACTION_REJECTED || type == PacketType.ERROR;
     }
 
+    static String bigEndSound(boolean firstGodBig) {
+        return firstGodBig ? "god_bonus_end" : "bonus_end";
+    }
+
     private RemoteAudioPolicy() {}
 }

@@ -349,9 +349,13 @@ public final class JugglerGodGameEngine implements GameEngine {
 
     static JugglerGodRuntime recordGodChainBonusStart(JugglerGodRuntime state){
         if(!"GOD_CHAIN".equals(state.bonusOrigin()))throw new IllegalArgumentException("Not GOD chain");
+        // The GOD hit already reserves/counts the first BIG as #1 before the entry presentation.
+        // Do not count that same first BIG a second time when its bonus actually starts.
+        boolean firstAlreadyCounted=state.godBigCount()==1&&"GOD_STARTED".equals(state.lastEvent());
+        int nextCount=firstAlreadyCounted?1:Math.addExact(state.godBigCount(),1);
         return state.core(state.mode(),state.heavenTarget(),state.heavenProgress(),state.guaranteedRemaining(),
                 state.forceChainBig(),state.countNextChainGame(),state.bonusOrigin(),
-                state.godBigCount()+1,state.godFreeze(),"GOD_BIG_STARTED");
+                nextCount,state.godFreeze(),"GOD_BIG_STARTED");
     }
 
     private record Release(Session session,JugglerGodRuntime runtime){}

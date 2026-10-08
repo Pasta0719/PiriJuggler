@@ -128,6 +128,15 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals(1,scalar("SELECT count(*) FROM bonus_history WHERE machine_id=? AND bonus_type='BIG' AND games=0",before.machine()));
     }
 
+    @Test void firstGodBigEntryKeepsCounterOneForDedicatedAudioLifecycle() {
+        var before=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
+                "GOD_CHAIN",1,false,"GOD_STARTED");
+        var after=JugglerGodGameEngine.recordGodChainBonusStart(before);
+        assertEquals(1,after.godBigCount());
+        assertEquals("GOD_BIG_STARTED",after.lastEvent());
+        assertEquals(4,after.guaranteedRemaining());
+    }
+
     @Test void directEntryGodChainBigIncrementsCounter() {
         var before=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,2,false,false,
                 "GOD_CHAIN",2,false,"BONUS_DRAWN");

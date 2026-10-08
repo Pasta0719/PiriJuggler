@@ -31,5 +31,7 @@ class RemoteMachineSyncTest {
         assertTrue(RemoteAudioPolicy.ownerOnly(PacketType.ERROR));
         assertFalse(RemoteAudioPolicy.ownerOnly(PacketType.ACTION_ACCEPTED));
         assertFalse(RemoteAudioPolicy.ownerOnly(PacketType.NOTICE));
+        assertEquals("god_bonus_end",RemoteAudioPolicy.bigEndSound(true));
+        assertEquals("bonus_end",RemoteAudioPolicy.bigEndSound(false));
     }
 }

@@ -265,7 +265,7 @@ public final class RemoteMachineSync {
                     audio(machineId,"LOOP_STOP",null,0,1,0,null);
                     if("BIG".equals(type)){
                         boolean first=godFirstBigAudioActive.getOrDefault(machineId,false);
-                        audio(machineId,"PLAY",first?"god_bonus_end":"bonus_end",0,1,0,null);
+                        audio(machineId,"PLAY",RemoteAudioPolicy.bigEndSound(first),0,1,0,null);
                     }
                     godFirstBigAudioActive.remove(machineId);
                 }
