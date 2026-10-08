@@ -58,6 +58,24 @@ class TaskExecutorsTest {
         }
     }
 
+    @Test void readOnlyWorkDoesNotQueueBehindGameplayDatabase() throws Exception {
+        TestMain main=new TestMain();
+        try(TaskExecutors executors=new TaskExecutors(main)){
+            CountDownLatch dbStarted=new CountDownLatch(1),releaseDb=new CountDownLatch(1);
+            var blockingDb=executors.database(()->{
+                dbStarted.countDown();assertTrue(releaseDb.await(10,TimeUnit.SECONDS));return 1;
+            },(value,error)->assertNull(error));
+            assertTrue(dbStarted.await(10,TimeUnit.SECONDS));
+            var read=executors.readOnly(()->Thread.currentThread(),(thread,error)->{
+                assertNull(error);assertTrue(thread.getName().startsWith("piri-read-"));
+            });
+            main.next();read.join();
+            assertFalse(blockingDb.isDone());
+            releaseDb.countDown();
+            main.next();blockingDb.join();
+        }
+    }
+
     @Test void busyLastsUntilMainThreadCallbackEvenWhenDatabaseFails() throws Exception {
         for (boolean fail : new boolean[]{false, true}) {
             TestMain main = new TestMain();

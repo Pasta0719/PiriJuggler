@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 public final class TaskExecutors implements AutoCloseable {
     private final MainThread mainThread;
     private final ExecutorService database = Executors.newSingleThreadExecutor(Thread.ofPlatform().name("piri-db-", 1).factory());
+    private final ExecutorService readOnly = Executors.newFixedThreadPool(2, Thread.ofPlatform().name("piri-read-", 1).factory());
     private final ExecutorService simulator = Executors.newFixedThreadPool(1, Thread.ofPlatform().name("piri-simulator-", 1).factory());
 
     public TaskExecutors(MainThread mainThread) { this.mainThread = mainThread; }
@@ -23,6 +24,11 @@ public final class TaskExecutors implements AutoCloseable {
     /** Completion (including failure) is delivered on the main thread. */
     public <T> CompletableFuture<Void> database(Callable<T> operation, BiConsumer<T, Throwable> completion) {
         return submit(database, operation, completion);
+    }
+
+    /** Read-only work that opens its own SQLite connection and must never queue behind gameplay writes. */
+    public <T> CompletableFuture<Void> readOnly(Callable<T> operation, BiConsumer<T, Throwable> completion) {
+        return submit(readOnly, operation, completion);
     }
 
     public <T> CompletableFuture<Void> simulator(Callable<T> operation, BiConsumer<T, Throwable> completion) {
@@ -55,12 +61,15 @@ public final class TaskExecutors implements AutoCloseable {
 
     @Override public void close() {
         database.shutdown();
+        readOnly.shutdown();
         simulator.shutdown();
         try {
             if (!database.awaitTermination(5, TimeUnit.SECONDS)) database.shutdownNow();
+            if (!readOnly.awaitTermination(5, TimeUnit.SECONDS)) readOnly.shutdownNow();
             if (!simulator.awaitTermination(5, TimeUnit.SECONDS)) simulator.shutdownNow();
         } catch (InterruptedException exception) {
             database.shutdownNow();
+            readOnly.shutdownNow();
             simulator.shutdownNow();
             Thread.currentThread().interrupt();
         }

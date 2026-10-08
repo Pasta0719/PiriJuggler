@@ -42,10 +42,10 @@ public final class PublicDataCommand {
         }
 
         var databasePath=plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
-        plugin.executors().database(()->{
+        plugin.executors().readOnly(()->{
             List<JsonObject> snapshots=new ArrayList<>();
             try(var connection=DriverManager.getConnection("jdbc:sqlite:"+databasePath)){
-                connection.createStatement().execute("PRAGMA query_only=ON");
+                try(var pragma=connection.createStatement()){pragma.execute("PRAGMA query_only=ON");pragma.execute("PRAGMA busy_timeout=1000");}
                 for(int id:ids)snapshots.add(DataLampSnapshot.read(connection,id,period));
             }
             return snapshots;

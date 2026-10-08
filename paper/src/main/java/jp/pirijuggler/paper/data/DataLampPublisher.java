@@ -31,7 +31,7 @@ public final class DataLampPublisher implements AutoCloseable {
     private void tick() {
         if(inFlight||!plugin.isEnabled())return;
         inFlight=true;
-        plugin.executors().database(this::readAll,(packets,error)->{
+        plugin.executors().readOnly(this::readAll,(packets,error)->{
             inFlight=false;
             if(!plugin.isEnabled())return;
             if(error!=null){
@@ -51,6 +51,10 @@ public final class DataLampPublisher implements AutoCloseable {
         var owners=new LinkedHashMap<UUID,com.google.gson.JsonObject>();
         var remotes=new LinkedHashMap<Integer,com.google.gson.JsonObject>();
         try(var connection=DriverManager.getConnection("jdbc:sqlite:"+databaseFile.toAbsolutePath())){
+            try(var pragma=connection.createStatement()){
+                pragma.execute("PRAGMA query_only=ON");
+                pragma.execute("PRAGMA busy_timeout=1000");
+            }
             String period=null;
             try(var ps=connection.prepareStatement("SELECT value FROM metadata WHERE key='current_business_period_id'");var rs=ps.executeQuery()){
                 if(rs.next())period=rs.getString(1);

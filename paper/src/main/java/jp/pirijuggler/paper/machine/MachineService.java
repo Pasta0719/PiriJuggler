@@ -52,6 +52,8 @@ public final class MachineService implements Listener, CommandExecutor {
     private final Set<UUID> pendingPlayers = new HashSet<>();
     private final Set<Integer> pendingMachines = new HashSet<>();
     private final Map<UUID, Runnable> deferredClose = new HashMap<>();
+    private final Map<UUID, ArrayDeque<Runnable>> deferredGameplay = new HashMap<>();
+    private static final int MAX_DEFERRED_GAMEPLAY = 8;
     private final Map<UUID, ArrayDeque<Envelope>> mobileDelayedEvents = new HashMap<>();
     private final Set<UUID> deferredDisconnect = new HashSet<>();
     private final long graceMs;
@@ -681,7 +683,12 @@ public final class MachineService implements Listener, CommandExecutor {
         Session session=state.session(player.getUniqueId());
         if(session==null||!session.id().equals(id)||session.machine()!=machine||session.lifecycle()!=Session.Lifecycle.ACTIVE){reject(player,sequence,"SESSION_MISMATCH");return;}
         if(sequence<=session.sequence()){reject(player,sequence,"SEQUENCE_OLD");return;}
-        if(pendingPlayers.contains(player.getUniqueId())||pendingMachines.contains(machine)){reject(player,sequence,"BUSY");return;}
+        UUID owner=player.getUniqueId();
+        if(pendingPlayers.contains(owner)){
+            if(deferGameplay(owner,()->{if(player.isOnline())gameAction(player,id,machine,sequence,action,pressedIndex);} ))return;
+            reject(player,sequence,"BUSY");return;
+        }
+        if(pendingMachines.contains(machine)){reject(player,sequence,"BUSY");return;}
         try {
             GameEngine game=engine(machine);
             var transition=game.plan(session,state.machine(machine),action,sequence,System.currentTimeMillis(),System.nanoTime(),player.getPing(),pressedIndex);
@@ -735,13 +742,36 @@ public final class MachineService implements Listener, CommandExecutor {
             try { if (!stopped) { if (error != null) failure(sender, error); else success.accept(saved.value); } }
             finally {
                 if (player != null) pendingPlayers.remove(player); if (machine != 0) pendingMachines.remove(machine);
-                if (player != null && !stopped) {
-                    Runnable close = deferredClose.remove(player); if (close != null) close.run();
-                    if (deferredDisconnect.remove(player)) disconnect(player);
-                }
+                if (player != null && !stopped) afterPlayerOperation(player);
             }
         });
     }
+    private boolean deferGameplay(UUID player,Runnable action){
+        ArrayDeque<Runnable> queue=deferredGameplay.computeIfAbsent(player,ignored->new ArrayDeque<>());
+        if(queue.size()>=MAX_DEFERRED_GAMEPLAY)return false;
+        queue.addLast(action);
+        return true;
+    }
+
+    private void afterPlayerOperation(UUID player){
+        Runnable close=deferredClose.remove(player);
+        if(close!=null){
+            deferredGameplay.remove(player);
+            close.run();
+            return;
+        }
+        if(deferredDisconnect.remove(player)){
+            deferredGameplay.remove(player);
+            disconnect(player);
+            return;
+        }
+        ArrayDeque<Runnable> queue=deferredGameplay.get(player);
+        if(queue==null)return;
+        Runnable next=queue.pollFirst();
+        if(queue.isEmpty())deferredGameplay.remove(player);
+        if(next!=null)next.run();
+    }
+
     private <T> void submitMany(CommandSender sender,List<Integer> machines,Callable<T> operation,Consumer<T> success) {
         main();
         if(machines.stream().anyMatch(pendingMachines::contains)){if(sender!=null)error(sender,"BUSY");return;}
@@ -830,9 +860,9 @@ public final class MachineService implements Listener, CommandExecutor {
         }
         String period = state.period();
         var databasePath = plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
-        plugin.executors().database(() -> {
+        plugin.executors().readOnly(() -> {
             try (var connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath)) {
-                connection.createStatement().execute("PRAGMA query_only=ON");
+                try(var pragma=connection.createStatement()){pragma.execute("PRAGMA query_only=ON");pragma.execute("PRAGMA busy_timeout=1000");}
                 return DataLampSnapshot.read(connection, machineId, period);
             }
         }, (snapshot, error) -> {
@@ -952,7 +982,11 @@ public final class MachineService implements Listener, CommandExecutor {
         int machineId = session.machine();
         Machine machine = state.machine(machineId);
         if (machine == null || !mobileSupported(machine.type())) { remote.publishOwnerError(owner); callback.accept(null, "INVALID_STATE"); return; }
-        if (pendingPlayers.contains(owner) || pendingMachines.contains(machineId)) { remote.publishOwnerError(owner); callback.accept(null, "BUSY"); return; }
+        if (pendingPlayers.contains(owner)) {
+            if (deferGameplay(owner, () -> mobileAction(owner, action, pressedIndex, callback))) return;
+            remote.publishOwnerError(owner); callback.accept(null, "BUSY"); return;
+        }
+        if (pendingMachines.contains(machineId)) { remote.publishOwnerError(owner); callback.accept(null, "BUSY"); return; }
         long sequence = session.sequence() + 1;
         try {
             GameEngine game = engine(machineId);
@@ -1523,11 +1557,7 @@ public final class MachineService implements Listener, CommandExecutor {
             } finally {
                 if (player != null) pendingPlayers.remove(player);
                 if (machine != 0) pendingMachines.remove(machine);
-                if (player != null && !stopped) {
-                    Runnable close = deferredClose.remove(player);
-                    if (close != null) close.run();
-                    if (deferredDisconnect.remove(player)) disconnect(player);
-                }
+                if (player != null && !stopped) afterPlayerOperation(player);
             }
         });
     }
