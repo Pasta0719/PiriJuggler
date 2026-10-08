@@ -114,10 +114,6 @@ public final class RemoteMachineSync {
         // Never mirror them into hall REMOTE_MACHINE_SOUND traffic.
     }
 
-    static boolean ownerOnlyAudio(PacketType type){
-        return type==PacketType.ACTION_REJECTED||type==PacketType.ERROR;
-    }
-
     /** Sends a fresh public state to current interested spectators only. */
     public void broadcastSnapshot(int machineId) {
         requireMain();
@@ -136,7 +132,7 @@ public final class RemoteMachineSync {
      */
     public void publishOwnerPacket(int machineId, Envelope ownerPacket) {
         requireMain();
-        if(ownerOnlyAudio(ownerPacket.packetType()))return;
+        if(RemoteAudioPolicy.ownerOnly(ownerPacket.packetType()))return;
         JsonObject source = ownerPacket.payload();
         switch (ownerPacket.packetType()) {
             case PUBLIC_STATE -> broadcastSnapshot(machineId);

@@ -27,9 +27,9 @@ class RemoteMachineSyncTest {
     }
 
     @Test void rejectionAndErrorAudioStayWithTheMachineOwner() {
-        assertTrue(RemoteMachineSync.ownerOnlyAudio(PacketType.ACTION_REJECTED));
-        assertTrue(RemoteMachineSync.ownerOnlyAudio(PacketType.ERROR));
-        assertFalse(RemoteMachineSync.ownerOnlyAudio(PacketType.ACTION_ACCEPTED));
-        assertFalse(RemoteMachineSync.ownerOnlyAudio(PacketType.NOTICE));
+        assertTrue(RemoteAudioPolicy.ownerOnly(PacketType.ACTION_REJECTED));
+        assertTrue(RemoteAudioPolicy.ownerOnly(PacketType.ERROR));
+        assertFalse(RemoteAudioPolicy.ownerOnly(PacketType.ACTION_ACCEPTED));
+        assertFalse(RemoteAudioPolicy.ownerOnly(PacketType.NOTICE));
     }
 }
