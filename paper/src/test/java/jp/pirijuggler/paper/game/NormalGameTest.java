@@ -67,6 +67,31 @@ class NormalGameTest extends GameFixture {
         var last=game.plan(s,PacketType.STOP_RIGHT,s.sequence()+1,1,NOW,1_000_000_000,0);var after=store.commit(last);store.commit(last);
         assertEquals(60,after.number("credit")+after.number("held_medals"));assertEquals(5,scalar("SELECT today_difference FROM machine_period_stats"));assertEquals(2,scalar("SELECT count(*) FROM graph_points"));
     }
+    @Test void intermediateStopsDoNotRewriteStatistics() throws Exception {
+        var game=game(InternalRole.GRAPE);Session s=seat(50,5);
+        s=action(game,s,PacketType.SPACE_ACTION,0);
+        s=action(game,s,PacketType.SPACE_ACTION,0);
+        db.sql("CREATE TRIGGER fail_intermediate_stats BEFORE UPDATE ON machine_period_stats BEGIN SELECT RAISE(ABORT,'intermediate stats write'); END");
+        s=action(game,s,PacketType.STOP_LEFT,1_000_000_000L);
+        s=action(game,s,PacketType.STOP_CENTER,1_000_000_000L);
+        assertEquals(3,s.number("stopped_mask"));
+        db.sql("DROP TRIGGER fail_intermediate_stats");
+        s=action(game,s,PacketType.STOP_RIGHT,1_000_000_000L);
+        assertEquals(Session.GameState.SEATED_READY,s.state());
+    }
+
+    @Test void rejectedGameplayActionDoesNotRewriteStatisticsOrMachineRow() throws Exception {
+        var game=game(InternalRole.MISS);Session s=seat(0,2);
+        db.sql("CREATE TRIGGER fail_rejected_stats BEFORE UPDATE ON machine_period_stats BEGIN SELECT RAISE(ABORT,'rejected stats write'); END");
+        db.sql("CREATE TRIGGER fail_rejected_machine BEFORE UPDATE ON machines BEGIN SELECT RAISE(ABORT,'rejected machine write'); END");
+        var rejected=game.plan(s,PacketType.SPACE_ACTION,s.sequence()+1,1,NOW,0,0);
+        s=store.commit(rejected);
+        assertEquals(1,s.sequence());
+        assertEquals(Session.GameState.SEATED_READY,s.state());
+        db.sql("DROP TRIGGER fail_rejected_stats");
+        db.sql("DROP TRIGGER fail_rejected_machine");
+    }
+
     @Test void failedResultTransactionRollsBackSessionStatsGraphAndCanRetrySameDraw() throws Exception {
         var game=game(InternalRole.GRAPE);Session s=seat(48,5);s=action(game,s,PacketType.SPACE_ACTION,0);s=action(game,s,PacketType.SPACE_ACTION,0);
         s=action(game,s,PacketType.STOP_LEFT,1_000_000_000);s=action(game,s,PacketType.STOP_CENTER,1_000_000_000);

@@ -71,6 +71,8 @@ public final class MachineService implements Listener, CommandExecutor {
     private final GameEngines games;
     private final RemoteMachineSync remote;
     private record Saved<T>(T value, PiriDatabase.State state) {}
+    private static final long GAMEPLAY_DB_WARN_NANOS=250_000_000L;
+    private static final long GAMEPLAY_DB_DEADLINE_NANOS=2_000_000_000L;
 
     public MachineService(PiriJugglerPlugin plugin, Map<String, Object> config) {
         this.plugin = plugin;
@@ -692,7 +694,8 @@ public final class MachineService implements Listener, CommandExecutor {
         try {
             GameEngine game=engine(machine);
             var transition=game.plan(session,state.machine(machine),action,sequence,System.currentTimeMillis(),System.nanoTime(),player.getPing(),pressedIndex);
-            submit(player,player.getUniqueId(),machine,()->new GameStore(database).commit(transition),saved->{
+            submitGameplay(owner,machine,transition,(saved,error)->{
+                if(error!=null){failureOrReject(player,sequence,error);return;}
                 for(var packet:game.committed(transition,System.nanoTime())){send(player,packet);remote.publishOwnerPacket(machine,packet);}
                 for(var event:game.scheduled(transition))schedule(player,id,machine,event);
             });
@@ -733,6 +736,56 @@ public final class MachineService implements Listener, CommandExecutor {
         Session motion=engine(session.machine()).capture(session,System.nanoTime());
         submit(null, player, session.machine(), () -> { database.disconnect(player, System.currentTimeMillis(), graceMs, motion); return null; }, unused -> {engine(session.machine()).forget(session.id());remote.broadcastSnapshot(session.machine());});
     }
+    private void submitGameplay(UUID player,int machine,GameTransition transition,BiConsumer<Session,Throwable> completion){
+        main();
+        if(pendingPlayers.contains(player)||pendingMachines.contains(machine)){
+            completion.accept(null,new DomainException("BUSY"));
+            return;
+        }
+        pendingPlayers.add(player);pendingMachines.add(machine);
+        long queuedAt=System.nanoTime();
+        plugin.executors().database(()->new GameStore(database).commit(transition),(saved,error)->{
+            long elapsed=System.nanoTime()-queuedAt;
+            if(elapsed>=GAMEPLAY_DB_DEADLINE_NANOS)
+                plugin.getLogger().warning("PIRI_GAMEPLAY_DB_DEADLINE_MISS machine="+machine+" player="+player+" elapsedMs="+elapsed/1_000_000L);
+            else if(elapsed>=GAMEPLAY_DB_WARN_NANOS)
+                plugin.getLogger().warning("PIRI_GAMEPLAY_DB_SLOW machine="+machine+" player="+player+" elapsedMs="+elapsed/1_000_000L);
+            if(saved!=null)applyCommittedGameplay(saved,transition);
+            try{
+                if(!stopped)completion.accept(saved,error);
+            }finally{
+                pendingPlayers.remove(player);pendingMachines.remove(machine);
+                if(!stopped)afterPlayerOperation(player);
+            }
+        });
+    }
+
+    private void applyCommittedGameplay(Session committed,GameTransition transition){
+        if(state==null)return;
+        var sessions=new ArrayList<>(state.sessions());
+        boolean replaced=false;
+        for(int i=0;i<sessions.size();i++)if(sessions.get(i).player().equals(committed.player())){
+            sessions.set(i,committed);replaced=true;break;
+        }
+        if(!replaced)sessions.add(committed);
+
+        List<Machine> machines=state.machines();
+        if(transition.finished()||transition.machineRuntimeJson()!=null){
+            var changed=new ArrayList<>(machines);
+            for(int i=0;i<changed.size();i++){
+                Machine current=changed.get(i);
+                if(current.id()!=committed.machine())continue;
+                String runtime=transition.machineRuntimeJson()!=null?transition.machineRuntimeJson():current.runtimeJson();
+                changed.set(i,new Machine(current.id(),current.location(),current.type(),current.setting(),current.enabled(),current.autoSetting(),
+                        current.deleted(),Math.toIntExact(committed.number("display_left_stop")),Math.toIntExact(committed.number("display_center_stop")),
+                        Math.toIntExact(committed.number("display_right_stop")),runtime,current.createdAt(),committed.number("last_activity")));
+                break;
+            }
+            machines=List.copyOf(changed);
+        }
+        state=new PiriDatabase.State(state.period(),state.profile(),machines,List.copyOf(sessions));
+    }
+
     private <T> void submit(CommandSender sender, UUID player, int machine, Callable<T> operation, Consumer<T> success) {
         main();
         if ((player != null && pendingPlayers.contains(player)) || (machine != 0 && pendingMachines.contains(machine))) { if (sender != null) error(sender, "BUSY"); return; }
@@ -996,8 +1049,12 @@ public final class MachineService implements Listener, CommandExecutor {
                     .filter(packet -> packet.packetType() == PacketType.ACTION_REJECTED)
                     .map(packet -> packet.payload().has("errorCode") ? packet.payload().get("errorCode").getAsString() : "INVALID_STATE")
                     .findFirst().orElse(null);
-            submitMobile(owner, machineId, () -> new GameStore(database).commit(transition), (saved, failure) -> {
-                if (failure != null) { callback.accept(null, failure); return; }
+            submitGameplay(owner,machineId,transition,(saved,failure)->{
+                if(failure!=null){
+                    logMobileFailure(failure);
+                    callback.accept(null,mobileFailureCode(failure));
+                    return;
+                }
                 List<Envelope> committed = game.committed(transition, System.nanoTime());
                 for(Envelope packet:committed)remote.publishOwnerPacket(machineId,packet);
                 remote.broadcastSnapshot(machineId);
