@@ -747,7 +747,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
  content:"";position:absolute;left:14px;right:14px;bottom:20px;height:10px;pointer-events:none;background:rgba(74,44,8,.23)
 }
 
-#reelBacking{position:absolute;left:670px;top:300px;width:900px;height:390px;background:#8A8175}
+#reelBacking{position:absolute;left:670px;top:300px;width:900px;height:390px;background:#8A8175;z-index:3}
 .reelWindow{position:absolute;top:300px;width:270px;height:390px;overflow:hidden;background:#F4F1E8;z-index:4}
 #reel0{left:670px}#reel1{left:985px}#reel2{left:1300px}
 .reelWindow.godlike{background:#fff}
