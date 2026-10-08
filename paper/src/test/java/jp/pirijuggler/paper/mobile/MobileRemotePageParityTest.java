@@ -26,11 +26,11 @@ final class MobileRemotePageParityTest {
     void fabricCanonicalLayoutIsTheOnlyMachineLayout() throws Exception {
         String page=page();
         assertTrue(page.contains("#stage{position:absolute;width:1920px;height:1080px"));
-        assertTrue(page.contains("#cabinet{position:absolute;left:290px;top:205px;width:1340px;height:835px"));
-        assertTrue(page.contains("#reelBacking{position:absolute;left:670px;top:300px;width:900px;height:390px"));
+        assertTrue(page.contains("#cabinet{position:absolute;left:310px;top:292px;width:1320px;height:748px"));
+        assertTrue(page.contains("#reelBacking{position:absolute;left:670px;top:315px;width:900px;height:390px"));
         assertTrue(page.contains("#reel0{left:670px}#reel1{left:985px}#reel2{left:1300px}"));
-        assertTrue(page.contains("#lamp{position:absolute;left:350px;top:390px;width:300px;height:170px"));
-        assertTrue(page.contains("#statusPanel{position:absolute;left:670px;top:710px;width:900px;height:95px"));
+        assertTrue(page.contains("#lamp{position:absolute;left:350px;top:405px;width:300px;height:170px"));
+        assertTrue(page.contains("#statusPanel{position:absolute;left:670px;top:720px;width:900px;height:95px"));
         assertTrue(page.contains("#betBtn{left:440px;top:860px;width:150px;height:100px}"));
         assertTrue(page.contains("#leverBtn{left:300px;top:780px;width:130px;height:260px"));
         assertTrue(page.contains("#leftBtn{left:720px;top:865px}#centerBtn{left:990px;top:865px}#rightBtn{left:1260px;top:865px}"));
@@ -73,14 +73,20 @@ final class MobileRemotePageParityTest {
     void mobilePanelsStayCleanlyLayeredAndMoneyFitsInsideRightFrame() throws Exception {
         String page=page();
         assertTrue(page.contains(".panel{position:absolute;background:#090B0E;border:4px solid #B68A42;border-radius:18px;z-index:2"));
-        assertTrue(page.contains("#cabinet{position:absolute;left:290px;top:205px;width:1340px;height:835px"));
+        assertTrue(page.contains("#cabinet{position:absolute;left:310px;top:292px;width:1320px;height:748px"));
         assertTrue(page.contains("overflow:hidden;z-index:1}"));
         assertTrue(page.contains("#gameGraph{position:absolute;left:55px;top:88px;width:825px;height:146px;background:#090b0e!important;z-index:3"));
-        assertTrue(page.contains("#mobileMoney{position:absolute;left:1664px;top:697px;width:220px;height:45px"));
-        assertTrue(page.contains("#chain{position:absolute;left:1664px;top:592px;width:220px;height:88px"));
-        int rightTop=325,rightHeight=430,moneyTop=697,moneyHeight=45;
-        assertTrue(moneyTop>=rightTop);
-        assertTrue(moneyTop+moneyHeight<=rightTop+rightHeight);
+        assertTrue(page.contains("#mobileMoney{position:absolute;left:1668px;top:670px;width:210px;height:70px"));
+        assertTrue(page.contains("#chain{position:absolute;left:1668px;top:575px;width:210px;height:80px"));
+        int topPanelBottom=12+270,cabinetTop=292;
+        int leftPanelRight=18+275,cabinetLeft=310;
+        int cabinetRight=310+1320,rightPanelLeft=1645;
+        int rightPanelBottom=325+430,chainBottom=575+80,moneyTop=670,moneyBottom=670+70;
+        assertTrue(cabinetTop>topPanelBottom);
+        assertTrue(cabinetLeft>leftPanelRight);
+        assertTrue(cabinetRight<rightPanelLeft);
+        assertTrue(chainBottom<moneyTop);
+        assertTrue(moneyBottom<rightPanelBottom);
     }
 
     @Test
