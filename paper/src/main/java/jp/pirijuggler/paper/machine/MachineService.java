@@ -853,7 +853,7 @@ public final class MachineService implements Listener, CommandExecutor {
         Session session = state.session(owner);
         if (session == null || session.lifecycle() != Session.Lifecycle.ACTIVE) {
             result.addProperty("seated", false);
-            if (session != null && session.ownsLock()) result.addProperty("resumeMachineId", session.machine());
+            if (session != null) result.addProperty("resumeMachineId", session.machine());
             addMobileBalance(result, owner);
             return result;
         }
@@ -871,12 +871,52 @@ public final class MachineService implements Listener, CommandExecutor {
         main();
         if(!ready()){callback.accept(null,"DB_ERROR");return;}
         Session session=state.session(owner);
-        if(session==null||session.lifecycle()!=Session.Lifecycle.ACTIVE){callback.accept(null,"SESSION_MISMATCH");return;}
+        if(session==null){callback.accept(null,"SESSION_MISMATCH");return;}
         Machine machine=state.machine(session.machine());
         if(machine==null||!mobileSupported(machine.type())){callback.accept(null,"INVALID_STATE");return;}
-        JsonObject response=mobileState(owner);
-        engine(session.machine()).resume(session,System.nanoTime()).ifPresent(event->response.add("events",mobileEvents(List.of(event))));
-        callback.accept(response,null);
+
+        if(session.lifecycle()==Session.Lifecycle.ACTIVE){
+            JsonObject response=mobileState(owner);
+            engine(session.machine()).resume(session,System.nanoTime()).ifPresent(event->response.add("events",mobileEvents(List.of(event))));
+            callback.accept(response,null);
+            return;
+        }
+
+        int machineId=session.machine();
+        if(pendingPlayers.contains(owner)){callback.accept(null,"BUSY");return;}
+        boolean occupiedByOther=state.sessions().stream()
+                .anyMatch(other->other.machine()==machineId&&!other.player().equals(owner)&&other.ownsLock());
+        if(occupiedByOther){
+            pendingPlayers.add(owner);
+            UUID staleSession=session.id();
+            plugin.executors().database(
+                    ()->new Saved<>(new EconomyStore(database).forceLeaveSuspendedToWallet(
+                            owner,new RecoveryStore(database,config,plugin.reels().solver()),System.currentTimeMillis()),database.state()),
+                    (saved,error)->{
+                        if(saved!=null)state=saved.state;
+                        pendingPlayers.remove(owner);
+                        if(error!=null){callback.accept(null,mobileFailureCode(error));return;}
+                        engine(machineId).forget(staleSession);
+                        mobileDelayedEvents.remove(owner);
+                        remote.broadcastSnapshot(machineId);
+                        JsonObject response=mobileState(owner);
+                        response.addProperty("forcedLeave",true);
+                        response.addProperty("forcedLeaveMachineId",machineId);
+                        response.addProperty("returnedMedals",saved.value);
+                        callback.accept(response,null);
+                    });
+            return;
+        }
+
+        if(pendingMachines.contains(machineId)){callback.accept(null,"BUSY");return;}
+        submitMobile(owner,machineId,()->database.seat(owner,machineId,System.currentTimeMillis()),(seated,failure)->{
+            if(failure!=null){callback.accept(null,failure);return;}
+            GameEngine game=engine(machineId);
+            JsonObject response=mobileState(owner);
+            game.resume(seated,System.nanoTime()).ifPresent(event->response.add("events",mobileEvents(List.of(event))));
+            remote.broadcastSnapshot(machineId);
+            callback.accept(response,null);
+        });
     }
 
     public void mobileSeat(UUID owner, int machineId, BiConsumer<JsonObject, String> callback) {

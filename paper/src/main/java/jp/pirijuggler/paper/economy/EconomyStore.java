@@ -346,6 +346,27 @@ public final class EconomyStore {
         });
     }
 
+    /**
+     * Force-leaves only a suspended session and preserves all session assets in the durable
+     * mobile wallet. Active play is never destroyed by this path.
+     */
+    public long forceLeaveSuspendedToWallet(UUID player, RecoveryStore recovery, long now) throws Exception {
+        Objects.requireNonNull(recovery);
+        return db.transaction(() -> {
+            Session session=optionalSession(player);
+            if(session==null)return 0L;
+            if(session.lifecycle()==Session.Lifecycle.ACTIVE)throw new DomainException("INVALID_STATE");
+            if(session.lifecycle()==Session.Lifecycle.SUSPENDED_GRACE){
+                if(!session.ready())recovery.settle(session,now);
+                session=optionalSession(player);
+            }
+            long assets=Math.addExact(session.number("credit"),session.number("held_medals"));
+            if(assets>0)addPending(player,assets,now);
+            db.sql("DELETE FROM player_sessions WHERE player_uuid=?",player.toString());
+            return assets;
+        });
+    }
+
     public long pendingMedals(UUID player) throws Exception { return pending(player); }
 
     public boolean validActiveBundle(UUID id, int amount) throws Exception { ensureUnlimitedTable(); try { requireUsableBundle(id, amount); return true; } catch (DomainException invalid) { return false; } }

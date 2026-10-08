@@ -1044,10 +1044,31 @@ function renderPreData(d){
  drawGraph($("preGraph"),d.graph||[],d.totalGames||0);
  const h=$("preHistory");h.textContent="";(d.history||[]).slice(0,20).forEach(function(x){const r=document.createElement("div");r.className="histRow";r.innerHTML="<b>"+x.type+"</b><span>"+x.games+"G</span>";h.append(r)});if(!(d.history||[]).length)h.textContent="-- no bonus yet --";
 }
+async function resumeStoredSession(){
+ try{
+  const j=await api("/api/resume","POST");
+  if(j.seated){startGame(j);return true}
+  stopTimers();resetSlotRuntime();currentState=null;currentData=null;currentType="";
+  show("lobby");await loadMachines();await loadPrizes();
+  return false;
+ }catch(e){
+  if(e.message==="BUSY"){setTimeout(resumeStoredSession,250);return false}
+  alert(errorText(e));return false;
+ }
+}
 async function seat(id){
  try{
   const j=await api("/api/seat?id="+id,"POST");startGame(j);
- }catch(e){alert(errorText(e))}
+ }catch(e){
+  if(e.message==="SESSION_MISMATCH"){
+   try{
+    const state=await api("/api/state");
+    if(state.seated){startGame(state);return}
+    if(state.resumeMachineId){await resumeStoredSession();return}
+   }catch(ignored){}
+  }
+  alert(errorText(e))
+ }
 }
 function resizeStage(){
  const baseW=1920,baseH=1080,scale=Math.min(innerWidth/baseW,innerHeight/baseH);
@@ -1516,7 +1537,11 @@ window.addEventListener("focus",function(){pollState(true)});
 requestAnimationFrame(frame);
 if(token){
  $("player").textContent=player;
- api("/api/state").then(function(j){if(j.seated)startGame(j);else{show("lobby");loadMachines()}}).catch(function(e){if(e.message==="AUTH_LOADING")setTimeout(function(){location.reload()},1000);else show("pair")});
+ api("/api/state").then(async function(j){
+  if(j.seated)startGame(j);
+  else if(j.resumeMachineId)await resumeStoredSession();
+  else{show("lobby");loadMachines()}
+ }).catch(function(e){if(e.message==="AUTH_LOADING")setTimeout(function(){location.reload()},1000);else show("pair")});
 }else show("pair");
 })();
 </script>

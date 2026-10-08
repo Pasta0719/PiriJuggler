@@ -90,6 +90,16 @@ final class MobileRemotePageParityTest {
     }
 
     @Test
+    void suspendedMobileSessionAutoResumesAndOccupiedResumeFallsBackToForcedLeave() throws Exception {
+        String page=page();
+        assertTrue(page.contains("async function resumeStoredSession()"));
+        assertTrue(page.contains("api(\"/api/resume\",\"POST\")"));
+        assertTrue(page.contains("else if(j.resumeMachineId)await resumeStoredSession()"));
+        assertTrue(page.contains("if(e.message===\"SESSION_MISMATCH\")"));
+        assertTrue(page.contains("if(state.resumeMachineId){await resumeStoredSession();return}"));
+    }
+
+    @Test
     void fabricStateRecoverySemanticsArePresent() throws Exception {
         String page=page();
         assertTrue(page.contains("/api/resume"));

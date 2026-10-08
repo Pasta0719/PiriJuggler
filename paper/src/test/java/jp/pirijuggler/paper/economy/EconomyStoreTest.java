@@ -93,6 +93,18 @@ class EconomyStoreTest {
         assertEquals(11,((Number)db.rows("SELECT pending_medals FROM player_wallet WHERE player_uuid=?",player.toString()).getFirst().get("pending_medals")).longValue());
     }
 
+    @Test void forcedMobileLeavePreservesSuspendedAssetsInWalletAndDeletesOnlyOldSession() throws Exception {
+        db.sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',credit=17,held_medals=83");
+        long moved=store.forceLeaveSuspendedToWallet(player,new RecoveryStore(db,config,new StopSolver(new StopCatalogue())),NOW+1);
+        assertEquals(100,moved);
+        assertNull(db.state().session(player));
+        assertEquals(100,store.pendingMedals(player));
+    }
+
+    @Test void forcedMobileLeaveNeverDestroysActivePlay() {
+        code("INVALID_STATE",()->store.forceLeaveSuspendedToWallet(player,new RecoveryStore(db,config,new StopSolver(new StopCatalogue())),NOW+1));
+    }
+
     @Test void offlineInventoryStashMovesRealMedalItemsIntoMobileWallet() throws Exception {
         UUID first=UUID.randomUUID(),second=UUID.randomUUID();
         db.sql("INSERT INTO medal_tokens(bundle_id,amount,state,created_at,updated_at) VALUES(?,30,'ACTIVE',?,?)",first.toString(),NOW,NOW);
