@@ -25,18 +25,18 @@ public class FirstStopAuditTest {
   private static final String[] AWARDS = {"BIG","REG","CHERRY_BIG","CHERRY_REG","PIERO_BIG","PIERO_REG"};
   private static String bonus(String role) { return role.endsWith("BIG")||role.startsWith("BIG")||role.startsWith("ONE_")?"BIG":
     role.endsWith("REG")||role.equals("REG")?"REG":"NONE"; }
-  private static Event jugglerEvent(StopSolver solver, String role, String premium, Reel reel, int pressed) {
+  private static Event jugglerEvent(StopSolver solver, String family, String role, String premium, Reel reel, int pressed) {
     InternalRole internal=InternalRole.valueOf(role);
     boolean isB=premium.equals("B"),isF=premium.equals("F");
     DisplayRole display=internal.display(isB);
     DisplayRole direct=(isB||isF)?null:internal.directEntryDisplay();
-    boolean allowBar=!premium.equals("NONE");
+    boolean allowBar=family.equals("JUGGLER")&&!premium.equals("NONE");
     boolean forbidRight = display!=DisplayRole.GRAPE&&display!=DisplayRole.BONUS&&
        display!=DisplayRole.BONUS_CHERRY&&display!=DisplayRole.PIERO_BONUS&&display!=DisplayRole.PREMIUM_B;
     StopSolver.Choice x=solver.choose(display,direct,0,new StopTriplet(0,0,0),reel,pressed,
        isF,allowBar,forbidRight,direct!=null);
     int s=x.stopIndex();
-    return new Event("JUGGLER_FAMILY",role,bonus(role),premium,reel,pressed,s,x.slip(),
+    return new Event(family,role,bonus(role),premium,reel,pressed,s,x.slip(),
        FixedReels.row(reel,pressed,0),FixedReels.row(reel,s,-1),FixedReels.row(reel,s,0),FixedReels.row(reel,s,1));
   }
   private static Event skillEvent(SkillStopControl solver, String role, String premium, Reel reel, int pressed) {
@@ -50,12 +50,14 @@ public class FirstStopAuditTest {
   private static List<Event> juggler() {
     var solver=new StopSolver(new StopCatalogue());
     var out=new ArrayList<Event>();
-    for(var role:SMALL)for(Reel reel:Reel.values())for(int p=0;p<21;p++)out.add(jugglerEvent(solver,role,"NONE",reel,p));
+    for(String family:List.of("JUGGLER","JUGGLER_GOD","JUGGLER_GOD_EXTREME")) {
+      for(var role:SMALL)for(Reel reel:Reel.values())for(int p=0;p<21;p++)out.add(jugglerEvent(solver,family,role,"NONE",reel,p));
     for(var role:AWARDS) {
       var premiums=new ArrayList<String>();premiums.add("NONE");
       if(bonus(role).equals("BIG")) {premiums.addAll(List.of("A","C","D","E","F"));if(role.equals("CHERRY_BIG"))premiums.add("B");}
       for(var premium:premiums)for(Reel reel:Reel.values())for(int p=0;p<21;p++)
-        out.add(jugglerEvent(solver,role,premium,reel,p));
+        out.add(jugglerEvent(solver,family,role,premium,reel,p));
+    }
     }
     return out;
   }
@@ -89,7 +91,7 @@ public class FirstStopAuditTest {
     for(var e:positives)csv.add(e.csv(true));
     Files.write(Path.of("build","first-stop-audit-exclusive.csv"),csv);
     StringBuilder summary=new StringBuilder();
-    for(String family:List.of("JUGGLER_FAMILY","SKILL_STOP")){
+    for(String family:List.of("JUGGLER","JUGGLER_GOD","JUGGLER_GOD_EXTREME","SKILL_STOP")){
       var familyAll=all.stream().filter(x->x.family().equals(family)).toList();
       var familyPos=positives.stream().filter(x->x.family().equals(family)).toList();
       long big=familyPos.stream().filter(x->x.bonus().equals("BIG")).count();
