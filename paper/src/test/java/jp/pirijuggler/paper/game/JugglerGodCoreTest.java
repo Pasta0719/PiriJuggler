@@ -137,7 +137,7 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals(4,after.guaranteedRemaining());
     }
 
-    @Test void firstGodBigEndIsAuthoritativelyIdentifiedFromTheFinalBonusSpin() {
+    @Test void firstGodBigEndIsAuthoritativelyIdentifiedFromTheFinalBonusSpin() throws Exception {
         Rig rig=rig(new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
                 "GOD_CHAIN",1,false,"GOD_BIG_STARTED"),1);
         var values=new LinkedHashMap<>(rig.session().snapshot());
