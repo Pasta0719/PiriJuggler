@@ -105,6 +105,7 @@ final class MobileRemotePageParityTest {
         assertTrue(page.contains("juggler_god_god_bonus_end"));
         assertTrue(page.contains("godBigAudioPending"));
         assertTrue(page.contains("godBigAudioActive"));
+        assertTrue(page.contains("!!p.godFirstBigAudio||godBigAudioActive"));
         assertFalse(page.contains("playSound(\"bonus_end\")"));
     }
 

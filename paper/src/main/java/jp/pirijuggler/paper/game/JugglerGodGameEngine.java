@@ -431,8 +431,25 @@ public final class JugglerGodGameEngine implements GameEngine {
 
     @Override
     public List<GameTransition.Scheduled> scheduled(GameTransition action){
+        boolean firstGodBigEnd=firstGodBigEnd(action.before(),action.bonusEnded());
         return delegate.scheduled(toLegacy(action)).stream()
-                .map(e->new GameTransition.Scheduled(e.delayMs(),e.packet())).toList();
+                .map(e->{
+                    Envelope packet=e.packet();
+                    if(firstGodBigEnd&&packet.packetType()==PacketType.BONUS_END){
+                        JsonObject body=packet.payload().deepCopy();
+                        body.addProperty("godFirstBigAudio",true);
+                        packet=new Envelope(packet.protocol(),packet.packetType(),body);
+                    }
+                    return new GameTransition.Scheduled(e.delayMs(),packet);
+                }).toList();
+    }
+
+    static boolean firstGodBigEnd(Session before,boolean bonusEnded){
+        if(!bonusEnded||before==null||before.state()!=Session.GameState.BIG_SPINNING)return false;
+        JsonObject ms=before.machineState();
+        if(ms==null||!ms.has("jgMode"))return false;
+        JugglerGodRuntime runtime=JugglerGodRuntime.fromJson(ms.toString());
+        return "GOD_CHAIN".equals(runtime.bonusOrigin())&&runtime.godBigCount()==1;
     }
 
     @Override public Optional<Envelope> resume(Session saved,long sentNanos){

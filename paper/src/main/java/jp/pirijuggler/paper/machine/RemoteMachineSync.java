@@ -264,7 +264,8 @@ public final class RemoteMachineSync {
                     String type=source.get("bonusType").getAsString();
                     audio(machineId,"LOOP_STOP",null,0,1,0,null);
                     if("BIG".equals(type)){
-                        boolean first=godFirstBigAudioActive.getOrDefault(machineId,false);
+                        boolean first=source.has("godFirstBigAudio")&&source.get("godFirstBigAudio").getAsBoolean()
+                                ||godFirstBigAudioActive.getOrDefault(machineId,false);
                         audio(machineId,"PLAY",RemoteAudioPolicy.bigEndSound(first),0,1,0,null);
                     }
                     godFirstBigAudioActive.remove(machineId);

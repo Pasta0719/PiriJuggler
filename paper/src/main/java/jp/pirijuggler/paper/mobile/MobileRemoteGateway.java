@@ -1381,7 +1381,7 @@ async function pollEvents(){
     }else if(type==="BONUS_END"){
      const bonus=p.bonusType||"BONUS";$("gameMessage").textContent=bonus+" END";pendingBigBgmAt=0;pendingBigBgmName="";pendingGodHitSound="";stopLoop();
      if(bonus==="BIG"){
-      const godFirstEnd=godBigAudioActive&&(currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME");
+      const godFirstEnd=(!!p.godFirstBigAudio||godBigAudioActive)&&(currentType==="JUGGLER_GOD"||currentType==="JUGGLER_GOD_EXTREME");
       playNamed(godFirstEnd?"juggler_god_god_bonus_end":machineSound("bonus_end"),machineSound("bonus_end"));
      }
      godBigAudioPending=false;godBigAudioActive=false;

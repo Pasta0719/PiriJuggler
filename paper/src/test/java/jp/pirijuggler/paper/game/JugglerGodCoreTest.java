@@ -137,6 +137,22 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals(4,after.guaranteedRemaining());
     }
 
+    @Test void firstGodBigEndIsAuthoritativelyIdentifiedFromTheFinalBonusSpin() {
+        Rig rig=rig(new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
+                "GOD_CHAIN",1,false,"GOD_BIG_STARTED"),1);
+        var values=new LinkedHashMap<>(rig.session().snapshot());
+        values.put("game_state","BIG_SPINNING");
+        values.put("bonus_type","BIG");
+        values.put("machine_state_json",new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,false,false,
+                "GOD_CHAIN",1,false,"GOD_BIG_STARTED").toJsonString());
+        Session first=new Session(values);
+        assertTrue(JugglerGodGameEngine.firstGodBigEnd(first,true));
+        values.put("machine_state_json",new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,3,false,false,
+                "GOD_CHAIN",2,false,"GOD_BIG_STARTED").toJsonString());
+        assertFalse(JugglerGodGameEngine.firstGodBigEnd(new Session(values),true));
+        assertFalse(JugglerGodGameEngine.firstGodBigEnd(first,false));
+    }
+
     @Test void directEntryGodChainBigIncrementsCounter() {
         var before=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,2,false,false,
                 "GOD_CHAIN",2,false,"BONUS_DRAWN");
