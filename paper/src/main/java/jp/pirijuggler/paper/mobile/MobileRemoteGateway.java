@@ -729,12 +729,12 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #game{position:fixed;inset:0;background:#000000;z-index:30;overflow:hidden;touch-action:manipulation}
 #stageWrap{position:absolute;inset:0;overflow:hidden}
 #stage{position:absolute;width:1920px;height:1080px;transform-origin:0 0;background:#000000;color:#F6F1E7;font-family:Arial,sans-serif;user-select:none}
-.panel{position:absolute;background:#090B0E;border:4px solid #B68A42;border-radius:18px}
+.panel{position:absolute;background:#090B0E;border:4px solid #B68A42;border-radius:18px;z-index:2;box-shadow:0 8px 24px rgba(0,0,0,.28)}
 #dataTop{left:20px;top:12px;width:1880px;height:270px}
 #dataLeft{left:18px;top:325px;width:275px;height:430px}
 #dataRight{left:1645px;top:325px;width:257px;height:430px}
 
-#cabinet{position:absolute;left:290px;top:205px;width:1340px;height:835px;background:#3C0A10;border:4px solid #B68A42;border-radius:18px;overflow:hidden}
+#cabinet{position:absolute;left:290px;top:205px;width:1340px;height:835px;background:#3C0A10;border:4px solid #B68A42;border-radius:18px;overflow:hidden;z-index:1}
 #cabinet.godlike{
  background:linear-gradient(to bottom,#E9D07A,#64410D);
  border-color:#E4C174
@@ -776,8 +776,8 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #statusPanel>div{position:absolute;top:11px;width:170px}
 #statusPanel>div:nth-child(1){left:16px}#statusPanel>div:nth-child(2){left:214px}#statusPanel>div:nth-child(3){left:412px}#statusPanel>div:nth-child(4){left:610px}
 .statLabel{font-size:18px;line-height:18px;color:#F6F1E7}.statValue{font-size:27px;line-height:27px;font-weight:900;margin-top:15px}
-#mobileMoney{position:absolute;left:1664px;top:730px;width:220px;height:42px;text-align:center;color:#F6F1E7;z-index:7}
-#mobileMoney .statLabel{font-size:14px;line-height:14px}#mobileMoney .statValue{font-size:21px;line-height:21px;margin-top:5px}
+#mobileMoney{position:absolute;left:1664px;top:697px;width:220px;height:45px;text-align:center;color:#F6F1E7;z-index:3;border-top:1px solid #292d36;padding-top:6px}
+#mobileMoney .statLabel{font-size:13px;line-height:13px}#mobileMoney .statValue{font-size:20px;line-height:20px;margin-top:4px}
 
 .machineControl{position:absolute;z-index:8;border-radius:14px;background:#666A72;padding:4px}
 .machineControl>span{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:10px;background:#C92734;font-size:22px;font-weight:900;text-shadow:2px 2px #190406}
@@ -801,24 +801,24 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #gameMessage{position:absolute;left:840px;top:990px;width:400px;text-align:center;font-size:24px;font-weight:800;color:#F6F1E7;z-index:10}
 #leaveBtn{position:fixed;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));z-index:50;background:#5a2525;border-radius:12px;padding:10px 14px;font-size:14px;opacity:.9}
 
-.dataTitle{position:absolute;font-size:20px;font-weight:900}
+.dataTitle{position:absolute;font-size:20px;font-weight:900;z-index:3}
 #machineLabel{left:38px;top:27px}
 #graphLabel{left:55px;top:55px}
-#gameGraph{position:absolute;left:55px;top:88px;width:825px;height:146px;background:#090b0e!important}
+#gameGraph{position:absolute;left:55px;top:88px;width:825px;height:146px;background:#090b0e!important;z-index:3;border-radius:6px;overflow:hidden}
 
-.topMetric{position:absolute;width:205px;text-align:center}.topMetric .t{font-size:23px;font-weight:900}.topMetric .n{font-size:36px;font-weight:900;margin-top:6px}
+.topMetric{position:absolute;width:205px;text-align:center;z-index:3}.topMetric .t{font-size:23px;font-weight:900}.topMetric .n{font-size:36px;font-weight:900;margin-top:6px}
 #currentBox{left:958px;top:43px}#totalBox{left:1268px;top:43px}#maxBox{left:1578px;top:43px}
 #bigBox{left:1108px;top:145px;color:#ff4242}#regBox{left:1438px;top:145px;color:#3a78ff}
 
-#graphStart{position:absolute;left:55px;top:241px;font-size:17px;font-weight:900}
-#graphEnd{position:absolute;left:820px;top:241px;width:120px;text-align:center;font-size:17px;font-weight:900}
-#diffTitle{left:42px;top:345px}.sideLarge{position:absolute;left:62px;width:188px;text-align:center;font-size:42px;font-weight:900}
+#graphStart{position:absolute;left:55px;top:241px;font-size:17px;font-weight:900;z-index:3}
+#graphEnd{position:absolute;left:820px;top:241px;width:120px;text-align:center;font-size:17px;font-weight:900;z-index:3}
+#diffTitle{left:42px;top:345px}.sideLarge{position:absolute;left:62px;width:188px;text-align:center;font-size:42px;font-weight:900;z-index:3}
 #diffValue{top:382px}
-#historyTitle{left:42px;top:465px}.historyList{position:absolute;left:44px;top:521px;width:210px;height:220px;font-size:17px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+#historyTitle{left:42px;top:465px}.historyList{position:absolute;left:44px;top:521px;width:210px;height:220px;font-size:17px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;z-index:3}
 .historyItem{display:flex;justify-content:space-between;height:22px}.big{color:#ff4242}.reg{color:#3a78ff}.god{color:#58e36a}
-#oddsTitle{left:1672px;top:345px}.odds{position:absolute;left:1672px;width:210px;font-size:19px}.odds b{float:right;font-size:24px}
+#oddsTitle{left:1672px;top:345px}.odds{position:absolute;left:1672px;width:210px;font-size:19px;z-index:3}.odds b{float:right;font-size:24px}
 #bigOdds{top:385px;color:#ff4242}#regOdds{top:455px;color:#3a78ff}#allOdds{top:525px}
-#chain{position:absolute;left:1664px;top:615px;width:220px;height:102px;border:4px solid #58e36a;border-radius:12px;text-align:center;padding-top:14px;font-size:21px;font-weight:900;color:#58e36a}
+#chain{position:absolute;left:1664px;top:592px;width:220px;height:88px;border:4px solid #58e36a;border-radius:12px;text-align:center;padding-top:9px;font-size:20px;font-weight:900;color:#58e36a;z-index:3}
 @media(max-width:700px){
  #normal{padding:12px 10px 30px}.machine{grid-template-columns:minmax(0,1fr) auto auto}.normalBtn{padding:8px 10px;font-size:14px}.dataGrid{grid-template-columns:repeat(2,1fr)}
 }

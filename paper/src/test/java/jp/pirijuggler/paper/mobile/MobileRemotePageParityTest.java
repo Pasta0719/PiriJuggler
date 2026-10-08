@@ -70,6 +70,20 @@ final class MobileRemotePageParityTest {
     }
 
     @Test
+    void mobilePanelsStayCleanlyLayeredAndMoneyFitsInsideRightFrame() throws Exception {
+        String page=page();
+        assertTrue(page.contains(".panel{position:absolute;background:#090B0E;border:4px solid #B68A42;border-radius:18px;z-index:2"));
+        assertTrue(page.contains("#cabinet{position:absolute;left:290px;top:205px;width:1340px;height:835px"));
+        assertTrue(page.contains("overflow:hidden;z-index:1}"));
+        assertTrue(page.contains("#gameGraph{position:absolute;left:55px;top:88px;width:825px;height:146px;background:#090b0e!important;z-index:3"));
+        assertTrue(page.contains("#mobileMoney{position:absolute;left:1664px;top:697px;width:220px;height:45px"));
+        assertTrue(page.contains("#chain{position:absolute;left:1664px;top:592px;width:220px;height:88px"));
+        int rightTop=325,rightHeight=430,moneyTop=697,moneyHeight=45;
+        assertTrue(moneyTop>=rightTop);
+        assertTrue(moneyTop+moneyHeight<=rightTop+rightHeight);
+    }
+
+    @Test
     void fabricStateRecoverySemanticsArePresent() throws Exception {
         String page=page();
         assertTrue(page.contains("/api/resume"));
