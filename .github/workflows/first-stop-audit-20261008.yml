@@ -1,0 +1,37 @@
+name: First Stop Bonus Audit
+on:
+  push:
+    branches:
+      - audit/first-stop-20261008
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Execute production first-stop controls for all roles and indices
+        run: |
+          chmod +x gradlew
+          ./gradlew :paper:test --tests "jp.pirijuggler.paper.reel.FirstStopAuditTest" --console=plain
+      - name: Display report
+        if: always()
+        run: |
+          if [ -f paper/build/first-stop-audit-summary.txt ]; then
+            cat paper/build/first-stop-audit-summary.txt
+          else
+            echo "Audit did not generate its report"
+          fi
+      - name: Store exhaustive audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: first-stop-20261008-audit
+          path: |
+            paper/build/first-stop-audit-*.csv
+            paper/build/first-stop-audit-summary.txt
+            paper/build/test-results/test/TEST-*FirstStopAuditTest.xml
