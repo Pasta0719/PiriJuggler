@@ -234,7 +234,7 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length >= 2 && args[0].equalsIgnoreCase("event")) {
                 commandEvent(sender,args); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|JUGGLER_GOD_EXTREME|SKILL_STOP|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri jgrole <id> <MISS|REPLAY|GRAPE|CHERRY|BELL|PIERO|BIG|REG|CHERRY_BIG|CHERRY_REG|PIERO_BIG|PIERO_REG|GOD|clear>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|JUGGLER_GOD_EXTREME|SKILL_STOP|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri jgrole <id> <MISS|REPLAY|GRAPE|CHERRY|BELL|PIERO|BIG|REG|CHERRY_BIG|CHERRY_REG|PIERO_BIG|PIERO_REG|GOD|clear>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>|reroll [profile|p1 p2 p3 p4 p5 p6], /piri recover status|cashout, /piri simulator <setting> <games>");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
@@ -426,6 +426,24 @@ public final class MachineService implements Listener, CommandExecutor {
         }
         if(args.length==3&&args[1].equalsIgnoreCase("next")) {
             String profile=args[2]; submit(sender,null,0,()->{store.setNextProfile(profile);return profile;},done->tell(sender,"EVENT_NEXT "+done)); return;
+        }
+        if(args[1].equalsIgnoreCase("reroll")&&(args.length==2||args.length==3||args.length==8)) {
+            List<Integer> ids=state.machines().stream().filter(m->!m.deleted()&&m.enabled()&&m.autoSetting()).map(Machine::id).toList();
+            if(ids.stream().anyMatch(this::busy))throw new DomainException("MACHINE_OCCUPIED");
+            long now=System.currentTimeMillis();
+            if(args.length==8){
+                int[] distribution=new int[6];int total=0;
+                for(int i=0;i<6;i++){distribution[i]=Integer.parseInt(args[i+2]);if(distribution[i]<0)throw new DomainException("INVALID_STATE");total+=distribution[i];}
+                if(total!=100)throw new DomainException("INVALID_STATE");
+                String label=java.util.Arrays.toString(distribution);
+                submitMany(sender,ids,()->store.rerollSettings(state,distribution,random.eventAllocation(),plugin.getLogger()::warning,now),
+                        allocation->tell(sender,"EVENT_REROLL custom="+label+" machines="+allocation.size()));
+            }else{
+                String profile=args.length==3?args[2]:state.profile();
+                submitMany(sender,ids,()->store.rerollSettings(state,profile,random.eventAllocation(),plugin.getLogger()::warning,now),
+                        allocation->tell(sender,"EVENT_REROLL profile="+profile+" machines="+allocation.size()));
+            }
+            return;
         }
         throw new DomainException("INVALID_STATE");
     }
