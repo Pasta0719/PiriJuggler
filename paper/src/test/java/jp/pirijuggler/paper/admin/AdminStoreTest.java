@@ -122,4 +122,48 @@ class AdminStoreTest {
         assertEquals(PachinkoStatistics.empty(),reset.statistics());
     }
 
+
+    @Test void rerollSettingsOnlyUpdatesEligibleMachinesAndKeepsExistingHistory() throws Exception {
+        int active=create(21), manual=create(22), disabled=create(23);
+        store.setAuto(db.state(),manual,false,NOW+1);
+        store.setEnabled(db.state(),disabled,false,NOW+2);
+        int oldActive=db.state().machine(active).setting();
+        int oldManual=db.state().machine(manual).setting();
+        int oldDisabled=db.state().machine(disabled).setting();
+        db.sql("UPDATE machine_period_stats SET total_games=120,today_difference=345 WHERE machine_id=?",active);
+        db.sql("INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) VALUES(?,?,?,?,?)",
+                active,db.state().period(),120,345,NOW+3);
+        long initialHistory=scalar("SELECT count(*) FROM setting_history WHERE machine_id=?",active);
+
+        var allocation=store.rerollSettings(db.state(),new int[]{0,0,0,0,0,100},
+                new SplittableRandom(7),ignored->{},NOW+4);
+        assertEquals(Map.of(active,6),allocation);
+        assertEquals(6,db.state().machine(active).setting());
+        assertEquals(oldManual,db.state().machine(manual).setting());
+        assertEquals(oldDisabled,db.state().machine(disabled).setting());
+        assertEquals(120,scalar("SELECT total_games FROM machine_period_stats WHERE machine_id=?",active));
+        assertEquals(345,scalar("SELECT today_difference FROM machine_period_stats WHERE machine_id=?",active));
+        assertEquals(2,scalar("SELECT count(*) FROM graph_points WHERE machine_id=?",active));
+        assertEquals(initialHistory+(oldActive==6?0:1),
+                scalar("SELECT count(*) FROM setting_history WHERE machine_id=?",active));
+        if(oldActive!=6){
+            var latest=db.rows("SELECT reason,profile_name FROM setting_history WHERE machine_id=? ORDER BY id DESC LIMIT 1",active).getFirst();
+            assertEquals("REROLL",latest.get("reason"));
+            assertEquals("custom",latest.get("profile_name"));
+        }
+        assertThrows(jp.pirijuggler.paper.machine.DomainException.class,
+                ()->store.rerollSettings(db.state(),new int[]{20,20,20,20,20,20},new SplittableRandom(1),ignored->{},NOW+5));
+    }
+
+    @Test void namedProfileRerollUsesConfiguredDistributionWithoutChangingStartProfile() throws Exception {
+        int id=create(24);
+        String previous=db.state().profile();
+        var allocation=store.rerollSettings(db.state(),"strong",new SplittableRandom(44),ignored->{},NOW+1);
+        assertEquals(1,allocation.size());
+        assertTrue(allocation.containsKey(id));
+        assertEquals(allocation.get(id).intValue(),db.state().machine(id).setting());
+        assertEquals(previous,db.state().profile());
+        assertThrows(jp.pirijuggler.paper.machine.DomainException.class,
+                ()->store.rerollSettings(db.state(),"unknown",new SplittableRandom(1),ignored->{},NOW+2));
+    }
 }
