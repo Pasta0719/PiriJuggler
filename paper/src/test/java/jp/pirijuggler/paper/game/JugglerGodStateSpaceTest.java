@@ -21,7 +21,7 @@ class JugglerGodStateSpaceTest {
                             for (String suspended : new String[]{"BIG","REG"}) {
                                 for (boolean ended : new boolean[]{false,true}) {
                                     String origin = switch (mode) {
-                                        case NORMAL -> suspended;
+                                        case NORMAL,HIGH,ULTRA -> suspended;
                                         case HEAVEN -> "HEAVEN";
                                         case GOD_CHAIN -> "GOD_CHAIN";
                                     };
@@ -83,7 +83,7 @@ class JugglerGodStateSpaceTest {
                     for (boolean freeze : new boolean[]{false,true}) {
                         for (boolean releasing : new boolean[]{false,true}) {
                             String origin=switch(mode){
-                                case NORMAL -> "NONE";
+                                case NORMAL,HIGH,ULTRA -> "NONE";
                                 case HEAVEN -> "HEAVEN";
                                 case GOD_CHAIN -> "GOD_CHAIN";
                             };
