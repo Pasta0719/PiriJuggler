@@ -31,6 +31,7 @@ public final class JugglerGodGameEngine implements GameEngine {
     private final long heavenToHeavenPpm;
     private final int[] bonusScalePpm=new int[7];
     private final int[] smallRoleScalePpm=new int[7];
+    private final int[] precursorTwoHighPpm=new int[7];
     private final int[] highModeScalePpm=new int[7];
     private final int[] ultraModeScalePpm=new int[7];
     private final int[] continuationPercent=new int[7];
@@ -64,6 +65,10 @@ public final class JugglerGodGameEngine implements GameEngine {
             Map<String,Object> row=map(settings.get(Integer.toString(setting)));
             bonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
             smallRoleScalePpm[setting]=(int)number(row.get("small_role_scale_ppm"),1_000_000);
+            int[] precursorDefaults="juggler_god_extreme".equals(configKey)
+                    ?new int[]{0,72001,78911,92247,110987,127811,139688}
+                    :new int[]{0,94884,105041,114326,130995,139760,153160};
+            precursorTwoHighPpm[setting]=(int)number(row.get("precursor_two_high_ppm"),precursorDefaults[setting]);
             continuationPercent[setting]=(int)number(row.get("god_continuation_percent"),defaults[setting]);
             long rawBonus=weights.unscaledBonusFamilyWeight(setting);
             highModeScalePpm[setting]=(int)Math.round(HIGH_BONUS_PER_LEVER*1_000_000_000_000_000.0/rawBonus);
@@ -77,6 +82,7 @@ public final class JugglerGodGameEngine implements GameEngine {
             throw new IllegalArgumentException("JUGGLER_GOD heaven tuning");
         for(int setting=1;setting<=6;setting++)if(bonusScalePpm[setting]<0||bonusScalePpm[setting]>1_000_000
                 ||smallRoleScalePpm[setting]<0||smallRoleScalePpm[setting]>1_000_000
+                ||precursorTwoHighPpm[setting]<0||precursorTwoHighPpm[setting]>1_000_000
                 ||continuationPercent[setting]<0||continuationPercent[setting]>=100
                 ||ultraModeScalePpm[setting]>20_000_000)
             throw new IllegalArgumentException("JUGGLER_GOD role scale");
@@ -170,7 +176,7 @@ public final class JugglerGodGameEngine implements GameEngine {
             }else{
                 // Bonuses/mode rises earned by a role are rolled on the NEXT lever.
                 var rng=random.gameplay(machine.id());
-                Trigger trigger=trigger(runtime.roleStreak());
+                Trigger trigger=trigger(runtime.roleStreak(),precursorTwoHighPpm[machine.setting()]);
                 if(rng.nextDouble()<trigger.bonus()){
                     forced=weights.drawBonusFamily(machine.setting(),rng);
                 }else{
@@ -387,13 +393,15 @@ public final class JugglerGodGameEngine implements GameEngine {
 
     /** Probabilities after a small role, used only on the next normal lever. */
     private record Trigger(double bonus,double high,double ultra){}
-    private static Trigger trigger(int streak){
+    private static Trigger trigger(int streak,int twoHighPpm){
         return switch(streak){
+            // Two consecutive grape/replay results start a *visible-role* anticipation route.
+            case 2,7->new Trigger(0,twoHighPpm/1_000_000.0,0);
             case 3,8->new Trigger(0,.15,0);
             case 4->new Trigger(.20,.20,.03);
             case 5,10,13->new Trigger(1,0,0);
             case 9->new Trigger(.20,.18,.05);
-            case 11->new Trigger(0,.05,0);
+            case 11->new Trigger(0,.08,0);
             case 12->new Trigger(.40,.20,.20);
             case 14->new Trigger(.35,.15,.10);
             case 15->new Trigger(.15,.20,.05);
