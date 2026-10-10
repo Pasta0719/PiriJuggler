@@ -73,6 +73,18 @@ public final class PiriDatabase implements AutoCloseable {
                     }
                     sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE lifecycle IN ('ACTIVE','SUSPENDED_GRACE') AND session_id NOT IN (SELECT s.session_id FROM player_sessions s JOIN machines m ON s.machine_id=m.machine_id WHERE m.machine_type='SKILL_STOP' AND s.game_state<>'SEATED_READY')");
                     sql("UPDATE player_sessions SET lifecycle='SUSPENDED_GRACE',lock_expires_at=? WHERE session_id IN (SELECT s.session_id FROM player_sessions s JOIN machines m ON s.machine_id=m.machine_id WHERE m.machine_type='SKILL_STOP' AND s.game_state<>'SEATED_READY')",Long.MAX_VALUE);
+                    // A true JVM restart ends only ordinary HIGH/ULTRA anticipation and
+                    // small-role streaks. Preserve HEAVEN, GOD_CHAIN, confirmed stocks,
+                    // saved bonuses and coin balances. Recovery settlement above runs first.
+                    for(Machine m:machines()) if(!m.deleted() &&
+                            (m.type()==MachineType.JUGGLER_GOD||m.type()==MachineType.JUGGLER_GOD_EXTREME)){
+                        String normalized=JugglerGodRuntime.fromJson(m.runtimeJson())
+                                .resetNewSessionPrecursors().toJsonString();
+                        sql("UPDATE machines SET machine_runtime_json=?,updated_at=? WHERE machine_id=?",
+                                normalized,now,m.id());
+                        sql("UPDATE player_sessions SET machine_state_json=? WHERE machine_id=? AND lifecycle='SUSPENDED_SAFE'",
+                                normalized,m.id());
+                    }
                     var day = Instant.ofEpochMilli(now).atZone(ZoneId.of("Asia/Tokyo")).toLocalDate();
                     var resolved = StartupProfile.resolve(config, day, metadata("next_start_profile"));
                     period = UUID.randomUUID().toString(); profile = resolved.name();
