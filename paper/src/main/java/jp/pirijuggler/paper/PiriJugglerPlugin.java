@@ -38,7 +38,7 @@ import java.util.UUID;
 import jp.pirijuggler.paper.reel.ReelEngine;
 
 public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessageListener, Listener {
-    private static final String BUILD_IDENTITY = "MOBILE_REMOTE_20261006_FINAL";
+    private static final String BUILD_IDENTITY = "JUGGLER_GOD_CONFIG_COMPAT_20261010";
     private PaperMainThread mainThread;
     private TaskExecutors executors;
     private ServerHandshake handshake;
