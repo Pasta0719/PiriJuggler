@@ -390,8 +390,8 @@ public final class JugglerGodGameEngine implements GameEngine {
     }
 
     /** Probabilities after a small role, used only on the next normal lever. */
-    record Trigger(double bonus,double high,double ultra){}
-    static Trigger trigger(int streak,int twoHighPpm){
+    public record Trigger(double bonus,double high,double ultra){}
+    public static Trigger trigger(int streak,int twoHighPpm){
         return switch(streak){
             // Two consecutive grape/replay results start a *visible-role* anticipation route.
             case 2,7->new Trigger(0,twoHighPpm/1_000_000.0,0);
@@ -406,7 +406,7 @@ public final class JugglerGodGameEngine implements GameEngine {
             default->new Trigger(0,0,0);
         };
     }
-    static int followingStreak(int prior,InternalRole role){
+    public static int followingStreak(int prior,InternalRole role){
         return switch(role){
             case GRAPE->prior>=1&&prior<=5?Math.min(prior+1,5):1;
             case REPLAY->prior>=6&&prior<=10?Math.min(prior+1,10):6;
