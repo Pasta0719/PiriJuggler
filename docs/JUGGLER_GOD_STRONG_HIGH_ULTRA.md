@@ -53,3 +53,10 @@ To preserve target RTP 97.5%, 99%, 101.5%, 105%, 109.5%, 115%, the normal-mode b
 
 The 65% share and modeled RTP results come from an independent stationary Markov reward model, **not** a production Paper server run. Both bonus-family and heaven/GOD economy were included with the previous approximation of interrupted GOD bonuses. Verify with production-path sampling and full gameplay runtime acceptance before deploying.
 
+
+## Machine-history generation (/piri sim)
+
+`/piri sim <machineId|all> <games>` changes actual period data: BIG/REG bonus history, graph, current/total game counts and difference. In GOD/EXTREME GOD this uses `JugglerGodMachineDataSimulator`, **not** the separate obsolete `/piri godsim` economy probe.
+
+The machine-history simulation now reproduces the production normal-game small-role streak, 2-streak promotion by setting, high/ultra 40/70-percent base drawing, countdown, reset on BIG/REG/GOD, and saved SIM_CURSOR continuity between calls. Real plays supersede and clear an existing synthetic SIM_CURSOR. This simulator remains an approximation for visuals and bonus-chain accounting, not a replacement for the production game-state engine; verify end-to-end on an actual Minecraft server.
+
