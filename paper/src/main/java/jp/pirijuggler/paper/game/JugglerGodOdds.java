@@ -2,14 +2,16 @@ package jp.pirijuggler.paper.game;
 
 /**
  * Independently tuned bonus-stock odds and normal-mode HOT multipliers.
- * The HOT multipliers retain their original *relative* strength, not a fixed
- * 40/70% chance after normal-base tuning is changed.
+ * The HOT multipliers scale with normal-base odds, but never weaken the
+ * uninterrupted 20G/15G base-bonus windows below 38%/68% respectively.
  */
 public final class JugglerGodOdds {
     private static final int[] GOD_REFERENCE_BASE = {0,297986,296030,298549,303386,306204,289197};
     private static final int[] EXTREME_REFERENCE_BASE = {0,224070,221440,225491,230039,235721,223878};
     private static final int[] GOD_STOCK = {0,743613,734884,734653,739194,741839,696323};
     private static final int[] EXTREME_STOCK = {0,564190,554200,558800,562600,571106,537600};
+    private static final double HIGH_FLOOR_CHANCE = 1.0-Math.pow(0.62,1.0/20.0);
+    private static final double ULTRA_FLOOR_CHANCE = 1.0-Math.pow(0.32,1.0/15.0);
     private static final double HIGH_REFERENCE_CHANCE = 1.0-Math.pow(0.60,1.0/20.0);
     private static final double ULTRA_REFERENCE_CHANCE = 1.0-Math.pow(0.30,1.0/15.0);
     private JugglerGodOdds() {}
@@ -27,9 +29,9 @@ public final class JugglerGodOdds {
         if(normalBaseScale<0||normalBaseScale>1_000_000||referenceBase<=0||rawBonusWeight<=0)
             throw new IllegalArgumentException("GOD HOT odds");
         double referenceChance=ultra?ULTRA_REFERENCE_CHANCE:HIGH_REFERENCE_CHANCE;
-        return Math.toIntExact(Math.round(
-                referenceChance*1_000_000_000_000_000.0/rawBonusWeight
-                *normalBaseScale/referenceBase));
+        double floorChance=ultra?ULTRA_FLOOR_CHANCE:HIGH_FLOOR_CHANCE;
+        double chance=Math.max(floorChance,referenceChance*normalBaseScale/referenceBase);
+        return Math.toIntExact(Math.round(chance*1_000_000_000_000_000.0/rawBonusWeight));
     }
     private static void check(int setting) {
         if(setting<1||setting>6)throw new IllegalArgumentException("Setting");
