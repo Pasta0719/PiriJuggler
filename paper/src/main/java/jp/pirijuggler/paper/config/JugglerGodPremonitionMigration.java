@@ -55,7 +55,7 @@ public final class JugglerGodPremonitionMigration {
                         ?line.substring(0,originalBase.start(1))+target[setting]+line.substring(originalBase.end(1))
                         :line;
                 if(!updated.contains("precursor_two_high_ppm:"))
-                    updated=updated.replaceFirst("\\}\\s*$",", precursor_two_high_ppm: "+precursors[setting]+"}");
+                    updated=updated.replaceFirst("\\}(\\r?)$",", precursor_two_high_ppm: "+precursors[setting]+"}$1");
                 if(!updated.equals(line)){lines[i]=updated;changed++;}
             }else{
                 // Custom operator tuning must never be silently replaced.
