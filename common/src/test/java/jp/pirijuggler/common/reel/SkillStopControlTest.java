@@ -28,6 +28,24 @@ class SkillStopControlTest {
         assertTop(solver,SkillStopControl.Context.normal(SkillStopRole.CHERRY,SkillStopControl.Premium.NONE),Reel.LEFT,5,6,1);
         assertTop(solver,SkillStopControl.Context.normal(SkillStopRole.CHERRY_BIG,SkillStopControl.Premium.B),Reel.LEFT,5,5,0);
     }
+    @Test void reportedMixedBonusStopsAreRejected(){
+        var control=new SkillStopControl();
+        var context=SkillStopControl.Context.normal(SkillStopRole.MISS,SkillStopControl.Premium.NONE);
+        for(int[] inputs:new int[][]{{19,7,2},{19,2,2}}){
+            var h=SkillStopHistory.empty();
+            for(Reel reel:Reel.values())h=stop(control,context,h,reel,inputs[reel.ordinal()]);
+            assertNoUnexpectedBonusLines(context,h,control.outcome(context,h));
+        }
+    }
+    @Test void barChallengeStillAllowsItsIntendedTarget(){
+        var control=new SkillStopControl();
+        var context=SkillStopControl.Context.challenge(64);
+        var h=SkillStopHistory.empty();
+        int[] inputs={19,15,3};
+        for(Reel reel:Reel.values())h=stop(control,context,h,reel,inputs[reel.ordinal()]);
+        assertTrue(control.outcome(context,h).challengeSuccess(), "BAR challenge must remain winnable");
+        assertNoUnexpectedBonusLines(context,h,control.outcome(context,h));
+    }
     @Test void replayLawStillPermitsLowerBonusBitEntry(){
         var solver=new SkillStopControl();var context=SkillStopControl.Context.pending(SkillStopRole.REPLAY,"BIG");var h=SkillStopHistory.empty();
         h=appendTop(solver,context,h,Reel.CENTER,20);h=appendTop(solver,context,h,Reel.LEFT,1);h=appendTop(solver,context,h,Reel.RIGHT,1);
@@ -53,6 +71,7 @@ class SkillStopControlTest {
         assertEquals(contexts.size()*6L*21*21*21,histories);System.out.println("SKILL_STOP_HISTORIES_PASS "+histories);
     }
     private static void independentCheck(SkillStopControl.Context c,SkillStopHistory h,SkillStopControl.Outcome out){
+        assertNoUnexpectedBonusLines(c,h,out);
         int allowed=c.role().pattern();String bonus=c.bonus();
         if(c.mode()==SkillStopControl.Mode.CHALLENGE){assertEquals(14,out.payout());assertFalse(line(h,"7","7","7"));assertFalse(line(h,"7","7","BAR"));return;}
         assertFalse(line(h,"BAR","BAR","BAR"));
@@ -63,6 +82,20 @@ class SkillStopControlTest {
         Symbol mid=SkillStopReels.row(Reel.LEFT,h.stop(0),0);if(mid==Symbol.CHERRY){assertEquals(SkillStopControl.Premium.B,c.premium());assertTrue(h.bit(0));}
         assertTrue(out.payout()>=0&&out.payout()<=14);
     }
+    private static void assertNoUnexpectedBonusLines(SkillStopControl.Context c,SkillStopHistory h,SkillStopControl.Outcome out){
+        for(int[] rows:LINES){
+            Symbol left=SkillStopReels.row(Reel.LEFT,h.stop(0),rows[0]);
+            Symbol center=SkillStopReels.row(Reel.CENTER,h.stop(1),rows[1]);
+            Symbol right=SkillStopReels.row(Reel.RIGHT,h.stop(2),rows[2]);
+            if(!bonusSymbol(left)||!bonusSymbol(center)||!bonusSymbol(right))continue;
+            boolean allowed=c.mode()==SkillStopControl.Mode.CHALLENGE
+                    ? c.challengePattern()==64&&left==Symbol.BAR&&center==Symbol.BAR&&right==Symbol.BAR
+                    : ("BIG".equals(out.entryBonus())&&left==Symbol.SEVEN&&center==Symbol.SEVEN&&right==Symbol.SEVEN)
+                        ||("REG".equals(out.entryBonus())&&left==Symbol.SEVEN&&center==Symbol.SEVEN&&right==Symbol.BAR);
+            assertTrue(allowed,"unexpected bonus-symbol line "+left+"/"+center+"/"+right+" context="+c+" stops="+Arrays.toString(h.stops()));
+        }
+    }
+    private static boolean bonusSymbol(Symbol symbol){return symbol==Symbol.SEVEN||symbol==Symbol.BAR;}
     private static boolean line(SkillStopHistory h,String l,String m,String r){String[] target={l,m,r};for(int[] rows:LINES){boolean match=true;for(int k=0;k<3;k++)if(SkillStopReels.row(Reel.values()[k],h.stop(k),rows[k])!=symbol(target[k]))match=false;if(match)return true;}return false;}
     private static Symbol symbol(String s){return switch(s){case "7"->Symbol.SEVEN;case "R"->Symbol.REPLAY;case "G"->Symbol.GRAPE;case "C"->Symbol.CHERRY;case "B"->Symbol.BELL;case "P"->Symbol.PIERO;default->Symbol.valueOf(s);};}
     private static SkillStopHistory stop(SkillStopControl control,SkillStopControl.Context context,SkillStopHistory h,Reel r,int input){var choice=control.choose(context,h,r,input);assertTrue(choice.slip()>=0&&choice.slip()<=4);assertEquals(ReelMotion.slip(choice.stopIndex(),input),choice.slip());return h.append(r,input,choice.stopIndex());}
