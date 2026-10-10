@@ -24,6 +24,23 @@ public final class JugglerGodOdds {
         check(setting);
         return ("juggler_god_extreme".equals(profile)?EXTREME_STOCK:GOD_STOCK)[setting];
     }
+    /**
+     * Spend the requested total base-bonus reduction solely on standalone
+     * BIG/REG while preserving original cherry/piero-overlap bonus rates.
+     * The nominal bonus_scale_ppm is a total-family EV budget, not a second roll.
+     */
+    public static int normalStandaloneScale(int familyBudgetScale,int originalOverlapScale,
+            long rawStandalone,long rawFamily) {
+        if(familyBudgetScale<0||familyBudgetScale>1_000_000
+                ||originalOverlapScale<0||originalOverlapScale>1_000_000
+                ||rawStandalone<=0||rawFamily<rawStandalone)
+            throw new IllegalArgumentException("GOD standalone bonus odds");
+        double overlapWeight=rawFamily-rawStandalone;
+        double standalone=(familyBudgetScale*(double)rawFamily
+                -originalOverlapScale*overlapWeight)/rawStandalone;
+        return (int)Math.max(0,Math.min(1_000_000,Math.round(standalone)));
+    }
+
     /** Exact scaled BIG/REG-family weighting, sharing the production drawing scale. */
     public static int hotScale(int normalBaseScale,int referenceBase,long rawBonusWeight,boolean ultra) {
         if(normalBaseScale<0||normalBaseScale>1_000_000||referenceBase<=0||rawBonusWeight<=0)
