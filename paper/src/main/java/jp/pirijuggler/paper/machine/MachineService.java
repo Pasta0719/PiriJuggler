@@ -320,7 +320,13 @@ public final class MachineService implements Listener, CommandExecutor {
     private void commandJugglerGodRole(CommandSender sender,int id,String rawRole) {
         Machine machine=state.machine(id);
         if(machine==null||(machine.type()!=MachineType.JUGGLER_GOD&&machine.type()!=MachineType.JUGGLER_GOD_EXTREME))throw new DomainException("INVALID_STATE");
-        if(busy(id))throw new DomainException("MACHINE_OCCUPIED");
+        Session occupied=state.sessions().stream().filter(session->session.machine()==id&&session.ownsLock())
+                .findFirst().orElse(null);
+        UUID owner=sender instanceof Player player&&occupied!=null&&occupied.player().equals(player.getUniqueId())
+                &&occupied.lifecycle()==Session.Lifecycle.ACTIVE
+                &&(occupied.state()==Session.GameState.SEATED_READY||occupied.state()==Session.GameState.REPLAY_READY)
+                ?occupied.player():null;
+        if(busy(id)&&owner==null)throw new DomainException("MACHINE_OCCUPIED");
 
         final String roleName;
         if(rawRole.equalsIgnoreCase("clear")) roleName="NONE";
@@ -329,14 +335,23 @@ public final class MachineService implements Listener, CommandExecutor {
             catch(IllegalArgumentException invalid){ throw new DomainException("INVALID_STATE"); }
         }
 
-        JugglerGodRuntime current=JugglerGodRuntime.fromJson(machine.runtimeJson());
-        JugglerGodRuntime next=current.forceRole(roleName);
         long now=System.currentTimeMillis();
-        submit(sender,null,id,()->{database.setMachineRuntimeJson(id,next.toJsonString(),now);return id;},
-                done->{tell(sender,"NONE".equals(roleName)
-                        ?"JUGGLER_GOD_ROLE_CLEARED id="+done
-                        :"JUGGLER_GOD_ROLE_READY id="+done+" role="+roleName+" nextSpinOnly=true");
-                    remote.machineChanged(done);});
+        if(owner!=null){
+            // When REPLAY_READY is active, the next lever reads the session state,
+            // not only machine_runtime_json. Keep both records in sync.
+            submit(sender,owner,id,()->{database.forceJugglerGodRoleForSeatedOwner(id,owner,roleName,now);return id;},
+                    done->{tell(sender,"NONE".equals(roleName)
+                            ?"JUGGLER_GOD_ROLE_CLEARED id="+done
+                            :"JUGGLER_GOD_ROLE_READY id="+done+" role="+roleName+" nextSpinOnly=true");
+                        remote.machineChanged(done);});
+        }else{
+            JugglerGodRuntime next=JugglerGodRuntime.fromJson(machine.runtimeJson()).forceRole(roleName);
+            submit(sender,null,id,()->{database.setMachineRuntimeJson(id,next.toJsonString(),now);return id;},
+                    done->{tell(sender,"NONE".equals(roleName)
+                            ?"JUGGLER_GOD_ROLE_CLEARED id="+done
+                            :"JUGGLER_GOD_ROLE_READY id="+done+" role="+roleName+" nextSpinOnly=true");
+                        remote.machineChanged(done);});
+        }
     }
 
     private void commandGodRole(CommandSender sender,int id,String rawRole) {
