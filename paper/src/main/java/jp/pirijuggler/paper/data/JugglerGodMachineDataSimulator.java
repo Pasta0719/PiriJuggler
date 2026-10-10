@@ -134,7 +134,7 @@ public final class JugglerGodMachineDataSimulator {
         final Connection db;
         final RoleWeights weights;
         final RandomGenerator random;
-        final int machineId,setting,bonusScalePpm,bonusStockScalePpm,smallRoleScalePpm,precursorTwoHighPpm,highScalePpm,ultraScalePpm;
+        final int machineId,setting,bonusScalePpm,bonusStockScalePpm,smallRoleScalePpm,precursorTwoHighPpm,highScalePpm,ultraScalePpm,standaloneNormalScalePpm,overlapNormalScalePpm;
         final int godDenominator,godInGodBigStock,guaranteedBigs,continuationPercent,bigPayout,regPayout;
         final String period;
         final long normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm,targetSpins;
@@ -151,6 +151,9 @@ public final class JugglerGodMachineDataSimulator {
             this.bonusScalePpm=bonusScalePpm;this.bonusStockScalePpm=bonusStockScalePpm;this.smallRoleScalePpm=smallRoleScalePpm;
             this.precursorTwoHighPpm=precursorTwoHighPpm;
             long rawBonus=weights.unscaledBonusFamilyWeight(setting);
+            overlapNormalScalePpm=referenceBase;
+            standaloneNormalScalePpm=JugglerGodOdds.normalStandaloneScale(
+                    bonusScalePpm,referenceBase,weights.unscaledStandaloneBonusWeight(setting),rawBonus);
             highScalePpm=JugglerGodOdds.hotScale(bonusScalePpm,referenceBase,rawBonus,false);
             ultraScalePpm=JugglerGodOdds.hotScale(bonusScalePpm,referenceBase,rawBonus,true);
             this.godDenominator=godDenominator;this.godInGodBigStock=godInGodBigStock;this.guaranteedBigs=guaranteedBigs;
@@ -315,7 +318,10 @@ public final class JugglerGodMachineDataSimulator {
                             }
                             int scale=c.mode==Mode.HIGH?s.highScalePpm:
                                     c.mode==Mode.ULTRA?s.ultraScalePpm:bonusScale;
-                            role=weights.drawJugglerGod(setting,random,scale,smallRoleScale);
+                            if(c.mode==Mode.NORMAL)
+                                role=weights.drawJugglerGod(setting,random,
+                                        s.standaloneNormalScalePpm,s.overlapNormalScalePpm,smallRoleScale);
+                            else role=weights.drawJugglerGod(setting,random,scale,smallRoleScale);
                         }
                     }
 
