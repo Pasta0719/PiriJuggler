@@ -215,21 +215,32 @@ public final class JugglerGodGameEngine implements GameEngine {
         if(normalLever&&legacy.lever()&&rawAfter.text("internal_role")!=null){
             InternalRole actual=InternalRole.valueOf(rawAfter.text("internal_role"));
             if(actual==InternalRole.GOD){
+                JugglerGodRuntime cleaned=prepared.clearHot();
                 if(godInGodConfirm){
-                    next=prepared.core(prepared.mode(),prepared.heavenTarget(),prepared.heavenProgress(),
-                            prepared.guaranteedRemaining(),prepared.forceChainBig(),prepared.countNextChainGame(),
-                            prepared.bonusOrigin(),prepared.godBigCount(),true,"GOD_IN_GOD_FREEZE");
+                    next=cleaned.core(cleaned.mode(),cleaned.heavenTarget(),cleaned.heavenProgress(),
+                            cleaned.guaranteedRemaining(),cleaned.forceChainBig(),cleaned.countNextChainGame(),
+                            cleaned.bonusOrigin(),cleaned.godBigCount(),true,"GOD_IN_GOD_FREEZE");
                 }else{
-                    next=prepared.core(prepared.mode(),prepared.heavenTarget(),prepared.heavenProgress(),
-                            prepared.guaranteedRemaining(),false,false,"GOD_CHAIN",
-                            prepared.godBigCount(),true,"GOD_FREEZE");
+                    next=cleaned.core(cleaned.mode(),cleaned.heavenTarget(),cleaned.heavenProgress(),
+                            cleaned.guaranteedRemaining(),false,false,"GOD_CHAIN",
+                            cleaned.godBigCount(),true,"GOD_FREEZE");
                 }
             }else if(GameRules.bonus(actual)!=null){
                 String origin=prepared.mode()==JugglerGodRuntime.Mode.HEAVEN?"HEAVEN":
                         prepared.mode()==JugglerGodRuntime.Mode.GOD_CHAIN?"GOD_CHAIN":GameRules.bonus(actual);
-                next=prepared.core(prepared.mode(),prepared.heavenTarget(),prepared.heavenProgress(),
-                        prepared.guaranteedRemaining(),false,false,origin,
-                        prepared.godBigCount(),false,"BONUS_DRAWN");
+                JugglerGodRuntime cleaned=prepared.clearHot();
+                next=cleaned.core(cleaned.mode(),cleaned.heavenTarget(),cleaned.heavenProgress(),
+                        cleaned.guaranteedRemaining(),false,false,origin,
+                        cleaned.godBigCount(),false,"BONUS_DRAWN");
+            }else if(prepared.mode()==JugglerGodRuntime.Mode.NORMAL
+                    ||prepared.mode()==JugglerGodRuntime.Mode.HIGH
+                    ||prepared.mode()==JugglerGodRuntime.Mode.ULTRA){
+                JugglerGodRuntime.Mode mode=prepared.mode();
+                int remaining=prepared.hotRemaining();
+                if(mode==JugglerGodRuntime.Mode.HIGH||mode==JugglerGodRuntime.Mode.ULTRA){
+                    if(--remaining<=0){mode=JugglerGodRuntime.Mode.NORMAL;remaining=0;}
+                }
+                next=prepared.withHot(mode,remaining,followingStreak(prepared.roleStreak(),actual),"ROLE_STOPPED");
             }
         }
 
@@ -372,6 +383,32 @@ public final class JugglerGodGameEngine implements GameEngine {
         Session after=new Session(values);
         return new GameTransition(UUID.randomUUID(),before,after,0,0,0,false,false,null,false,0,
                 List.of(ErrorPackets.rejected(sequence,ErrorCode.INVALID_STATE)),List.of(),List.of(),runtime.toJsonString());
+    }
+
+    /** Probabilities after a small role, used only on the next normal lever. */
+    private record Trigger(double bonus,double high,double ultra){}
+    private static Trigger trigger(int streak){
+        return switch(streak){
+            case 3,8->new Trigger(0,.15,0);
+            case 4->new Trigger(.20,.20,.03);
+            case 5,10,13->new Trigger(1,0,0);
+            case 9->new Trigger(.20,.18,.05);
+            case 11->new Trigger(0,.05,0);
+            case 12->new Trigger(.40,.20,.20);
+            case 14->new Trigger(.35,.15,.10);
+            case 15->new Trigger(.15,.20,.05);
+            default->new Trigger(0,0,0);
+        };
+    }
+    private static int followingStreak(int prior,InternalRole role){
+        return switch(role){
+            case GRAPE->prior>=1&&prior<=5?Math.min(prior+1,5):1;
+            case REPLAY->prior>=6&&prior<=10?Math.min(prior+1,10):6;
+            case CHERRY->prior>=11&&prior<=13?Math.min(prior+1,13):11;
+            case BELL->14;
+            case PIERO->15;
+            default->0;
+        };
     }
 
     private String drawBonusOverlay(Machine machine){
