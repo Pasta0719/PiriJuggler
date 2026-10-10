@@ -29,7 +29,10 @@ public final class SkillStopControl {
     private static final int[][] LINES = {{-1,-1,-1},{0,0,0},{1,1,1},{-1,0,1},{1,0,-1}};
     private static final Symbol[][] PATTERNS = {{REPLAY,REPLAY,REPLAY},{GRAPE,GRAPE,GRAPE},{BELL,BELL,BELL},{PIERO,PIERO,PIERO},
             {SEVEN,SEVEN,SEVEN},{SEVEN,SEVEN,BAR},{BAR,BAR,BAR},{SEVEN,CHERRY,BAR},{BELL,SEVEN,BELL},
-            {GRAPE,GRAPE,PIERO},{PIERO,GRAPE,PIERO},{PIERO,PIERO,SEVEN},{PIERO,BAR,PIERO}};
+            {GRAPE,GRAPE,PIERO},{PIERO,GRAPE,PIERO},{PIERO,PIERO,SEVEN},{PIERO,BAR,PIERO},
+            // All other 7/BAR-only payline combinations must be rejected.
+            {SEVEN,BAR,SEVEN},{SEVEN,BAR,BAR},{BAR,SEVEN,SEVEN},{BAR,SEVEN,BAR},{BAR,BAR,SEVEN}};
+    private static final int BONUS_ONLY_PATTERNS = (1<<4)|(1<<5)|(1<<6)|(31<<13);
     private static final int[] PATTERN_MASK = new int[9261];
     private static final boolean[] LEFT_MIDDLE_CHERRY = new boolean[21], LEFT_CORNER_CHERRY = new boolean[21];
     static {
@@ -173,7 +176,10 @@ public final class SkillStopControl {
     }
     private static boolean legal(Context c, int[] t, boolean leftBit, boolean entry) {
         int mask=patterns(t);
-        if(c.mode()==Mode.CHALLENGE)return (mask&48)==0;
+        if(c.mode()==Mode.CHALLENGE) {
+            int allowed=c.challengePattern()==64?64:0;
+            return (mask&BONUS_ONLY_PATTERNS&~allowed)==0;
+        }
         if(LEFT_MIDDLE_CHERRY[t[0]]&&!(c.premium()==Premium.B&&leftBit))return false;
         if(LEFT_CORNER_CHERRY[t[0]]&&!c.role().cherry())return false;
         return (mask&~(c.role().pattern()|(entry?bonusBit(c):0)))==0;
