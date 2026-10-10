@@ -133,7 +133,7 @@ public final class JugglerGodMachineDataSimulator {
         final Connection db;
         final RoleWeights weights;
         final RandomGenerator random;
-        final int machineId,setting,bonusScalePpm,smallRoleScalePpm;
+        final int machineId,setting,bonusScalePpm,smallRoleScalePpm,precursorTwoHighPpm,highScalePpm,ultraScalePpm;
         final int godDenominator,godInGodBigStock,guaranteedBigs,continuationPercent,bigPayout,regPayout;
         final String period;
         final long normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm,targetSpins;
@@ -142,12 +142,16 @@ public final class JugglerGodMachineDataSimulator {
         Long lastBonusAt;
 
         State(Connection db,RoleWeights weights,RandomGenerator random,int machineId,int setting,String period,
-              int bonusScalePpm,int smallRoleScalePpm,int godDenominator,int godInGodBigStock,int guaranteedBigs,
+              int bonusScalePpm,int smallRoleScalePpm,int precursorTwoHighPpm,int godDenominator,int godInGodBigStock,int guaranteedBigs,
               int continuationPercent,int bigPayout,int regPayout,
               long normalBigToHeavenPpm,long normalRegToHeavenPpm,long heavenToHeavenPpm,long targetSpins,
               long total,long big,long reg,long current,long difference,long max,long clock){
             this.db=db;this.weights=weights;this.random=random;this.machineId=machineId;this.setting=setting;this.period=period;
             this.bonusScalePpm=bonusScalePpm;this.smallRoleScalePpm=smallRoleScalePpm;
+            this.precursorTwoHighPpm=precursorTwoHighPpm;
+            long rawBonus=weights.unscaledBonusFamilyWeight(setting);
+            highScalePpm=(int)Math.round((1-Math.pow(.60,1.0/20.0))*1_000_000_000_000_000.0/rawBonus);
+            ultraScalePpm=(int)Math.round((1-Math.pow(.30,1.0/15.0))*1_000_000_000_000_000.0/rawBonus);
             this.godDenominator=godDenominator;this.godInGodBigStock=godInGodBigStock;this.guaranteedBigs=guaranteedBigs;
             this.continuationPercent=continuationPercent;this.bigPayout=bigPayout;this.regPayout=regPayout;
             this.normalBigToHeavenPpm=normalBigToHeavenPpm;this.normalRegToHeavenPpm=normalRegToHeavenPpm;this.heavenToHeavenPpm=heavenToHeavenPpm;
@@ -235,6 +239,7 @@ public final class JugglerGodMachineDataSimulator {
                 Map<String,Object> row=StartupProfile.map(settings.get(Integer.toString(setting)));
                 int bonusScale=(int)number(row.get("bonus_scale_ppm"),1_000_000);
                 int smallRoleScale=(int)number(row.get("small_role_scale_ppm"),1_000_000);
+                int precursorTwoHigh=(int)number(row.get("precursor_two_high_ppm"),0);
                 int continuation=(int)number(row.get("god_continuation_percent"),new int[]{0,75,78,80,82,85,90}[setting]);
 
                 if(!query(db,"SELECT session_id FROM player_sessions WHERE machine_id=? AND lifecycle IN ('ACTIVE','SUSPENDED_GRACE') LIMIT 1",machineId).isEmpty())
@@ -243,7 +248,7 @@ public final class JugglerGodMachineDataSimulator {
                 if(rows.isEmpty())throw new IllegalArgumentException("Missing machine stats");
                 Map<String,Object> stats=rows.getFirst();
 
-                State s=new State(db,weights,random,machineId,setting,period,bonusScale,smallRoleScale,
+                State s=new State(db,weights,random,machineId,setting,period,bonusScale,smallRoleScale,precursorTwoHigh,
                         godDenominator,godInGodBigStock,guaranteedBigs,continuation,bigPayout,regPayout,
                         normalBigPpm,normalRegPpm,heavenPpm,games,
                         n(stats,"total_games"),n(stats,"big_count"),n(stats,"reg_count"),n(stats,"current_games"),
