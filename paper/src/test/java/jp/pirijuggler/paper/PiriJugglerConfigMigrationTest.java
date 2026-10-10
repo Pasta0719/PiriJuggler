@@ -53,8 +53,8 @@ class PiriJugglerConfigMigrationTest {
         // but strict config validation then disabled all gameplay at startup.
         String current=Files.readString(Path.of(System.getProperty("piri.specRoot"),"paper/src/main/resources/config.yml"));
         String oldConfig=current.replaceAll(", precursor_two_high_ppm: \\d+", "")
-                .replace("bonus_scale_ppm: 297986", "bonus_scale_ppm: 410000")
-                .replace("bonus_scale_ppm: 224070", "bonus_scale_ppm: 410001");
+                .replace("bonus_scale_ppm: 270000", "bonus_scale_ppm: 410000")
+                .replace("bonus_scale_ppm: 198000", "bonus_scale_ppm: 410001");
         assertFalse(oldConfig.contains("precursor_two_high_ppm"));
         assertTrue(ConfigValidation.load(new StringReader(oldConfig)).valid(),
                 "Custom operator profiles missing only the newly optional key must load");
