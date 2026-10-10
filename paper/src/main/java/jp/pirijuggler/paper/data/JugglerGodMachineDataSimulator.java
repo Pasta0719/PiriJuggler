@@ -6,6 +6,8 @@ import com.google.gson.JsonParser;
 import jp.pirijuggler.paper.config.FixedGameRules;
 import jp.pirijuggler.paper.database.StartupProfile;
 import jp.pirijuggler.paper.game.GameRules;
+import jp.pirijuggler.paper.game.JugglerGodGameEngine;
+import jp.pirijuggler.paper.game.JugglerGodOdds;
 import jp.pirijuggler.paper.game.RoleWeights;
 import jp.pirijuggler.paper.machine.DomainException;
 import jp.pirijuggler.paper.reel.InternalRole;
@@ -24,13 +26,15 @@ import java.util.random.RandomGenerator;
  * Zero-game transitions do not consume the requested game budget.
  */
 public final class JugglerGodMachineDataSimulator {
-    private enum Mode { NORMAL, HEAVEN }
+    private enum Mode { NORMAL, HIGH, ULTRA, HEAVEN }
 
     private static final class Cursor {
         final String kind;
         Mode mode=Mode.NORMAL;
         int heavenTarget;
         int heavenProgress;
+        int hotRemaining;
+        int roleStreak;
         boolean freeReplay;
 
         String activeBonus="NONE";
@@ -66,6 +70,8 @@ public final class JugglerGodMachineDataSimulator {
                 c.mode=Mode.valueOf(text(j,"mode","NORMAL"));
                 c.heavenTarget=value(j,"heavenTarget",0);
                 c.heavenProgress=value(j,"heavenProgress",0);
+                c.hotRemaining=value(j,"hotRemaining",0);
+                c.roleStreak=value(j,"roleStreak",0);
                 c.freeReplay=bool(j,"freeReplay",false);
                 c.activeBonus=text(j,"activeBonus","NONE");
                 c.activeRemaining=value(j,"activeRemaining",0);
@@ -102,8 +108,9 @@ public final class JugglerGodMachineDataSimulator {
 
         String json(){
             JsonObject j=new JsonObject();
-            j.addProperty("version",3);j.addProperty("kind",kind);
+            j.addProperty("version",4);j.addProperty("kind",kind);
             j.addProperty("mode",mode.name());j.addProperty("heavenTarget",heavenTarget);j.addProperty("heavenProgress",heavenProgress);
+            j.addProperty("hotRemaining",hotRemaining);j.addProperty("roleStreak",roleStreak);
             j.addProperty("freeReplay",freeReplay);
             j.addProperty("activeBonus",activeBonus);j.addProperty("activeRemaining",activeRemaining);
             j.addProperty("activeInsideGod",activeInsideGod);j.addProperty("activeNeedsEntry",activeNeedsEntry);
@@ -127,7 +134,7 @@ public final class JugglerGodMachineDataSimulator {
         final Connection db;
         final RoleWeights weights;
         final RandomGenerator random;
-        final int machineId,setting,bonusScalePpm,smallRoleScalePpm;
+        final int machineId,setting,bonusScalePpm,bonusStockScalePpm,smallRoleScalePpm,precursorTwoHighPpm,highScalePpm,ultraScalePpm,standaloneNormalScalePpm,overlapNormalScalePpm;
         final int godDenominator,godInGodBigStock,guaranteedBigs,continuationPercent,bigPayout,regPayout;
         final String period;
         final long normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm,targetSpins;
@@ -136,12 +143,19 @@ public final class JugglerGodMachineDataSimulator {
         Long lastBonusAt;
 
         State(Connection db,RoleWeights weights,RandomGenerator random,int machineId,int setting,String period,
-              int bonusScalePpm,int smallRoleScalePpm,int godDenominator,int godInGodBigStock,int guaranteedBigs,
+              int bonusScalePpm,int bonusStockScalePpm,int smallRoleScalePpm,int precursorTwoHighPpm,int referenceBase,int godDenominator,int godInGodBigStock,int guaranteedBigs,
               int continuationPercent,int bigPayout,int regPayout,
               long normalBigToHeavenPpm,long normalRegToHeavenPpm,long heavenToHeavenPpm,long targetSpins,
               long total,long big,long reg,long current,long difference,long max,long clock){
             this.db=db;this.weights=weights;this.random=random;this.machineId=machineId;this.setting=setting;this.period=period;
-            this.bonusScalePpm=bonusScalePpm;this.smallRoleScalePpm=smallRoleScalePpm;
+            this.bonusScalePpm=bonusScalePpm;this.bonusStockScalePpm=bonusStockScalePpm;this.smallRoleScalePpm=smallRoleScalePpm;
+            this.precursorTwoHighPpm=precursorTwoHighPpm;
+            long rawBonus=weights.unscaledBonusFamilyWeight(setting);
+            overlapNormalScalePpm=referenceBase;
+            standaloneNormalScalePpm=JugglerGodOdds.normalStandaloneScale(
+                    bonusScalePpm,referenceBase,weights.unscaledStandaloneBonusWeight(setting),rawBonus);
+            highScalePpm=JugglerGodOdds.hotScale(bonusScalePpm,referenceBase,rawBonus,false);
+            ultraScalePpm=JugglerGodOdds.hotScale(bonusScalePpm,referenceBase,rawBonus,true);
             this.godDenominator=godDenominator;this.godInGodBigStock=godInGodBigStock;this.guaranteedBigs=guaranteedBigs;
             this.continuationPercent=continuationPercent;this.bigPayout=bigPayout;this.regPayout=regPayout;
             this.normalBigToHeavenPpm=normalBigToHeavenPpm;this.normalRegToHeavenPpm=normalRegToHeavenPpm;this.heavenToHeavenPpm=heavenToHeavenPpm;
@@ -216,7 +230,8 @@ public final class JugglerGodMachineDataSimulator {
                 boolean extreme="JUGGLER_GOD_EXTREME".equals(machineType);
                 if(!extreme&&!"JUGGLER_GOD".equals(machineType))throw new IllegalArgumentException("Wrong machine type");
 
-                Map<String,Object> tuning=StartupProfile.map(config.get(extreme?"juggler_god_extreme":"juggler_god"));
+                String profileKey=extreme?"juggler_god_extreme":"juggler_god";
+                Map<String,Object> tuning=StartupProfile.map(config.get(profileKey));
                 long normalBigPpm=number(tuning.get("normal_big_to_heaven_ppm"),0);
                 long normalRegPpm=number(tuning.get("normal_reg_to_heaven_ppm"),0);
                 long heavenPpm=number(tuning.get("heaven_to_heaven_ppm"),0);
@@ -228,7 +243,10 @@ public final class JugglerGodMachineDataSimulator {
                 Map<String,Object> settings=StartupProfile.map(tuning.get("settings"));
                 Map<String,Object> row=StartupProfile.map(settings.get(Integer.toString(setting)));
                 int bonusScale=(int)number(row.get("bonus_scale_ppm"),1_000_000);
+                int stockScale=(int)number(row.get("bonus_stock_scale_ppm"),JugglerGodOdds.defaultStockScale(profileKey,setting));
+                int referenceBase=JugglerGodOdds.referenceBase(profileKey,setting);
                 int smallRoleScale=(int)number(row.get("small_role_scale_ppm"),1_000_000);
+                int precursorTwoHigh=(int)number(row.get("precursor_two_high_ppm"),0);
                 int continuation=(int)number(row.get("god_continuation_percent"),new int[]{0,75,78,80,82,85,90}[setting]);
 
                 if(!query(db,"SELECT session_id FROM player_sessions WHERE machine_id=? AND lifecycle IN ('ACTIVE','SUSPENDED_GRACE') LIMIT 1",machineId).isEmpty())
@@ -237,7 +255,7 @@ public final class JugglerGodMachineDataSimulator {
                 if(rows.isEmpty())throw new IllegalArgumentException("Missing machine stats");
                 Map<String,Object> stats=rows.getFirst();
 
-                State s=new State(db,weights,random,machineId,setting,period,bonusScale,smallRoleScale,
+                State s=new State(db,weights,random,machineId,setting,period,bonusScale,stockScale,smallRoleScale,precursorTwoHigh,referenceBase,
                         godDenominator,godInGodBigStock,guaranteedBigs,continuation,bigPayout,regPayout,
                         normalBigPpm,normalRegPpm,heavenPpm,games,
                         n(stats,"total_games"),n(stats,"big_count"),n(stats,"reg_count"),n(stats,"current_games"),
@@ -269,6 +287,8 @@ public final class JugglerGodMachineDataSimulator {
                     boolean originHeaven=c.mode==Mode.HEAVEN;
                     InternalRole role;
                     if(random.nextInt(s.godDenominator)==0){
+                        // A fresh GOD overrides any lingering normal-game anticipation.
+                        c.mode=Mode.NORMAL;c.hotRemaining=0;c.roleStreak=0;
                         s.advanceNormalGame(c,GameRules.payout(InternalRole.GOD));
                         s.godHistory((int)s.current);
                         c.godStartPending=true;
@@ -283,18 +303,46 @@ public final class JugglerGodMachineDataSimulator {
                                 ?weights.drawBonusFamily(setting,random)
                                 :weights.drawJugglerGodNonBonus(setting,random,bonusScale,smallRoleScale);
                     }else{
-                        role=weights.drawJugglerGod(setting,random,bonusScale,smallRoleScale);
+                        // Reuse the live engine's exact small-role trigger table and mode transition.
+                        var trigger=JugglerGodGameEngine.trigger(c.roleStreak,s.precursorTwoHighPpm);
+                        if(random.nextDouble()<trigger.bonus()){
+                            role=weights.drawBonusFamily(setting,random);
+                        }else{
+                            double upgrade=random.nextDouble();
+                            if(upgrade<trigger.high()){
+                                if(c.mode==Mode.NORMAL){c.mode=Mode.HIGH;c.hotRemaining=20;}
+                                else if(c.mode==Mode.HIGH){c.mode=Mode.ULTRA;c.hotRemaining=15;}
+                                else if(c.mode==Mode.ULTRA){c.hotRemaining=15;}
+                            }else if(upgrade<trigger.high()+trigger.ultra()){
+                                c.mode=Mode.ULTRA;c.hotRemaining=15;
+                            }
+                            int scale=c.mode==Mode.HIGH?s.highScalePpm:
+                                    c.mode==Mode.ULTRA?s.ultraScalePpm:bonusScale;
+                            if(c.mode==Mode.NORMAL)
+                                role=weights.drawJugglerGod(setting,random,
+                                        s.standaloneNormalScalePpm,s.overlapNormalScalePpm,smallRoleScale);
+                            else role=weights.drawJugglerGod(setting,random,scale,smallRoleScale);
+                        }
                     }
 
                     s.advanceNormalGame(c,GameRules.payout(role));
                     String bonus=GameRules.bonus(role);
                     if(bonus!=null){
+                        // A bonus consumes HIGH/ULTRA and any accumulated small-role streak.
+                        if(!originHeaven)c.mode=Mode.NORMAL;
+                        c.hotRemaining=0;c.roleStreak=0;
                         c.postBonusPending=true;
                         c.postBonusOrigin=originHeaven?"HEAVEN":"NORMAL";
                         c.postBonusType=bonus;
                         startBonus(s,c,bonus,(int)s.current,false,true);
                     }else{
                         c.freeReplay=role==InternalRole.REPLAY;
+                        if(!originHeaven){
+                            c.roleStreak=JugglerGodGameEngine.followingStreak(c.roleStreak,role);
+                            if(c.mode==Mode.HIGH||c.mode==Mode.ULTRA){
+                                if(--c.hotRemaining<=0){c.mode=Mode.NORMAL;c.hotRemaining=0;}
+                            }
+                        }
                     }
                 }
 
@@ -410,7 +458,7 @@ public final class JugglerGodMachineDataSimulator {
                 return;
             }
         }else{
-            InternalRole hit=s.weights.drawJugglerGod(s.setting,s.random,s.bonusScalePpm,s.smallRoleScalePpm);
+            InternalRole hit=s.weights.drawJugglerGod(s.setting,s.random,s.bonusStockScalePpm,s.smallRoleScalePpm);
             String next=GameRules.bonus(hit);
             if(next!=null){
                 if(c.activeInsideGod&&c.godChainActive)c.godStock.addLast(next);

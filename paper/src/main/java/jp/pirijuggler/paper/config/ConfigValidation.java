@@ -69,7 +69,9 @@ public final class ConfigValidation {
         c.keys("juggler_god.settings", Set.of("1","2","3","4","5","6"));
         for(int setting=1;setting<=6;setting++){
             String base="juggler_god.settings."+setting;
-            c.keys(base, Set.of("bonus_scale_ppm","small_role_scale_ppm"));
+            c.keysWithOptionals(base, Set.of("bonus_scale_ppm","small_role_scale_ppm","precursor_two_high_ppm","bonus_stock_scale_ppm"), Set.of("precursor_two_high_ppm","bonus_stock_scale_ppm"));
+            if(c.map(base).containsKey("bonus_stock_scale_ppm"))c.integer(base+".bonus_stock_scale_ppm", 0, 1_000_000);
+            if(c.map(base).containsKey("precursor_two_high_ppm"))c.integer(base+".precursor_two_high_ppm", 0, 1_000_000);
             c.integer(base+".bonus_scale_ppm", 0, 1_000_000);
             c.integer(base+".small_role_scale_ppm", 0, 1_000_000);
         }
@@ -85,7 +87,9 @@ public final class ConfigValidation {
         c.keys("juggler_god_extreme.settings", Set.of("1","2","3","4","5","6"));
         for(int setting=1;setting<=6;setting++){
             String base="juggler_god_extreme.settings."+setting;
-            c.keys(base, Set.of("bonus_scale_ppm","small_role_scale_ppm","god_continuation_percent"));
+            c.keysWithOptionals(base, Set.of("bonus_scale_ppm","small_role_scale_ppm","god_continuation_percent","precursor_two_high_ppm","bonus_stock_scale_ppm"), Set.of("precursor_two_high_ppm","bonus_stock_scale_ppm"));
+            if(c.map(base).containsKey("bonus_stock_scale_ppm"))c.integer(base+".bonus_stock_scale_ppm", 0, 1_000_000);
+            if(c.map(base).containsKey("precursor_two_high_ppm"))c.integer(base+".precursor_two_high_ppm", 0, 1_000_000);
             c.integer(base+".bonus_scale_ppm", 0, 1_000_000);
             c.integer(base+".small_role_scale_ppm", 0, 1_000_000);
             c.integer(base+".god_continuation_percent", 0, 99);
@@ -190,6 +194,18 @@ public final class ConfigValidation {
 
         void keys(String path, Set<String> expected) {
             if (!map(path).keySet().equals(expected)) fail(path, "keys must be " + expected);
+        }
+
+        // Newly introduced GOD precursor odds are optional for existing operator configs.
+        // The engine defaults an omitted value to zero without overwriting custom tuning.
+        void keysWithOptional(String path, Set<String> expected, String optional) {
+            keysWithOptionals(path,expected,Set.of(optional));
+        }
+        void keysWithOptionals(String path, Set<String> expected, Set<String> optional) {
+            Set<String> actual=map(path).keySet();
+            if (!expected.containsAll(actual)
+                    || !expected.stream().filter(k -> !optional.contains(k)).allMatch(actual::contains))
+                fail(path, "keys must be " + expected + " (optional: " + optional + ")");
         }
 
         BigInteger integer(String path, long min, long max) { return integerValue(path, at(path), min, max); }

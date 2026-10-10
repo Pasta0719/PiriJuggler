@@ -10,6 +10,9 @@ dependencies {
     implementation("io.netty:netty-codec-http:4.1.97.Final")
     compileOnly("org.yaml:snakeyaml:2.2")
     testImplementation("org.yaml:snakeyaml:2.2")
+    // Paper provides Adventure to the running server, but unit tests need it on their own classpath.
+    testImplementation("net.kyori:adventure-api:4.17.0")
+    testImplementation("net.kyori:adventure-text-serializer-gson:4.17.0")
     implementation("org.xerial:sqlite-jdbc:3.50.3.0")
 }
 

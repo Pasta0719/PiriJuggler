@@ -29,6 +29,24 @@ class JugglerGodCoreTest extends GameFixture {
         return new Rig(s,db.state().machine(id),engine);
     }
 
+    private Rig rig(JugglerGodRuntime runtime,int setting,MachineType type) throws Exception {
+        if(type==MachineType.JUGGLER_GOD)return rig(runtime,setting);
+        var location=new Machine.Location(UUID.randomUUID(),"world",0,64,0,"NORTH");
+        int id=db.create(location,type,NOW);
+        db.sql("UPDATE machines SET setting=?,machine_runtime_json=? WHERE machine_id=?",setting,runtime.toJsonString(),id);
+        UUID player=UUID.randomUUID();
+        Session s=db.seat(player,id,NOW);
+        db.sql("UPDATE player_sessions SET credit=50,held_medals=500 WHERE player_uuid=?",player.toString());
+        s=db.state().session(player);
+        var weights=new RoleWeights(config);
+        var random=new RandomStreams(123456789L);
+        var tune=jp.pirijuggler.paper.database.StartupProfile.map(config.get("juggler_god_extreme"));
+        var normal=new NormalGame(weights,random,SOLVER,main,config,false,
+                ((Number)tune.get("big_payout")).intValue(),((Number)tune.get("reg_payout")).intValue());
+        var engine=new JugglerGodGameEngine(normal,random,weights,config,"juggler_god_extreme");
+        return new Rig(s,db.state().machine(id),engine);
+    }
+
     private GameTransition plan(Rig rig,Session s,PacketType type,long nano) throws Exception {
         return rig.engine().plan(s,db.state().machine(rig.machine().id()),type,s.sequence()+1,NOW+s.sequence()+1,nano,0,null);
     }
@@ -364,6 +382,227 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals(32,after.heavenTarget());
         assertEquals(0,after.heavenProgress());
         assertEquals("GOD_END_HEAVEN",after.lastEvent());
+    }
+
+    private Session playForcedRole(Rig rig,Session s,InternalRole role,long baseNanos) throws Exception {
+        db.forceJugglerGodRoleForSeatedOwner(s.machine(),s.player(),role.name(),NOW+s.sequence()+1);
+        s=db.state().session(s.player());
+        if(s.state()==Session.GameState.SEATED_READY)s=action(rig,s,PacketType.SPACE_ACTION,baseNanos);
+        assertTrue(s.state()==Session.GameState.NORMAL_BETTED||s.state()==Session.GameState.REPLAY_READY);
+        s=action(rig,s,PacketType.SPACE_ACTION,baseNanos);
+        assertEquals(role.name(),s.text("internal_role"));
+        for(var stop:List.of(PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT))
+            s=action(rig,s,stop,baseNanos+1_000_000_000L);
+        return s;
+    }
+
+    @Test void threeForcedCherriesGuaranteeBonusOnNextLiveLeverBothProfiles() throws Exception {
+        for(var type:List.of(MachineType.JUGGLER_GOD,MachineType.JUGGLER_GOD_EXTREME)){
+            Rig rig=rig(JugglerGodRuntime.initial(),1,type);
+            Session s=rig.session();
+            for(int i=1;i<=3;i++){
+                s=playForcedRole(rig,s,InternalRole.CHERRY,3_000_000_000L*i);
+                assertEquals(Session.GameState.SEATED_READY,s.state());
+                var runtime=JugglerGodRuntime.fromJson(db.state().machine(s.machine()).runtimeJson());
+                assertEquals(10+i,runtime.roleStreak(),type+" consecutive cherry count "+i);
+                assertEquals("NONE",runtime.forcedRole());
+            }
+            s=action(rig,s,PacketType.SPACE_ACTION,15_000_000_000L);
+            GameTransition next=plan(rig,s,PacketType.SPACE_ACTION,16_000_000_000L);
+            InternalRole role=InternalRole.valueOf(next.after().text("internal_role"));
+            assertNotNull(GameRules.bonus(role),type+" cherry x3 should guarantee BIG/REG or GOD on next lever");
+            assertEquals(0,JugglerGodRuntime.fromJson(next.machineRuntimeJson()).roleStreak());
+        }
+    }
+
+    @Test void cherryStreakPersistsAcrossNormalExitAndReSeat() throws Exception {
+        Rig rig=rig(JugglerGodRuntime.initial(),1);
+        Session s=rig.session();
+        for(int i=1;i<=3;i++){
+            s=playForcedRole(rig,s,InternalRole.CHERRY,3_000_000_000L*i);
+            String prior=JugglerGodRuntime.fromJson(db.state().machine(s.machine()).runtimeJson()).toJsonString();
+            assertEquals("USER_CLOSE_SAFE",db.closeSession(s.player(),s.id(),s.machine(),s.sequence()+1,NOW+i*1000,60_000));
+            assertFalse(db.state().busy(s.machine()));
+            s=db.seat(s.player(),s.machine(),NOW+i*1000+1);
+            assertEquals(prior,s.machineState().toString());
+            assertEquals(10+i,JugglerGodRuntime.fromJson(s.machineState().toString()).roleStreak());
+        }
+        s=action(rig,s,PacketType.SPACE_ACTION,20_000_000_000L);
+        GameTransition next=plan(rig,s,PacketType.SPACE_ACTION,21_000_000_000L);
+        assertNotNull(GameRules.bonus(InternalRole.valueOf(next.after().text("internal_role"))));
+    }
+
+    @Test void fiveForcedReplaysWorkOnOccupiedOwnSeatAndGuaranteeNextBonus() throws Exception {
+        Rig rig=rig(JugglerGodRuntime.initial(),2);
+        Session s=rig.session();
+        for(int i=1;i<=5;i++){
+            s=playForcedRole(rig,s,InternalRole.REPLAY,3_000_000_000L*i);
+            assertEquals(Session.GameState.REPLAY_READY,s.state());
+            var runtime=JugglerGodRuntime.fromJson(db.state().machine(s.machine()).runtimeJson());
+            assertEquals(5+i,runtime.roleStreak(),"consecutive replay "+i);
+        }
+        GameTransition next=plan(rig,s,PacketType.SPACE_ACTION,21_000_000_000L);
+        assertNotNull(GameRules.bonus(InternalRole.valueOf(next.after().text("internal_role"))));
+        assertEquals(0,JugglerGodRuntime.fromJson(next.machineRuntimeJson()).roleStreak());
+    }
+
+    @Test void everyPrecursorPathIsReachableFromRealRoleStreaks() {
+        for(var role:List.of(InternalRole.GRAPE,InternalRole.REPLAY,InternalRole.CHERRY)){
+            int state=0;
+            int limit=role==InternalRole.CHERRY?3:5;
+            for(int i=1;i<=limit;i++){
+                state=JugglerGodGameEngine.followingStreak(state,role);
+                var trigger=JugglerGodGameEngine.trigger(state,100_000);
+                if(i==2&&role==InternalRole.CHERRY)assertEquals(.40,trigger.bonus(),1e-12);
+                if(i==3&&role==InternalRole.CHERRY)assertEquals(1,trigger.bonus(),1e-12);
+                if(i==4&&role!=InternalRole.CHERRY)assertEquals(.20,trigger.bonus(),1e-12);
+                if(i==5&&role!=InternalRole.CHERRY)assertEquals(1,trigger.bonus(),1e-12);
+            }
+        }
+        assertEquals(.35,JugglerGodGameEngine.trigger(JugglerGodGameEngine.followingStreak(0,InternalRole.BELL),100_000).bonus(),1e-12);
+        assertEquals(.15,JugglerGodGameEngine.trigger(JugglerGodGameEngine.followingStreak(0,InternalRole.PIERO),100_000).bonus(),1e-12);
+    }
+
+    @Test void pieroFifteenPercentDebugSeparatesTriggerHitFromIncidentalBaseBonus() throws Exception {
+        int hits=0,misses=0;
+        for(int trial=0;trial<80;trial++){
+            Rig rig=rig(JugglerGodRuntime.initial(),1);
+            Session s=playForcedRole(rig,rig.session(),InternalRole.PIERO,(long)(trial+1)*3_000_000_000L);
+            assertEquals(15,JugglerGodRuntime.fromJson(s.machineState().toString()).roleStreak());
+            s=action(rig,s,PacketType.SPACE_ACTION,(long)(trial+1)*3_000_000_000L);
+            GameTransition next=plan(rig,s,PacketType.SPACE_ACTION,(long)(trial+1)*3_000_000_000L+1_000_000_000L);
+            InternalRole drawn=InternalRole.valueOf(next.after().text("internal_role"));
+            JugglerGodRuntime debug=JugglerGodRuntime.fromJson(next.machineRuntimeJson());
+            String origin=debug.lastWinSource(),draw=debug.lastTriggerDebug();
+            if(draw.startsWith("PIERO_HIT_")){
+                hits++;
+                assertTrue(origin.startsWith("PIERO_TRIGGER:"),origin);
+                assertNotNull(GameRules.bonus(drawn));
+            }else if(draw.startsWith("PIERO_MISS_")){
+                misses++;
+                if(GameRules.bonus(drawn)!=null)
+                    assertTrue(origin.startsWith("NORMAL_BASE:")||origin.startsWith("HIGH_BASE:")||
+                            origin.startsWith("ULTRA_BASE:"),origin);
+            }else{
+                assertEquals(InternalRole.GOD,drawn,"Only GOD can preempt the PIERO trigger roll");
+                assertEquals("GOD_RANDOM:GOD",origin);
+            }
+            assertEquals(debug,JugglerGodRuntime.fromJson(debug.toJsonString()));
+        }
+        assertTrue(hits>0,"Seeded production path should include PIERO trigger wins");
+        assertTrue(misses>0,"Seeded production path should include PIERO trigger misses");
+    }
+
+    @Test void bonusDebugFieldsSurviveNormalTransitionsWithoutChangingStreak() {
+        JugglerGodRuntime prior=JugglerGodRuntime.initial()
+                .withHot(JugglerGodRuntime.Mode.HIGH,17,15,"PIERO")
+                .withBonusDebug("PIERO_MISS_PCT=15_ROLL_PPM=670000","HIGH_BASE:BIG");
+        assertEquals("HIGH_BASE:BIG",prior.withHot(JugglerGodRuntime.Mode.HIGH,16,0,"NEXT").lastWinSource());
+        assertEquals("PIERO_MISS_PCT=15_ROLL_PPM=670000",prior.core(JugglerGodRuntime.Mode.NORMAL,
+                0,0,0,false,false,"NONE",0,false,"NORMAL").lastTriggerDebug());
+        assertEquals("HIGH_BASE:BIG",JugglerGodRuntime.fromJson(prior.toJsonString()).lastWinSource());
+        JugglerGodRuntime restarted=prior.resetNewSessionPrecursors();
+        assertEquals(JugglerGodRuntime.Mode.NORMAL,restarted.mode());
+        assertEquals(0,restarted.hotRemaining());
+        assertEquals(0,restarted.roleStreak());
+        assertEquals("NONE",restarted.lastWinSource());
+    }
+
+    @Test void highUltraRuntimeSurvivesJsonAndPreservesBonusOnlyLamp() throws Exception {
+        var state=JugglerGodRuntime.initial().withHot(JugglerGodRuntime.Mode.HIGH,20,3,"GRAPE_THREE");
+        var parsed=JugglerGodRuntime.fromJson(state.toJsonString());
+        assertEquals(state,parsed);
+        assertEquals(20,parsed.hotRemaining());
+        assertEquals(3,parsed.roleStreak());
+        var ultra=parsed.withHot(JugglerGodRuntime.Mode.ULTRA,15,9,"REPLAY_FOUR");
+        assertEquals(ultra,JugglerGodRuntime.fromJson(ultra.toJsonString()));
+        assertEquals(JugglerGodRuntime.Mode.NORMAL,ultra.clearHot().mode());
+        assertEquals(0,ultra.clearHot().hotRemaining());
+        assertEquals(0,ultra.clearHot().roleStreak());
+    }
+
+    @Test void liveBonusOverlayUsesLegacyStockProbabilityNotLoweredNormalBase() throws Exception {
+        var method=JugglerGodGameEngine.class.getDeclaredMethod("drawBonusOverlay",Machine.class);
+        method.setAccessible(true);
+        var weights=new RoleWeights(config);
+        for(MachineType type:List.of(MachineType.JUGGLER_GOD,MachineType.JUGGLER_GOD_EXTREME)){
+            Rig rig=rig(JugglerGodRuntime.initial(),1,type);
+            int samples=160000,stocks=0;
+            for(int i=0;i<samples;i++){
+                String hit=(String)method.invoke(rig.engine(),rig.machine());
+                if("BIG".equals(hit)||"REG".equals(hit))stocks++;
+            }
+            String profile=type==MachineType.JUGGLER_GOD?"juggler_god":"juggler_god_extreme";
+            @SuppressWarnings("unchecked")
+            Map<String,Object> settings=(Map<String,Object>)((Map<String,Object>)config.get(profile)).get("settings");
+            @SuppressWarnings("unchecked")
+            Map<String,Object> row=(Map<String,Object>)settings.get("1");
+            int stockScale=((Number)row.get("bonus_stock_scale_ppm")).intValue();
+            int normalScale=((Number)row.get("bonus_scale_ppm")).intValue();
+            int godDenominator=type==MachineType.JUGGLER_GOD?8192:16384;
+            double rawBonus=weights.unscaledBonusFamilyWeight(1);
+            double expected=rawBonus*stockScale/1.0e15*(1-1.0/godDenominator);
+            double normal=rawBonus*normalScale/1.0e15;
+            double actual=stocks/(double)samples;
+            assertEquals(expected,actual,.00065,type+" bonus-game stock draw");
+            assertTrue(actual>normal*1.5,type+" stock draw must remain stronger than normal");
+        }
+    }
+
+    @Test void highAndUltraBoostRealBonusRoleDrawWithoutAddingNotice() throws Exception {
+        Rig rig=rig(JugglerGodRuntime.initial(),1);
+        var field=JugglerGodGameEngine.class.getDeclaredField("highModeScalePpm");
+        field.setAccessible(true);
+        var ultraField=JugglerGodGameEngine.class.getDeclaredField("ultraModeScalePpm");
+        ultraField.setAccessible(true);
+        int high=((int[])field.get(rig.engine()))[1];
+        int ultra=((int[])ultraField.get(rig.engine()))[1];
+        var weights=new RoleWeights(config);
+        int total=300000;
+        var rng=new Random(950871L);
+        int highHits=0,ultraHits=0;
+        for(int i=0;i<total;i++){
+            if(GameRules.bonus(weights.drawJugglerGod(1,rng,high,813500))!=null)highHits++;
+            if(GameRules.bonus(weights.drawJugglerGod(1,rng,ultra,813500))!=null)ultraHits++;
+        }
+        assertEquals(1-Math.pow(.62,1.0/20.0),highHits/(double)total,.0015);
+        assertEquals(1-Math.pow(.32,1.0/15.0),ultraHits/(double)total,.0015);
+    }
+
+    @Test void stoppedRoleAdvancesExistingStreakAndSpendsExactlyOneHighGame() throws Exception {
+        var runtime=JugglerGodRuntime.initial()
+                .withHot(JugglerGodRuntime.Mode.HIGH,20,2,"TEST")
+                .forceRole("GRAPE");
+        Rig rig=rig(runtime,1);
+        Session s=action(rig,rig.session(),PacketType.SPACE_ACTION,0);
+        GameTransition lever=plan(rig,s,PacketType.SPACE_ACTION,1_000_000_000L);
+        assertEquals("GRAPE",lever.after().text("internal_role"));
+        var next=JugglerGodRuntime.fromJson(lever.machineRuntimeJson());
+        assertEquals(JugglerGodRuntime.Mode.HIGH,next.mode());
+        assertEquals(19,next.hotRemaining());
+        assertEquals(3,next.roleStreak());
+        assertEquals(0,lever.after().number("lamp_on"));
+    }
+
+    @Test void twoStreakIsExplicitHighPromotionOpportunityWithNoPrematureBonusNotice() throws Exception {
+        var weights=new RoleWeights(config);
+        var normal=new NormalGame(weights,new RandomStreams(333L),SOLVER,main,config,false);
+        var engine=new JugglerGodGameEngine(normal,new RandomStreams(444L),weights,config);
+        var array=JugglerGodGameEngine.class.getDeclaredField("precursorTwoHighPpm");
+        array.setAccessible(true);
+        assertEquals(94884,((int[])array.get(engine))[1]);
+        var method=JugglerGodGameEngine.class.getDeclaredMethod("trigger",int.class,int.class);
+        method.setAccessible(true);
+        Object grapeTwo=method.invoke(null,2,100000);
+        Object replayTwo=method.invoke(null,7,100000);
+        Object cherryOne=method.invoke(null,11,100000);
+        var bonus=grapeTwo.getClass().getDeclaredMethod("bonus");
+        var high=grapeTwo.getClass().getDeclaredMethod("high");
+        bonus.setAccessible(true);high.setAccessible(true);
+        assertEquals(0.0,((Double)bonus.invoke(grapeTwo)),1e-12);
+        assertEquals(0.1,((Double)high.invoke(grapeTwo)),1e-12);
+        assertEquals(0.1,((Double)high.invoke(replayTwo)),1e-12);
+        assertEquals(0.08,((Double)high.invoke(cherryOne)),1e-12);
     }
 
 }

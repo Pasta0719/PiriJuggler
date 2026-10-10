@@ -28,7 +28,13 @@ public final class JugglerGodGameEngine implements GameEngine {
     private final long normalRegToHeavenPpm;
     private final long heavenToHeavenPpm;
     private final int[] bonusScalePpm=new int[7];
+    private final int[] standaloneNormalScalePpm=new int[7];
+    private final int[] overlapNormalScalePpm=new int[7];
+    private final int[] bonusStockScalePpm=new int[7];
     private final int[] smallRoleScalePpm=new int[7];
+    private final int[] precursorTwoHighPpm=new int[7];
+    private final int[] highModeScalePpm=new int[7];
+    private final int[] ultraModeScalePpm=new int[7];
     private final int[] continuationPercent=new int[7];
     private final int godDenominator;
     private final int godInGodBigStock;
@@ -59,8 +65,19 @@ public final class JugglerGodGameEngine implements GameEngine {
         for(int setting=1;setting<=6;setting++){
             Map<String,Object> row=map(settings.get(Integer.toString(setting)));
             bonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
+            bonusStockScalePpm[setting]=(int)number(row.get("bonus_stock_scale_ppm"),JugglerGodOdds.defaultStockScale(configKey,setting));
             smallRoleScalePpm[setting]=(int)number(row.get("small_role_scale_ppm"),1_000_000);
+            // Custom legacy profiles lacking the key retain their prior distribution.
+            precursorTwoHighPpm[setting]=(int)number(row.get("precursor_two_high_ppm"),0);
             continuationPercent[setting]=(int)number(row.get("god_continuation_percent"),defaults[setting]);
+            long rawBonus=weights.unscaledBonusFamilyWeight(setting);
+            int referenceBase=JugglerGodOdds.referenceBase(configKey,setting);
+            overlapNormalScalePpm[setting]=referenceBase;
+            standaloneNormalScalePpm[setting]=JugglerGodOdds.normalStandaloneScale(
+                    bonusScalePpm[setting],referenceBase,
+                    weights.unscaledStandaloneBonusWeight(setting),rawBonus);
+            highModeScalePpm[setting]=JugglerGodOdds.hotScale(bonusScalePpm[setting],referenceBase,rawBonus,false);
+            ultraModeScalePpm[setting]=JugglerGodOdds.hotScale(bonusScalePpm[setting],referenceBase,rawBonus,true);
         }
         if(godDenominator<2||godInGodBigStock<0||godGuaranteedBigs<1||bigThreshold<0||regThreshold<0)
             throw new IllegalArgumentException("JUGGLER_GOD profile tuning");
@@ -69,8 +86,11 @@ public final class JugglerGodGameEngine implements GameEngine {
                 ||heavenToHeavenPpm<0||heavenToHeavenPpm>1_000_000)
             throw new IllegalArgumentException("JUGGLER_GOD heaven tuning");
         for(int setting=1;setting<=6;setting++)if(bonusScalePpm[setting]<0||bonusScalePpm[setting]>1_000_000
+                ||bonusStockScalePpm[setting]<0||bonusStockScalePpm[setting]>1_000_000
                 ||smallRoleScalePpm[setting]<0||smallRoleScalePpm[setting]>1_000_000
-                ||continuationPercent[setting]<0||continuationPercent[setting]>=100)
+                ||precursorTwoHighPpm[setting]<0||precursorTwoHighPpm[setting]>1_000_000
+                ||continuationPercent[setting]<0||continuationPercent[setting]>=100
+                ||ultraModeScalePpm[setting]>20_000_000)
             throw new IllegalArgumentException("JUGGLER_GOD role scale");
     }
 
@@ -80,6 +100,8 @@ public final class JugglerGodGameEngine implements GameEngine {
         JugglerGodRuntime runtime=load(before,machine);
         JugglerGodRuntime prepared=runtime;
         InternalRole forced=null;
+        String triggerAudit=null;
+        String winningSource=null;
 
         long presentationStart=runtime.godPresentationStartMs();
         if(presentationStart>0&&now<presentationStart+GOD_PRESENTATION_LOCK_MS
@@ -117,7 +139,8 @@ public final class JugglerGodGameEngine implements GameEngine {
             String current=before.state()==Session.GameState.BIG_BETTED?"BIG":"REG";
             String hit=drawBonusOverlay(machine);
             if(!"NONE".equals(hit)){
-                prepared=prepared.interrupt(hit,current,(int)before.number("bonus_payout_count"),false,
+                prepared=prepared.withBonusDebug("NONE","BONUS_OVERLAY:"+hit)
+                        .interrupt(hit,current,(int)before.number("bonus_payout_count"),false,
                         "GOD".equals(hit)?"GOD_IN_GOD_DRAWN":"BONUS_STOCK_DRAWN");
             }
         }
@@ -127,11 +150,15 @@ public final class JugglerGodGameEngine implements GameEngine {
                 try { forced=InternalRole.valueOf(runtime.forcedRole()); }
                 catch(IllegalArgumentException ignored) { forced=null; }
                 prepared=runtime.forceRole("NONE");
+                winningSource="DEV_FORCE:"+forced.name();
+                triggerAudit="SKIPPED_DEV_FORCE";
             }
             if(forced!=null){
                 // Explicit development force wins over production GOD/heaven/chain draws for this spin only.
             }else if(godOverlayConfirm){
                 forced=InternalRole.GOD;
+                winningSource="GOD_OVERLAY";
+                triggerAudit="SKIPPED_GOD_OVERLAY";
                 suppressNormalSpinCount=true;
                 prepared=runtime.core(runtime.mode(),runtime.heavenTarget(),runtime.heavenProgress(),
                         runtime.guaranteedRemaining(),runtime.forceChainBig(),runtime.countNextChainGame(),
@@ -139,6 +166,8 @@ public final class JugglerGodGameEngine implements GameEngine {
                         godInGodConfirm?"GOD_IN_GOD_FREEZE":"BONUS_GOD_FREEZE");
             }else if(runtime.mode()==JugglerGodRuntime.Mode.GOD_CHAIN&&runtime.forceChainBig()){
                 forced=InternalRole.BIG;
+                winningSource="GOD_CHAIN";
+                triggerAudit="SKIPPED_GOD_CHAIN";
                 suppressNormalSpinCount=!runtime.countNextChainGame();
                 // A queued GOD-chain BIG is a one-shot reservation. Consume the reservation
                 // at lever-on so it cannot survive into the started BIG and accidentally
@@ -150,17 +179,64 @@ public final class JugglerGodGameEngine implements GameEngine {
             }else if(runtime.mode()!=JugglerGodRuntime.Mode.GOD_CHAIN
                     &&random.gameplay(machine.id()).nextInt(godDenominator)==0){
                 forced=InternalRole.GOD;
+                winningSource="GOD_RANDOM";
+                triggerAudit=triggerLabel(runtime.roleStreak())+"_SKIPPED_GOD";
             }else if(runtime.mode()==JugglerGodRuntime.Mode.HEAVEN){
                 int progress=Math.min(32,runtime.heavenProgress()+1);
                 prepared=runtime.core(runtime.mode(),runtime.heavenTarget(),progress,
                         runtime.guaranteedRemaining(),runtime.forceChainBig(),runtime.countNextChainGame(),
                         runtime.bonusOrigin(),runtime.godBigCount(),runtime.godFreeze(),runtime.lastEvent());
-                if(progress>=runtime.heavenTarget())
+                if(progress>=runtime.heavenTarget()){
                     forced=weights.drawBonusFamily(machine.setting(),random.gameplay(machine.id()));
+                    winningSource="HEAVEN_TARGET";
+                }
                 else
                     forced=weights.drawJugglerGodNonBonus(machine.setting(),random.gameplay(machine.id()),bonusScalePpm[machine.setting()],smallRoleScalePpm[machine.setting()]);
             }else{
-                forced=weights.drawJugglerGod(machine.setting(),random.gameplay(machine.id()),bonusScalePpm[machine.setting()],smallRoleScalePpm[machine.setting()]);
+                // Bonuses/mode rises earned by a role are rolled on the NEXT lever.
+                var rng=random.gameplay(machine.id());
+                Trigger trigger=trigger(runtime.roleStreak(),precursorTwoHighPpm[machine.setting()]);
+                String label=triggerLabel(runtime.roleStreak());
+                double bonusRoll=rng.nextDouble();
+                if(trigger.bonus()>0)
+                    triggerAudit=label+"_"+(bonusRoll<trigger.bonus()?"HIT":"MISS")
+                            +"_PCT="+Math.round(trigger.bonus()*100)+"_ROLL_PPM="+Math.round(bonusRoll*1_000_000);
+                if(bonusRoll<trigger.bonus()){
+                    forced=weights.drawBonusFamily(machine.setting(),rng);
+                    winningSource=label+"_TRIGGER";
+                }else{
+                    JugglerGodRuntime.Mode mode=runtime.mode();
+                    int remaining=runtime.hotRemaining();
+                    double upgrade=rng.nextDouble();
+                    if(upgrade<trigger.high()){
+                        if(mode==JugglerGodRuntime.Mode.NORMAL){
+                            mode=JugglerGodRuntime.Mode.HIGH;remaining=20;
+                        }else if(mode==JugglerGodRuntime.Mode.HIGH){
+                            mode=JugglerGodRuntime.Mode.ULTRA;remaining=15;
+                        }else if(mode==JugglerGodRuntime.Mode.ULTRA){
+                            remaining=15;
+                        }
+                    }else if(upgrade<trigger.high()+trigger.ultra()){
+                        mode=JugglerGodRuntime.Mode.ULTRA;remaining=15;
+                    }
+                    prepared=runtime.withHot(mode,remaining,runtime.roleStreak(),"ROLE_MODE_ROLL");
+                    int scale=switch(mode){
+                        case HIGH->highModeScalePpm[machine.setting()];
+                        case ULTRA->ultraModeScalePpm[machine.setting()];
+                        default->bonusScalePpm[machine.setting()];
+                    };
+                    int standaloneScale=mode==JugglerGodRuntime.Mode.NORMAL
+                            ?standaloneNormalScalePpm[machine.setting()]:scale;
+                    int overlapScale=mode==JugglerGodRuntime.Mode.NORMAL
+                            ?overlapNormalScalePpm[machine.setting()]:scale;
+                    forced=weights.drawJugglerGod(machine.setting(),rng,
+                            standaloneScale,overlapScale,smallRoleScalePpm[machine.setting()]);
+                    winningSource=switch(mode){
+                        case HIGH->"HIGH_BASE";
+                        case ULTRA->"ULTRA_BASE";
+                        default->"NORMAL_BASE";
+                    };
+                }
             }
         }
 
@@ -180,21 +256,32 @@ public final class JugglerGodGameEngine implements GameEngine {
         if(normalLever&&legacy.lever()&&rawAfter.text("internal_role")!=null){
             InternalRole actual=InternalRole.valueOf(rawAfter.text("internal_role"));
             if(actual==InternalRole.GOD){
+                JugglerGodRuntime cleaned=prepared.clearHot();
                 if(godInGodConfirm){
-                    next=prepared.core(prepared.mode(),prepared.heavenTarget(),prepared.heavenProgress(),
-                            prepared.guaranteedRemaining(),prepared.forceChainBig(),prepared.countNextChainGame(),
-                            prepared.bonusOrigin(),prepared.godBigCount(),true,"GOD_IN_GOD_FREEZE");
+                    next=cleaned.core(cleaned.mode(),cleaned.heavenTarget(),cleaned.heavenProgress(),
+                            cleaned.guaranteedRemaining(),cleaned.forceChainBig(),cleaned.countNextChainGame(),
+                            cleaned.bonusOrigin(),cleaned.godBigCount(),true,"GOD_IN_GOD_FREEZE");
                 }else{
-                    next=prepared.core(prepared.mode(),prepared.heavenTarget(),prepared.heavenProgress(),
-                            prepared.guaranteedRemaining(),false,false,"GOD_CHAIN",
-                            prepared.godBigCount(),true,"GOD_FREEZE");
+                    next=cleaned.core(cleaned.mode(),cleaned.heavenTarget(),cleaned.heavenProgress(),
+                            cleaned.guaranteedRemaining(),false,false,"GOD_CHAIN",
+                            cleaned.godBigCount(),true,"GOD_FREEZE");
                 }
             }else if(GameRules.bonus(actual)!=null){
                 String origin=prepared.mode()==JugglerGodRuntime.Mode.HEAVEN?"HEAVEN":
                         prepared.mode()==JugglerGodRuntime.Mode.GOD_CHAIN?"GOD_CHAIN":GameRules.bonus(actual);
-                next=prepared.core(prepared.mode(),prepared.heavenTarget(),prepared.heavenProgress(),
-                        prepared.guaranteedRemaining(),false,false,origin,
-                        prepared.godBigCount(),false,"BONUS_DRAWN");
+                JugglerGodRuntime cleaned=prepared.clearHot();
+                next=cleaned.core(cleaned.mode(),cleaned.heavenTarget(),cleaned.heavenProgress(),
+                        cleaned.guaranteedRemaining(),false,false,origin,
+                        cleaned.godBigCount(),false,"BONUS_DRAWN");
+            }else if(prepared.mode()==JugglerGodRuntime.Mode.NORMAL
+                    ||prepared.mode()==JugglerGodRuntime.Mode.HIGH
+                    ||prepared.mode()==JugglerGodRuntime.Mode.ULTRA){
+                JugglerGodRuntime.Mode mode=prepared.mode();
+                int remaining=prepared.hotRemaining();
+                if(mode==JugglerGodRuntime.Mode.HIGH||mode==JugglerGodRuntime.Mode.ULTRA){
+                    if(--remaining<=0){mode=JugglerGodRuntime.Mode.NORMAL;remaining=0;}
+                }
+                next=prepared.withHot(mode,remaining,followingStreak(prepared.roleStreak(),actual),"ROLE_STOPPED");
             }
         }
 
@@ -295,6 +382,14 @@ public final class JugglerGodGameEngine implements GameEngine {
             }
         }
 
+        if(normalLever&&legacy.lever()&&rawAfter.text("internal_role")!=null){
+            InternalRole actual=InternalRole.valueOf(rawAfter.text("internal_role"));
+            if(actual==InternalRole.GOD||GameRules.bonus(actual)!=null)
+                next=next.withBonusDebug(triggerAudit==null?"NONE":triggerAudit,
+                        (winningSource==null?"UNKNOWN":winningSource)+":"+actual.name());
+            else
+                next=next.withBonusDebug(triggerAudit==null?"NONE":triggerAudit,null);
+        }
         Session after=withRuntime(rawAfter,next);
         int normalSpins=suppressNormalSpinCount?0:legacy.normalSpins();
 
@@ -339,10 +434,49 @@ public final class JugglerGodGameEngine implements GameEngine {
                 List.of(ErrorPackets.rejected(sequence,ErrorCode.INVALID_STATE)),List.of(),List.of(),runtime.toJsonString());
     }
 
+    /** Probabilities after a small role, used only on the next normal lever. */
+    public record Trigger(double bonus,double high,double ultra){}
+    public static Trigger trigger(int streak,int twoHighPpm){
+        return switch(streak){
+            // Two consecutive grape/replay results start a *visible-role* anticipation route.
+            case 2,7->new Trigger(0,twoHighPpm/1_000_000.0,0);
+            case 3,8->new Trigger(0,.15,0);
+            case 4->new Trigger(.20,.20,.03);
+            case 5,10,13->new Trigger(1,0,0);
+            case 9->new Trigger(.20,.18,.05);
+            case 11->new Trigger(0,.08,0);
+            case 12->new Trigger(.40,.20,.20);
+            case 14->new Trigger(.35,.15,.10);
+            case 15->new Trigger(.15,.20,.05);
+            default->new Trigger(0,0,0);
+        };
+    }
+    /** Exact names used in OP-only trigger audit lines. */
+    private static String triggerLabel(int streak){
+        return switch(streak){
+            case 2->"GRAPE_2";case 3->"GRAPE_3";case 4->"GRAPE_4";case 5->"GRAPE_5";
+            case 7->"REPLAY_2";case 8->"REPLAY_3";case 9->"REPLAY_4";case 10->"REPLAY_5";
+            case 11->"CHERRY_1";case 12->"CHERRY_2";case 13->"CHERRY_3";
+            case 14->"BELL";case 15->"PIERO";default->"NONE";
+        };
+    }
+
+    public static int followingStreak(int prior,InternalRole role){
+        return switch(role){
+            case GRAPE->prior>=1&&prior<=5?Math.min(prior+1,5):1;
+            case REPLAY->prior>=6&&prior<=10?Math.min(prior+1,10):6;
+            case CHERRY->prior>=11&&prior<=13?Math.min(prior+1,13):11;
+            case BELL->14;
+            case PIERO->15;
+            default->0;
+        };
+    }
+
     private String drawBonusOverlay(Machine machine){
         var rng=random.gameplay(machine.id());
         if(rng.nextInt(godDenominator)==0)return "GOD";
-        InternalRole role=weights.drawJugglerGod(machine.setting(),rng,bonusScalePpm[machine.setting()],smallRoleScalePpm[machine.setting()]);
+        // Bonus stock uses its own fixed odds; NORMAL/HIGH/ULTRA tuning never leaks here.
+        InternalRole role=weights.drawJugglerGod(machine.setting(),rng,bonusStockScalePpm[machine.setting()],smallRoleScalePpm[machine.setting()]);
         String bonus=GameRules.bonus(role);
         return bonus==null?"NONE":bonus;
     }

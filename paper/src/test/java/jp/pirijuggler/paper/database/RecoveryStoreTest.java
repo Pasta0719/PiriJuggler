@@ -33,6 +33,64 @@ class RecoveryStoreTest {
 
     @AfterEach void close() throws Exception { db.close(); }
 
+    @Test void jugglerGodRecoveryUsesLivePrecursorAndHotStateOnPendingLevers() throws Exception {
+        var method=RecoveryStore.class.getDeclaredMethod("drawJugglerGodRecovery",JugglerGodRuntime.class,int.class,int.class);
+        method.setAccessible(true);
+        var type=Class.forName("jp.pirijuggler.paper.database.RecoveryStore$JgDraw");
+        var role=type.getDeclaredMethod("role");role.setAccessible(true);
+        var runtime=type.getDeclaredMethod("runtime");runtime.setAccessible(true);
+        var extremeFlag=RecoveryStore.class.getDeclaredField("activeExtreme");extremeFlag.setAccessible(true);
+
+        for(boolean isExtreme:new boolean[]{false,true}){
+            RecoveryStore recovery=new RecoveryStore(db,config,new StopSolver(new StopCatalogue()),1234L);
+            extremeFlag.setBoolean(recovery,isExtreme);
+            int baseMachine=isExtreme?801:701;
+            // Third cherry/replay and fifth grape are guaranteed by the same live trigger table.
+            for(int streak:new int[]{5,10,13}){
+                for(int i=0;i<60;i++){
+                    Object draw=method.invoke(recovery,JugglerGodRuntime.initial()
+                            .withHot(JugglerGodRuntime.Mode.NORMAL,0,streak,"TEST"),6,baseMachine+i);
+                    var actual=(jp.pirijuggler.paper.reel.InternalRole)role.invoke(draw);
+                    assertNotNull(jp.pirijuggler.paper.game.GameRules.bonus(actual),
+                            "A guaranteed precursor must never settle to a non-bonus");
+                    var after=(JugglerGodRuntime)runtime.invoke(draw);
+                    assertEquals(0,after.roleStreak());
+                }
+            }
+
+            // High must roll at the 20G hazard, then consume one remaining game when
+            // the result is not a bonus. A previous forced small role must also
+            // advance the streak, matching live owner commands.
+            Object hotDraw=method.invoke(recovery,JugglerGodRuntime.initial()
+                    .withHot(JugglerGodRuntime.Mode.HIGH,20,0,"TEST"),1,baseMachine+9000);
+            var h=(JugglerGodRuntime)runtime.invoke(hotDraw);
+            if(jp.pirijuggler.paper.game.GameRules.bonus((jp.pirijuggler.paper.reel.InternalRole)role.invoke(hotDraw))==null){
+                assertEquals(19,h.hotRemaining());
+                assertEquals(JugglerGodRuntime.Mode.HIGH,h.mode());
+            }
+            Object forced=method.invoke(recovery,JugglerGodRuntime.initial().forceRole("PIERO"),1,baseMachine+10000);
+            var forcedAfter=(JugglerGodRuntime)runtime.invoke(forced);
+            assertEquals(15,forcedAfter.roleStreak());
+            assertEquals("NONE",forcedAfter.forcedRole());
+        }
+    }
+
+    @Test void jugglerGodRecoveryExtremeSelectsExtremeBonusScaleNotNormalScale() throws Exception {
+        RecoveryStore recovery=new RecoveryStore(db,config,new StopSolver(new StopCatalogue()),345L);
+        var flag=RecoveryStore.class.getDeclaredField("activeExtreme");flag.setAccessible(true);
+        var scale=RecoveryStore.class.getDeclaredMethod("jgBonusScale",int.class);scale.setAccessible(true);
+        var stock=RecoveryStore.class.getDeclaredMethod("jgBonusStockScale",int.class);stock.setAccessible(true);
+        var small=RecoveryStore.class.getDeclaredMethod("jgSmallRoleScale",int.class);small.setAccessible(true);
+        flag.setBoolean(recovery,false);
+        assertEquals(270000,((Number)scale.invoke(recovery,1)).intValue());
+        assertEquals(743613,((Number)stock.invoke(recovery,1)).intValue());
+        assertEquals(813500,((Number)small.invoke(recovery,1)).intValue());
+        flag.setBoolean(recovery,true);
+        assertEquals(199600,((Number)scale.invoke(recovery,1)).intValue());
+        assertEquals(564190,((Number)stock.invoke(recovery,1)).intValue());
+        assertEquals(700000,((Number)small.invoke(recovery,1)).intValue());
+    }
+
     @Test void sameSnapshotForceSettlementIsIdempotent() throws Exception {
         int machine=db.create(new Machine.Location(UUID.randomUUID(),"world",0,64,0,"NORTH"),NOW);
         UUID player=UUID.randomUUID();

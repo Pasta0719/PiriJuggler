@@ -39,11 +39,17 @@ class JugglerGodExtremeProfileTest extends GameFixture {
 
         int[] bonusScale=(int[])field(extremeEngine,"bonusScalePpm");
         int[] smallScale=(int[])field(extremeEngine,"smallRoleScalePpm");
-        int[] expectedBonus={0,564190,554200,558800,562600,571106,537600};
+        int[] stockScale=(int[])field(extremeEngine,"bonusStockScalePpm");
+        int[] expectedBonus={0,199600,196300,197500,201300,204500,188600};
         for(int setting=1;setting<=6;setting++){
             assertEquals(expectedBonus[setting],bonusScale[setting]);
             assertEquals(700000,smallScale[setting]);
+            assertEquals(new int[]{0,564190,554200,558800,562600,571106,537600}[setting],stockScale[setting]);
         }
+
+        int[] precursor=(int[])field(extremeEngine,"precursorTwoHighPpm");
+        int[] expectedPrecursor={0,72001,78911,92247,110987,127811,139688};
+        for(int setting=1;setting<=6;setting++)assertEquals(expectedPrecursor[setting],precursor[setting]);
 
         int[] continuation=(int[])field(extremeEngine,"continuationPercent");
         assertEquals(75,continuation[1]);

@@ -6,6 +6,8 @@ import jp.pirijuggler.common.protocol.ProtocolException;
 import jp.pirijuggler.paper.machine.MachineService;
 import jp.pirijuggler.paper.mobile.MobileRemoteGateway;
 import jp.pirijuggler.paper.config.ConfigValidation;
+import jp.pirijuggler.paper.config.JugglerGodPremonitionMigration;
+import jp.pirijuggler.paper.config.JugglerGodStockOddsMigration;
 import jp.pirijuggler.paper.network.ServerHandshake;
 import jp.pirijuggler.paper.threading.PaperMainThread;
 import jp.pirijuggler.paper.threading.TaskExecutors;
@@ -37,7 +39,7 @@ import java.util.UUID;
 import jp.pirijuggler.paper.reel.ReelEngine;
 
 public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessageListener, Listener {
-    private static final String BUILD_IDENTITY = "MOBILE_REMOTE_20261006_FINAL";
+    private static final String BUILD_IDENTITY = "JG_BONUS_ORIGIN_RESTART_AUDIT_20261010";
     private PaperMainThread mainThread;
     private TaskExecutors executors;
     private ServerHandshake handshake;
@@ -77,6 +79,8 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
             migrateProtocolConfig(getDataFolder().toPath().resolve("config.yml"));
             migrateJugglerGodConfig(getDataFolder().toPath().resolve("config.yml"));
             migrateJugglerGodExtremeConfig(getDataFolder().toPath().resolve("config.yml"));
+            migrateJugglerGodPremonitionConfig(getDataFolder().toPath().resolve("config.yml"));
+            migrateJugglerGodStockOddsConfig(getDataFolder().toPath().resolve("config.yml"));
             try (var reader = Files.newBufferedReader(getDataFolder().toPath().resolve("config.yml"), StandardCharsets.UTF_8)) {
                 ConfigValidation.Result result = ConfigValidation.load(reader);
                 configurationValid = result.valid();
@@ -179,6 +183,33 @@ juggler_god_extreme:
 """;
         Files.writeString(path, original.stripTrailing() + "\n" + block, StandardCharsets.UTF_8);
         getLogger().info("Migrated existing config with juggler_god_extreme defaults");
+    }
+
+    /**
+     * Upgrade only untouched stock JUGGLER GOD tuning rows, keeping operator-modified
+     * profiles unchanged. New installs get these values straight from bundled config.
+     * Uses text replacement solely for the documented inline per-setting row shape,
+     * preserving surrounding comments/formatting instead of rewriting all YAML.
+     */
+    private void migrateJugglerGodPremonitionConfig(java.nio.file.Path path) throws IOException {
+        String original=Files.readString(path,StandardCharsets.UTF_8);
+        JugglerGodPremonitionMigration.Result result=JugglerGodPremonitionMigration.migrate(original);
+        if(result.changed()>0){
+            Files.writeString(path,result.text(),StandardCharsets.UTF_8);
+            getLogger().info("Migrated "+result.changed()+" untouched JUGGLER GOD setting rows to context-led defaults");
+        }
+        if(result.skipped()>0)
+            getLogger().warning("Kept "+result.skipped()+" custom JUGGLER GOD tuning rows; review base odds and precursor_two_high_ppm manually");
+    }
+
+    private void migrateJugglerGodStockOddsConfig(java.nio.file.Path path) throws IOException {
+        String original=Files.readString(path,StandardCharsets.UTF_8);
+        JugglerGodStockOddsMigration.Result result=JugglerGodStockOddsMigration.migrate(original);
+        if(result.stockKeysAdded()>0||result.adjusted()>0){
+            Files.writeString(path,result.text(),StandardCharsets.UTF_8);
+            getLogger().info("Separated GOD stock scales in "+result.stockKeysAdded()+" rows; adjusted "+result.adjusted()+" stock default normal bases");
+        }
+        if(result.customKept()>0)getLogger().warning("Kept "+result.customKept()+" customized GOD/EXTREME normal odds; independent stock defaults applied");
     }
 
     private boolean handleBuildIdentity(CommandSender sender,String[] args) {

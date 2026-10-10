@@ -31,6 +31,13 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.AtomicMoveNotSupportedException;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.lang.management.ManagementFactory;
@@ -134,6 +141,12 @@ public final class MachineService implements Listener, CommandExecutor {
         }
         if (!sender.isOp()) { error(sender, "NOT_OP"); return true; }
         try {
+            if(args.length==3 && args[0].equalsIgnoreCase("book") && args[1].equalsIgnoreCase("extend")) {
+                commandExtendGodBook(sender,args[2]); return true;
+            }
+            if(args.length==3 && args[0].equalsIgnoreCase("book") && args[1].equalsIgnoreCase("export")) {
+                commandExportGodBook(sender,args[2]); return true;
+            }
             if (args.length==3 && (args[0].equalsIgnoreCase("simulator") || args[0].equalsIgnoreCase("sim"))) {
                 int setting=Integer.parseInt(args[1]);long count=Long.parseLong(args[2]);
                 if(setting<1||setting>6||count<1||count>100_000_000L)throw new DomainException("INVALID_STATE");
@@ -192,6 +205,9 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length==3 && (args[0].equalsIgnoreCase("jugglergodrole") || args[0].equalsIgnoreCase("jgrole"))) {
                 commandJugglerGodRole(sender,Integer.parseInt(args[1]),args[2]); return true;
             }
+            if (args.length==2 && args[0].equalsIgnoreCase("jgstate")) {
+                commandJugglerGodState(sender,Integer.parseInt(args[1])); return true;
+            }
             if(args.length>=2 && (args[0].equalsIgnoreCase("jgextreme")||args[0].equalsIgnoreCase("extreme"))){
                 String action=args[1].toLowerCase(Locale.ROOT);
                 if(action.equals("create")&&args.length==2){
@@ -234,7 +250,7 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length >= 2 && args[0].equalsIgnoreCase("event")) {
                 commandEvent(sender,args); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|JUGGLER_GOD_EXTREME|SKILL_STOP|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri jgrole <id> <MISS|REPLAY|GRAPE|CHERRY|BELL|PIERO|BIG|REG|CHERRY_BIG|CHERRY_REG|PIERO_BIG|PIERO_REG|GOD|clear>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|JUGGLER_GOD_EXTREME|SKILL_STOP|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri jgrole <id> <MISS|REPLAY|GRAPE|CHERRY|BELL|PIERO|BIG|REG|CHERRY_BIG|CHERRY_REG|PIERO_BIG|PIERO_REG|GOD|clear>, /piri jgstate <id>, /piri book extend <god|extreme>, /piri book export <god|extreme>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
@@ -278,6 +294,103 @@ public final class MachineService implements Listener, CommandExecutor {
         return true;
     }
 
+    /**
+     * Add new rules to the real, originally signed book held in the main hand.
+     * Preserve the original twelve pages verbatim; never regenerate or guess them.
+     * Silent unless the OP explicitly invokes this command.
+     */
+    private void commandExtendGodBook(CommandSender sender,String rawKind){
+        if(!(sender instanceof Player player)){
+            tell(sender,"PLAYER_REQUIRED");return;
+        }
+        String kind=rawKind.toLowerCase(Locale.ROOT);
+        if(!kind.equals("god")&&!kind.equals("extreme")){
+            tell(player,"使い方 /piri book extend god|extreme");return;
+        }
+        ItemStack item=player.getInventory().getItemInMainHand();
+        if(item.getType()!=Material.WRITTEN_BOOK || !(item.getItemMeta() instanceof BookMeta book)){
+            tell(player,"元のGOD説明書（記入済みの本）をメインハンドに持ってください");return;
+        }
+        String title=book.getTitle();
+        if(title!=null&&title.toUpperCase(Locale.ROOT).contains("EXTREME")&&kind.equals("god")){
+            tell(player,"EXTREMEの本です /piri book extend extreme を指定してください");return;
+        }
+        if(book.getPageCount()<12){
+            tell(player,"元の12ページの説明書が必要です");return;
+        }
+        if(GodGuideAddendum.alreadyIncluded(book.getPages())){
+            tell(player,"この本には新仕様が追加済みです");return;
+        }
+        if(book.getPageCount()+GodGuideAddendum.pages().size()>100){
+            tell(player,"本のページ上限を超えるため追加できません");return;
+        }
+        for(String page:GodGuideAddendum.pages())book.addPage(page);
+        item.setItemMeta(book);
+        player.getInventory().setItemInMainHand(item);
+        tell(player,(kind.equals("extreme")?"EXTREME GOD":"GOD")
+                +"の説明書に新仕様5ページを追加しました 元のページは変更していません");
+    }
+
+    /**
+     * Export an exact 1.21 /give command using the real original book pages.
+     * The original ItemStack is read only. File contains the finished 17-page
+     * book, including the new small-role/bonus-mode rules. Nothing goes to
+     * the regular gameplay console logs.
+     */
+    private void commandExportGodBook(CommandSender sender,String rawKind){
+        if(!(sender instanceof Player player)){
+            tell(sender,"PLAYER_REQUIRED");return;
+        }
+        String kind=rawKind.toLowerCase(Locale.ROOT);
+        if(!kind.equals("god")&&!kind.equals("extreme")){
+            tell(sender,"使い方 /piri book export god|extreme");return;
+        }
+        ItemStack item=player.getInventory().getItemInMainHand();
+        if(item.getType()!=Material.WRITTEN_BOOK || !(item.getItemMeta() instanceof BookMeta book)){
+            tell(player,"元のGODまたはEXTREME GODの記入済みの本をメインハンドに持ってください");return;
+        }
+        String title=book.getTitle();
+        if(kind.equals("god")&&title!=null&&title.toUpperCase(Locale.ROOT).contains("EXTREME")){
+            tell(player,"EXTREMEの本です /piri book export extreme を指定してください");return;
+        }
+        if(book.getPageCount()<12){
+            tell(player,"元の12ページ以上の説明書が必要です");return;
+        }
+        boolean added=GodGuideAddendum.alreadyIncluded(book.getPages());
+        var newPages=added?List.<String>of():GodGuideAddendum.pages();
+        final String command;
+        try{
+            int generation=book.getGeneration()==null?0:book.getGeneration().ordinal();
+            command=GodBookGiveExporter.command(player.getName(),title,book.getAuthor(),
+                    generation,book.pages(),newPages);
+        }catch(IllegalArgumentException exception){
+            tell(player,"GIVE_EXPORT_INVALID_BOOK "+exception.getMessage());
+            return;
+        }
+        String fileName=(kind.equals("extreme")?"EXTREME_GOD_":"GOD_")+player.getName()+".txt";
+        Path folder=plugin.getDataFolder().toPath().resolve("book-give");
+        Path target=folder.resolve(fileName);
+        Path temp=null;
+        try{
+            Files.createDirectories(folder);
+            temp=Files.createTempFile(folder,".god-book-",".tmp");
+            Files.writeString(temp,command+"\n",StandardCharsets.UTF_8);
+            try{
+                Files.move(temp,target,StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);
+            }catch(AtomicMoveNotSupportedException ignored){
+                Files.move(temp,target,StandardCopyOption.REPLACE_EXISTING);
+            }
+            temp=null;
+            tell(player,"本を変更せず/giveコマンドを保存しました: plugins/"
+                    +plugin.getName()+"/book-give/"+fileName+" (ページ数="+(book.getPageCount()+newPages.size())+")");
+            tell(player,"このテキストファイルの/giveをサーバーコンソールに貼り付けてください");
+        }catch(IOException error){
+            tell(player,"GIVE_EXPORT_WRITE_FAILED "+error.getMessage());
+        }finally{
+            if(temp!=null)try{Files.deleteIfExists(temp);}catch(IOException ignored){}
+        }
+    }
+
     private void recoverStatus(Player player){
         UUID owner=player.getUniqueId();
         plugin.executors().database(()->new EconomyStore(database).recoveryStatus(owner),(status,error)->{
@@ -317,10 +430,42 @@ public final class MachineService implements Listener, CommandExecutor {
         return machine;
     }
 
+    /** OP-only diagnosis; reads the session snapshot during play, machine snapshot while vacant. */
+    private void commandJugglerGodState(CommandSender sender,int id) {
+        Machine machine=state.machine(id);
+        if(machine==null||(machine.type()!=MachineType.JUGGLER_GOD&&machine.type()!=MachineType.JUGGLER_GOD_EXTREME))
+            throw new DomainException("INVALID_STATE");
+        Session occupied=state.sessions().stream()
+                .filter(session->session.machine()==id&&session.ownsLock()).findFirst().orElse(null);
+        JugglerGodRuntime runtime=occupied!=null&&occupied.machineState()!=null
+                ?JugglerGodRuntime.fromJson(occupied.machineState().toString())
+                :JugglerGodRuntime.fromJson(machine.runtimeJson());
+        int streak=runtime.roleStreak();
+        String role=streak>=1&&streak<=5?"GRAPE x"+streak:
+                streak>=6&&streak<=10?"REPLAY x"+(streak-5):
+                streak>=11&&streak<=13?"CHERRY x"+(streak-10):
+                streak==14?"BELL x1":streak==15?"PIERO x1":"NONE";
+        tell(sender,"JG_STATE id="+id+" type="+machine.type()+" setting="+machine.setting()
+                +" mode="+runtime.mode()+" hotRemaining="+runtime.hotRemaining()
+                +" streak="+role+" forcedRole="+runtime.forcedRole()
+                +" lastEvent="+runtime.lastEvent()+" lastTrigger="+runtime.lastTriggerDebug()
+                +" lastWinSource="+runtime.lastWinSource()+" busy="+busy(id)
+                +" sessionState="+(occupied==null?"NONE":occupied.state().name()));
+    }
+
     private void commandJugglerGodRole(CommandSender sender,int id,String rawRole) {
         Machine machine=state.machine(id);
         if(machine==null||(machine.type()!=MachineType.JUGGLER_GOD&&machine.type()!=MachineType.JUGGLER_GOD_EXTREME))throw new DomainException("INVALID_STATE");
-        if(busy(id))throw new DomainException("MACHINE_OCCUPIED");
+        Session occupied=state.sessions().stream().filter(session->session.machine()==id&&session.ownsLock())
+                .findFirst().orElse(null);
+        // The owning OP player or server console can queue a development role during
+        // normal/replay-ready. Other players cannot override a machine they do not own.
+        boolean authorized=occupied!=null&&(!(sender instanceof Player player)
+                ||occupied.player().equals(player.getUniqueId()));
+        UUID owner=authorized&&occupied.lifecycle()==Session.Lifecycle.ACTIVE
+                &&(occupied.state()==Session.GameState.SEATED_READY||occupied.state()==Session.GameState.REPLAY_READY)
+                ?occupied.player():null;
+        if(busy(id)&&owner==null)throw new DomainException("MACHINE_OCCUPIED");
 
         final String roleName;
         if(rawRole.equalsIgnoreCase("clear")) roleName="NONE";
@@ -329,14 +474,23 @@ public final class MachineService implements Listener, CommandExecutor {
             catch(IllegalArgumentException invalid){ throw new DomainException("INVALID_STATE"); }
         }
 
-        JugglerGodRuntime current=JugglerGodRuntime.fromJson(machine.runtimeJson());
-        JugglerGodRuntime next=current.forceRole(roleName);
         long now=System.currentTimeMillis();
-        submit(sender,null,id,()->{database.setMachineRuntimeJson(id,next.toJsonString(),now);return id;},
-                done->{tell(sender,"NONE".equals(roleName)
-                        ?"JUGGLER_GOD_ROLE_CLEARED id="+done
-                        :"JUGGLER_GOD_ROLE_READY id="+done+" role="+roleName+" nextSpinOnly=true");
-                    remote.machineChanged(done);});
+        if(owner!=null){
+            // When REPLAY_READY is active, the next lever reads the session state,
+            // not only machine_runtime_json. Keep both records in sync.
+            submit(sender,owner,id,()->{database.forceJugglerGodRoleForSeatedOwner(id,owner,roleName,now);return id;},
+                    done->{tell(sender,"NONE".equals(roleName)
+                            ?"JUGGLER_GOD_ROLE_CLEARED id="+done
+                            :"JUGGLER_GOD_ROLE_READY id="+done+" role="+roleName+" nextSpinOnly=true");
+                        remote.machineChanged(done);});
+        }else{
+            JugglerGodRuntime next=JugglerGodRuntime.fromJson(machine.runtimeJson()).forceRole(roleName);
+            submit(sender,null,id,()->{database.setMachineRuntimeJson(id,next.toJsonString(),now);return id;},
+                    done->{tell(sender,"NONE".equals(roleName)
+                            ?"JUGGLER_GOD_ROLE_CLEARED id="+done
+                            :"JUGGLER_GOD_ROLE_READY id="+done+" role="+roleName+" nextSpinOnly=true");
+                        remote.machineChanged(done);});
+        }
     }
 
     private void commandGodRole(CommandSender sender,int id,String rawRole) {

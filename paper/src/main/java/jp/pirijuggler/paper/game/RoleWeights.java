@@ -46,15 +46,29 @@ public final class RoleWeights {
         return drawJugglerGod(setting,rng,bonusScalePpm,1_000_000);
     }
     public InternalRole drawJugglerGod(int setting,RandomGenerator rng,int bonusScalePpm,int smallRoleScalePpm) {
-        if(setting<1||setting>6||bonusScalePpm<0||bonusScalePpm>1_000_000
+        return drawJugglerGod(setting,rng,bonusScalePpm,bonusScalePpm,smallRoleScalePpm);
+    }
+
+    /**
+     * Separate standalone BIG/REG from cherry/piero-overlap bonuses.
+     * The existing four-argument overload intentionally preserves old callers.
+     */
+    public InternalRole drawJugglerGod(int setting,RandomGenerator rng,
+            int standaloneScalePpm,int overlapScalePpm,int smallRoleScalePpm) {
+        if(setting<1||setting>6||standaloneScalePpm<0||standaloneScalePpm>20_000_000
+                ||overlapScalePpm<0||overlapScalePpm>20_000_000
                 ||smallRoleScalePpm<0||smallRoleScalePpm>1_000_000)
             throw new IllegalArgumentException("JUGGLER_GOD weights");
         int roll=rng.nextInt(DENOMINATOR);long cursor=0,removed=0;
         int[] row=rawWeights[setting-1];
         for(int i=0;i<ORDER.length;i++){
             InternalRole role=ORDER[i];long weight=row[i];
-            int scale=GameRules.bonus(role)!=null&&role!=InternalRole.GOD?bonusScalePpm:
-                    switch(role){case GRAPE,BELL,CHERRY,PIERO->smallRoleScalePpm;default->1_000_000;};
+            int scale=switch(role){
+                case BIG,REG->standaloneScalePpm;
+                case CHERRY_BIG,CHERRY_REG,PIERO_BIG,PIERO_REG->overlapScalePpm;
+                case GRAPE,BELL,CHERRY,PIERO->smallRoleScalePpm;
+                default->1_000_000;
+            };
             if(role==InternalRole.MISS){
                 weight+=removed;
             }else if(scale!=1_000_000){
@@ -83,6 +97,18 @@ public final class RoleWeights {
         long roll=rng.nextLong(total);
         return roll<big?InternalRole.BIG:InternalRole.REG;
     }
+    /** Original (unscaled) BIG+REG family weight out of one billion. */
+    public long unscaledBonusFamilyWeight(int setting) {
+        if(setting<1||setting>6)throw new IllegalArgumentException("Setting");
+        return bonusFamilies[setting-1][0]+bonusFamilies[setting-1][1];
+    }
+
+    /** Original unscaled weight for standalone BIG + REG, excluding role overlaps. */
+    public long unscaledStandaloneBonusWeight(int setting) {
+        if(setting<1||setting>6)throw new IllegalArgumentException("Setting");
+        return (long)rawWeights[setting-1][5]+rawWeights[setting-1][6];
+    }
+
     public long bonusFamilyWeight(int setting,boolean big,int bonusScalePpm) {
         if(setting<1||setting>6||bonusScalePpm<0||bonusScalePpm>1_000_000)throw new IllegalArgumentException("JUGGLER_GOD weights");
         return bonusFamilies[setting-1][big?0:1]*bonusScalePpm/1_000_000L;
