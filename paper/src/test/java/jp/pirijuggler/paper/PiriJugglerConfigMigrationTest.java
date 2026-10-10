@@ -54,7 +54,7 @@ class PiriJugglerConfigMigrationTest {
         String current=Files.readString(Path.of(System.getProperty("piri.specRoot"),"paper/src/main/resources/config.yml"));
         String oldConfig=current.replaceAll(", precursor_two_high_ppm: \\d+", "")
                 .replace("bonus_scale_ppm: 270000", "bonus_scale_ppm: 410000")
-                .replace("bonus_scale_ppm: 198000", "bonus_scale_ppm: 410001");
+                .replace("bonus_scale_ppm: 199600", "bonus_scale_ppm: 410001");
         assertFalse(oldConfig.contains("precursor_two_high_ppm"));
         assertTrue(ConfigValidation.load(new StringReader(oldConfig)).valid(),
                 "Custom operator profiles missing only the newly optional key must load");
@@ -99,7 +99,7 @@ class PiriJugglerConfigMigrationTest {
         assertEquals(3,result.stockKeysAdded());
         assertEquals(1,result.customKept());
         assertTrue(result.text().contains("bonus_scale_ppm: 270000,"));
-        assertTrue(result.text().contains("bonus_scale_ppm: 187000,"));
+        assertTrue(result.text().contains("bonus_scale_ppm: 188600,"));
         assertTrue(result.text().contains("bonus_scale_ppm: 412345,"));
         assertTrue(result.text().contains("bonus_stock_scale_ppm: 743613"));
         assertTrue(result.text().contains("bonus_stock_scale_ppm: 734884"));
@@ -123,10 +123,43 @@ class PiriJugglerConfigMigrationTest {
         assertEquals(2,result.adjusted());
         assertEquals(2,result.stockKeysAdded());
         assertTrue(result.text().contains("bonus_scale_ppm: 270000"));
-        assertTrue(result.text().contains("bonus_scale_ppm: 198000"));
+        assertTrue(result.text().contains("bonus_scale_ppm: 199600"));
         assertFalse(result.text().replace("\r\n","").contains("\n"),
                 "Stock migration must not introduce mixed Windows/Unix line endings");
         assertEquals(result.text(),JugglerGodStockOddsMigration.migrate(result.text()).text());
+    }
+
+
+    @Test void previousSplitStockConfigUpdatesAllExtremeDefaultRowsWithoutChangingStocks() throws Exception {
+        String current=Files.readString(Path.of(System.getProperty("piri.specRoot"),"paper/src/main/resources/config.yml"));
+        int[] before={198000,192500,194000,197000,199500,187000};
+        int[] after={199600,196300,197500,201300,204500,188600};
+        int[] stocks={564190,554200,558800,562600,571106,537600};
+        String old=current;
+        for(int i=0;i<6;i++){
+            old=old.replace("bonus_scale_ppm: "+after[i]+", bonus_stock_scale_ppm: "+stocks[i],
+                    "bonus_scale_ppm: "+before[i]+", bonus_stock_scale_ppm: "+stocks[i]);
+        }
+        var migrated=JugglerGodStockOddsMigration.migrate(old);
+        assertEquals(6,migrated.adjusted());
+        assertEquals(0,migrated.stockKeysAdded());
+        assertEquals(current,migrated.text());
+        assertEquals(current,JugglerGodStockOddsMigration.migrate(migrated.text()).text());
+        assertTrue(ConfigValidation.load(new StringReader(migrated.text())).valid());
+    }
+
+    @Test void customizedExtremeSplitRowsAreNeverRebalanced() {
+        String custom=String.join("\r\n",
+                "juggler_god_extreme:",
+                "  settings:",
+                "    '1': {bonus_scale_ppm: 198001, bonus_stock_scale_ppm: 564190, small_role_scale_ppm: 700000, god_continuation_percent: 75, precursor_two_high_ppm: 72001}",
+                "    '2': {bonus_scale_ppm: 192500, bonus_stock_scale_ppm: 600000, small_role_scale_ppm: 700000, god_continuation_percent: 78, precursor_two_high_ppm: 78911}",
+                "    '3': {bonus_scale_ppm: 194000, bonus_stock_scale_ppm: 558800, small_role_scale_ppm: 700001, god_continuation_percent: 80, precursor_two_high_ppm: 92247}",
+                "");
+        var migrated=JugglerGodStockOddsMigration.migrate(custom);
+        assertEquals(custom,migrated.text());
+        assertEquals(0,migrated.adjusted());
+        assertEquals(0,migrated.stockKeysAdded());
     }
 
     @Test void stockOddsMigrationPreservesOperatorSpecifiedStockOdds() {
