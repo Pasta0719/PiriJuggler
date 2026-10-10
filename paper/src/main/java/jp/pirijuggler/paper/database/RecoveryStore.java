@@ -37,9 +37,11 @@ public final class RecoveryStore {
     private final long normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm;
     private final int[] jgBonusScalePpm=new int[7];
     private final int[] jgSmallRoleScalePpm=new int[7];
+    private final int[] jgPrecursorTwoHighPpm=new int[7];
     private final long extremeNormalBigToHeavenPpm,extremeNormalRegToHeavenPpm,extremeHeavenToHeavenPpm;
     private final int[] extremeBonusScalePpm=new int[7];
     private final int[] extremeSmallRoleScalePpm=new int[7];
+    private final int[] extremePrecursorTwoHighPpm=new int[7];
     private final int[] extremeContinuationPercent=new int[7];
     private final int extremeGodDenominator,extremeGodInGodBigStock,extremeGuaranteedBigs,extremeBigPayout,extremeRegPayout;
     private boolean activeExtreme;
@@ -64,6 +66,7 @@ public final class RecoveryStore {
             Map<String,Object> row=StartupProfile.map(settings.get(Integer.toString(setting)));
             jgBonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
             jgSmallRoleScalePpm[setting]=(int)number(row.get("small_role_scale_ppm"),1_000_000);
+            jgPrecursorTwoHighPpm[setting]=(int)number(row.get("precursor_two_high_ppm"),0);
         }
         Map<String,Object> extreme=StartupProfile.map(config.get("juggler_god_extreme"));
         extremeGodDenominator=(int)number(extreme.get("god_denominator"),16384);
@@ -80,6 +83,7 @@ public final class RecoveryStore {
             Map<String,Object> row=StartupProfile.map(extremeSettings.get(Integer.toString(setting)));
             extremeBonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
             extremeSmallRoleScalePpm[setting]=(int)number(row.get("small_role_scale_ppm"),1_000_000);
+            extremePrecursorTwoHighPpm[setting]=(int)number(row.get("precursor_two_high_ppm"),0);
             extremeContinuationPercent[setting]=(int)number(row.get("god_continuation_percent"),defaults[setting]);
         }
     }
@@ -303,23 +307,24 @@ public final class RecoveryStore {
         return JugglerGodRuntime.fromJson(raw instanceof String s?s:null);
     }
 
+    /** Apply the same role-streak, mode-upgrade and bonus draw ordering as the live lever. */
     private JgDraw drawJugglerGodRecovery(JugglerGodRuntime runtime,int setting,int machine){
         SplittableRandom rng=rng(machine);
         if(!"NONE".equals(runtime.forcedRole())){
             InternalRole role;
             try{role=InternalRole.valueOf(runtime.forcedRole());}
             catch(IllegalArgumentException invalid){role=InternalRole.MISS;}
-            return new JgDraw(role,runtime.forceRole("NONE"),1);
+            return recoveryDrawResolved(runtime.forceRole("NONE"),role,1);
         }
         if(runtime.mode()==JugglerGodRuntime.Mode.GOD_CHAIN&&runtime.forceChainBig()){
             int spins=runtime.countNextChainGame()?1:0;
             JugglerGodRuntime consumed=runtime.core(runtime.mode(),runtime.heavenTarget(),runtime.heavenProgress(),
                     runtime.guaranteedRemaining(),false,false,runtime.bonusOrigin(),runtime.godBigCount(),
                     runtime.godFreeze(),"RECOVERY_GOD_CHAIN_BIG_CONSUMED");
-            return new JgDraw(InternalRole.BIG,consumed,spins);
+            return recoveryDrawResolved(consumed,InternalRole.BIG,spins);
         }
         if(runtime.mode()!=JugglerGodRuntime.Mode.GOD_CHAIN&&rng.nextInt(jgGodDenominator())==0)
-            return new JgDraw(InternalRole.GOD,runtime,1);
+            return recoveryDrawResolved(runtime,InternalRole.GOD,1);
         if(runtime.mode()==JugglerGodRuntime.Mode.HEAVEN){
             int progress=Math.min(32,runtime.heavenProgress()+1);
             JugglerGodRuntime progressed=runtime.core(runtime.mode(),runtime.heavenTarget(),progress,
@@ -327,10 +332,53 @@ public final class RecoveryStore {
                     runtime.bonusOrigin(),runtime.godBigCount(),runtime.godFreeze(),runtime.lastEvent());
             InternalRole role=progress>=runtime.heavenTarget()
                     ?weights.drawBonusFamily(setting,rng)
-                    :weights.drawJugglerGodNonBonus(setting,rng,jgBonusScalePpm[setting],jgSmallRoleScalePpm[setting]);
-            return new JgDraw(role,progressed,1);
+                    :weights.drawJugglerGodNonBonus(setting,rng,jgBonusScale(setting),jgSmallRoleScale(setting));
+            return recoveryDrawResolved(progressed,role,1);
         }
-        return new JgDraw(weights.drawJugglerGod(setting,rng,jgBonusScalePpm[setting],jgSmallRoleScalePpm[setting]),runtime,1);
+        int precursor=activeExtreme?extremePrecursorTwoHighPpm[setting]:jgPrecursorTwoHighPpm[setting];
+        var trigger=jp.pirijuggler.paper.game.JugglerGodGameEngine.trigger(runtime.roleStreak(),precursor);
+        if(rng.nextDouble()<trigger.bonus())
+            return recoveryDrawResolved(runtime,weights.drawBonusFamily(setting,rng),1);
+
+        JugglerGodRuntime.Mode mode=runtime.mode();
+        int remaining=runtime.hotRemaining();
+        double upgrade=rng.nextDouble();
+        if(upgrade<trigger.high()){
+            if(mode==JugglerGodRuntime.Mode.NORMAL){mode=JugglerGodRuntime.Mode.HIGH;remaining=20;}
+            else if(mode==JugglerGodRuntime.Mode.HIGH){mode=JugglerGodRuntime.Mode.ULTRA;remaining=15;}
+            else if(mode==JugglerGodRuntime.Mode.ULTRA){remaining=15;}
+        }else if(upgrade<trigger.high()+trigger.ultra()){
+            mode=JugglerGodRuntime.Mode.ULTRA;remaining=15;
+        }
+        JugglerGodRuntime prepared=runtime.withHot(mode,remaining,runtime.roleStreak(),"RECOVERY_ROLE_MODE_ROLL");
+        int scale=switch(mode){
+            case HIGH->recoveryHotScale(setting,true);
+            case ULTRA->recoveryHotScale(setting,false);
+            default->jgBonusScale(setting);
+        };
+        InternalRole role=weights.drawJugglerGod(setting,rng,scale,jgSmallRoleScale(setting));
+        return recoveryDrawResolved(prepared,role,1);
+    }
+
+    private int recoveryHotScale(int setting,boolean high){
+        double chance=1-Math.pow(high?.60:.30,1.0/(high?20:15));
+        return (int)Math.round(chance*1_000_000_000_000_000.0/weights.unscaledBonusFamilyWeight(setting));
+    }
+
+    private static JgDraw recoveryDrawResolved(JugglerGodRuntime prepared,InternalRole role,int spins){
+        if(role==InternalRole.GOD||GameRules.bonus(role)!=null)
+            return new JgDraw(role,prepared.clearHot(),spins);
+        JugglerGodRuntime.Mode mode=prepared.mode();
+        int remaining=prepared.hotRemaining();
+        if(mode==JugglerGodRuntime.Mode.HIGH||mode==JugglerGodRuntime.Mode.ULTRA){
+            if(--remaining<=0){mode=JugglerGodRuntime.Mode.NORMAL;remaining=0;}
+        }
+        if(mode==JugglerGodRuntime.Mode.NORMAL||mode==JugglerGodRuntime.Mode.HIGH
+                ||mode==JugglerGodRuntime.Mode.ULTRA)
+            prepared=prepared.withHot(mode,remaining,
+                    jp.pirijuggler.paper.game.JugglerGodGameEngine.followingStreak(prepared.roleStreak(),role),
+                    "RECOVERY_ROLE_STOPPED");
+        return new JgDraw(role,prepared,spins);
     }
 
     private void putRecoveryRole(Map<String,Object> values,InternalRole role,int machine){
@@ -410,7 +458,7 @@ public final class RecoveryStore {
                         runtime.additionalRegStock(),"RECOVERY_GOD_IN_GOD");
                 continue;
             }
-            InternalRole hit=weights.drawJugglerGod(setting,rng,jgBonusScalePpm[setting],jgSmallRoleScalePpm[setting]);
+            InternalRole hit=weights.drawJugglerGod(setting,rng,jgBonusScale(setting),jgSmallRoleScale(setting));
             String bonus=GameRules.bonus(hit);
             if(bonus==null)continue;
             runtime=runtime.stock(
