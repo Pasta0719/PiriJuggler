@@ -190,4 +190,77 @@ class MachineDataSimulatorContinuityTest {
         assertEquals(0,after.getAsJsonArray("stock").size(),"GOD-chain overlay must not leak into deferred post-GOD stock");
     }
 
+    @Test void godHistorySimPersistsHighModeAndConsumesExactGameBudget() throws Exception {
+        int id=create(MachineType.JUGGLER_GOD,8);
+        putCursor(id,"{\"version\":4,\"kind\":\"JUGGLER_GOD\",\"mode\":\"HIGH\",\"hotRemaining\":3,\"roleStreak\":0}");
+        for(int spin=1;spin<=3;spin++){
+            var result=JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,id,1,1,period(),
+                    new HighRandom(),NOW+200+spin);
+            assertEquals(1,result.games());
+            var c=cursor(id);
+            assertEquals(Math.max(0,3-spin),c.get("hotRemaining").getAsInt());
+            assertEquals(spin==3?"NORMAL":"HIGH",c.get("mode").getAsString());
+        }
+        assertEquals(3,stat("total_games",id));
+    }
+
+    @Test void godHistorySimPromotesAfterTwoGrapesAndSurvivesCommandBoundary() throws Exception {
+        int id=create(MachineType.JUGGLER_GOD,9);
+        putCursor(id,"{\"version\":4,\"kind\":\"JUGGLER_GOD\",\"mode\":\"NORMAL\",\"roleStreak\":2}");
+        RandomGenerator promote=new RandomGenerator(){
+            @Override public long nextLong(){return 0L;}
+            @Override public int nextInt(int bound){return bound-1;}
+            @Override public double nextDouble(){return 0.0;}
+        };
+        JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,id,1,1,period(),promote,NOW+250);
+        assertEquals("HIGH",cursor(id).get("mode").getAsString());
+        assertEquals(19,cursor(id).get("hotRemaining").getAsInt());
+        assertEquals(0,cursor(id).get("roleStreak").getAsInt());
+        JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,id,1,1,period(),new HighRandom(),NOW+251);
+        assertEquals("HIGH",cursor(id).get("mode").getAsString());
+        assertEquals(18,cursor(id).get("hotRemaining").getAsInt());
+    }
+
+    @Test void godHistorySimActuallyRecordsHighModeBigRatherThanOrdinaryMysteryRate() throws Exception {
+        int id=create(MachineType.JUGGLER_GOD,10);
+        var profiles=StartupProfile.map(StartupProfile.map(config.get("probabilities")).get("settings"));
+        var roles=StartupProfile.map(profiles.get("1"));
+        var cfg=StartupProfile.map(StartupProfile.map(config.get("juggler_god")).get("settings"));
+        var row=StartupProfile.map(cfg.get("1"));
+        int small=((Number)row.get("small_role_scale_ppm")).intValue();
+        int base=((Number)row.get("bonus_scale_ppm")).intValue();
+        long raw=weights.unscaledBonusFamilyWeight(1);
+        int high=(int)Math.round((1-Math.pow(.60,1.0/20.0))*1_000_000_000_000_000.0/raw);
+        int bigRoll=Math.toIntExact(((Number)roles.get("replay")).longValue()
+                +((Number)roles.get("grape")).longValue()*small/1_000_000L
+                +((Number)roles.get("bell")).longValue()*small/1_000_000L
+                +((Number)roles.get("cherry")).longValue()*small/1_000_000L
+                +((Number)roles.get("piero")).longValue()*small/1_000_000L);
+        assertNotEquals(jp.pirijuggler.paper.reel.InternalRole.BIG,
+                weights.drawJugglerGod(1,new SequenceRandom(bigRoll),base,small));
+        assertEquals(jp.pirijuggler.paper.reel.InternalRole.BIG,
+                weights.drawJugglerGod(1,new SequenceRandom(bigRoll),high,small));
+        putCursor(id,"{\"version\":4,\"kind\":\"JUGGLER_GOD\",\"mode\":\"HIGH\",\"hotRemaining\":4}");
+        JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,id,1,1,period(),
+                new SequenceRandom(1,bigRoll),NOW+280);
+        assertEquals(1,stat("big_count",id),"high-mode BIG must appear in real machine statistics");
+        assertEquals(1,stat("total_games",id));
+        assertEquals("NORMAL",cursor(id).get("mode").getAsString(),"bonus consumes high mode");
+        assertEquals(0,cursor(id).get("hotRemaining").getAsInt());
+        var history=db.rows("SELECT bonus_type,games FROM bonus_history WHERE machine_id=? AND business_period_id=?",id,period());
+        assertEquals(1,history.size(),"bonus must be in the real historical table");
+        assertEquals("BIG",history.getFirst().get("bonus_type"));
+    }
+
+    @Test void extremeGodHistorySimAlsoPersistsUltraAndExpiresAfterFifteenGames() throws Exception {
+        int id=create(MachineType.JUGGLER_GOD_EXTREME,11);
+        putCursor(id,"{\"version\":4,\"kind\":\"JUGGLER_GOD_EXTREME\",\"mode\":\"ULTRA\",\"hotRemaining\":2}");
+        JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,id,1,1,period(),new HighRandom(),NOW+300);
+        assertEquals("ULTRA",cursor(id).get("mode").getAsString());
+        assertEquals(1,cursor(id).get("hotRemaining").getAsInt());
+        JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,id,1,1,period(),new HighRandom(),NOW+301);
+        assertEquals("NORMAL",cursor(id).get("mode").getAsString());
+        assertEquals(0,cursor(id).get("hotRemaining").getAsInt());
+    }
+
 }
