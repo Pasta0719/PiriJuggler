@@ -142,7 +142,7 @@ class PiriDatabaseTest {
         db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",heavenState.toJsonString(),heaven);
         db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",chainState.toJsonString(),chain);
         db.seat(player,high,NOW);
-        db.sql("UPDATE player_sessions SET credit=321,held_medals=654,game_state='SEATED_READY'");
+        db.sql("UPDATE player_sessions SET credit=32,held_medals=654,game_state='SEATED_READY'");
         db.shutdown(NOW+2,60_000);
         db=new PiriDatabase(directory.resolve("piri.db"));
         db.open(2,NOW+100,config,new SplittableRandom(2),ignored->{});
@@ -165,7 +165,7 @@ class PiriDatabaseTest {
         assertEquals(jp.pirijuggler.paper.game.JugglerGodRuntime.Mode.GOD_CHAIN,g.mode());
         assertEquals(4,g.guaranteedRemaining());
         assertEquals(3,g.additionalBigStock());assertEquals(2,g.additionalRegStock());
-        assertEquals(321,db.state().session(player).number("credit"));
+        assertEquals(32,db.state().session(player).number("credit"));
         assertEquals(654,db.state().session(player).number("held_medals"));
     }
 
