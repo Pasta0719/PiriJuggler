@@ -1,6 +1,7 @@
 package jp.pirijuggler.paper;
 
 import jp.pirijuggler.paper.config.ConfigValidation;
+import jp.pirijuggler.paper.config.JugglerGodPremonitionMigration;
 import org.junit.jupiter.api.Test;
 
 import java.io.StringReader;
@@ -20,7 +21,7 @@ class PiriJugglerConfigMigrationTest {
                 .replace("bonus_scale_ppm: 223878", "bonus_scale_ppm: 537600")
                 .replace(", precursor_two_high_ppm: 94884", "")
                 .replace(", precursor_two_high_ppm: 139688", "");
-        var result=PiriJugglerPlugin.migrateJugglerGodPremonitionText(legacy);
+        var result=JugglerGodPremonitionMigration.migrate(legacy);
         assertEquals(2,result.changed());
         assertEquals(0,result.skipped());
         assertTrue(result.text().contains("bonus_scale_ppm: 297986"));
@@ -32,7 +33,7 @@ class PiriJugglerConfigMigrationTest {
         var validation=ConfigValidation.load(new StringReader(result.text()));
         assertTrue(validation.valid(),()->"Migrated YAML must be valid: "+validation.errors());
 
-        var repeated=PiriJugglerPlugin.migrateJugglerGodPremonitionText(result.text());
+        var repeated=JugglerGodPremonitionMigration.migrate(result.text());
         assertEquals(0,repeated.changed());
         assertEquals(result.text(),repeated.text(),"migration must be idempotent");
     }
@@ -41,7 +42,7 @@ class PiriJugglerConfigMigrationTest {
         String custom=config()
                 .replace("bonus_scale_ppm: 297986", "bonus_scale_ppm: 410000")
                 .replace(", precursor_two_high_ppm: 94884", "");
-        var migrated=PiriJugglerPlugin.migrateJugglerGodPremonitionText(custom);
+        var migrated=JugglerGodPremonitionMigration.migrate(custom);
         assertEquals(0,migrated.changed());
         assertEquals(1,migrated.skipped());
         assertEquals(custom,migrated.text());
