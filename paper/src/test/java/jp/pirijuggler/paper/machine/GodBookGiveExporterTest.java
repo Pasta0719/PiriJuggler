@@ -58,8 +58,8 @@ class GodBookGiveExporterTest {
     }
 
     @Test void refusesInvalidOriginalDataAndUnsafeRecipient(){
-        var pages=java.util.stream.IntStream.range(0,12)
-                .mapToObj(i->Component.text("page"+i)).toList();
+        List<Component> pages=java.util.stream.IntStream.range(0,12)
+                .mapToObj(i->(Component)Component.text("page"+i)).toList();
         assertThrows(IllegalArgumentException.class,()->
                 GodBookGiveExporter.command("@a","GOD","admin",0,pages,GodGuideAddendum.pages()));
         assertThrows(IllegalArgumentException.class,()->
