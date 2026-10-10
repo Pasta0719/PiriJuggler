@@ -280,6 +280,8 @@ public final class JugglerGodMachineDataSimulator {
                     boolean originHeaven=c.mode==Mode.HEAVEN;
                     InternalRole role;
                     if(random.nextInt(s.godDenominator)==0){
+                        // A fresh GOD overrides any lingering normal-game anticipation.
+                        c.mode=Mode.NORMAL;c.hotRemaining=0;c.roleStreak=0;
                         s.advanceNormalGame(c,GameRules.payout(InternalRole.GOD));
                         s.godHistory((int)s.current);
                         c.godStartPending=true;
@@ -294,18 +296,43 @@ public final class JugglerGodMachineDataSimulator {
                                 ?weights.drawBonusFamily(setting,random)
                                 :weights.drawJugglerGodNonBonus(setting,random,bonusScale,smallRoleScale);
                     }else{
-                        role=weights.drawJugglerGod(setting,random,bonusScale,smallRoleScale);
+                        // Reuse the live engine's exact small-role trigger table and mode transition.
+                        var trigger=JugglerGodGameEngine.trigger(c.roleStreak,s.precursorTwoHighPpm);
+                        if(random.nextDouble()<trigger.bonus()){
+                            role=weights.drawBonusFamily(setting,random);
+                        }else{
+                            double upgrade=random.nextDouble();
+                            if(upgrade<trigger.high()){
+                                if(c.mode==Mode.NORMAL){c.mode=Mode.HIGH;c.hotRemaining=20;}
+                                else if(c.mode==Mode.HIGH){c.mode=Mode.ULTRA;c.hotRemaining=15;}
+                                else if(c.mode==Mode.ULTRA){c.hotRemaining=15;}
+                            }else if(upgrade<trigger.high()+trigger.ultra()){
+                                c.mode=Mode.ULTRA;c.hotRemaining=15;
+                            }
+                            int scale=c.mode==Mode.HIGH?s.highScalePpm:
+                                    c.mode==Mode.ULTRA?s.ultraScalePpm:bonusScale;
+                            role=weights.drawJugglerGod(setting,random,scale,smallRoleScale);
+                        }
                     }
 
                     s.advanceNormalGame(c,GameRules.payout(role));
                     String bonus=GameRules.bonus(role);
                     if(bonus!=null){
+                        // A bonus consumes HIGH/ULTRA and any accumulated small-role streak.
+                        if(!originHeaven)c.mode=Mode.NORMAL;
+                        c.hotRemaining=0;c.roleStreak=0;
                         c.postBonusPending=true;
                         c.postBonusOrigin=originHeaven?"HEAVEN":"NORMAL";
                         c.postBonusType=bonus;
                         startBonus(s,c,bonus,(int)s.current,false,true);
                     }else{
                         c.freeReplay=role==InternalRole.REPLAY;
+                        if(!originHeaven){
+                            c.roleStreak=JugglerGodGameEngine.followingStreak(c.roleStreak,role);
+                            if(c.mode==Mode.HIGH||c.mode==Mode.ULTRA){
+                                if(--c.hotRemaining<=0){c.mode=Mode.NORMAL;c.hotRemaining=0;}
+                            }
+                        }
                     }
                 }
 
