@@ -90,6 +90,34 @@ class PiriDatabaseTest {
         before.forEach((key, value) -> { if (!Set.of("last_activity", "lock_expires_at", "lifecycle").contains(key)) assertEquals(value, resumed.snapshot().get(key), key); });
         assertEquals(Session.Lifecycle.ACTIVE, resumed.lifecycle()); assertNull(resumed.snapshot().get("lock_expires_at"));
     }
+    @Test void seatedReplayCanQueueForcedRoleWithoutDroppingReplayOrStreak() throws Exception {
+        int id=db.create(location(0),MachineType.JUGGLER_GOD,NOW);
+        Session seat=db.seat(player,id,NOW);
+        var initial=jp.pirijuggler.paper.game.JugglerGodRuntime.initial()
+                .withHot(jp.pirijuggler.paper.game.JugglerGodRuntime.Mode.HIGH,19,7,"REPLAY_TWO");
+        db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",initial.toJsonString(),id);
+        db.sql("UPDATE player_sessions SET game_state='REPLAY_READY',machine_state_json=?,credit=42,held_medals=15 WHERE session_id=?",
+                initial.toJsonString(),seat.id().toString());
+        db.forceJugglerGodRoleForSeatedOwner(id,player,"REPLAY",NOW+1);
+        Session after=db.state().session(player);
+        var live=jp.pirijuggler.paper.game.JugglerGodRuntime.fromJson(after.machineState().toString());
+        assertEquals(Session.GameState.REPLAY_READY,after.state());
+        assertEquals(Session.Lifecycle.ACTIVE,after.lifecycle());
+        assertEquals(42,after.number("credit"));
+        assertEquals(15,after.number("held_medals"));
+        assertEquals("REPLAY",live.forcedRole());
+        assertEquals(19,live.hotRemaining());
+        assertEquals(7,live.roleStreak());
+        assertEquals(live.toJsonString(),db.state().machine(id).runtimeJson());
+        code("MACHINE_OCCUPIED",()->db.forceJugglerGodRoleForSeatedOwner(id,other,"GRAPE",NOW+2));
+
+        db.forceJugglerGodRoleForSeatedOwner(id,player,"NONE",NOW+2);
+        assertEquals("NONE",jp.pirijuggler.paper.game.JugglerGodRuntime
+                .fromJson(db.state().session(player).machineState().toString()).forcedRole());
+        db.sql("UPDATE player_sessions SET game_state='NORMAL_SPINNING' WHERE session_id=?",seat.id().toString());
+        code("INVALID_STATE",()->db.forceJugglerGodRoleForSeatedOwner(id,player,"REPLAY",NOW+3));
+    }
+
     @Test void graceReadyRetainsLockUntilExpiryThenAssetsStaySafe() throws Exception {
         int id = create(0); db.seat(player, id, NOW); db.sql("UPDATE player_sessions SET credit=7,held_medals=90");
         db.disconnect(player, NOW, 60_000); db.expire(NOW + 59_999); assertTrue(db.state().busy(id));
