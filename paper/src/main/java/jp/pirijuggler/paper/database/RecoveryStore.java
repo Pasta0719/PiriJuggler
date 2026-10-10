@@ -361,7 +361,18 @@ public final class RecoveryStore {
             case ULTRA->recoveryHotScale(setting,false);
             default->jgBonusScale(setting);
         };
-        InternalRole role=weights.drawJugglerGod(setting,rng,scale,jgSmallRoleScale(setting));
+        InternalRole role;
+        if(mode==JugglerGodRuntime.Mode.NORMAL){
+            String profile=activeExtreme?"juggler_god_extreme":"juggler_god";
+            int referenceBase=JugglerGodOdds.referenceBase(profile,setting);
+            int solo=JugglerGodOdds.normalStandaloneScale(
+                    jgBonusScale(setting),referenceBase,
+                    weights.unscaledStandaloneBonusWeight(setting),
+                    weights.unscaledBonusFamilyWeight(setting));
+            role=weights.drawJugglerGod(setting,rng,solo,referenceBase,jgSmallRoleScale(setting));
+        }else{
+            role=weights.drawJugglerGod(setting,rng,scale,jgSmallRoleScale(setting));
+        }
         return recoveryDrawResolved(prepared,role,1);
     }
 
