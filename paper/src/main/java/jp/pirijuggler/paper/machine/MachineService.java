@@ -374,7 +374,7 @@ public final class MachineService implements Listener, CommandExecutor {
         try{
             Files.createDirectories(folder);
             temp=Files.createTempFile(folder,".god-book-",".tmp");
-            Files.writeString(temp,command+"\\n",StandardCharsets.UTF_8);
+            Files.writeString(temp,command+"\n",StandardCharsets.UTF_8);
             try{
                 Files.move(temp,target,StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);
             }catch(AtomicMoveNotSupportedException ignored){
