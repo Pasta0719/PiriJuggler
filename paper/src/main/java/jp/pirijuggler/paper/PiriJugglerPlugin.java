@@ -190,6 +190,19 @@ juggler_god_extreme:
      */
     private void migrateJugglerGodPremonitionConfig(java.nio.file.Path path) throws IOException {
         String original=Files.readString(path,StandardCharsets.UTF_8);
+        MigrationResult result=migrateJugglerGodPremonitionText(original);
+        if(result.changed()>0){
+            Files.writeString(path,result.text(),StandardCharsets.UTF_8);
+            getLogger().info("Migrated "+result.changed()+" untouched JUGGLER GOD setting rows to context-led defaults");
+        }
+        if(result.skipped()>0)
+            getLogger().warning("Kept "+result.skipped()+" custom JUGGLER GOD tuning rows; review base odds and precursor_two_high_ppm manually");
+    }
+
+    static record MigrationResult(String text,int changed,int skipped) {}
+
+    /** Pure migration helper: testable without starting a Minecraft server. */
+    static MigrationResult migrateJugglerGodPremonitionText(String original) {
         String[] lines=original.split("\\n",-1);
         int[] godOld={0,743613,734884,734653,739194,741839,696323};
         int[] godPrior={0,511253,515456,524724,541234,547868,521596};
@@ -238,11 +251,7 @@ juggler_god_extreme:
                 skipped++;
             }
         }
-        if(changed>0){
-            Files.writeString(path,String.join("\\n",lines),StandardCharsets.UTF_8);
-            getLogger().info("Migrated "+changed+" untouched JUGGLER GOD setting rows to context-led defaults");
-        }
-        if(skipped>0)getLogger().warning("Kept "+skipped+" custom JUGGLER GOD tuning rows; review base odds and precursor_two_high_ppm manually");
+        return new MigrationResult(String.join("\n",lines),changed,skipped);
     }
 
     private boolean handleBuildIdentity(CommandSender sender,String[] args) {
