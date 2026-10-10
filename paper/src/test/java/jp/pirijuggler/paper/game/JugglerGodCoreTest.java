@@ -366,4 +366,52 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals("GOD_END_HEAVEN",after.lastEvent());
     }
 
+    @Test void highUltraRuntimeSurvivesJsonAndPreservesBonusOnlyLamp() throws Exception {
+        var state=JugglerGodRuntime.initial().withHot(JugglerGodRuntime.Mode.HIGH,20,3,"GRAPE_THREE");
+        var parsed=JugglerGodRuntime.fromJson(state.toJsonString());
+        assertEquals(state,parsed);
+        assertEquals(20,parsed.hotRemaining());
+        assertEquals(3,parsed.roleStreak());
+        var ultra=parsed.withHot(JugglerGodRuntime.Mode.ULTRA,15,9,"REPLAY_FOUR");
+        assertEquals(ultra,JugglerGodRuntime.fromJson(ultra.toJsonString()));
+        assertEquals(JugglerGodRuntime.Mode.NORMAL,ultra.clearHot().mode());
+        assertEquals(0,ultra.clearHot().hotRemaining());
+        assertEquals(0,ultra.clearHot().roleStreak());
+    }
+
+    @Test void highAndUltraBoostRealBonusRoleDrawWithoutAddingNotice() throws Exception {
+        Rig rig=rig(JugglerGodRuntime.initial(),1);
+        var field=JugglerGodGameEngine.class.getDeclaredField("highModeScalePpm");
+        field.setAccessible(true);
+        var ultraField=JugglerGodGameEngine.class.getDeclaredField("ultraModeScalePpm");
+        ultraField.setAccessible(true);
+        int high=((int[])field.get(rig.engine()))[1];
+        int ultra=((int[])ultraField.get(rig.engine()))[1];
+        var weights=new RoleWeights(config);
+        int total=300000;
+        var rng=new Random(950871L);
+        int highHits=0,ultraHits=0;
+        for(int i=0;i<total;i++){
+            if(GameRules.bonus(weights.drawJugglerGod(1,rng,high,813500))!=null)highHits++;
+            if(GameRules.bonus(weights.drawJugglerGod(1,rng,ultra,813500))!=null)ultraHits++;
+        }
+        assertEquals(1-Math.pow(.60,1.0/20.0),highHits/(double)total,.0015);
+        assertEquals(1-Math.pow(.30,1.0/15.0),ultraHits/(double)total,.0015);
+    }
+
+    @Test void stoppedRoleAdvancesExistingStreakAndSpendsExactlyOneHighGame() throws Exception {
+        var runtime=JugglerGodRuntime.initial()
+                .withHot(JugglerGodRuntime.Mode.HIGH,20,2,"TEST")
+                .forceRole("GRAPE");
+        Rig rig=rig(runtime,1);
+        Session s=action(rig,rig.session(),PacketType.SPACE_ACTION,0);
+        GameTransition lever=plan(rig,s,PacketType.SPACE_ACTION,1_000_000_000L);
+        assertEquals("GRAPE",lever.after().text("internal_role"));
+        var next=JugglerGodRuntime.fromJson(lever.machineRuntimeJson());
+        assertEquals(JugglerGodRuntime.Mode.HIGH,next.mode());
+        assertEquals(19,next.hotRemaining());
+        assertEquals(3,next.roleStreak());
+        assertEquals(0,lever.after().number("lamp_on"));
+    }
+
 }
