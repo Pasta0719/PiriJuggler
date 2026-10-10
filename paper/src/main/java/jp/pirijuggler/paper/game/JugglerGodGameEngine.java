@@ -65,10 +65,8 @@ public final class JugglerGodGameEngine implements GameEngine {
             Map<String,Object> row=map(settings.get(Integer.toString(setting)));
             bonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
             smallRoleScalePpm[setting]=(int)number(row.get("small_role_scale_ppm"),1_000_000);
-            int[] precursorDefaults="juggler_god_extreme".equals(configKey)
-                    ?new int[]{0,72001,78911,92247,110987,127811,139688}
-                    :new int[]{0,94884,105041,114326,130995,139760,153160};
-            precursorTwoHighPpm[setting]=(int)number(row.get("precursor_two_high_ppm"),precursorDefaults[setting]);
+            // Custom legacy profiles lacking the key retain their prior distribution.
+            precursorTwoHighPpm[setting]=(int)number(row.get("precursor_two_high_ppm"),0);
             continuationPercent[setting]=(int)number(row.get("god_continuation_percent"),defaults[setting]);
             long rawBonus=weights.unscaledBonusFamilyWeight(setting);
             highModeScalePpm[setting]=(int)Math.round(HIGH_BONUS_PER_LEVER*1_000_000_000_000_000.0/rawBonus);
