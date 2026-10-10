@@ -23,6 +23,16 @@ class JugglerGodStockOddsTest extends GameFixture {
                 assertEquals(normal[profile][setting],base);
                 assertEquals(JugglerGodOdds.defaultStockScale(type,setting),stock);
                 assertTrue(stock>base,"stock must be independent and stronger");
+                long soloRaw=weights.unscaledStandaloneBonusWeight(setting);
+                long totalRaw=weights.unscaledBonusFamilyWeight(setting);
+                int reference=JugglerGodOdds.referenceBase(type,setting);
+                int soloScale=JugglerGodOdds.normalStandaloneScale(base,reference,soloRaw,totalRaw);
+                assertTrue(soloScale<reference,"the reduction must hit standalone BIG/REG");
+                // Composite cherry/piero bonus roles retain the previous base scaling.
+                double actualFamilyWeight=soloRaw*(double)soloScale
+                        +(totalRaw-soloRaw)*(double)reference;
+                assertEquals(totalRaw*(double)base,actualFamilyWeight,soloRaw/2.0+2.0,
+                        type+" setting "+setting+" standalone-only budget");
                 long raw=weights.unscaledBonusFamilyWeight(setting);
                 int high=JugglerGodOdds.hotScale(base,JugglerGodOdds.referenceBase(type,setting),raw,false);
                 int ultra=JugglerGodOdds.hotScale(base,JugglerGodOdds.referenceBase(type,setting),raw,true);
