@@ -202,9 +202,9 @@ juggler_god_extreme:
         int[] exTwo={0,72001,78911,92247,110987,127811,139688};
         String profile="";
         int changed=0,skipped=0;
-        var row=java.util.regex.Pattern.compile("^(\\\\s{4}'([1-6])':\\\\s*\\\\{)(.*)(\\\\}\\\\s*)$");
-        var base=java.util.regex.Pattern.compile("bonus_scale_ppm:\\\\s*(\\\\d+)");
-        var small=java.util.regex.Pattern.compile("small_role_scale_ppm:\\\\s*(\\\\d+)");
+        var row=java.util.regex.Pattern.compile("^(\\s{4}'([1-6])':\\s*\\{)(.*)(\\}\\s*)$");
+        var base=java.util.regex.Pattern.compile("bonus_scale_ppm:\\s*(\\d+)");
+        var small=java.util.regex.Pattern.compile("small_role_scale_ppm:\\s*(\\d+)");
         for(int i=0;i<lines.length;i++){
             String line=lines[i];
             if(line.matches("^[a-z_]+:.*")){
@@ -230,7 +230,7 @@ juggler_god_extreme:
                         ?line.substring(0,originalBase.start(1))+target[setting]+line.substring(originalBase.end(1))
                         :line;
                 if(!updated.contains("precursor_two_high_ppm:"))
-                    updated=updated.replaceFirst("\\\\}\\\\s*$",", precursor_two_high_ppm: "+precursors[setting]+"}");
+                    updated=updated.replaceFirst("\\}\\s*$",", precursor_two_high_ppm: "+precursors[setting]+"}");
                 if(!updated.equals(line)){lines[i]=updated;changed++;}
             }else{
                 // Custom operator tuning must never be silently replaced.
