@@ -28,7 +28,7 @@ public final class JugglerGodPremonitionMigration {
         var small=java.util.regex.Pattern.compile("small_role_scale_ppm:\\s*(\\d+)");
         for(int i=0;i<lines.length;i++){
             String line=lines[i];
-            if(line.matches("^[a-z_]+:.*")){
+            if(line.stripTrailing().matches("^[a-z_]+:.*")){
                 profile=line.substring(0,line.indexOf(':'));
             }
             if(!"juggler_god".equals(profile)&&!"juggler_god_extreme".equals(profile))continue;
