@@ -110,6 +110,25 @@ class PiriJugglerConfigMigrationTest {
         assertEquals(result.text(),second.text());
     }
 
+    @Test void windowsCrLfConfigMigrationPreservesLineEndings() {
+        String windows=String.join("\r\n",
+                "juggler_god:",
+                "  settings:",
+                "    '1': {bonus_scale_ppm: 297986, small_role_scale_ppm: 813500, precursor_two_high_ppm: 94884}",
+                "juggler_god_extreme:",
+                "  settings:",
+                "    '1': {bonus_scale_ppm: 224070, small_role_scale_ppm: 700000, god_continuation_percent: 75, precursor_two_high_ppm: 72001}",
+                "");
+        var result=JugglerGodStockOddsMigration.migrate(windows);
+        assertEquals(2,result.adjusted());
+        assertEquals(2,result.stockKeysAdded());
+        assertTrue(result.text().contains("bonus_scale_ppm: 270000"));
+        assertTrue(result.text().contains("bonus_scale_ppm: 198000"));
+        assertFalse(result.text().replace("\r\n","").contains("\n"),
+                "Stock migration must not introduce mixed Windows/Unix line endings");
+        assertEquals(result.text(),JugglerGodStockOddsMigration.migrate(result.text()).text());
+    }
+
     @Test void stockOddsMigrationPreservesOperatorSpecifiedStockOdds() {
         String old=String.join("\n",
                 "juggler_god:",
