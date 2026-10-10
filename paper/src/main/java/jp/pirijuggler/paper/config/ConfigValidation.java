@@ -69,7 +69,8 @@ public final class ConfigValidation {
         c.keys("juggler_god.settings", Set.of("1","2","3","4","5","6"));
         for(int setting=1;setting<=6;setting++){
             String base="juggler_god.settings."+setting;
-            c.keys(base, Set.of("bonus_scale_ppm","small_role_scale_ppm"));
+            c.keys(base, Set.of("bonus_scale_ppm","small_role_scale_ppm","precursor_two_high_ppm"));
+            if(c.at(base+".precursor_two_high_ppm")!=null)c.integer(base+".precursor_two_high_ppm", 0, 1_000_000);
             c.integer(base+".bonus_scale_ppm", 0, 1_000_000);
             c.integer(base+".small_role_scale_ppm", 0, 1_000_000);
         }
@@ -85,7 +86,8 @@ public final class ConfigValidation {
         c.keys("juggler_god_extreme.settings", Set.of("1","2","3","4","5","6"));
         for(int setting=1;setting<=6;setting++){
             String base="juggler_god_extreme.settings."+setting;
-            c.keys(base, Set.of("bonus_scale_ppm","small_role_scale_ppm","god_continuation_percent"));
+            c.keys(base, Set.of("bonus_scale_ppm","small_role_scale_ppm","god_continuation_percent","precursor_two_high_ppm"));
+            if(c.at(base+".precursor_two_high_ppm")!=null)c.integer(base+".precursor_two_high_ppm", 0, 1_000_000);
             c.integer(base+".bonus_scale_ppm", 0, 1_000_000);
             c.integer(base+".small_role_scale_ppm", 0, 1_000_000);
             c.integer(base+".god_continuation_percent", 0, 99);
