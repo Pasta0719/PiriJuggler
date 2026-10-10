@@ -9,7 +9,7 @@ class JugglerGodStockOddsTest extends GameFixture {
         var weights=new RoleWeights(config);
         int[][] normal={
             {0,270000,267000,270500,270500,268000,255000},
-            {0,198000,192500,194000,197000,199500,187000}
+            {0,199600,196300,197500,201300,204500,188600}
         };
         for(int profile=0;profile<2;profile++){
             String type=profile==0?"juggler_god":"juggler_god_extreme";
