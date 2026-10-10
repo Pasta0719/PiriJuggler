@@ -235,9 +235,10 @@ const buildNormal=function buildNormalModels(){
  "B R P G B R P G B R P G B R P G B R BAR 7 G"
  ].map(x=>x.split(" "));
  const lines=[[0,0,0],[1,1,1],[2,2,2],[0,1,2],[2,1,0]];
- const patterns=["R R R","G G G","B B B","P P P","7 7 7","7 7 BAR","BAR BAR BAR","7 C BAR","B 7 B","G G P","P G P","P P 7","P BAR P"].map(x=>x.split(" "));
+ const patterns=["R R R","G G G","B B B","P P P","7 7 7","7 7 BAR","BAR BAR BAR","7 C BAR","B 7 B","G G P","P G P","P P 7","P BAR P",
+   "7 BAR 7","7 BAR BAR","BAR 7 7","BAR 7 BAR","BAR BAR 7"].map(x=>x.split(" "));
  const win=(r,t,row)=>reels[r][(t-row+21)%21];
- const masks=new Uint16Array(9261),leftBad=new Uint8Array(21),leftC=new Uint8Array(21);
+ const masks=new Uint32Array(9261),leftBad=new Uint8Array(21),leftC=new Uint8Array(21);
  for(let l=0;l<21;l++){leftBad[l]=win(0,l,1)==="C"?1:0;leftC[l]=[0,2].some(row=>win(0,l,row)==="C")?1:0;}
  for(let l=0;l<21;l++)for(let m=0;m<21;m++)for(let r=0;r<21;r++){
   let mask=0; const ts=[l,m,r];
@@ -339,9 +340,10 @@ const buildPending=function buildNormalModels(){
  "B R P G B R P G B R P G B R P G B R BAR 7 G"
  ].map(x=>x.split(" "));
  const lines=[[0,0,0],[1,1,1],[2,2,2],[0,1,2],[2,1,0]];
- const patterns=["R R R","G G G","B B B","P P P","7 7 7","7 7 BAR","BAR BAR BAR","7 C BAR","B 7 B","G G P","P G P","P P 7","P BAR P"].map(x=>x.split(" "));
+ const patterns=["R R R","G G G","B B B","P P P","7 7 7","7 7 BAR","BAR BAR BAR","7 C BAR","B 7 B","G G P","P G P","P P 7","P BAR P",
+   "7 BAR 7","7 BAR BAR","BAR 7 7","BAR 7 BAR","BAR BAR 7"].map(x=>x.split(" "));
  const win=(r,t,row)=>reels[r][(t-row+21)%21];
- const masks=new Uint16Array(9261),leftBad=new Uint8Array(21),leftC=new Uint8Array(21);
+ const masks=new Uint32Array(9261),leftBad=new Uint8Array(21),leftC=new Uint8Array(21);
  for(let l=0;l<21;l++){leftBad[l]=win(0,l,1)==="C"?1:0;leftC[l]=[0,2].some(row=>win(0,l,row)==="C")?1:0;}
  for(let l=0;l<21;l++)for(let m=0;m<21;m++)for(let r=0;r<21;r++){
   let mask=0; const ts=[l,m,r];
