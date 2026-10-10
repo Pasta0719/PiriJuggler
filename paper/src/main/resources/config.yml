@@ -26,12 +26,12 @@ juggler_god:
   normal_reg_to_heaven_ppm: 62500
   heaven_to_heaven_ppm: 500000
   settings:
-    '1': {bonus_scale_ppm: 511253, small_role_scale_ppm: 813500}
-    '2': {bonus_scale_ppm: 515456, small_role_scale_ppm: 809600}
-    '3': {bonus_scale_ppm: 524724, small_role_scale_ppm: 819100}
-    '4': {bonus_scale_ppm: 541234, small_role_scale_ppm: 827000}
-    '5': {bonus_scale_ppm: 547868, small_role_scale_ppm: 841000}
-    '6': {bonus_scale_ppm: 521596, small_role_scale_ppm: 833500}
+    '1': {bonus_scale_ppm: 297986, small_role_scale_ppm: 813500, precursor_two_high_ppm: 94884}
+    '2': {bonus_scale_ppm: 296030, small_role_scale_ppm: 809600, precursor_two_high_ppm: 105041}
+    '3': {bonus_scale_ppm: 298549, small_role_scale_ppm: 819100, precursor_two_high_ppm: 114326}
+    '4': {bonus_scale_ppm: 303386, small_role_scale_ppm: 827000, precursor_two_high_ppm: 130995}
+    '5': {bonus_scale_ppm: 306204, small_role_scale_ppm: 841000, precursor_two_high_ppm: 139760}
+    '6': {bonus_scale_ppm: 289197, small_role_scale_ppm: 833500, precursor_two_high_ppm: 153160}
 
 juggler_god_extreme:
   # Same gameplay/presentation as JUGGLER_GOD, tuned as a high-volatility profile.
@@ -44,12 +44,12 @@ juggler_god_extreme:
   normal_reg_to_heaven_ppm: 30000
   heaven_to_heaven_ppm: 700000
   settings:
-    '1': {bonus_scale_ppm: 373441, small_role_scale_ppm: 700000, god_continuation_percent: 75}
-    '2': {bonus_scale_ppm: 374111, small_role_scale_ppm: 700000, god_continuation_percent: 78}
-    '3': {bonus_scale_ppm: 389811, small_role_scale_ppm: 700000, god_continuation_percent: 80}
-    '4': {bonus_scale_ppm: 407855, small_role_scale_ppm: 700000, god_continuation_percent: 82}
-    '5': {bonus_scale_ppm: 424958, small_role_scale_ppm: 700000, god_continuation_percent: 85}
-    '6': {bonus_scale_ppm: 406753, small_role_scale_ppm: 700000, god_continuation_percent: 90}
+    '1': {bonus_scale_ppm: 224070, small_role_scale_ppm: 700000, god_continuation_percent: 75, precursor_two_high_ppm: 72001}
+    '2': {bonus_scale_ppm: 221440, small_role_scale_ppm: 700000, god_continuation_percent: 78, precursor_two_high_ppm: 78911}
+    '3': {bonus_scale_ppm: 225491, small_role_scale_ppm: 700000, god_continuation_percent: 80, precursor_two_high_ppm: 92247}
+    '4': {bonus_scale_ppm: 230039, small_role_scale_ppm: 700000, god_continuation_percent: 82, precursor_two_high_ppm: 110987}
+    '5': {bonus_scale_ppm: 235721, small_role_scale_ppm: 700000, god_continuation_percent: 85, precursor_two_high_ppm: 127811}
+    '6': {bonus_scale_ppm: 223878, small_role_scale_ppm: 700000, god_continuation_percent: 90, precursor_two_high_ppm: 139688}
 
 premium:
   big_chance_weight: 50000
