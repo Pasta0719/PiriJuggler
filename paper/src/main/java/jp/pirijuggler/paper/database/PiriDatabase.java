@@ -363,6 +363,32 @@ public final class PiriDatabase implements AutoCloseable {
         sql("DELETE FROM mobile_pairings WHERE player_uuid=?", owner.toString());
     }
 
+    /**
+     * Test-only admin role override for the owner of an active GOD-family seat.
+     * The session snapshot is authoritative during live play: writing machines alone
+     * does not reach the next lever, especially after REPLAY_READY.
+     */
+    public void forceJugglerGodRoleForSeatedOwner(int id,UUID owner,String role,long now) throws Exception {
+        transaction(() -> {
+            Machine machine=requireMachine(id);
+            if(machine.type()!=MachineType.JUGGLER_GOD&&machine.type()!=MachineType.JUGGLER_GOD_EXTREME)
+                throw new DomainException("INVALID_STATE");
+            Session session=session(owner);
+            if(session==null||session.machine()!=id||session.lifecycle()!=Session.Lifecycle.ACTIVE)
+                throw new DomainException("MACHINE_OCCUPIED");
+            if(session.state()!=Session.GameState.SEATED_READY&&session.state()!=Session.GameState.REPLAY_READY)
+                throw new DomainException("INVALID_STATE");
+            JugglerGodRuntime runtime=JugglerGodRuntime.fromJson(
+                    session.machineState()!=null?session.machineState().toString():machine.runtimeJson());
+            String next=runtime.forceRole(role).toJsonString();
+            sql("UPDATE player_sessions SET machine_state_json=?,last_activity=? WHERE session_id=?",
+                    next,now,session.id().toString());
+            sql("UPDATE machines SET machine_runtime_json=?,updated_at=? WHERE machine_id=?",
+                    next,now,id);
+            return null;
+        });
+    }
+
     public void setMachineRuntimeJson(int id, String runtimeJson, long now) throws SQLException {
         requireMachine(id);
         sql("UPDATE machines SET machine_runtime_json=?,updated_at=? WHERE machine_id=?", runtimeJson, now, id);
