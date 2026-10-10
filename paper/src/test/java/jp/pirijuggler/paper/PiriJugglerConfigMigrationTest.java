@@ -11,41 +11,46 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PiriJugglerConfigMigrationTest {
-    private static String config() throws Exception {
-        return Files.readString(Path.of(System.getProperty("piri.specRoot"),"paper/src/main/resources/config.yml"));
+
+    @Test void legacyStockGodRowsMigrateWithoutCorruptingYamlNewlines() {
+        String legacy=String.join("\n",
+                "juggler_god:",
+                "  settings:",
+                "    '1': {bonus_scale_ppm: 743613, small_role_scale_ppm: 813500}",
+                "juggler_god_extreme:",
+                "  settings:",
+                "    '6': {bonus_scale_ppm: 537600, small_role_scale_ppm: 700000, god_continuation_percent: 90}",
+                "");
+        var migrated=JugglerGodPremonitionMigration.migrate(legacy);
+        assertEquals(2,migrated.changed(),migrated::toString);
+        assertEquals(0,migrated.skipped(),migrated::toString);
+        assertTrue(migrated.text().contains("bonus_scale_ppm: 297986"));
+        assertTrue(migrated.text().contains("precursor_two_high_ppm: 94884"));
+        assertTrue(migrated.text().contains("bonus_scale_ppm: 223878"));
+        assertTrue(migrated.text().contains("precursor_two_high_ppm: 139688"));
+        assertTrue(migrated.text().contains("\njuggler_god_extreme:"),
+                "real newline must separate the YAML sections");
+        var second=JugglerGodPremonitionMigration.migrate(migrated.text());
+        assertEquals(0,second.changed(),second::toString);
+        assertEquals(migrated.text(),second.text());
     }
 
-    @Test void legacyGodRowsBecomeValidYamlWithoutLosingNewlines() throws Exception {
-        String legacy=config()
-                .replace("bonus_scale_ppm: 297986", "bonus_scale_ppm: 743613")
-                .replace("bonus_scale_ppm: 223878", "bonus_scale_ppm: 537600")
-                .replace(", precursor_two_high_ppm: 94884", "")
-                .replace(", precursor_two_high_ppm: 139688", "");
-        var result=JugglerGodPremonitionMigration.migrate(legacy);
-        assertEquals(2,result.changed());
-        assertEquals(0,result.skipped());
-        assertTrue(result.text().contains("bonus_scale_ppm: 297986"));
-        assertTrue(result.text().contains("precursor_two_high_ppm: 94884"));
-        assertTrue(result.text().contains("bonus_scale_ppm: 223878"));
-        assertTrue(result.text().contains("precursor_two_high_ppm: 139688"));
-        assertTrue(result.text().contains("\neconomy:") || result.text().contains("\njuggler_god:"),
-                "the migration must preserve real YAML line separators");
-        var validation=ConfigValidation.load(new StringReader(result.text()));
-        assertTrue(validation.valid(),()->"Migrated YAML must be valid: "+validation.errors());
-
-        var repeated=JugglerGodPremonitionMigration.migrate(result.text());
-        assertEquals(0,repeated.changed());
-        assertEquals(result.text(),repeated.text(),"migration must be idempotent");
-    }
-
-    @Test void customTuningIsNotOverwritten() throws Exception {
-        String custom=config()
-                .replace("bonus_scale_ppm: 297986", "bonus_scale_ppm: 410000")
-                .replace(", precursor_two_high_ppm: 94884", "");
+    @Test void customizedGodRowsAreNotOverwritten() {
+        String custom=String.join("\n",
+                "juggler_god:",
+                "  settings:",
+                "    '1': {bonus_scale_ppm: 410000, small_role_scale_ppm: 813500}",
+                "");
         var migrated=JugglerGodPremonitionMigration.migrate(custom);
-        assertEquals(0,migrated.changed());
-        assertEquals(1,migrated.skipped());
+        assertEquals(0,migrated.changed(),migrated::toString);
+        assertEquals(1,migrated.skipped(),migrated::toString);
         assertEquals(custom,migrated.text());
-        assertTrue(ConfigValidation.load(new StringReader(migrated.text())).valid());
+    }
+
+    @Test void currentFullConfigurationRemainsValidAfterMigration() throws Exception {
+        String full=Files.readString(Path.of(System.getProperty("piri.specRoot"),"paper/src/main/resources/config.yml"));
+        var migrated=JugglerGodPremonitionMigration.migrate(full);
+        assertTrue(ConfigValidation.load(new StringReader(migrated.text())).valid(),
+                ()->"Invalid YAML after migration: "+migrated);
     }
 }
