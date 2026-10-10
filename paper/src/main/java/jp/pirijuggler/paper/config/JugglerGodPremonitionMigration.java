@@ -19,6 +19,8 @@ public final class JugglerGodPremonitionMigration {
         int[] exPrior={0,373441,374111,389811,407855,424958,406753};
         int[] exNew={0,224070,221440,225491,230039,235721,223878};
         int[] exTwo={0,72001,78911,92247,110987,127811,139688};
+        int[] godStockSplit={0,270000,267000,270500,270500,268000,255000};
+        int[] exStockSplit={0,198000,192500,194000,197000,199500,187000};
         String profile="";
         int changed=0,skipped=0;
         var row=java.util.regex.Pattern.compile("^(\\s{4}'([1-6])':\\s*\\{)(.*)(\\}\\s*)$");
@@ -37,12 +39,15 @@ public final class JugglerGodPremonitionMigration {
             int[] previous=extreme?exPrior:godPrior;
             int[] older=extreme?exOld:godOld;
             int[] target=extreme?exNew:godNew;
+            int[] stockSplit=extreme?exStockSplit:godStockSplit;
             int[] precursors=extreme?exTwo:godTwo;
             var originalBase=base.matcher(line);
             var originalSmall=small.matcher(line);
             if(!originalBase.find()||!originalSmall.find())continue;
             int observed=Integer.parseInt(originalBase.group(1));
             int observedSmall=Integer.parseInt(originalSmall.group(1));
+            // A fully migrated split-stock row is a new stock default, not custom drift.
+            if(observed==stockSplit[setting]&&line.contains("bonus_stock_scale_ppm:"))continue;
             boolean stockSmall=observedSmall==(extreme?700000:godRole[setting]);
             boolean stockBase=observed==older[setting]||observed==previous[setting];
             if(observed==target[setting]||stockBase&&stockSmall){
