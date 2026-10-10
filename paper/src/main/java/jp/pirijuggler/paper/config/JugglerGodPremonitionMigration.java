@@ -59,5 +59,4 @@ public final class JugglerGodPremonitionMigration {
         }
         return new Result(String.join("\n",lines),changed,skipped);
     }
-
-
+}
