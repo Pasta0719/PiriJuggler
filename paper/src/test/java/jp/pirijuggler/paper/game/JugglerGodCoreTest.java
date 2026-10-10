@@ -463,6 +463,51 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals(.15,JugglerGodGameEngine.trigger(JugglerGodGameEngine.followingStreak(0,InternalRole.PIERO),100_000).bonus(),1e-12);
     }
 
+    @Test void pieroFifteenPercentDebugSeparatesTriggerHitFromIncidentalBaseBonus() throws Exception {
+        int hits=0,misses=0;
+        for(int trial=0;trial<80;trial++){
+            Rig rig=rig(JugglerGodRuntime.initial(),1);
+            Session s=playForcedRole(rig,rig.session(),InternalRole.PIERO,(long)(trial+1)*3_000_000_000L);
+            assertEquals(15,JugglerGodRuntime.fromJson(s.machineState().toString()).roleStreak());
+            s=action(rig,s,PacketType.SPACE_ACTION,(long)(trial+1)*3_000_000_000L);
+            GameTransition next=plan(rig,s,PacketType.SPACE_ACTION,(long)(trial+1)*3_000_000_000L+1_000_000_000L);
+            InternalRole drawn=InternalRole.valueOf(next.after().text("internal_role"));
+            JugglerGodRuntime debug=JugglerGodRuntime.fromJson(next.machineRuntimeJson());
+            String origin=debug.lastWinSource(),draw=debug.lastTriggerDebug();
+            if(draw.startsWith("PIERO_HIT_")){
+                hits++;
+                assertTrue(origin.startsWith("PIERO_TRIGGER:"),origin);
+                assertNotNull(GameRules.bonus(drawn));
+            }else if(draw.startsWith("PIERO_MISS_")){
+                misses++;
+                if(GameRules.bonus(drawn)!=null)
+                    assertTrue(origin.startsWith("NORMAL_BASE:")||origin.startsWith("HIGH_BASE:")||
+                            origin.startsWith("ULTRA_BASE:"),origin);
+            }else{
+                assertEquals(InternalRole.GOD,drawn,"Only GOD can preempt the PIERO trigger roll");
+                assertEquals("GOD_RANDOM:GOD",origin);
+            }
+            assertEquals(debug,JugglerGodRuntime.fromJson(debug.toJsonString()));
+        }
+        assertTrue(hits>0,"Seeded production path should include PIERO trigger wins");
+        assertTrue(misses>0,"Seeded production path should include PIERO trigger misses");
+    }
+
+    @Test void bonusDebugFieldsSurviveNormalTransitionsWithoutChangingStreak() {
+        JugglerGodRuntime prior=JugglerGodRuntime.initial()
+                .withHot(JugglerGodRuntime.Mode.HIGH,17,15,"PIERO")
+                .withBonusDebug("PIERO_MISS_PCT=15_ROLL_PPM=670000","HIGH_BASE:BIG");
+        assertEquals("HIGH_BASE:BIG",prior.withHot(JugglerGodRuntime.Mode.HIGH,16,0,"NEXT").lastWinSource());
+        assertEquals("PIERO_MISS_PCT=15_ROLL_PPM=670000",prior.core(JugglerGodRuntime.Mode.NORMAL,
+                0,0,0,false,false,"NONE",0,false,"NORMAL").lastTriggerDebug());
+        assertEquals("HIGH_BASE:BIG",JugglerGodRuntime.fromJson(prior.toJsonString()).lastWinSource());
+        JugglerGodRuntime restarted=prior.resetNewSessionPrecursors();
+        assertEquals(JugglerGodRuntime.Mode.NORMAL,restarted.mode());
+        assertEquals(0,restarted.hotRemaining());
+        assertEquals(0,restarted.roleStreak());
+        assertEquals("NONE",restarted.lastWinSource());
+    }
+
     @Test void highUltraRuntimeSurvivesJsonAndPreservesBonusOnlyLamp() throws Exception {
         var state=JugglerGodRuntime.initial().withHot(JugglerGodRuntime.Mode.HIGH,20,3,"GRAPE_THREE");
         var parsed=JugglerGodRuntime.fromJson(state.toJsonString());
