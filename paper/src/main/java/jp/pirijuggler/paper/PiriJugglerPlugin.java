@@ -38,7 +38,7 @@ import java.util.UUID;
 import jp.pirijuggler.paper.reel.ReelEngine;
 
 public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessageListener, Listener {
-    private static final String BUILD_IDENTITY = "JG_PRECURSOR_AUDIT_20261010";
+    private static final String BUILD_IDENTITY = "JG_BONUS_ORIGIN_RESTART_AUDIT_20261010";
     private PaperMainThread mainThread;
     private TaskExecutors executors;
     private ServerHandshake handshake;
