@@ -235,7 +235,8 @@ class MachineDataSimulatorContinuityTest {
                 +((Number)roles.get("grape")).longValue()*small/1_000_000L
                 +((Number)roles.get("bell")).longValue()*small/1_000_000L
                 +((Number)roles.get("cherry")).longValue()*small/1_000_000L
-                +((Number)roles.get("piero")).longValue()*small/1_000_000L);
+                +((Number)roles.get("piero")).longValue()*small/1_000_000L
+                +((Number)roles.get("big")).longValue()*((long)base+high)/2_000_000L);
         assertNotEquals(jp.pirijuggler.paper.reel.InternalRole.BIG,
                 weights.drawJugglerGod(1,new SequenceRandom(bigRoll),base,small));
         assertEquals(jp.pirijuggler.paper.reel.InternalRole.BIG,
