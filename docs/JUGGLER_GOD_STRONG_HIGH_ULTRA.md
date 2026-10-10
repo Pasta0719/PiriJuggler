@@ -1,5 +1,7 @@
 # JUGGLER_GOD / EXTREME — High and Ultra-high 2026-10-10
 
+> **2026-10-11 update:** The independent bonus-stock probabilities and near-original HIGH/ULTRA strength are now specified in [JUGGLER_GOD_STOCK_SPLIT_20261011.md](JUGGLER_GOD_STOCK_SPLIT_20261011.md). The following 40/70, 65/35 and RTP statements describe the earlier baseline, not the final rebalance. Current HIGH/ULTRA full-window base-draw minimum is 38%/68%; the original 65/35 share needs to be remeasured.
+
 This proposal keeps existing cabinet, reels, Piri Chance bonus-only lamp and bonus-only notice sounds. HIGH / ULTRA are invisible internal states; use small-role streaks and resulting bonus wins to infer them. No visual asset or sound effects are introduced.
 
 ## Bonus targets and persistence
