@@ -18,6 +18,8 @@ import java.util.*;
 public final class JugglerGodGameEngine implements GameEngine {
     private static final long GOD_PRESENTATION_LOCK_MS=15_000L;
     private static final int GOD_PRESENTATION_SEVEN_STOP=3;
+    private static final double HIGH_BONUS_PER_LEVER=1.0-Math.pow(0.60,1.0/20.0);
+    private static final double ULTRA_BONUS_PER_LEVER=1.0-Math.pow(0.30,1.0/15.0);
     private static final Set<PacketType> GOD_PRESENTATION_INPUTS=Set.of(
             PacketType.SPACE_ACTION,PacketType.STOP_LEFT,PacketType.STOP_CENTER,PacketType.STOP_RIGHT);
 
@@ -29,6 +31,8 @@ public final class JugglerGodGameEngine implements GameEngine {
     private final long heavenToHeavenPpm;
     private final int[] bonusScalePpm=new int[7];
     private final int[] smallRoleScalePpm=new int[7];
+    private final int[] highModeScalePpm=new int[7];
+    private final int[] ultraModeScalePpm=new int[7];
     private final int[] continuationPercent=new int[7];
     private final int godDenominator;
     private final int godInGodBigStock;
@@ -61,6 +65,9 @@ public final class JugglerGodGameEngine implements GameEngine {
             bonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
             smallRoleScalePpm[setting]=(int)number(row.get("small_role_scale_ppm"),1_000_000);
             continuationPercent[setting]=(int)number(row.get("god_continuation_percent"),defaults[setting]);
+            long rawBonus=weights.unscaledBonusFamilyWeight(setting);
+            highModeScalePpm[setting]=(int)Math.round(HIGH_BONUS_PER_LEVER*1_000_000_000_000_000.0/rawBonus);
+            ultraModeScalePpm[setting]=(int)Math.round(ULTRA_BONUS_PER_LEVER*1_000_000_000_000_000.0/rawBonus);
         }
         if(godDenominator<2||godInGodBigStock<0||godGuaranteedBigs<1||bigThreshold<0||regThreshold<0)
             throw new IllegalArgumentException("JUGGLER_GOD profile tuning");
@@ -70,7 +77,8 @@ public final class JugglerGodGameEngine implements GameEngine {
             throw new IllegalArgumentException("JUGGLER_GOD heaven tuning");
         for(int setting=1;setting<=6;setting++)if(bonusScalePpm[setting]<0||bonusScalePpm[setting]>1_000_000
                 ||smallRoleScalePpm[setting]<0||smallRoleScalePpm[setting]>1_000_000
-                ||continuationPercent[setting]<0||continuationPercent[setting]>=100)
+                ||continuationPercent[setting]<0||continuationPercent[setting]>=100
+                ||ultraModeScalePpm[setting]>20_000_000)
             throw new IllegalArgumentException("JUGGLER_GOD role scale");
     }
 
@@ -160,7 +168,34 @@ public final class JugglerGodGameEngine implements GameEngine {
                 else
                     forced=weights.drawJugglerGodNonBonus(machine.setting(),random.gameplay(machine.id()),bonusScalePpm[machine.setting()],smallRoleScalePpm[machine.setting()]);
             }else{
-                forced=weights.drawJugglerGod(machine.setting(),random.gameplay(machine.id()),bonusScalePpm[machine.setting()],smallRoleScalePpm[machine.setting()]);
+                // Bonuses/mode rises earned by a role are rolled on the NEXT lever.
+                var rng=random.gameplay(machine.id());
+                Trigger trigger=trigger(runtime.roleStreak());
+                if(rng.nextDouble()<trigger.bonus()){
+                    forced=weights.drawBonusFamily(machine.setting(),rng);
+                }else{
+                    JugglerGodRuntime.Mode mode=runtime.mode();
+                    int remaining=runtime.hotRemaining();
+                    double upgrade=rng.nextDouble();
+                    if(upgrade<trigger.high()){
+                        if(mode==JugglerGodRuntime.Mode.NORMAL){
+                            mode=JugglerGodRuntime.Mode.HIGH;remaining=20;
+                        }else if(mode==JugglerGodRuntime.Mode.HIGH){
+                            mode=JugglerGodRuntime.Mode.ULTRA;remaining=15;
+                        }else if(mode==JugglerGodRuntime.Mode.ULTRA){
+                            remaining=15;
+                        }
+                    }else if(upgrade<trigger.high()+trigger.ultra()){
+                        mode=JugglerGodRuntime.Mode.ULTRA;remaining=15;
+                    }
+                    prepared=runtime.withHot(mode,remaining,runtime.roleStreak(),"ROLE_MODE_ROLL");
+                    int scale=switch(mode){
+                        case HIGH->highModeScalePpm[machine.setting()];
+                        case ULTRA->ultraModeScalePpm[machine.setting()];
+                        default->bonusScalePpm[machine.setting()];
+                    };
+                    forced=weights.drawJugglerGod(machine.setting(),rng,scale,smallRoleScalePpm[machine.setting()]);
+                }
             }
         }
 
