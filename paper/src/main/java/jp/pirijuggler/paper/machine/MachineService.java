@@ -737,7 +737,6 @@ public final class MachineService implements Listener, CommandExecutor {
             // Gameplay is authoritative in memory immediately. Never wait for SQLite before publishing
             // the accepted action / reel stop / next ready state.
             applyGameplayMemory(transition.after(),transition);
-            logJugglerGodDraw(transition);
             List<Envelope> committed=game.committed(transition,System.nanoTime());
             for(var packet:committed){send(player,packet);remote.publishOwnerPacket(machine,packet);}
             for(var event:game.scheduled(transition))schedule(player,id,machine,event);
@@ -784,27 +783,6 @@ public final class MachineService implements Listener, CommandExecutor {
      * The single gameplay DB lane keeps every transition in order. Transient SQLite failures
      * retry in-place, so later transitions cannot overtake an earlier one.
      */
-    /** OP debugging in server console: exact committed lever source, never a guess from lamps. */
-    private void logJugglerGodDraw(GameTransition transition){
-        if(!transition.lever()||!Set.of(Session.GameState.NORMAL_BETTED,Session.GameState.REPLAY_READY)
-                .contains(transition.before().state()))return;
-        Machine machine=state.machine(transition.after().machine());
-        if(machine==null||(machine.type()!=MachineType.JUGGLER_GOD&&machine.type()!=MachineType.JUGGLER_GOD_EXTREME))
-            return;
-        JugglerGodRuntime after=JugglerGodRuntime.fromJson(transition.machineRuntimeJson());
-        String trigger=after.lastTriggerDebug();
-        if(!trigger.equals("NONE"))
-            plugin.getLogger().info("PIRI_JG_TRIGGER_DRAW machine="+machine.id()+" setting="+machine.setting()
-                    +" trigger="+trigger);
-        String raw=transition.after().text("internal_role");
-        if(raw==null)return;
-        InternalRole actual=InternalRole.valueOf(raw);
-        if(actual==InternalRole.GOD||jp.pirijuggler.paper.game.GameRules.bonus(actual)!=null)
-            plugin.getLogger().info("PIRI_JG_BONUS_SOURCE machine="+machine.id()
-                    +" setting="+machine.setting()+" actual="+actual.name()
-                    +" source="+after.lastWinSource());
-    }
-
     private void enqueueGameplayPersistence(GameTransition transition){
         plugin.executors().gameplayDatabase(()->persistGameplayEventually(transition),(saved,error)->{
             if(error!=null&&!stopped)
@@ -1100,7 +1078,6 @@ public final class MachineService implements Listener, CommandExecutor {
                     .map(packet -> packet.payload().has("errorCode") ? packet.payload().get("errorCode").getAsString() : "INVALID_STATE")
                     .findFirst().orElse(null);
             applyGameplayMemory(transition.after(),transition);
-            logJugglerGodDraw(transition);
             List<Envelope> committed = game.committed(transition, System.nanoTime());
             for(Envelope packet:committed)remote.publishOwnerPacket(machineId,packet);
             remote.broadcastSnapshot(machineId);
