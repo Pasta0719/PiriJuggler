@@ -192,6 +192,9 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length==3 && (args[0].equalsIgnoreCase("jugglergodrole") || args[0].equalsIgnoreCase("jgrole"))) {
                 commandJugglerGodRole(sender,Integer.parseInt(args[1]),args[2]); return true;
             }
+            if (args.length==2 && args[0].equalsIgnoreCase("jgstate")) {
+                commandJugglerGodState(sender,Integer.parseInt(args[1])); return true;
+            }
             if(args.length>=2 && (args[0].equalsIgnoreCase("jgextreme")||args[0].equalsIgnoreCase("extreme"))){
                 String action=args[1].toLowerCase(Locale.ROOT);
                 if(action.equals("create")&&args.length==2){
@@ -234,7 +237,7 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length >= 2 && args[0].equalsIgnoreCase("event")) {
                 commandEvent(sender,args); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|JUGGLER_GOD_EXTREME|SKILL_STOP|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri jgrole <id> <MISS|REPLAY|GRAPE|CHERRY|BELL|PIERO|BIG|REG|CHERRY_BIG|CHERRY_REG|PIERO_BIG|PIERO_REG|GOD|clear>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|JUGGLER_GOD_EXTREME|SKILL_STOP|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri jgrole <id> <MISS|REPLAY|GRAPE|CHERRY|BELL|PIERO|BIG|REG|CHERRY_BIG|CHERRY_REG|PIERO_BIG|PIERO_REG|GOD|clear>, /piri jgstate <id>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
@@ -315,6 +318,28 @@ public final class MachineService implements Listener, CommandExecutor {
         Machine machine=state.machine(id);
         if(machine==null||machine.type()!=MachineType.JUGGLER_GOD_EXTREME)throw new DomainException("INVALID_STATE");
         return machine;
+    }
+
+    /** OP-only diagnosis; reads the session snapshot during play, machine snapshot while vacant. */
+    private void commandJugglerGodState(CommandSender sender,int id) {
+        Machine machine=state.machine(id);
+        if(machine==null||(machine.type()!=MachineType.JUGGLER_GOD&&machine.type()!=MachineType.JUGGLER_GOD_EXTREME))
+            throw new DomainException("INVALID_STATE");
+        Session occupied=state.sessions().stream()
+                .filter(session->session.machine()==id&&session.ownsLock()).findFirst().orElse(null);
+        JugglerGodRuntime runtime=occupied!=null&&occupied.machineState()!=null
+                ?JugglerGodRuntime.fromJson(occupied.machineState().toString())
+                :JugglerGodRuntime.fromJson(machine.runtimeJson());
+        int streak=runtime.roleStreak();
+        String role=streak>=1&&streak<=5?"GRAPE x"+streak:
+                streak>=6&&streak<=10?"REPLAY x"+(streak-5):
+                streak>=11&&streak<=13?"CHERRY x"+(streak-10):
+                streak==14?"BELL x1":streak==15?"PIERO x1":"NONE";
+        tell(sender,"JG_STATE id="+id+" type="+machine.type()+" setting="+machine.setting()
+                +" mode="+runtime.mode()+" hotRemaining="+runtime.hotRemaining()
+                +" streak="+role+" forcedRole="+runtime.forcedRole()
+                +" lastEvent="+runtime.lastEvent()+" busy="+busy(id)
+                +" sessionState="+(occupied==null?"NONE":occupied.state().name()));
     }
 
     private void commandJugglerGodRole(CommandSender sender,int id,String rawRole) {
