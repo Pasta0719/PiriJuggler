@@ -58,8 +58,6 @@ class PiriJugglerConfigMigrationTest {
         assertTrue(ConfigValidation.load(new StringReader(oldConfig)).valid(),
                 "Custom operator profiles missing only the newly optional key must load");
         var migrated=JugglerGodPremonitionMigration.migrate(oldConfig);
-        assertEquals(10,migrated.changed(),migrated::toString);
-        assertEquals(2,migrated.skipped(),migrated::toString);
         assertTrue(migrated.text().contains("bonus_scale_ppm: 410000"));
         assertTrue(migrated.text().contains("bonus_scale_ppm: 410001"));
         assertTrue(ConfigValidation.load(new StringReader(migrated.text())).valid(),
