@@ -347,8 +347,11 @@ public final class MachineService implements Listener, CommandExecutor {
         if(machine==null||(machine.type()!=MachineType.JUGGLER_GOD&&machine.type()!=MachineType.JUGGLER_GOD_EXTREME))throw new DomainException("INVALID_STATE");
         Session occupied=state.sessions().stream().filter(session->session.machine()==id&&session.ownsLock())
                 .findFirst().orElse(null);
-        UUID owner=sender instanceof Player player&&occupied!=null&&occupied.player().equals(player.getUniqueId())
-                &&occupied.lifecycle()==Session.Lifecycle.ACTIVE
+        // The owning OP player or server console can queue a development role during
+        // normal/replay-ready. Other players cannot override a machine they do not own.
+        boolean authorized=occupied!=null&&(!(sender instanceof Player player)
+                ||occupied.player().equals(player.getUniqueId()));
+        UUID owner=authorized&&occupied.lifecycle()==Session.Lifecycle.ACTIVE
                 &&(occupied.state()==Session.GameState.SEATED_READY||occupied.state()==Session.GameState.REPLAY_READY)
                 ?occupied.player():null;
         if(busy(id)&&owner==null)throw new DomainException("MACHINE_OCCUPIED");
