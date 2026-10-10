@@ -85,6 +85,23 @@ class AdminStoreTest {
         assertEquals(0,reset.godPresentationStartMs());
     }
 
+    @Test void dailyResetAlsoClearsNewHighUltraStreakAndBonusDebugForBothProfiles() throws Exception {
+        for(MachineType type:List.of(MachineType.JUGGLER_GOD,MachineType.JUGGLER_GOD_EXTREME)){
+            int id=db.create(new Machine.Location(UUID.randomUUID(),"world",type.ordinal()+20,64,0,"NORTH"),type,NOW);
+            var boosted=JugglerGodRuntime.initial().withHot(JugglerGodRuntime.Mode.ULTRA,13,12,"CHERRY_TWO")
+                    .withBonusDebug("CHERRY_2_HIT_PCT=40_ROLL_PPM=200000","CHERRY_2_TRIGGER:BIG")
+                    .forceRole("REPLAY");
+            db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",boosted.toJsonString(),id);
+            store.resetDaily(db.state(),id,NOW+10);
+            var reset=JugglerGodRuntime.fromJson(db.state().machine(id).runtimeJson());
+            assertEquals(JugglerGodRuntime.initial(),reset,type.toString());
+            assertEquals(0,reset.hotRemaining());
+            assertEquals(0,reset.roleStreak());
+            assertEquals("NONE",reset.lastTriggerDebug());
+            assertEquals("NONE",reset.lastWinSource());
+        }
+    }
+
     @Test void resetAllIsOneTransactionAndNextProfileCanBeSetAndCleared() throws Exception {
         int a=create(0),b=create(1);var state=db.state();
         db.sql("UPDATE machine_period_stats SET total_games=9");
