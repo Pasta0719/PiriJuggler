@@ -31,6 +31,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.lang.management.ManagementFactory;
@@ -134,6 +135,9 @@ public final class MachineService implements Listener, CommandExecutor {
         }
         if (!sender.isOp()) { error(sender, "NOT_OP"); return true; }
         try {
+            if(args.length==3 && args[0].equalsIgnoreCase("book") && args[1].equalsIgnoreCase("extend")) {
+                commandExtendGodBook(sender,args[2]); return true;
+            }
             if (args.length==3 && (args[0].equalsIgnoreCase("simulator") || args[0].equalsIgnoreCase("sim"))) {
                 int setting=Integer.parseInt(args[1]);long count=Long.parseLong(args[2]);
                 if(setting<1||setting>6||count<1||count>100_000_000L)throw new DomainException("INVALID_STATE");
@@ -279,6 +283,43 @@ public final class MachineService implements Listener, CommandExecutor {
         } catch (DomainException error) { tell(sender, error.getMessage()); }
         catch (IllegalArgumentException error) { tell(sender, "INVALID_STATE"); }
         return true;
+    }
+
+    /**
+     * Add new rules to the real, originally signed book held in the main hand.
+     * Preserve the original twelve pages verbatim; never regenerate or guess them.
+     * Silent unless the OP explicitly invokes this command.
+     */
+    private void commandExtendGodBook(CommandSender sender,String rawKind){
+        if(!(sender instanceof Player player)){
+            tell(sender,"PLAYER_REQUIRED");return;
+        }
+        String kind=rawKind.toLowerCase(Locale.ROOT);
+        if(!kind.equals("god")&&!kind.equals("extreme")){
+            tell(player,"使い方 /piri book extend god|extreme");return;
+        }
+        ItemStack item=player.getInventory().getItemInMainHand();
+        if(item.getType()!=Material.WRITTEN_BOOK || !(item.getItemMeta() instanceof BookMeta book)){
+            tell(player,"元のGOD説明書（記入済みの本）をメインハンドに持ってください");return;
+        }
+        String title=book.getTitle();
+        if(title!=null&&title.toUpperCase(Locale.ROOT).contains("EXTREME")&&kind.equals("god")){
+            tell(player,"EXTREMEの本です /piri book extend extreme を指定してください");return;
+        }
+        if(book.getPageCount()<12){
+            tell(player,"元の12ページの説明書が必要です");return;
+        }
+        if(GodGuideAddendum.alreadyIncluded(book.getPages())){
+            tell(player,"この本には新仕様が追加済みです");return;
+        }
+        if(book.getPageCount()+GodGuideAddendum.pages().size()>100){
+            tell(player,"本のページ上限を超えるため追加できません");return;
+        }
+        for(String page:GodGuideAddendum.pages())book.addPage(page);
+        item.setItemMeta(book);
+        player.getInventory().setItemInMainHand(item);
+        tell(player,(kind.equals("extreme")?"EXTREME GOD":"GOD")
+                +"の説明書に新仕様5ページを追加しました 元のページは変更していません");
     }
 
     private void recoverStatus(Player player){
