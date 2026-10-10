@@ -137,12 +137,14 @@ class PiriDatabaseTest {
         var chainState=new jp.pirijuggler.paper.game.JugglerGodRuntime(
                 jp.pirijuggler.paper.game.JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,true,false,
                 "GOD_CHAIN",3,false,"GOD_GUARANTEED_NEXT").stock(3,2,"GOD_STOCK");
+        // Seat BEFORE adding stored bonus rights; seat() itself releases one stock.
+        db.seat(player,high,NOW);
         db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",normal.toJsonString(),high);
         db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",ultraState.toJsonString(),ultra);
         db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",heavenState.toJsonString(),heaven);
         db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",chainState.toJsonString(),chain);
-        db.seat(player,high,NOW);
-        db.sql("UPDATE player_sessions SET credit=32,held_medals=654,game_state='SEATED_READY'");
+        db.sql("UPDATE player_sessions SET credit=32,held_medals=654,game_state='SEATED_READY',machine_state_json=?",
+                normal.toJsonString());
         db.shutdown(NOW+2,60_000);
         db=new PiriDatabase(directory.resolve("piri.db"));
         db.open(2,NOW+100,config,new SplittableRandom(2),ignored->{});
