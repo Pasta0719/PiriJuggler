@@ -219,7 +219,8 @@ juggler_god_extreme:
             int[] older=extreme?exOld:godOld;
             int[] target=extreme?exNew:godNew;
             int[] precursors=extreme?exTwo:godTwo;
-            var originalBase=base.matcher(line),originalSmall=small.matcher(line);
+            var originalBase=base.matcher(line);
+            var originalSmall=small.matcher(line);
             if(!originalBase.find()||!originalSmall.find())continue;
             int observed=Integer.parseInt(originalBase.group(1));
             int observedSmall=Integer.parseInt(originalSmall.group(1));
