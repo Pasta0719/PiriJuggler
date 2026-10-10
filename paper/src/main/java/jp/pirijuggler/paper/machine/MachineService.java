@@ -32,6 +32,12 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.AtomicMoveNotSupportedException;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.lang.management.ManagementFactory;
@@ -138,6 +144,9 @@ public final class MachineService implements Listener, CommandExecutor {
             if(args.length==3 && args[0].equalsIgnoreCase("book") && args[1].equalsIgnoreCase("extend")) {
                 commandExtendGodBook(sender,args[2]); return true;
             }
+            if(args.length==3 && args[0].equalsIgnoreCase("book") && args[1].equalsIgnoreCase("export")) {
+                commandExportGodBook(sender,args[2]); return true;
+            }
             if (args.length==3 && (args[0].equalsIgnoreCase("simulator") || args[0].equalsIgnoreCase("sim"))) {
                 int setting=Integer.parseInt(args[1]);long count=Long.parseLong(args[2]);
                 if(setting<1||setting>6||count<1||count>100_000_000L)throw new DomainException("INVALID_STATE");
@@ -241,7 +250,7 @@ public final class MachineService implements Listener, CommandExecutor {
             if (args.length >= 2 && args[0].equalsIgnoreCase("event")) {
                 commandEvent(sender,args); return true;
             }
-            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|JUGGLER_GOD_EXTREME|SKILL_STOP|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri jgrole <id> <MISS|REPLAY|GRAPE|CHERRY|BELL|PIERO|BIG|REG|CHERRY_BIG|CHERRY_REG|PIERO_BIG|PIERO_REG|GOD|clear>, /piri jgstate <id>, /piri book extend <god|extreme>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
+            if (args.length < 2 || !args[0].equalsIgnoreCase("machine")) throw new DomainException("Usage: /piri machine create [JUGGLER|JUGGLER_GOD|JUGGLER_GOD_EXTREME|SKILL_STOP|OKIDOKI|GOD|DISC]|type <id> <type>|redefine <id>|remove <id>|list|info <id>, /piri godtest <id> <reset|normal|gg|god|red7|sgg|gzone|zzone|zgame>, /piri godrole <id> <role|clear>, /piri jgrole <id> <MISS|REPLAY|GRAPE|CHERRY|BELL|PIERO|BIG|REG|CHERRY_BIG|CHERRY_REG|PIERO_BIG|PIERO_REG|GOD|clear>, /piri jgstate <id>, /piri book extend <god|extreme>, /piri book export <god|extreme>, /piri key give [player], /piri setting <id> <1-6>, /piri reset daily <id|all>, /piri event status|next <profile|clear>, /piri recover status|cashout, /piri simulator <setting> <games>");
             String action = args[1].toLowerCase(Locale.ROOT);
             if (action.equals("list") && args.length == 2) {
                 tell(sender, "MACHINES " + state.machines().stream().filter(m -> !m.deleted()).map(m -> Integer.toString(m.id())).toList()); return true;
@@ -320,6 +329,66 @@ public final class MachineService implements Listener, CommandExecutor {
         player.getInventory().setItemInMainHand(item);
         tell(player,(kind.equals("extreme")?"EXTREME GOD":"GOD")
                 +"の説明書に新仕様5ページを追加しました 元のページは変更していません");
+    }
+
+    /**
+     * Export an exact 1.21 /give command using the real original book pages.
+     * The original ItemStack is read only. File contains the finished 17-page
+     * book, including the new small-role/bonus-mode rules. Nothing goes to
+     * the regular gameplay console logs.
+     */
+    private void commandExportGodBook(CommandSender sender,String rawKind){
+        if(!(sender instanceof Player player)){
+            tell(sender,"PLAYER_REQUIRED");return;
+        }
+        String kind=rawKind.toLowerCase(Locale.ROOT);
+        if(!kind.equals("god")&&!kind.equals("extreme")){
+            tell(sender,"使い方 /piri book export god|extreme");return;
+        }
+        ItemStack item=player.getInventory().getItemInMainHand();
+        if(item.getType()!=Material.WRITTEN_BOOK || !(item.getItemMeta() instanceof BookMeta book)){
+            tell(player,"元のGODまたはEXTREME GODの記入済みの本をメインハンドに持ってください");return;
+        }
+        String title=book.getTitle();
+        if(kind.equals("god")&&title!=null&&title.toUpperCase(Locale.ROOT).contains("EXTREME")){
+            tell(player,"EXTREMEの本です /piri book export extreme を指定してください");return;
+        }
+        if(book.getPageCount()<12){
+            tell(player,"元の12ページ以上の説明書が必要です");return;
+        }
+        boolean added=GodGuideAddendum.alreadyIncluded(book.getPages());
+        var newPages=added?List.<String>of():GodGuideAddendum.pages();
+        final String command;
+        try{
+            int generation=book.getGeneration()==null?0:book.getGeneration().ordinal();
+            command=GodBookGiveExporter.command(player.getName(),title,book.getAuthor(),
+                    generation,book.pages(),newPages);
+        }catch(IllegalArgumentException exception){
+            tell(player,"GIVE_EXPORT_INVALID_BOOK "+exception.getMessage());
+            return;
+        }
+        String fileName=(kind.equals("extreme")?"EXTREME_GOD_":"GOD_")+player.getName()+".txt";
+        Path folder=plugin.getDataFolder().toPath().resolve("book-give");
+        Path target=folder.resolve(fileName);
+        Path temp=null;
+        try{
+            Files.createDirectories(folder);
+            temp=Files.createTempFile(folder,".god-book-",".tmp");
+            Files.writeString(temp,command+"\\n",StandardCharsets.UTF_8);
+            try{
+                Files.move(temp,target,StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);
+            }catch(AtomicMoveNotSupportedException ignored){
+                Files.move(temp,target,StandardCopyOption.REPLACE_EXISTING);
+            }
+            temp=null;
+            tell(player,"本を変更せず/giveコマンドを保存しました: plugins/"
+                    +plugin.getName()+"/book-give/"+fileName+" (ページ数="+(book.getPageCount()+newPages.size())+")");
+            tell(player,"このテキストファイルの/giveをサーバーコンソールに貼り付けてください");
+        }catch(IOException error){
+            tell(player,"GIVE_EXPORT_WRITE_FAILED "+error.getMessage());
+        }finally{
+            if(temp!=null)try{Files.deleteIfExists(temp);}catch(IOException ignored){}
+        }
     }
 
     private void recoverStatus(Player player){
