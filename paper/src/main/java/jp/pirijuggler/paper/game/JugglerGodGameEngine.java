@@ -28,6 +28,8 @@ public final class JugglerGodGameEngine implements GameEngine {
     private final long normalRegToHeavenPpm;
     private final long heavenToHeavenPpm;
     private final int[] bonusScalePpm=new int[7];
+    private final int[] standaloneNormalScalePpm=new int[7];
+    private final int[] overlapNormalScalePpm=new int[7];
     private final int[] bonusStockScalePpm=new int[7];
     private final int[] smallRoleScalePpm=new int[7];
     private final int[] precursorTwoHighPpm=new int[7];
@@ -70,6 +72,10 @@ public final class JugglerGodGameEngine implements GameEngine {
             continuationPercent[setting]=(int)number(row.get("god_continuation_percent"),defaults[setting]);
             long rawBonus=weights.unscaledBonusFamilyWeight(setting);
             int referenceBase=JugglerGodOdds.referenceBase(configKey,setting);
+            overlapNormalScalePpm[setting]=referenceBase;
+            standaloneNormalScalePpm[setting]=JugglerGodOdds.normalStandaloneScale(
+                    bonusScalePpm[setting],referenceBase,
+                    weights.unscaledStandaloneBonusWeight(setting),rawBonus);
             highModeScalePpm[setting]=JugglerGodOdds.hotScale(bonusScalePpm[setting],referenceBase,rawBonus,false);
             ultraModeScalePpm[setting]=JugglerGodOdds.hotScale(bonusScalePpm[setting],referenceBase,rawBonus,true);
         }
@@ -219,7 +225,12 @@ public final class JugglerGodGameEngine implements GameEngine {
                         case ULTRA->ultraModeScalePpm[machine.setting()];
                         default->bonusScalePpm[machine.setting()];
                     };
-                    forced=weights.drawJugglerGod(machine.setting(),rng,scale,smallRoleScalePpm[machine.setting()]);
+                    int standaloneScale=mode==JugglerGodRuntime.Mode.NORMAL
+                            ?standaloneNormalScalePpm[machine.setting()]:scale;
+                    int overlapScale=mode==JugglerGodRuntime.Mode.NORMAL
+                            ?overlapNormalScalePpm[machine.setting()]:scale;
+                    forced=weights.drawJugglerGod(machine.setting(),rng,
+                            standaloneScale,overlapScale,smallRoleScalePpm[machine.setting()]);
                     winningSource=switch(mode){
                         case HIGH->"HIGH_BASE";
                         case ULTRA->"ULTRA_BASE";
