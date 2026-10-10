@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import jp.pirijuggler.paper.config.FixedGameRules;
 import jp.pirijuggler.paper.database.StartupProfile;
 import jp.pirijuggler.paper.game.GameRules;
+import jp.pirijuggler.paper.game.JugglerGodGameEngine;
 import jp.pirijuggler.paper.game.RoleWeights;
 import jp.pirijuggler.paper.machine.DomainException;
 import jp.pirijuggler.paper.reel.InternalRole;
@@ -24,13 +25,15 @@ import java.util.random.RandomGenerator;
  * Zero-game transitions do not consume the requested game budget.
  */
 public final class JugglerGodMachineDataSimulator {
-    private enum Mode { NORMAL, HEAVEN }
+    private enum Mode { NORMAL, HIGH, ULTRA, HEAVEN }
 
     private static final class Cursor {
         final String kind;
         Mode mode=Mode.NORMAL;
         int heavenTarget;
         int heavenProgress;
+        int hotRemaining;
+        int roleStreak;
         boolean freeReplay;
 
         String activeBonus="NONE";
@@ -66,6 +69,8 @@ public final class JugglerGodMachineDataSimulator {
                 c.mode=Mode.valueOf(text(j,"mode","NORMAL"));
                 c.heavenTarget=value(j,"heavenTarget",0);
                 c.heavenProgress=value(j,"heavenProgress",0);
+                c.hotRemaining=value(j,"hotRemaining",0);
+                c.roleStreak=value(j,"roleStreak",0);
                 c.freeReplay=bool(j,"freeReplay",false);
                 c.activeBonus=text(j,"activeBonus","NONE");
                 c.activeRemaining=value(j,"activeRemaining",0);
@@ -102,8 +107,9 @@ public final class JugglerGodMachineDataSimulator {
 
         String json(){
             JsonObject j=new JsonObject();
-            j.addProperty("version",3);j.addProperty("kind",kind);
+            j.addProperty("version",4);j.addProperty("kind",kind);
             j.addProperty("mode",mode.name());j.addProperty("heavenTarget",heavenTarget);j.addProperty("heavenProgress",heavenProgress);
+            j.addProperty("hotRemaining",hotRemaining);j.addProperty("roleStreak",roleStreak);
             j.addProperty("freeReplay",freeReplay);
             j.addProperty("activeBonus",activeBonus);j.addProperty("activeRemaining",activeRemaining);
             j.addProperty("activeInsideGod",activeInsideGod);j.addProperty("activeNeedsEntry",activeNeedsEntry);
