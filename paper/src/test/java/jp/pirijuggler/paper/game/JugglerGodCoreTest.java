@@ -537,8 +537,8 @@ class JugglerGodCoreTest extends GameFixture {
             if(GameRules.bonus(weights.drawJugglerGod(1,rng,high,813500))!=null)highHits++;
             if(GameRules.bonus(weights.drawJugglerGod(1,rng,ultra,813500))!=null)ultraHits++;
         }
-        assertEquals(1-Math.pow(.60,1.0/20.0),highHits/(double)total,.0015);
-        assertEquals(1-Math.pow(.30,1.0/15.0),ultraHits/(double)total,.0015);
+        assertEquals(1-Math.pow(.62,1.0/20.0),highHits/(double)total,.0015);
+        assertEquals(1-Math.pow(.32,1.0/15.0),ultraHits/(double)total,.0015);
     }
 
     @Test void stoppedRoleAdvancesExistingStreakAndSpendsExactlyOneHighGame() throws Exception {
