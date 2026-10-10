@@ -13,8 +13,8 @@ public final class JugglerGodStockOddsMigration {
     public record Result(String text,int adjusted,int stockKeysAdded,int customKept) {}
     private static final int[] GOD_REFERENCE={0,297986,296030,298549,303386,306204,289197};
     private static final int[] EXT_REFERENCE={0,224070,221440,225491,230039,235721,223878};
-    private static final int[] GOD_REBALANCED={0,276686,274000,273900,275600,278900,264300};
-    private static final int[] EXT_REBALANCED={0,206000,203500,204500,208000,211000,201000};
+    private static final int[] GOD_REBALANCED={0,270000,267000,270500,270500,268000,255000};
+    private static final int[] EXT_REBALANCED={0,198000,192500,194000,197000,199500,187000};
     private static final int[] GOD_STOCK={0,743613,734884,734653,739194,741839,696323};
     private static final int[] EXT_STOCK={0,564190,554200,558800,562600,571106,537600};
     private static final int[] GOD_SMALL={0,813500,809600,819100,827000,841000,833500};
