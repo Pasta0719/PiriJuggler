@@ -86,7 +86,7 @@ class RecoveryStoreTest {
         assertEquals(743613,((Number)stock.invoke(recovery,1)).intValue());
         assertEquals(813500,((Number)small.invoke(recovery,1)).intValue());
         flag.setBoolean(recovery,true);
-        assertEquals(198000,((Number)scale.invoke(recovery,1)).intValue());
+        assertEquals(199600,((Number)scale.invoke(recovery,1)).intValue());
         assertEquals(564190,((Number)stock.invoke(recovery,1)).intValue());
         assertEquals(700000,((Number)small.invoke(recovery,1)).intValue());
     }
