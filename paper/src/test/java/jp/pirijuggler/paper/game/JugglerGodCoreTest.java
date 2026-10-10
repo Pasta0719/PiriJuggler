@@ -414,4 +414,25 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals(0,lever.after().number("lamp_on"));
     }
 
+    @Test void twoStreakIsExplicitHighPromotionOpportunityWithNoPrematureBonusNotice() throws Exception {
+        var weights=new RoleWeights(config);
+        var normal=new NormalGame(weights,new RandomStreams(333L),SOLVER,main,config,false);
+        var engine=new JugglerGodGameEngine(normal,new RandomStreams(444L),weights,config);
+        var array=JugglerGodGameEngine.class.getDeclaredField("precursorTwoHighPpm");
+        array.setAccessible(true);
+        assertEquals(94884,((int[])array.get(engine))[1]);
+        var method=JugglerGodGameEngine.class.getDeclaredMethod("trigger",int.class,int.class);
+        method.setAccessible(true);
+        Object grapeTwo=method.invoke(null,2,100000);
+        Object replayTwo=method.invoke(null,7,100000);
+        Object cherryOne=method.invoke(null,11,100000);
+        var bonus=grapeTwo.getClass().getDeclaredMethod("bonus");
+        var high=grapeTwo.getClass().getDeclaredMethod("high");
+        bonus.setAccessible(true);high.setAccessible(true);
+        assertEquals(0.0,((Double)bonus.invoke(grapeTwo)),1e-12);
+        assertEquals(0.1,((Double)high.invoke(grapeTwo)),1e-12);
+        assertEquals(0.1,((Double)high.invoke(replayTwo)),1e-12);
+        assertEquals(0.08,((Double)high.invoke(cherryOne)),1e-12);
+    }
+
 }
