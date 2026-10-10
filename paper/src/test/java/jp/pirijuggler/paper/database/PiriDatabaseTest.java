@@ -118,6 +118,57 @@ class PiriDatabaseTest {
         code("INVALID_STATE",()->db.forceJugglerGodRoleForSeatedOwner(id,player,"REPLAY",NOW+3));
     }
 
+    @Test void trueRestartClearsOnlyNewPrecursorStateAndKeepsGodEntitlements() throws Exception {
+        int high=db.create(location(30),MachineType.JUGGLER_GOD,NOW);
+        int ultra=db.create(location(31),MachineType.JUGGLER_GOD_EXTREME,NOW);
+        int heaven=db.create(location(32),MachineType.JUGGLER_GOD,NOW);
+        int chain=db.create(location(33),MachineType.JUGGLER_GOD_EXTREME,NOW);
+        var normal=jp.pirijuggler.paper.game.JugglerGodRuntime.initial()
+                .withHot(jp.pirijuggler.paper.game.JugglerGodRuntime.Mode.HIGH,17,12,"CHERRY_TWO")
+                .stock(2,1,"BONUS_STOCK")
+                .withBonusDebug("PIERO_MISS_PCT=15_ROLL_PPM=200000","NORMAL_BASE:BIG")
+                .forceRole("PIERO");
+        var ultraState=jp.pirijuggler.paper.game.JugglerGodRuntime.initial()
+                .withHot(jp.pirijuggler.paper.game.JugglerGodRuntime.Mode.ULTRA,7,8,"REPLAY_THREE");
+        var heavenState=new jp.pirijuggler.paper.game.JugglerGodRuntime(
+                jp.pirijuggler.paper.game.JugglerGodRuntime.Mode.HEAVEN,17,8,0,false,false,
+                "HEAVEN",0,false,"HEAVEN_CONTINUE").stock(1,1,"HEAVEN_STOCK")
+                .withHot(jp.pirijuggler.paper.game.JugglerGodRuntime.Mode.HEAVEN,0,14,"BELL");
+        var chainState=new jp.pirijuggler.paper.game.JugglerGodRuntime(
+                jp.pirijuggler.paper.game.JugglerGodRuntime.Mode.GOD_CHAIN,0,0,4,true,false,
+                "GOD_CHAIN",3,false,"GOD_GUARANTEED_NEXT").stock(3,2,"GOD_STOCK");
+        db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",normal.toJsonString(),high);
+        db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",ultraState.toJsonString(),ultra);
+        db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",heavenState.toJsonString(),heaven);
+        db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",chainState.toJsonString(),chain);
+        db.seat(player,high,NOW);
+        db.sql("UPDATE player_sessions SET credit=321,held_medals=654,game_state='SEATED_READY'");
+        db.shutdown(NOW+2,60_000);
+        db=new PiriDatabase(directory.resolve("piri.db"));
+        db.open(2,NOW+100,config,new SplittableRandom(2),ignored->{});
+        var a=jp.pirijuggler.paper.game.JugglerGodRuntime.fromJson(db.state().machine(high).runtimeJson());
+        var b=jp.pirijuggler.paper.game.JugglerGodRuntime.fromJson(db.state().machine(ultra).runtimeJson());
+        var h=jp.pirijuggler.paper.game.JugglerGodRuntime.fromJson(db.state().machine(heaven).runtimeJson());
+        var g=jp.pirijuggler.paper.game.JugglerGodRuntime.fromJson(db.state().machine(chain).runtimeJson());
+        assertEquals(jp.pirijuggler.paper.game.JugglerGodRuntime.Mode.NORMAL,a.mode());
+        assertEquals(jp.pirijuggler.paper.game.JugglerGodRuntime.Mode.NORMAL,b.mode());
+        assertEquals(0,a.hotRemaining());assertEquals(0,b.hotRemaining());
+        assertEquals(0,a.roleStreak());assertEquals(0,b.roleStreak());
+        assertEquals("NONE",a.forcedRole());
+        assertEquals("NONE",a.lastWinSource());
+        assertEquals("NONE",a.lastTriggerDebug());
+        assertEquals(2,a.additionalBigStock());assertEquals(1,a.additionalRegStock());
+        assertEquals(jp.pirijuggler.paper.game.JugglerGodRuntime.Mode.HEAVEN,h.mode());
+        assertEquals(17,h.heavenTarget());assertEquals(8,h.heavenProgress());
+        assertEquals(1,h.additionalBigStock());assertEquals(1,h.additionalRegStock());
+        assertEquals(0,h.roleStreak());
+        assertEquals(jp.pirijuggler.paper.game.JugglerGodRuntime.Mode.GOD_CHAIN,g.mode());
+        assertEquals(4,g.guaranteedRemaining());
+        assertEquals(3,g.additionalBigStock());assertEquals(2,g.additionalRegStock());
+        assertEquals(321,db.state().session(player).number("credit"));
+        assertEquals(654,db.state().session(player).number("held_medals"));
+    }
+
     @Test void graceReadyRetainsLockUntilExpiryThenAssetsStaySafe() throws Exception {
         int id = create(0); db.seat(player, id, NOW); db.sql("UPDATE player_sessions SET credit=7,held_medals=90");
         db.disconnect(player, NOW, 60_000); db.expire(NOW + 59_999); assertTrue(db.state().busy(id));
