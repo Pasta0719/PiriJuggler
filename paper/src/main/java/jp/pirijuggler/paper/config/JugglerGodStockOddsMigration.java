@@ -60,7 +60,7 @@ public final class JugglerGodStockOddsMigration {
                 custom++;
             }
             if(!hasStock){
-                line=line.replaceFirst("\\}\\s*$",", bonus_stock_scale_ppm: "+stock+"}");
+                line=line.replaceFirst("\\}(\\r?)$",", bonus_stock_scale_ppm: "+stock+"}$1");
                 added++;
             }
             lines[i]=line;
