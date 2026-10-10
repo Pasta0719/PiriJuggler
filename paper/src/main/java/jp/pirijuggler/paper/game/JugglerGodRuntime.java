@@ -23,9 +23,11 @@ public record JugglerGodRuntime(
         boolean suspendedBonusEnded,
         boolean releasingStock,
         String forcedRole,
-        long godPresentationStartMs
+        long godPresentationStartMs,
+        int hotRemaining,
+        int roleStreak
 ) {
-    public enum Mode { NORMAL, HEAVEN, GOD_CHAIN }
+    public enum Mode { NORMAL, HIGH, ULTRA, HEAVEN, GOD_CHAIN }
 
     public JugglerGodRuntime {
         if (mode == null) throw new IllegalArgumentException("mode");
@@ -36,11 +38,26 @@ public record JugglerGodRuntime(
         if (additionalBigStock < 0 || additionalRegStock < 0) throw new IllegalArgumentException("additionalStock");
         if (suspendedBonusPayoutCount < 0) throw new IllegalArgumentException("suspendedBonusPayoutCount");
         if (godPresentationStartMs < 0) throw new IllegalArgumentException("godPresentationStartMs");
+        if (hotRemaining < 0 || hotRemaining > 20 || roleStreak < 0 || roleStreak > 15) throw new IllegalArgumentException("hotMode");
         if (bonusOrigin == null) bonusOrigin = "NONE";
         if (lastEvent == null) lastEvent = "NONE";
         if (pendingBonusHit == null) pendingBonusHit = "NONE";
         if (suspendedBonusType == null) suspendedBonusType = "NONE";
         if (forcedRole == null) forcedRole = "NONE";
+    }
+
+    /** Backward-compatible constructor for existing session/test call sites. */
+    public JugglerGodRuntime(Mode mode,int heavenTarget,int heavenProgress,int guaranteedRemaining,
+                             boolean forceChainBig,boolean countNextChainGame,String bonusOrigin,
+                             int godBigCount,boolean godFreeze,String lastEvent,
+                             int additionalBigStock,int additionalRegStock,String pendingBonusHit,
+                             String suspendedBonusType,int suspendedBonusPayoutCount,
+                             boolean suspendedBonusEnded,boolean releasingStock,String forcedRole,
+                             long godPresentationStartMs) {
+        this(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
+             bonusOrigin,godBigCount,godFreeze,lastEvent,additionalBigStock,additionalRegStock,
+             pendingBonusHit,suspendedBonusType,suspendedBonusPayoutCount,suspendedBonusEnded,
+             releasingStock,forcedRole,godPresentationStartMs,0,0);
     }
 
     public JugglerGodRuntime(Mode mode,int heavenTarget,int heavenProgress,int guaranteedRemaining,
@@ -89,25 +106,40 @@ public record JugglerGodRuntime(
         return new JugglerGodRuntime(nextMode,nextHeavenTarget,nextHeavenProgress,nextGuaranteedRemaining,
                 nextForceChainBig,nextCountNextChainGame,nextBonusOrigin,nextGodBigCount,nextGodFreeze,nextLastEvent,
                 additionalBigStock,additionalRegStock,pendingBonusHit,suspendedBonusType,
-                suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,forcedRole,godPresentationStartMs);
+                suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,forcedRole,godPresentationStartMs,hotRemaining,roleStreak);
+    }
+
+    /** Immutable update stored in the existing machine JSON; no new display state. */
+    public JugglerGodRuntime withHot(Mode nextMode,int remaining,int streak,String event) {
+        if (nextMode!=Mode.HIGH && nextMode!=Mode.ULTRA) remaining=0;
+        return new JugglerGodRuntime(nextMode,heavenTarget,heavenProgress,guaranteedRemaining,
+                forceChainBig,countNextChainGame,bonusOrigin,godBigCount,godFreeze,event,
+                additionalBigStock,additionalRegStock,pendingBonusHit,suspendedBonusType,
+                suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,forcedRole,
+                godPresentationStartMs,remaining,streak);
+    }
+
+    public JugglerGodRuntime clearHot() {
+        Mode next=mode==Mode.HIGH||mode==Mode.ULTRA?Mode.NORMAL:mode;
+        return withHot(next,0,0,lastEvent);
     }
 
     public JugglerGodRuntime stock(int big,int reg,String event) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,godFreeze,event,big,reg,pendingBonusHit,suspendedBonusType,
-                suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,forcedRole,godPresentationStartMs);
+                suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,forcedRole,godPresentationStartMs,hotRemaining,roleStreak);
     }
 
     public JugglerGodRuntime interrupt(String hit,String currentType,int payoutCount,boolean ended,String event) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,godFreeze,event,additionalBigStock,additionalRegStock,
-                hit,currentType,payoutCount,ended,releasingStock,forcedRole,godPresentationStartMs);
+                hit,currentType,payoutCount,ended,releasingStock,forcedRole,godPresentationStartMs,hotRemaining,roleStreak);
     }
 
     public JugglerGodRuntime clearInterrupt(String event) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,false,event,additionalBigStock,additionalRegStock,
-                "NONE","NONE",0,false,releasingStock,forcedRole,godPresentationStartMs);
+                "NONE","NONE",0,false,releasingStock,forcedRole,godPresentationStartMs,hotRemaining,roleStreak);
     }
 
     /** Clear only the acquired overlay hit while keeping the interrupted bonus available for later resume. */
@@ -115,7 +147,7 @@ public record JugglerGodRuntime(
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,godFreeze,event,additionalBigStock,additionalRegStock,
                 "NONE",suspendedBonusType,suspendedBonusPayoutCount,suspendedBonusEnded,
-                releasingStock,forcedRole,godPresentationStartMs);
+                releasingStock,forcedRole,godPresentationStartMs,hotRemaining,roleStreak);
     }
 
     public JugglerGodRuntime release(int big,int reg,String event) {
@@ -153,7 +185,9 @@ public record JugglerGodRuntime(
                     bool(j,"suspendedBonusEnded",false),
                     bool(j,"releasingStock",false),
                     text(j,"forcedRole","NONE"),
-                    longValue(j,"godPresentationStartMs",0)
+                    longValue(j,"godPresentationStartMs",0),
+                    value(j,"hotRemaining",0),
+                    value(j,"roleStreak",0)
             );
         } catch (RuntimeException invalid) {
             return initial();
@@ -163,7 +197,7 @@ public record JugglerGodRuntime(
     public JugglerGodRuntime startPresentation(long startMs,String event) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,godFreeze,event,additionalBigStock,additionalRegStock,pendingBonusHit,
-                suspendedBonusType,suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,forcedRole,startMs);
+                suspendedBonusType,suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,forcedRole,startMs,hotRemaining,roleStreak);
     }
 
     public JugglerGodRuntime clearPresentation(String event) {
@@ -173,7 +207,7 @@ public record JugglerGodRuntime(
     public JugglerGodRuntime forceRole(String role) {
         return new JugglerGodRuntime(mode,heavenTarget,heavenProgress,guaranteedRemaining,forceChainBig,countNextChainGame,
                 bonusOrigin,godBigCount,godFreeze,lastEvent,additionalBigStock,additionalRegStock,pendingBonusHit,
-                suspendedBonusType,suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,role==null?"NONE":role,godPresentationStartMs);
+                suspendedBonusType,suspendedBonusPayoutCount,suspendedBonusEnded,releasingStock,role==null?"NONE":role,godPresentationStartMs,hotRemaining,roleStreak);
     }
 
     public JsonObject toJson() {
@@ -197,6 +231,8 @@ public record JugglerGodRuntime(
         j.addProperty("releasingStock",releasingStock);
         j.addProperty("forcedRole",forcedRole);
         j.addProperty("godPresentationStartMs",godPresentationStartMs);
+        j.addProperty("hotRemaining",hotRemaining);
+        j.addProperty("roleStreak",roleStreak);
         return j;
     }
 
