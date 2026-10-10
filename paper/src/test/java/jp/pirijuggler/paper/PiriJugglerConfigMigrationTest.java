@@ -2,6 +2,7 @@ package jp.pirijuggler.paper;
 
 import jp.pirijuggler.paper.config.ConfigValidation;
 import jp.pirijuggler.paper.config.JugglerGodPremonitionMigration;
+import jp.pirijuggler.paper.config.JugglerGodStockOddsMigration;
 import org.junit.jupiter.api.Test;
 
 import java.io.StringReader;
@@ -81,5 +82,55 @@ class PiriJugglerConfigMigrationTest {
         var migrated=JugglerGodPremonitionMigration.migrate(full);
         assertTrue(ConfigValidation.load(new StringReader(migrated.text())).valid(),
                 ()->"Invalid YAML after migration: "+migrated);
+    }
+
+    @Test void stockOddsMigrationUpgradesOnlyRecognizedDefaultNormalBases() throws Exception {
+        String old=String.join("\n",
+                "juggler_god:",
+                "  settings:",
+                "    '1': {bonus_scale_ppm: 297986, small_role_scale_ppm: 813500, precursor_two_high_ppm: 94884}",
+                "    '2': {bonus_scale_ppm: 412345, small_role_scale_ppm: 809600, precursor_two_high_ppm: 105041}",
+                "juggler_god_extreme:",
+                "  settings:",
+                "    '6': {bonus_scale_ppm: 223878, small_role_scale_ppm: 700000, god_continuation_percent: 90, precursor_two_high_ppm: 139688}",
+                "");
+        var result=JugglerGodStockOddsMigration.migrate(old);
+        assertEquals(2,result.adjusted());
+        assertEquals(3,result.stockKeysAdded());
+        assertEquals(1,result.customKept());
+        assertTrue(result.text().contains("bonus_scale_ppm: 270000,"));
+        assertTrue(result.text().contains("bonus_scale_ppm: 187000,"));
+        assertTrue(result.text().contains("bonus_scale_ppm: 412345,"));
+        assertTrue(result.text().contains("bonus_stock_scale_ppm: 743613"));
+        assertTrue(result.text().contains("bonus_stock_scale_ppm: 734884"));
+        assertTrue(result.text().contains("bonus_stock_scale_ppm: 537600"));
+        var second=JugglerGodStockOddsMigration.migrate(result.text());
+        assertEquals(0,second.adjusted());
+        assertEquals(0,second.stockKeysAdded());
+        assertEquals(result.text(),second.text());
+    }
+
+    @Test void stockOddsMigrationPreservesOperatorSpecifiedStockOdds() {
+        String old=String.join("\n",
+                "juggler_god:",
+                "  settings:",
+                "    '1': {bonus_scale_ppm: 300000, small_role_scale_ppm: 813500, precursor_two_high_ppm: 94884, bonus_stock_scale_ppm: 900000}",
+                "");
+        var result=JugglerGodStockOddsMigration.migrate(old);
+        assertEquals(old,result.text());
+        assertEquals(0,result.adjusted());
+        assertEquals(0,result.stockKeysAdded());
+    }
+
+    @Test void stockOddsDefaultsAreValidWithAndWithoutOptionalKey() throws Exception {
+        String current=Files.readString(Path.of(System.getProperty("piri.specRoot"),"paper/src/main/resources/config.yml"));
+        assertTrue(ConfigValidation.load(new StringReader(current)).valid());
+        String legacy=current.replaceAll(", bonus_stock_scale_ppm: \\d+","");
+        assertTrue(ConfigValidation.load(new StringReader(legacy)).valid());
+        var migrated=JugglerGodStockOddsMigration.migrate(legacy);
+        assertEquals(12,migrated.stockKeysAdded());
+        assertTrue(ConfigValidation.load(new StringReader(migrated.text())).valid());
+        assertFalse(ConfigValidation.load(new StringReader(
+                current.replace("bonus_stock_scale_ppm: 743613","bonus_stock_scale_ppm: -1"))).valid());
     }
 }
