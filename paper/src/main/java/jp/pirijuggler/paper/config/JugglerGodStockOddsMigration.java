@@ -14,7 +14,8 @@ public final class JugglerGodStockOddsMigration {
     private static final int[] GOD_REFERENCE={0,297986,296030,298549,303386,306204,289197};
     private static final int[] EXT_REFERENCE={0,224070,221440,225491,230039,235721,223878};
     private static final int[] GOD_REBALANCED={0,270000,267000,270500,270500,268000,255000};
-    private static final int[] EXT_REBALANCED={0,198000,192500,194000,197000,199500,187000};
+    private static final int[] EXT_PREVIOUS_SPLIT={0,198000,192500,194000,197000,199500,187000};
+    private static final int[] EXT_REBALANCED={0,199600,196300,197500,201300,204500,188600};
     private static final int[] GOD_STOCK={0,743613,734884,734653,739194,741839,696323};
     private static final int[] EXT_STOCK={0,564190,554200,558800,562600,571106,537600};
     private static final int[] GOD_SMALL={0,813500,809600,819100,827000,841000,833500};
@@ -51,9 +52,13 @@ public final class JugglerGodStockOddsMigration {
             int observedSmall=Integer.parseInt(smallMatcher.group(1));
             boolean standard=observedSmall==small
                     &&twoMatcher.find()&&Integer.parseInt(twoMatcher.group(1))==two;
-            boolean hasStock=STOCK.matcher(line).find();
-            // A known unmodified profile is safe to rebalance once.
-            if(observed==ref&&standard&&!hasStock){
+            var stockMatcher=STOCK.matcher(line);
+            boolean hasStock=stockMatcher.find();
+            boolean stockUnmodified=!hasStock||Integer.parseInt(stockMatcher.group(1))==stock;
+            // Upgrade earlier stock-split defaults as well as pre-split stock defaults.
+            // Only canonical rows move: preserve customized normal or stock probabilities.
+            boolean knownPreviousSplit=extreme&&observed==EXT_PREVIOUS_SPLIT[setting];
+            if(standard&&stockUnmodified&&((observed==ref&&!hasStock)||knownPreviousSplit)){
                 line=line.substring(0,baseMatcher.start(1))+tuned+line.substring(baseMatcher.end(1));
                 adjusted++;
             }else if(observed!=tuned||!standard){
