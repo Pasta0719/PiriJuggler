@@ -177,8 +177,9 @@ public final class SkillStopControl {
     private static boolean legal(Context c, int[] t, boolean leftBit, boolean entry) {
         int mask=patterns(t);
         if(c.mode()==Mode.CHALLENGE) {
-            int allowed=c.challengePattern()==64?64:0;
-            return (mask&BONUS_ONLY_PATTERNS&~allowed)==0;
+            // BAR may stop even for another requested target: it simply fails the challenge.
+            // Mixed 7/BAR lines and 777/77BAR are still forbidden.
+            return (mask&BONUS_ONLY_PATTERNS&~64)==0;
         }
         if(LEFT_MIDDLE_CHERRY[t[0]]&&!(c.premium()==Premium.B&&leftBit))return false;
         if(LEFT_CORNER_CHERRY[t[0]]&&!c.role().cherry())return false;
