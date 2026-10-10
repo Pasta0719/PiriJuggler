@@ -79,12 +79,15 @@ class RecoveryStoreTest {
         RecoveryStore recovery=new RecoveryStore(db,config,new StopSolver(new StopCatalogue()),345L);
         var flag=RecoveryStore.class.getDeclaredField("activeExtreme");flag.setAccessible(true);
         var scale=RecoveryStore.class.getDeclaredMethod("jgBonusScale",int.class);scale.setAccessible(true);
+        var stock=RecoveryStore.class.getDeclaredMethod("jgBonusStockScale",int.class);stock.setAccessible(true);
         var small=RecoveryStore.class.getDeclaredMethod("jgSmallRoleScale",int.class);small.setAccessible(true);
         flag.setBoolean(recovery,false);
         assertEquals(270000,((Number)scale.invoke(recovery,1)).intValue());
+        assertEquals(743613,((Number)stock.invoke(recovery,1)).intValue());
         assertEquals(813500,((Number)small.invoke(recovery,1)).intValue());
         flag.setBoolean(recovery,true);
         assertEquals(198000,((Number)scale.invoke(recovery,1)).intValue());
+        assertEquals(564190,((Number)stock.invoke(recovery,1)).intValue());
         assertEquals(700000,((Number)small.invoke(recovery,1)).intValue());
     }
 
