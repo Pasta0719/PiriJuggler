@@ -7,6 +7,7 @@ import jp.pirijuggler.paper.machine.MachineService;
 import jp.pirijuggler.paper.mobile.MobileRemoteGateway;
 import jp.pirijuggler.paper.config.ConfigValidation;
 import jp.pirijuggler.paper.config.JugglerGodPremonitionMigration;
+import jp.pirijuggler.paper.config.JugglerGodStockOddsMigration;
 import jp.pirijuggler.paper.network.ServerHandshake;
 import jp.pirijuggler.paper.threading.PaperMainThread;
 import jp.pirijuggler.paper.threading.TaskExecutors;
@@ -79,6 +80,7 @@ public final class PiriJugglerPlugin extends JavaPlugin implements PluginMessage
             migrateJugglerGodConfig(getDataFolder().toPath().resolve("config.yml"));
             migrateJugglerGodExtremeConfig(getDataFolder().toPath().resolve("config.yml"));
             migrateJugglerGodPremonitionConfig(getDataFolder().toPath().resolve("config.yml"));
+            migrateJugglerGodStockOddsConfig(getDataFolder().toPath().resolve("config.yml"));
             try (var reader = Files.newBufferedReader(getDataFolder().toPath().resolve("config.yml"), StandardCharsets.UTF_8)) {
                 ConfigValidation.Result result = ConfigValidation.load(reader);
                 configurationValid = result.valid();
@@ -198,6 +200,16 @@ juggler_god_extreme:
         }
         if(result.skipped()>0)
             getLogger().warning("Kept "+result.skipped()+" custom JUGGLER GOD tuning rows; review base odds and precursor_two_high_ppm manually");
+    }
+
+    private void migrateJugglerGodStockOddsConfig(java.nio.file.Path path) throws IOException {
+        String original=Files.readString(path,StandardCharsets.UTF_8);
+        JugglerGodStockOddsMigration.Result result=JugglerGodStockOddsMigration.migrate(original);
+        if(result.stockKeysAdded()>0||result.adjusted()>0){
+            Files.writeString(path,result.text(),StandardCharsets.UTF_8);
+            getLogger().info("Separated GOD stock scales in "+result.stockKeysAdded()+" rows; adjusted "+result.adjusted()+" stock default normal bases");
+        }
+        if(result.customKept()>0)getLogger().warning("Kept "+result.customKept()+" customized GOD/EXTREME normal odds; independent stock defaults applied");
     }
 
     private boolean handleBuildIdentity(CommandSender sender,String[] args) {
