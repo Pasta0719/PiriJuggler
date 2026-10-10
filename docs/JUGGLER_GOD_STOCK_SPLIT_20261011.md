@@ -19,12 +19,12 @@ These are **provisional payout-neutral calibration settings** based on an indepe
 
 | Setting | GOD normal scale | GOD stock scale | EXTREME normal scale | EXTREME stock scale |
 |---|---:|---:|---:|---:|
-| 1 | 270000 | 743613 | 198000 | 564190 |
-| 2 | 267000 | 734884 | 192500 | 554200 |
-| 3 | 270500 | 734653 | 194000 | 558800 |
-| 4 | 270500 | 739194 | 197000 | 562600 |
-| 5 | 268000 | 741839 | 199500 | 571106 |
-| 6 | 255000 | 696323 | 187000 | 537600 |
+| 1 | 270000 | 743613 | 199600 | 564190 |
+| 2 | 267000 | 734884 | 196300 | 554200 |
+| 3 | 270500 | 734653 | 197500 | 558800 |
+| 4 | 270500 | 739194 | 201300 | 562600 |
+| 5 | 268000 | 741839 | 204500 | 571106 |
+| 6 | 255000 | 696323 | 188600 | 537600 |
 
 Target RTP remains 97.5%, 99.0%, 101.5%, 105.0%, 109.5%, 115.0% (settings 1–6).
 
@@ -41,3 +41,9 @@ Target RTP remains 97.5%, 99.0%, 101.5%, 105.0%, 109.5%, 115.0% (settings 1–6)
 ## Verification limits
 
 Previous PR text describing fixed 40/70 or exactly 65% context-led hits reflects a different configuration. Under this rebalance, the 65/35 breakdown needs to be remeasured before being represented as verified. Do not mistake the /piri sim approximation for live Paper engine acceptance.
+
+## EXTREME GOD second calibration (2026-10-11)
+
+Each EXTREME setting was independently simulated for 16 x 60 million = **960 million total spins per setting** using the standalone-only bonus adjustment model. The calibrated model RTP results were 97.543%, 99.064%, 101.425%, 105.061%, 109.590%, 114.888% for settings 1..6. Differences from design targets are respectively +0.043, +0.064, -0.075, +0.061, +0.090, -0.112 percentage points. All targets fell within the approximate normal-theory 95% confidence intervals across 16 independent trial blocks. These are simulations, not an exact analytical payout proof or live Paper-machine RTP verification.
+
+Migration now recognizes the **previous split default** values (198000, 192500, 194000, 197000, 199500, 187000), upgrading them to the re-tuned rates when the corresponding stock scale and other fields are untouched. Operator-customized rates remain unchanged.
