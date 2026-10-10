@@ -7,6 +7,7 @@ import jp.pirijuggler.common.reel.Reel;
 import jp.pirijuggler.paper.game.GameRules;
 import jp.pirijuggler.paper.game.JugglerGodRuntime;
 import jp.pirijuggler.paper.game.JugglerGodTransitions;
+import jp.pirijuggler.paper.game.JugglerGodOdds;
 import jp.pirijuggler.paper.game.SkillStopBonus;
 import jp.pirijuggler.paper.game.god.GodMachineRuntime;
 import jp.pirijuggler.paper.game.PremiumPolicy;
@@ -36,10 +37,12 @@ public final class RecoveryStore {
     private final long seed;
     private final long normalBigToHeavenPpm,normalRegToHeavenPpm,heavenToHeavenPpm;
     private final int[] jgBonusScalePpm=new int[7];
+    private final int[] jgBonusStockScalePpm=new int[7];
     private final int[] jgSmallRoleScalePpm=new int[7];
     private final int[] jgPrecursorTwoHighPpm=new int[7];
     private final long extremeNormalBigToHeavenPpm,extremeNormalRegToHeavenPpm,extremeHeavenToHeavenPpm;
     private final int[] extremeBonusScalePpm=new int[7];
+    private final int[] extremeBonusStockScalePpm=new int[7];
     private final int[] extremeSmallRoleScalePpm=new int[7];
     private final int[] extremePrecursorTwoHighPpm=new int[7];
     private final int[] extremeContinuationPercent=new int[7];
@@ -65,6 +68,7 @@ public final class RecoveryStore {
         for(int setting=1;setting<=6;setting++){
             Map<String,Object> row=StartupProfile.map(settings.get(Integer.toString(setting)));
             jgBonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
+            jgBonusStockScalePpm[setting]=(int)number(row.get("bonus_stock_scale_ppm"),JugglerGodOdds.defaultStockScale("juggler_god",setting));
             jgSmallRoleScalePpm[setting]=(int)number(row.get("small_role_scale_ppm"),1_000_000);
             jgPrecursorTwoHighPpm[setting]=(int)number(row.get("precursor_two_high_ppm"),0);
         }
@@ -82,6 +86,7 @@ public final class RecoveryStore {
         for(int setting=1;setting<=6;setting++){
             Map<String,Object> row=StartupProfile.map(extremeSettings.get(Integer.toString(setting)));
             extremeBonusScalePpm[setting]=(int)number(row.get("bonus_scale_ppm"),1_000_000);
+            extremeBonusStockScalePpm[setting]=(int)number(row.get("bonus_stock_scale_ppm"),JugglerGodOdds.defaultStockScale("juggler_god_extreme",setting));
             extremeSmallRoleScalePpm[setting]=(int)number(row.get("small_role_scale_ppm"),1_000_000);
             extremePrecursorTwoHighPpm[setting]=(int)number(row.get("precursor_two_high_ppm"),0);
             extremeContinuationPercent[setting]=(int)number(row.get("god_continuation_percent"),defaults[setting]);
@@ -361,8 +366,10 @@ public final class RecoveryStore {
     }
 
     private int recoveryHotScale(int setting,boolean high){
-        double chance=1-Math.pow(high?.60:.30,1.0/(high?20:15));
-        return (int)Math.round(chance*1_000_000_000_000_000.0/weights.unscaledBonusFamilyWeight(setting));
+        String profile=activeExtreme?"juggler_god_extreme":"juggler_god";
+        return JugglerGodOdds.hotScale(jgBonusScale(setting),
+                JugglerGodOdds.referenceBase(profile,setting),
+                weights.unscaledBonusFamilyWeight(setting),!high);
     }
 
     private static JgDraw recoveryDrawResolved(JugglerGodRuntime prepared,InternalRole role,int spins){
@@ -458,7 +465,7 @@ public final class RecoveryStore {
                         runtime.additionalRegStock(),"RECOVERY_GOD_IN_GOD");
                 continue;
             }
-            InternalRole hit=weights.drawJugglerGod(setting,rng,jgBonusScale(setting),jgSmallRoleScale(setting));
+            InternalRole hit=weights.drawJugglerGod(setting,rng,jgBonusStockScale(setting),jgSmallRoleScale(setting));
             String bonus=GameRules.bonus(hit);
             if(bonus==null)continue;
             runtime=runtime.stock(
@@ -796,6 +803,7 @@ public final class RecoveryStore {
     private int jgGodInGodBigStock(){return activeExtreme?extremeGodInGodBigStock:7;}
     private int jgGuaranteedBigs(){return activeExtreme?extremeGuaranteedBigs:5;}
     private int jgBonusScale(int setting){return activeExtreme?extremeBonusScalePpm[setting]:jgBonusScalePpm[setting];}
+    private int jgBonusStockScale(int setting){return activeExtreme?extremeBonusStockScalePpm[setting]:jgBonusStockScalePpm[setting];}
     private int jgSmallRoleScale(int setting){return activeExtreme?extremeSmallRoleScalePpm[setting]:jgSmallRoleScalePpm[setting];}
     private int jgBonusGross(String type){return activeExtreme?("BIG".equals(type)?extremeBigPayout:extremeRegPayout):GameRules.bonusGross(type);}
     private int jgBonusGames(String type){return jgBonusGross(type)/14;}
