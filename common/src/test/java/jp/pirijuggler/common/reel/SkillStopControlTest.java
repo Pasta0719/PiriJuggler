@@ -46,6 +46,16 @@ class SkillStopControlTest {
         assertTrue(control.outcome(context,h).challengeSuccess(), "BAR challenge must remain winnable");
         assertNoUnexpectedBonusLines(context,h,control.outcome(context,h));
     }
+    @Test void wrongBarTargetIsNotKickedButNeverCountsAsSuccess(){
+        var control=new SkillStopControl();
+        var context=SkillStopControl.Context.challenge(4);
+        var h=SkillStopHistory.empty();
+        int[] inputs={19,15,3};
+        for(Reel reel:Reel.values())h=stop(control,context,h,reel,inputs[reel.ordinal()]);
+        assertArrayEquals(inputs,h.stops(),"wrong-target BAR stops must not be kicked");
+        assertFalse(control.outcome(context,h).challengeSuccess());
+        assertNoUnexpectedBonusLines(context,h,control.outcome(context,h));
+    }
     @Test void replayLawStillPermitsLowerBonusBitEntry(){
         var solver=new SkillStopControl();var context=SkillStopControl.Context.pending(SkillStopRole.REPLAY,"BIG");var h=SkillStopHistory.empty();
         h=appendTop(solver,context,h,Reel.CENTER,20);h=appendTop(solver,context,h,Reel.LEFT,1);h=appendTop(solver,context,h,Reel.RIGHT,1);
@@ -89,7 +99,7 @@ class SkillStopControlTest {
             Symbol right=SkillStopReels.row(Reel.RIGHT,h.stop(2),rows[2]);
             if(!bonusSymbol(left)||!bonusSymbol(center)||!bonusSymbol(right))continue;
             boolean allowed=c.mode()==SkillStopControl.Mode.CHALLENGE
-                    ? c.challengePattern()==64&&left==Symbol.BAR&&center==Symbol.BAR&&right==Symbol.BAR
+                    ? left==Symbol.BAR&&center==Symbol.BAR&&right==Symbol.BAR
                     : ("BIG".equals(out.entryBonus())&&left==Symbol.SEVEN&&center==Symbol.SEVEN&&right==Symbol.SEVEN)
                         ||("REG".equals(out.entryBonus())&&left==Symbol.SEVEN&&center==Symbol.SEVEN&&right==Symbol.BAR);
             assertTrue(allowed,"unexpected bonus-symbol line "+left+"/"+center+"/"+right+" context="+c+" stops="+Arrays.toString(h.stops()));
