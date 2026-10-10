@@ -26,12 +26,30 @@ This proposal keeps existing cabinet, reels, Piri Chance bonus-only lamp and bon
 
 HIGH promotion from HIGH -> ULTRA; promotion from ULTRA refreshes its 15G timer. ULTRA promotion directly selects ULTRA 15G.
 
-## Rebalanced base bonus scales (ppm)
-| Setting | 1 | 2 | 3 | 4 | 5 | 6 |
-|---|---:|---:|---:|---:|---:|---:|
-| GOD | 511253 | 515456 | 524724 | 541234 | 547868 | 521596 |
-| EXTREME GOD | 373441 | 374111 | 389811 | 407855 | 424958 | 406753 |
+## Context-led initial bonus distribution (2026-10-10 revision)
 
-Targets: 97.5%, 99.0%, 101.5%, 105.0%, 109.5%, 115.0%. An **independent simulation**, not the production Java engine, processed two 500m-game RNG series per profile/setting (12 billion normal levers total). Its maximum observed gap from a target was **0.091 percentage points**. Its GOD-in-bonus and recovery behavior are approximations; production integration tests and real-client runtime checks remain required before merging.
+The main ordinary BIG/REG initial-hit route now comes from visibly recognizable small roles and the HIGH/ULTRA state they can cause. There are no new sound assets, no new screen elements and no modification of Piri Chance semantics.
 
-The 40%/70% windows describe direct basic bonus probabilities, not a guarantee that every promotion results in a bonus. Existing GOD, heaven and bonus-stock priority rules are unchanged.
+- Consecutive grape 2: next-lever HIGH chance per setting; consecutive replay 2: same
+- Consecutive grape/replay 3: existing 15% next-lever HIGH draw
+- Consecutive grape/replay 4: next-lever 20% bonus; if missed, chance to move up
+- Consecutive grape/replay 5: bonus on the next lever (unless the existing GOD-priority draw wins)
+- Single cherry (non-bonus result): next-lever HIGH chance increased from 5% to 8%
+- Cherry two/three, bell and piero retain the existing small-role bonus/upgrading chance table
+- HIGH 20G 40% and ULTRA 15G 70% base-bonus windows are unchanged
+
+Main paths are small-role triggered bonus (approx 12–16%), HIGH base bonus (approx 41–43%) and ULTRA base bonus (approx 8–11%), adding to **65% cause-linked first hits** for every setting/profile. Direct ordinary-base mystery hits account for the remaining **35%**. GOD, heaven, GOD chain, and bonus-game stock are *excluded* from these initial-hit route percentages.
+
+To preserve target RTP 97.5%, 99%, 101.5%, 105%, 109.5%, 115%, the normal-mode base odds are lowered as mode chances rise. New `precursor_two_high_ppm` values are deliberately per-profile/per-setting to reach approximately 65/35 without making one setting's payout disproportionately higher. New config is loaded on clean installs; on upgrades, stock (unaltered) rows from older versions are migrated automatically while customized profile rows remain untouched.
+
+| Setting | GOD base ppm | GOD two-streak HIGH ppm | EXTREME base ppm | EXTREME two-streak HIGH ppm |
+|---|---:|---:|---:|---:|
+| 1 | 297986 | 94884 | 224070 | 72001 |
+| 2 | 296030 | 105041 | 221440 | 78911 |
+| 3 | 298549 | 114326 | 225491 | 92247 |
+| 4 | 303386 | 130995 | 230039 | 110987 |
+| 5 | 306204 | 139760 | 235721 | 127811 |
+| 6 | 289197 | 153160 | 223878 | 139688 |
+
+The 65% share and modeled RTP results come from an independent stationary Markov reward model, **not** a production Paper server run. Both bonus-family and heaven/GOD economy were included with the previous approximation of interrupted GOD bonuses. Verify with production-path sampling and full gameplay runtime acceptance before deploying.
+
