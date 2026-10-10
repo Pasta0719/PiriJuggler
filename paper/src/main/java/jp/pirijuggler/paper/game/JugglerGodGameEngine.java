@@ -92,6 +92,8 @@ public final class JugglerGodGameEngine implements GameEngine {
         JugglerGodRuntime runtime=load(before,machine);
         JugglerGodRuntime prepared=runtime;
         InternalRole forced=null;
+        String triggerAudit=null;
+        String winningSource=null;
 
         long presentationStart=runtime.godPresentationStartMs();
         if(presentationStart>0&&now<presentationStart+GOD_PRESENTATION_LOCK_MS
@@ -129,7 +131,8 @@ public final class JugglerGodGameEngine implements GameEngine {
             String current=before.state()==Session.GameState.BIG_BETTED?"BIG":"REG";
             String hit=drawBonusOverlay(machine);
             if(!"NONE".equals(hit)){
-                prepared=prepared.interrupt(hit,current,(int)before.number("bonus_payout_count"),false,
+                prepared=prepared.withBonusDebug("NONE","BONUS_OVERLAY:"+hit)
+                        .interrupt(hit,current,(int)before.number("bonus_payout_count"),false,
                         "GOD".equals(hit)?"GOD_IN_GOD_DRAWN":"BONUS_STOCK_DRAWN");
             }
         }
@@ -139,11 +142,15 @@ public final class JugglerGodGameEngine implements GameEngine {
                 try { forced=InternalRole.valueOf(runtime.forcedRole()); }
                 catch(IllegalArgumentException ignored) { forced=null; }
                 prepared=runtime.forceRole("NONE");
+                winningSource="DEV_FORCE:"+forced.name();
+                triggerAudit="SKIPPED_DEV_FORCE";
             }
             if(forced!=null){
                 // Explicit development force wins over production GOD/heaven/chain draws for this spin only.
             }else if(godOverlayConfirm){
                 forced=InternalRole.GOD;
+                winningSource="GOD_OVERLAY";
+                triggerAudit="SKIPPED_GOD_OVERLAY";
                 suppressNormalSpinCount=true;
                 prepared=runtime.core(runtime.mode(),runtime.heavenTarget(),runtime.heavenProgress(),
                         runtime.guaranteedRemaining(),runtime.forceChainBig(),runtime.countNextChainGame(),
@@ -151,6 +158,8 @@ public final class JugglerGodGameEngine implements GameEngine {
                         godInGodConfirm?"GOD_IN_GOD_FREEZE":"BONUS_GOD_FREEZE");
             }else if(runtime.mode()==JugglerGodRuntime.Mode.GOD_CHAIN&&runtime.forceChainBig()){
                 forced=InternalRole.BIG;
+                winningSource="GOD_CHAIN";
+                triggerAudit="SKIPPED_GOD_CHAIN";
                 suppressNormalSpinCount=!runtime.countNextChainGame();
                 // A queued GOD-chain BIG is a one-shot reservation. Consume the reservation
                 // at lever-on so it cannot survive into the started BIG and accidentally
@@ -162,21 +171,31 @@ public final class JugglerGodGameEngine implements GameEngine {
             }else if(runtime.mode()!=JugglerGodRuntime.Mode.GOD_CHAIN
                     &&random.gameplay(machine.id()).nextInt(godDenominator)==0){
                 forced=InternalRole.GOD;
+                winningSource="GOD_RANDOM";
+                triggerAudit=triggerLabel(runtime.roleStreak())+"_SKIPPED_GOD";
             }else if(runtime.mode()==JugglerGodRuntime.Mode.HEAVEN){
                 int progress=Math.min(32,runtime.heavenProgress()+1);
                 prepared=runtime.core(runtime.mode(),runtime.heavenTarget(),progress,
                         runtime.guaranteedRemaining(),runtime.forceChainBig(),runtime.countNextChainGame(),
                         runtime.bonusOrigin(),runtime.godBigCount(),runtime.godFreeze(),runtime.lastEvent());
-                if(progress>=runtime.heavenTarget())
+                if(progress>=runtime.heavenTarget()){
                     forced=weights.drawBonusFamily(machine.setting(),random.gameplay(machine.id()));
+                    winningSource="HEAVEN_TARGET";
+                }
                 else
                     forced=weights.drawJugglerGodNonBonus(machine.setting(),random.gameplay(machine.id()),bonusScalePpm[machine.setting()],smallRoleScalePpm[machine.setting()]);
             }else{
                 // Bonuses/mode rises earned by a role are rolled on the NEXT lever.
                 var rng=random.gameplay(machine.id());
                 Trigger trigger=trigger(runtime.roleStreak(),precursorTwoHighPpm[machine.setting()]);
-                if(rng.nextDouble()<trigger.bonus()){
+                String label=triggerLabel(runtime.roleStreak());
+                double bonusRoll=rng.nextDouble();
+                if(trigger.bonus()>0)
+                    triggerAudit=label+"_"+(bonusRoll<trigger.bonus()?"HIT":"MISS")
+                            +"_PCT="+Math.round(trigger.bonus()*100)+"_ROLL_PPM="+Math.round(bonusRoll*1_000_000);
+                if(bonusRoll<trigger.bonus()){
                     forced=weights.drawBonusFamily(machine.setting(),rng);
+                    winningSource=label+"_TRIGGER";
                 }else{
                     JugglerGodRuntime.Mode mode=runtime.mode();
                     int remaining=runtime.hotRemaining();
@@ -199,6 +218,11 @@ public final class JugglerGodGameEngine implements GameEngine {
                         default->bonusScalePpm[machine.setting()];
                     };
                     forced=weights.drawJugglerGod(machine.setting(),rng,scale,smallRoleScalePpm[machine.setting()]);
+                    winningSource=switch(mode){
+                        case HIGH->"HIGH_BASE";
+                        case ULTRA->"ULTRA_BASE";
+                        default->"NORMAL_BASE";
+                    };
                 }
             }
         }
@@ -345,6 +369,14 @@ public final class JugglerGodGameEngine implements GameEngine {
             }
         }
 
+        if(normalLever&&legacy.lever()&&rawAfter.text("internal_role")!=null){
+            InternalRole actual=InternalRole.valueOf(rawAfter.text("internal_role"));
+            if(actual==InternalRole.GOD||GameRules.bonus(actual)!=null)
+                next=next.withBonusDebug(triggerAudit==null?"NONE":triggerAudit,
+                        (winningSource==null?"UNKNOWN":winningSource)+":"+actual.name());
+            else
+                next=next.withBonusDebug(triggerAudit==null?"NONE":triggerAudit,null);
+        }
         Session after=withRuntime(rawAfter,next);
         int normalSpins=suppressNormalSpinCount?0:legacy.normalSpins();
 
@@ -406,6 +438,16 @@ public final class JugglerGodGameEngine implements GameEngine {
             default->new Trigger(0,0,0);
         };
     }
+    /** Exact names used in OP-only trigger audit lines. */
+    private static String triggerLabel(int streak){
+        return switch(streak){
+            case 2->"GRAPE_2";case 3->"GRAPE_3";case 4->"GRAPE_4";case 5->"GRAPE_5";
+            case 7->"REPLAY_2";case 8->"REPLAY_3";case 9->"REPLAY_4";case 10->"REPLAY_5";
+            case 11->"CHERRY_1";case 12->"CHERRY_2";case 13->"CHERRY_3";
+            case 14->"BELL";case 15->"PIERO";default->"NONE";
+        };
+    }
+
     public static int followingStreak(int prior,InternalRole role){
         return switch(role){
             case GRAPE->prior>=1&&prior<=5?Math.min(prior+1,5):1;
