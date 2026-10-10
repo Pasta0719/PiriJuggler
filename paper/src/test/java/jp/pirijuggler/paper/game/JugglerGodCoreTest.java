@@ -521,6 +521,34 @@ class JugglerGodCoreTest extends GameFixture {
         assertEquals(0,ultra.clearHot().roleStreak());
     }
 
+    @Test void liveBonusOverlayUsesLegacyStockProbabilityNotLoweredNormalBase() throws Exception {
+        var method=JugglerGodGameEngine.class.getDeclaredMethod("drawBonusOverlay",Machine.class);
+        method.setAccessible(true);
+        var weights=new RoleWeights(config);
+        for(MachineType type:List.of(MachineType.JUGGLER_GOD,MachineType.JUGGLER_GOD_EXTREME)){
+            Rig rig=rig(JugglerGodRuntime.initial(),1,type);
+            int samples=160000,stocks=0;
+            for(int i=0;i<samples;i++){
+                String hit=(String)method.invoke(rig.engine(),rig.machine());
+                if("BIG".equals(hit)||"REG".equals(hit))stocks++;
+            }
+            String profile=type==MachineType.JUGGLER_GOD?"juggler_god":"juggler_god_extreme";
+            @SuppressWarnings("unchecked")
+            Map<String,Object> settings=(Map<String,Object>)((Map<String,Object>)config.get(profile)).get("settings");
+            @SuppressWarnings("unchecked")
+            Map<String,Object> row=(Map<String,Object>)settings.get("1");
+            int stockScale=((Number)row.get("bonus_stock_scale_ppm")).intValue();
+            int normalScale=((Number)row.get("bonus_scale_ppm")).intValue();
+            int godDenominator=type==MachineType.JUGGLER_GOD?8192:16384;
+            double rawBonus=weights.unscaledBonusFamilyWeight(1);
+            double expected=rawBonus*stockScale/1.0e15*(1-1.0/godDenominator);
+            double normal=rawBonus*normalScale/1.0e15;
+            double actual=stocks/(double)samples;
+            assertEquals(expected,actual,.00065,type+" bonus-game stock draw");
+            assertTrue(actual>normal*1.5,type+" stock draw must remain stronger than normal");
+        }
+    }
+
     @Test void highAndUltraBoostRealBonusRoleDrawWithoutAddingNotice() throws Exception {
         Rig rig=rig(JugglerGodRuntime.initial(),1);
         var field=JugglerGodGameEngine.class.getDeclaredField("highModeScalePpm");
