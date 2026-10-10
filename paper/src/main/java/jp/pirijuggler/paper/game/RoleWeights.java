@@ -46,7 +46,7 @@ public final class RoleWeights {
         return drawJugglerGod(setting,rng,bonusScalePpm,1_000_000);
     }
     public InternalRole drawJugglerGod(int setting,RandomGenerator rng,int bonusScalePpm,int smallRoleScalePpm) {
-        if(setting<1||setting>6||bonusScalePpm<0||bonusScalePpm>1_000_000
+        if(setting<1||setting>6||bonusScalePpm<0||bonusScalePpm>20_000_000
                 ||smallRoleScalePpm<0||smallRoleScalePpm>1_000_000)
             throw new IllegalArgumentException("JUGGLER_GOD weights");
         int roll=rng.nextInt(DENOMINATOR);long cursor=0,removed=0;
@@ -83,6 +83,12 @@ public final class RoleWeights {
         long roll=rng.nextLong(total);
         return roll<big?InternalRole.BIG:InternalRole.REG;
     }
+    /** Original (unscaled) BIG+REG family weight out of one billion. */
+    public long unscaledBonusFamilyWeight(int setting) {
+        if(setting<1||setting>6)throw new IllegalArgumentException("Setting");
+        return bonusFamilies[setting-1][0]+bonusFamilies[setting-1][1];
+    }
+
     public long bonusFamilyWeight(int setting,boolean big,int bonusScalePpm) {
         if(setting<1||setting>6||bonusScalePpm<0||bonusScalePpm>1_000_000)throw new IllegalArgumentException("JUGGLER_GOD weights");
         return bonusFamilies[setting-1][big?0:1]*bonusScalePpm/1_000_000L;
