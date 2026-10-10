@@ -18,7 +18,7 @@ This proposal keeps existing cabinet, reels, Piri Chance bonus-only lamp and bon
 | replay 3 | 0% | HIGH 15% |
 | replay 4 | 20% | HIGH 18%, ULTRA 5% |
 | replay 5 | 100% | - |
-| cherry 1 (standalone) | preserve overlap | HIGH 5% |
+| cherry 1 (standalone) | preserve overlap | HIGH 8% |
 | cherry 2 | 40% | HIGH 20%, ULTRA 20% |
 | cherry 3 | 100% | - |
 | bell | 35% | HIGH 15%, ULTRA 10% |
