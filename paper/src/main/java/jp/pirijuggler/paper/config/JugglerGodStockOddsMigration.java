@@ -32,7 +32,7 @@ public final class JugglerGodStockOddsMigration {
         int adjusted=0,added=0,custom=0;
         for(int i=0;i<lines.length;i++){
             String line=lines[i];
-            if(line.matches("^[a-z_]+:.*")) profile=line.substring(0,line.indexOf(':'));
+            if(line.stripTrailing().matches("^[a-z_]+:.*")) profile=line.substring(0,line.indexOf(':'));
             boolean extreme="juggler_god_extreme".equals(profile);
             if(!extreme&&!"juggler_god".equals(profile))continue;
             var match=ROW.matcher(line);
