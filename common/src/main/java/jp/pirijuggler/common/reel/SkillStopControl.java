@@ -122,6 +122,9 @@ public final class SkillStopControl {
             return SkillStopReels.stopIndex(t);
         }
         if(reel==Reel.RIGHT&&top==21) {
+            // The old right-top-1 law cannot form any legal REPLAY line.
+            // A guaranteed replay overrides that law and uses the nearest valid stop.
+            if(c.role()==SkillStopRole.REPLAY)return -1;
             int t=c.role()==SkillStopRole.BELL?1:c.role()==SkillStopRole.PIERO||c.role()==SkillStopRole.PIERO_BIG||c.role()==SkillStopRole.PIERO_REG?3:
                     c.bonus()!=null||c.role()==SkillStopRole.GRAPE?21:1;
             return SkillStopReels.stopIndex(t);
