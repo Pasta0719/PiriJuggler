@@ -258,6 +258,7 @@ const buildNormal=function buildNormalModels(){
  for(const s of states){
   const smallbit={R:1,G:2,B:4,P:8}[s.small]||0, bonusbit=s.type==="BIG"?16:s.type==="REG"?32:0;
   const permitted=smallbit|s.one;
+  const guaranteed=s.small==="G"||s.small==="R",maxSlip=s.small==="G"?5:4;
   for(let oi=0;oi<6;oi++){
    const order=orders[oi],pairCache=new Map();
    function pair(ft,st,elig,leftBit){
@@ -275,9 +276,15 @@ const buildNormal=function buildNormalModels(){
     let third=[],onePossible=false;
     for(let c=0;c<21;c++){
      currentInput=c;let out=null;
-     if(elig&&!s.F&&legal(c,true)&&masks[tops[0]*441+tops[1]*21+tops[2]]&bonusbit)out=c;
-     if(out===null&&s.one)for(let d=0;d<=4;d++){let t=(c+d)%21;if(legal(t,false)&&masks[tops[0]*441+tops[1]*21+tops[2]]&s.one){out=t;break;}}
-     if(out===null)for(let d=0;d<=4;d++){let t=(c+d)%21;if(legal(t,false)){out=t;break;}}
+     if(guaranteed) {
+      for(let d=0;d<=maxSlip;d++){let t=(c+d)%21;
+       if(legal(t,elig&&d===0)&&(masks[tops[0]*441+tops[1]*21+tops[2]]&smallbit)){out=t;break;}
+      }
+     } else {
+      if(elig&&!s.F&&legal(c,true)&&masks[tops[0]*441+tops[1]*21+tops[2]]&bonusbit)out=c;
+      if(out===null&&s.one)for(let d=0;d<=4;d++){let t=(c+d)%21;if(legal(t,false)&&masks[tops[0]*441+tops[1]*21+tops[2]]&s.one){out=t;break;}}
+      if(out===null)for(let d=0;d<=4;d++){let t=(c+d)%21;if(legal(t,false)){out=t;break;}}
+     }
      if(out===null){pairCache.set(key,null);return null;}
      tops[order[2]]=out;const mask=masks[tops[0]*441+tops[1]*21+tops[2]];
      const entry=!!(mask&bonusbit),replay=!!(mask&1);
@@ -293,9 +300,9 @@ const buildNormal=function buildNormalModels(){
     const ss=[],tt=[];let anyOne=false;
     for(let b=0;b<21;b++){
      const options=[];
-     for(let d=0;d<=4;d++){let st=(b+d)%21;const pp=pair(ft,st,elig&&d===0,order[0]===0?ft===a:order[1]===0?d===0:false);if(pp)options.push({st,d,pp});}
+     for(let d=0;d<=maxSlip;d++){let st=(b+d)%21;const pp=pair(ft,st,elig&&d===0,order[0]===0?ft===a:order[1]===0?d===0:false);if(pp)options.push({st,d,pp});}
      if(!options.length)return null;
-     let pick=options.find(x=>x.d===0&&x.pp.bonusPossible)|| (s.one?options.find(x=>x.pp.onePossible):null)||options[0];
+     let pick=guaranteed?options[0]:options.find(x=>x.d===0&&x.pp.bonusPossible)|| (s.one?options.find(x=>x.pp.onePossible):null)||options[0];
      ss.push(pick.st);tt.push(pick.pp.third);if(pick.pp.onePossible)anyOne=true;
     }
     return {second:ss,third:tt,anyOne};
@@ -307,8 +314,8 @@ const buildNormal=function buildNormalModels(){
     }
     if(order[0]===2&&a===20)forced=s.small==="B"?0:s.small==="P"?2:(s.type||s.small==="G"?20:0);
     let candidates=[];
-    for(let d=0;d<=4;d++){
-     const ft=(a+d)%21;if(forced!==null&&ft!==forced)continue;
+    for(let d=0;d<=maxSlip;d++){
+      const ft=(a+d)%21;if(forced!==null&&ft!==forced)continue;
      if(order[0]===0&&(leftBad[ft]&&!(s.B&&d===0)||s.small!=="C"&&leftC[ft]))continue;
      const elig=!!s.type&&(d===0||forced!==null);
      const chosen=chooseSecond(ft,a,elig);if(chosen)candidates.push({ft,d,chosen});
@@ -356,6 +363,7 @@ const buildPending=function buildNormalModels(){
  for(const s of states){
   const smallbit={R:1,G:2,B:4,P:8}[s.small]||0, bonusbit=s.type==="BIG"?16:s.type==="REG"?32:0;
   const permitted=smallbit|s.one;
+  const guaranteed=s.small==="G"||s.small==="R",maxSlip=s.small==="G"?5:4;
   for(let oi=0;oi<6;oi++){
    const order=orders[oi],pairCache=new Map();
    function pair(ft,st,elig,leftBit){
@@ -373,9 +381,15 @@ const buildPending=function buildNormalModels(){
     let third=[],onePossible=false;
     for(let c=0;c<21;c++){
      currentInput=c;let out=null;
-     if(elig&&!s.F&&legal(c,true)&&masks[tops[0]*441+tops[1]*21+tops[2]]&bonusbit)out=c;
-     if(out===null&&s.one)for(let d=0;d<=4;d++){let t=(c+d)%21;if(legal(t,false)&&masks[tops[0]*441+tops[1]*21+tops[2]]&s.one){out=t;break;}}
-     if(out===null)for(let d=0;d<=4;d++){let t=(c+d)%21;if(legal(t,false)){out=t;break;}}
+     if(guaranteed) {
+      for(let d=0;d<=maxSlip;d++){let t=(c+d)%21;
+       if(legal(t,elig&&d===0)&&(masks[tops[0]*441+tops[1]*21+tops[2]]&smallbit)){out=t;break;}
+      }
+     } else {
+      if(elig&&!s.F&&legal(c,true)&&masks[tops[0]*441+tops[1]*21+tops[2]]&bonusbit)out=c;
+      if(out===null&&s.one)for(let d=0;d<=4;d++){let t=(c+d)%21;if(legal(t,false)&&masks[tops[0]*441+tops[1]*21+tops[2]]&s.one){out=t;break;}}
+      if(out===null)for(let d=0;d<=4;d++){let t=(c+d)%21;if(legal(t,false)){out=t;break;}}
+     }
      if(out===null){pairCache.set(key,null);return null;}
      tops[order[2]]=out;const mask=masks[tops[0]*441+tops[1]*21+tops[2]];
      const entry=!!(mask&bonusbit),replay=!!(mask&1);
@@ -391,9 +405,9 @@ const buildPending=function buildNormalModels(){
     const ss=[],tt=[];let anyOne=false;
     for(let b=0;b<21;b++){
      const options=[];
-     for(let d=0;d<=4;d++){let st=(b+d)%21;const pp=pair(ft,st,elig&&d===0,order[0]===0?ft===a:order[1]===0?d===0:false);if(pp)options.push({st,d,pp});}
+     for(let d=0;d<=maxSlip;d++){let st=(b+d)%21;const pp=pair(ft,st,elig&&d===0,order[0]===0?ft===a:order[1]===0?d===0:false);if(pp)options.push({st,d,pp});}
      if(!options.length)return null;
-     let pick=options.find(x=>x.d===0&&x.pp.bonusPossible)|| (s.one?options.find(x=>x.pp.onePossible):null)||options[0];
+     let pick=guaranteed?options[0]:options.find(x=>x.d===0&&x.pp.bonusPossible)|| (s.one?options.find(x=>x.pp.onePossible):null)||options[0];
      ss.push(pick.st);tt.push(pick.pp.third);if(pick.pp.onePossible)anyOne=true;
     }
     return {second:ss,third:tt,anyOne};
@@ -405,8 +419,8 @@ const buildPending=function buildNormalModels(){
     }
     if(order[0]===2&&a===20)forced=s.small==="B"?0:s.small==="P"?2:(s.type||s.small==="G"?20:0);
     let candidates=[];
-    for(let d=0;d<=4;d++){
-     const ft=(a+d)%21;if(forced!==null&&ft!==forced)continue;
+    for(let d=0;d<=maxSlip;d++){
+      const ft=(a+d)%21;if(forced!==null&&ft!==forced)continue;
      if(order[0]===0&&(leftBad[ft]&&!(s.B&&d===0)||s.small!=="C"&&leftC[ft]))continue;
      const elig=!!s.type&&(d===0||forced!==null);
      const chosen=chooseSecond(ft,a,elig);if(chosen)candidates.push({ft,d,chosen});
