@@ -56,10 +56,10 @@ class SkillStopControlTest {
         assertFalse(control.outcome(context,h).challengeSuccess());
         assertNoUnexpectedBonusLines(context,h,control.outcome(context,h));
     }
-    @Test void replayLawStillPermitsLowerBonusBitEntry(){
+    @Test void pendingReplayWinsRatherThanBeingLostToBonusEntry(){
         var solver=new SkillStopControl();var context=SkillStopControl.Context.pending(SkillStopRole.REPLAY,"BIG");var h=SkillStopHistory.empty();
         h=appendTop(solver,context,h,Reel.CENTER,20);h=appendTop(solver,context,h,Reel.LEFT,1);h=appendTop(solver,context,h,Reel.RIGHT,1);
-        assertEquals("BIG",solver.outcome(context,h).entryBonus());assertEquals(0,solver.outcome(context,h).payout());
+        assertTrue(solver.outcome(context,h).replay());
     }
     @Test void exhaustiveInputHistories(){
         List<SkillStopControl.Context> contexts=new ArrayList<>();
@@ -83,6 +83,13 @@ class SkillStopControlTest {
     private static void independentCheck(SkillStopControl.Context c,SkillStopHistory h,SkillStopControl.Outcome out){
         assertNoUnexpectedBonusLines(c,h,out);
         int allowed=c.role().pattern();String bonus=c.bonus();
+        if((c.mode()==SkillStopControl.Mode.NORMAL||c.mode()==SkillStopControl.Mode.PENDING)
+                &&(c.role()==SkillStopRole.GRAPE||c.role()==SkillStopRole.REPLAY)) {
+            assertTrue((out.patterns()&allowed)!=0,
+                "guaranteed small role missing "+c.role()+" "+Arrays.toString(h.stops()));
+            if(c.role()==SkillStopRole.GRAPE)assertEquals(8,out.payout());
+            else assertTrue(out.replay());
+        }
         if(c.mode()==SkillStopControl.Mode.CHALLENGE){assertEquals(14,out.payout());assertFalse(line(h,"7","7","7"));assertFalse(line(h,"7","7","BAR"));return;}
         assertFalse(line(h,"BAR","BAR","BAR"));
         boolean big=line(h,"7","7","7"),reg=line(h,"7","7","BAR");
@@ -108,7 +115,10 @@ class SkillStopControlTest {
     private static boolean bonusSymbol(Symbol symbol){return symbol==Symbol.SEVEN||symbol==Symbol.BAR;}
     private static boolean line(SkillStopHistory h,String l,String m,String r){String[] target={l,m,r};for(int[] rows:LINES){boolean match=true;for(int k=0;k<3;k++)if(SkillStopReels.row(Reel.values()[k],h.stop(k),rows[k])!=symbol(target[k]))match=false;if(match)return true;}return false;}
     private static Symbol symbol(String s){return switch(s){case "7"->Symbol.SEVEN;case "R"->Symbol.REPLAY;case "G"->Symbol.GRAPE;case "C"->Symbol.CHERRY;case "B"->Symbol.BELL;case "P"->Symbol.PIERO;default->Symbol.valueOf(s);};}
-    private static SkillStopHistory stop(SkillStopControl control,SkillStopControl.Context context,SkillStopHistory h,Reel r,int input){var choice=control.choose(context,h,r,input);assertTrue(choice.slip()>=0&&choice.slip()<=4);assertEquals(ReelMotion.slip(choice.stopIndex(),input),choice.slip());return h.append(r,input,choice.stopIndex());}
+    private static SkillStopHistory stop(SkillStopControl control,SkillStopControl.Context context,SkillStopHistory h,Reel r,int input){var choice=control.choose(context,h,r,input);int max=(context.mode()==SkillStopControl.Mode.NORMAL||context.mode()==SkillStopControl.Mode.PENDING)
+                &&context.role()==SkillStopRole.GRAPE?5:4;
+        assertTrue(choice.slip()>=0&&choice.slip()<=max,
+                "illegal slip "+choice.slip()+" for "+context);assertEquals(ReelMotion.slip(choice.stopIndex(),input),choice.slip());return h.append(r,input,choice.stopIndex());}
     private static SkillStopHistory appendTop(SkillStopControl control,SkillStopControl.Context context,SkillStopHistory h,Reel r,int top){return stop(control,context,h,r,SkillStopReels.stopIndex(top));}
     private static void assertTop(SkillStopControl control,SkillStopControl.Context context,Reel reel,int input,int expected,int slip){var choice=control.choose(context,SkillStopHistory.empty(),reel,SkillStopReels.stopIndex(input));assertEquals(expected,SkillStopReels.topNumber(choice.stopIndex()));assertEquals(slip,choice.slip());}
 }
