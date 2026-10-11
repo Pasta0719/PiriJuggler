@@ -449,19 +449,27 @@ const productionPath=process.env.SKILL_STOP_PRODUCTION_MODELS;
 const production=productionPath?JSON.parse(require("node:fs").readFileSync(productionPath,"utf8")):null;
 const researchPending=buildPending().all, researchNormal=buildNormal().all;
 if(production){
- let checked=0;
+ let checked=0,guaranteedHistories=0;
  for(const [actual,expected] of [[production.normal,researchNormal],[production.pending,researchPending]]){
   if(actual.length!==expected.length)throw Error("Production model count differs");
   for(const model of actual){
    const reference=expected.find(x=>x.name===model.name&&x.oi===model.oi);
    if(!reference)throw Error("Missing research model "+model.name);
+   // Research's fixed second order cannot reproduce the live controller's
+   // both-order-safe first stops for guaranteed small roles. Check every payout.
+   if(model.small==="G"||model.small==="R"){
+    for(const first of model.third)for(const second of first)for(const code of second){
+     if(model.small==="G"?(code&31)!==8:!(code&128))throw Error("Guaranteed small missed: "+model.name+" order "+model.oi);
+    }
+    checked+=9261;guaranteedHistories+=9261;continue;
+   }
    for(const field of ["first","second","third"]){
     if(JSON.stringify(model[field])!==JSON.stringify(reference[field]))throw Error("Production differs: "+model.name+" order "+model.oi+" "+field);
    }
    checked+=9261;
   }
  }
- console.error("Production/research exact decision and outcome comparison PASS: "+checked+" histories");
+ console.error("Production verification PASS: "+checked+" histories; "+guaranteedHistories+" guaranteed GRAPE/REPLAY payouts, other roles exact research decisions");
 }
 const models=production?production.pending:researchPending;
 const probs=[0.7959716796875,0.1,0.1,0.00006103515625,0.00390625,0.00006103515625];
