@@ -312,7 +312,7 @@ const buildNormal=function buildNormalModels(){
     if(order[0]===1&&(a===19||a===20)){
      forced=s.small==="G"?1:s.small==="P"?2:s.small==="C"?20:s.small==="R"?0:(s.type||s.small==="B"?a:0);
     }
-    if(order[0]===2&&a===20)forced=s.small==="B"?0:s.small==="P"?2:(s.type||s.small==="G"?20:0);
+    if(order[0]===2&&a===20&&s.small!=="R")forced=s.small==="B"?0:s.small==="P"?2:(s.type||s.small==="G"?20:0);
     let candidates=[];
     for(let d=0;d<=maxSlip;d++){
       const ft=(a+d)%21;if(forced!==null&&ft!==forced)continue;
@@ -417,7 +417,7 @@ const buildPending=function buildNormalModels(){
     if(order[0]===1&&(a===19||a===20)){
      forced=s.small==="G"?1:s.small==="P"?2:s.small==="C"?20:s.small==="R"?0:(s.type||s.small==="B"?a:0);
     }
-    if(order[0]===2&&a===20)forced=s.small==="B"?0:s.small==="P"?2:(s.type||s.small==="G"?20:0);
+    if(order[0]===2&&a===20&&s.small!=="R")forced=s.small==="B"?0:s.small==="P"?2:(s.type||s.small==="G"?20:0);
     let candidates=[];
     for(let d=0;d<=maxSlip;d++){
       const ft=(a+d)%21;if(forced!==null&&ft!==forced)continue;
