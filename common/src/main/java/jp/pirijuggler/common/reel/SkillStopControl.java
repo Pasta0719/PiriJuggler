@@ -51,6 +51,15 @@ public final class SkillStopControl {
         }
     }
     private final Map<Key,int[]> cache = new ConcurrentHashMap<>();
+    // GRAPE must be paid on every stop order/input (it can require five symbols).
+    // REPLAY is likewise guaranteed, but its four-symbol physical limit is sufficient.
+    private static boolean guaranteedSmall(Context c) {
+        return (c.mode()==Mode.NORMAL||c.mode()==Mode.PENDING)
+                &&(c.role()==SkillStopRole.GRAPE||c.role()==SkillStopRole.REPLAY);
+    }
+    private static int slipLimit(Context c) {
+        return c.role()==SkillStopRole.GRAPE&&guaranteedSmall(c)?5:4;
+    }
     public Choice choose(Context context, SkillStopHistory history, Reel reel, int pressed) {
         if(pressed<0||pressed>20||(history.mask()&reel.bit())!=0) throw new IllegalArgumentException("STOP");
         int target;
@@ -62,7 +71,8 @@ public final class SkillStopControl {
             target=options[pressed];
         } else target=last(context,history,reel)[pressed];
         int slip=ReelMotion.slip(target,pressed);
-        if(context.mode()!=Mode.BONUS_AUTO && slip>4) throw new IllegalStateException("More than four symbols");
+        if(context.mode()!=Mode.BONUS_AUTO && slip>slipLimit(context))
+            throw new IllegalStateException("More than allowed symbols");
         return new Choice(pressed,target,slip,ReelMotion.durationMs(slip));
     }
     public Outcome outcome(Context context, SkillStopHistory history) {
@@ -84,7 +94,7 @@ public final class SkillStopControl {
             int[] answer=new int[21];
             for(int p=0;p<21;p++) {
                 int forced=forcedFirst(c,reel,p),pick=-1,onePick=-1;
-                for(int d=0;d<=4;d++) {
+                for(int d=0;d<=slipLimit(c);d++) {
                     int target=Math.floorMod(p-d,21);
                     if(forced>=0&&target!=forced)continue;
                     if(!leftPartial(c,reel,target,d==0))continue;
@@ -124,7 +134,7 @@ public final class SkillStopControl {
         int[] answer=new int[21];
         for(int p=0;p<21;p++) {
             int pick=-1,onePick=-1;
-            for(int d=0;d<=4;d++) {
+            for(int d=0;d<=slipLimit(c);d++) {
                 int target=Math.floorMod(p-d,21);
                 if(!leftPartial(c,reel,target,d==0))continue;
                 SkillStopHistory next=h.append(reel,p,target);
@@ -133,7 +143,7 @@ public final class SkillStopControl {
                 int[] finalChoices=lastOrNull(c,next,last);if(finalChoices==null)continue;
                 if(pick<0)pick=target;
                 if(c.role().oneMedal()&&onePick<0&&onePossible(c,next))onePick=target;
-                if(d==0&&entryEligible(c,next)&&sevenTenpai(next)!=0){pick=target;onePick=target;break;}
+                if(d==0&&!guaranteedSmall(c)&&entryEligible(c,next)&&sevenTenpai(next)!=0){pick=target;onePick=target;break;}
             }
             if(pick<0){cache.put(key,new int[]{-1});return null;}
             answer[p]=onePick>=0?onePick:pick;
@@ -150,12 +160,15 @@ public final class SkillStopControl {
         int[] answer=new int[21]; int[] tops=h.stops(); boolean entry=entryEligible(c,h);
         for(int p=0;p<21;p++) {
             int pick=-1,onePick=-1;
-            for(int d=0;d<=4;d++) {
+            for(int d=0;d<=slipLimit(c);d++) {
                 int target=Math.floorMod(p-d,21);tops[reel.ordinal()]=target;
                 boolean leftBit=reel==Reel.LEFT?d==0:h.bit(0);
                 if(!legal(c,tops,leftBit,entry&&d==0))continue;
-                if(pick<0)pick=target;
                 int mask=patterns(tops);
+                // Never settle for a safe MISS when the drawn role is GRAPE/REPLAY.
+                // Returning null here makes earlier stops avoid states with no winning continuation.
+                if(guaranteedSmall(c) && (mask&c.role().pattern())==0)continue;
+                if(pick<0)pick=target;
                 if(d==0&&entry&&(mask&bonusBit(c))!=0){pick=target;onePick=target;break;}
                 if(c.role().oneMedal()&&onePick<0&&(mask&c.role().pattern())!=0)onePick=target;
             }
