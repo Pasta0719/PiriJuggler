@@ -60,6 +60,10 @@ public final class MachineDataSimulationService {
         catch(NumberFormatException error){sender.sendMessage(Component.text("INVALID_STATE"));return true;}
         var machine=state.machine(machineId);
         if(machine==null){sender.sendMessage(Component.text("INVALID_STATE"));return true;}
+        if(!supported(machine)){
+            sender.sendMessage(Component.text("SIM_UNSUPPORTED machine="+machineId+" type="+machine.type()));
+            return true;
+        }
         // A single-machine simulation must not be stopped by a lock on any
         // unrelated cabinet (including intentionally suspended SKILL_STOP games).
         Session blocking=blockingSession(state,machineId);
@@ -87,11 +91,6 @@ public final class MachineDataSimulationService {
             });
             return true;
         }
-        if(!supported(machine)){
-            sender.sendMessage(Component.text("SIM_UNSUPPORTED machine="+machineId+" type="+machine.type()));
-            return true;
-        }
-
         running=true;
         launchSingle(sender,machine,games,skillPercent);
         return true;
