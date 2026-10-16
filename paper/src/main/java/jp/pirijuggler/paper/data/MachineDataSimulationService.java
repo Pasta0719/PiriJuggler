@@ -36,17 +36,20 @@ public final class MachineDataSimulationService {
     public boolean handle(CommandSender sender,String[] args) {
         if(args.length==0||!args[0].equalsIgnoreCase("sim"))return false;
         if(!sender.isOp()){sender.sendMessage(Component.text("NOT_OP"));return true;}
-        if(args.length!=3&&args.length!=4){sender.sendMessage(Component.text("Usage: /piri sim <machineId|all> <games> [skillPercent|force]"));return true;}
+        if(args.length<3||args.length>5){sender.sendMessage(Component.text("Usage: /piri sim <machineId|all> <games> [skillPercent] [force]"));return true;}
 
         final long games;
         try{games=Long.parseLong(args[2]);}
         catch(NumberFormatException error){sender.sendMessage(Component.text("INVALID_STATE"));return true;}
         if(games<1||games>100_000L){sender.sendMessage(Component.text("INVALID_STATE (games: 1..100000)"));return true;}
-        final boolean force=args.length==4&&args[3].equalsIgnoreCase("force");
-        final int skillPercent;
-        try{skillPercent=args.length==4&&!force?Integer.parseInt(args[3]):80;}
-        catch(NumberFormatException error){sender.sendMessage(Component.text("INVALID_STATE (skillPercent: 0..100)"));return true;}
-        if(skillPercent<0||skillPercent>100){sender.sendMessage(Component.text("INVALID_STATE (skillPercent: 0..100)"));return true;}
+        final SimulationOptions options;
+        try{options=parseOptions(args);}
+        catch(IllegalArgumentException error){
+            sender.sendMessage(Component.text("Usage: /piri sim <machineId|all> <games> [skillPercent] [force] (skillPercent: 0..100)"));
+            return true;
+        }
+        final boolean force=options.force();
+        final int skillPercent=options.skillPercent();
         if(running){sender.sendMessage(Component.text("BUSY"));return true;}
 
         var state=plugin.machines().snapshot();
@@ -77,7 +80,8 @@ public final class MachineDataSimulationService {
                 sender.sendMessage(Component.text("MACHINE_OCCUPIED id="+machineId
                         +" lifecycle="+blocking.lifecycle()
                         +" player="+blocking.player()
-                        +" (use /piri sim "+machineId+" "+games+" force to release this session)"));
+                        +" (use /piri sim "+machineId+" "+games
+                        +(skillPercent==80?"":" "+skillPercent)+" force to release this session)"));
                 return true;
             }
             running=true;
@@ -175,6 +179,22 @@ public final class MachineDataSimulationService {
             sender.sendMessage(Component.text("SIMULATION_ALL_DONE machines="+results.size()+" targetSpinsEach="+games+" actualSpins="+totalSpins+" BIG="+totalBig+" REG="+totalReg+" DIFF_SUM="+signed(totalDifference)));
         });
         return true;
+    }
+
+    record SimulationOptions(int skillPercent, boolean force) {}
+
+    /** Parse skill percentage and forced release independently.
+     * Three arguments: defaults; four: either old skill% or legacy force shorthand;
+     * five: explicit skill% followed by force. Never silently discard an option.
+     */
+    static SimulationOptions parseOptions(String[] args){
+        if(args.length<3||args.length>5)throw new IllegalArgumentException("sim option count");
+        boolean shortForce=args.length==4&&args[3].equalsIgnoreCase("force");
+        boolean longForce=args.length==5&&args[4].equalsIgnoreCase("force");
+        if(args.length==5&&!longForce)throw new IllegalArgumentException("invalid force flag");
+        final int percent=shortForce||args.length==3?80:Integer.parseInt(args[3]);
+        if(percent<0||percent>100)throw new IllegalArgumentException("skillPercent");
+        return new SimulationOptions(percent,shortForce||longForce);
     }
 
     static Session blockingSession(PiriDatabase.State state,int machineId){
