@@ -36,20 +36,24 @@ public final class MachineDataSimulationService {
     public boolean handle(CommandSender sender,String[] args) {
         if(args.length==0||!args[0].equalsIgnoreCase("sim"))return false;
         if(!sender.isOp()){sender.sendMessage(Component.text("NOT_OP"));return true;}
-        if(args.length!=3&&args.length!=4){sender.sendMessage(Component.text("Usage: /piri sim <machineId|all> <games> [skillPercent]"));return true;}
+        if(args.length!=3&&args.length!=4){sender.sendMessage(Component.text("Usage: /piri sim <machineId|all> <games> [skillPercent|force]"));return true;}
 
         final long games;
         try{games=Long.parseLong(args[2]);}
         catch(NumberFormatException error){sender.sendMessage(Component.text("INVALID_STATE"));return true;}
         if(games<1||games>100_000L){sender.sendMessage(Component.text("INVALID_STATE (games: 1..100000)"));return true;}
+        final boolean force=args.length==4&&args[3].equalsIgnoreCase("force");
         final int skillPercent;
-        try{skillPercent=args.length==4?Integer.parseInt(args[3]):80;}
+        try{skillPercent=args.length==4&&!force?Integer.parseInt(args[3]):80;}
         catch(NumberFormatException error){sender.sendMessage(Component.text("INVALID_STATE (skillPercent: 0..100)"));return true;}
         if(skillPercent<0||skillPercent>100){sender.sendMessage(Component.text("INVALID_STATE (skillPercent: 0..100)"));return true;}
         if(running){sender.sendMessage(Component.text("BUSY"));return true;}
 
         var state=plugin.machines().snapshot();
-        if(args[1].equalsIgnoreCase("all"))return simulateAll(sender,state,games,skillPercent);
+        if(args[1].equalsIgnoreCase("all")){
+            if(force){sender.sendMessage(Component.text("INVALID_STATE (force requires a single machine id)"));return true;}
+            return simulateAll(sender,state,games,skillPercent);
+        }
 
         final int machineId;
         try{machineId=Integer.parseInt(args[1]);}
@@ -60,11 +64,27 @@ public final class MachineDataSimulationService {
         // unrelated cabinet (including intentionally suspended SKILL_STOP games).
         Session blocking=blockingSession(state,machineId);
         if(blocking!=null){
-            sender.sendMessage(Component.text("MACHINE_OCCUPIED id="+machineId
-                    +" lifecycle="+blocking.lifecycle()
-                    +" gameState="+blocking.state()
-                    +" player="+blocking.player()
-                    +" online="+(Bukkit.getPlayer(blocking.player())!=null)));
+            // A closed/disconnected cabinet must be reusable immediately, even
+            // during the grace window. ACTIVE online sessions need explicit OP
+            // confirmation, since the server cannot infer if the UI is still open.
+            boolean orphan=blocking.lifecycle()!=Session.Lifecycle.ACTIVE
+                    ||Bukkit.getPlayer(blocking.player())==null;
+            if(!orphan&&!force){
+                sender.sendMessage(Component.text("MACHINE_OCCUPIED id="+machineId
+                        +" lifecycle="+blocking.lifecycle()
+                        +" player="+blocking.player()
+                        +" (use /piri sim "+machineId+" "+games+" force to release this session)"));
+                return true;
+            }
+            running=true;
+            plugin.machines().releaseForSimulation(machineId,releaseError->{
+                if(releaseError!=null){
+                    running=false;
+                    sender.sendMessage(Component.text(releaseError));
+                    return;
+                }
+                launchSingle(sender,machine,games,skillPercent);
+            });
             return true;
         }
         if(!supported(machine)){
@@ -72,8 +92,15 @@ public final class MachineDataSimulationService {
             return true;
         }
 
+        running=true;
+        launchSingle(sender,machine,games,skillPercent);
+        return true;
+    }
+
+    private void launchSingle(CommandSender sender,Machine machine,long games,int skillPercent) {
+        int machineId=machine.id();
         int setting=machine.setting();
-        String period=state.period();
+        String period=plugin.machines().snapshot().period();
         var dbFile=plugin.getDataFolder().toPath().resolve("piri.db");
         var random=new SplittableRandom(new SecureRandom().nextLong());
         running=true;
@@ -93,7 +120,6 @@ public final class MachineDataSimulationService {
                     }
                     sender.sendMessage(Component.text("SIMULATION_DONE machine="+result.machineId()+" setting="+result.setting()+" spins="+result.games()+" BIG="+result.big()+" REG="+result.reg()+" DIFF="+signed(result.difference())+" MAX="+signed(result.maxDifference())+" CURRENT="+result.currentGames()));
                 });
-        return true;
     }
 
     private boolean simulateAll(CommandSender sender, jp.pirijuggler.paper.database.PiriDatabase.State state, long games, int skillPercent) {
