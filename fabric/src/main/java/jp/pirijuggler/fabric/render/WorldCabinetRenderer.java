@@ -4,6 +4,7 @@ import jp.pirijuggler.fabric.PiriJugglerClient;
 import jp.pirijuggler.fabric.network.RemoteMachineViewState;
 import jp.pirijuggler.fabric.ui.UiConstants;
 import jp.pirijuggler.fabric.ui.JugglerGodAssets;
+import jp.pirijuggler.fabric.ui.SettingHintTexture;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
@@ -185,6 +186,13 @@ public final class WorldCabinetRenderer {
             rect(consumers,lamp,basis,camera,350,390,300,170,.0025,0xffffffff,0,0,1,1);
         }
 
+        if(isJugglerGod(state.machineType())){
+            var hint=jp.pirijuggler.fabric.ui.SlotLayout.SETTING_HINT;
+            int frame=SettingHintTexture.frame(state.settingHintColor());
+            rect(consumers,SettingHintTexture.ATLAS,basis,camera,
+                    hint.x(),hint.y(),hint.w(),hint.h(),.0025,0xffffffff,
+                    0,frame/9.0f,1,(frame+1)/9.0f);
+        }
         if(state.skillChallengeTexture()!=null){
             var box=jp.pirijuggler.fabric.ui.SlotLayout.SKILL_CHALLENGE;
             var size=JugglerGodAssets.textureSize(state.machineType(),state.skillChallengeTexture());
