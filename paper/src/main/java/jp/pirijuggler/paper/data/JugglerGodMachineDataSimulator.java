@@ -8,6 +8,7 @@ import jp.pirijuggler.paper.database.StartupProfile;
 import jp.pirijuggler.paper.game.GameRules;
 import jp.pirijuggler.paper.game.JugglerGodGameEngine;
 import jp.pirijuggler.paper.game.JugglerGodOdds;
+import jp.pirijuggler.paper.game.JugglerGodSettingHint;
 import jp.pirijuggler.paper.game.RoleWeights;
 import jp.pirijuggler.paper.machine.DomainException;
 import jp.pirijuggler.paper.reel.InternalRole;
@@ -15,6 +16,7 @@ import jp.pirijuggler.paper.reel.InternalRole;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.security.SecureRandom;
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -141,6 +143,24 @@ public final class JugglerGodMachineDataSimulator {
         long total,big,reg,current,difference,max,addedBig,addedReg,clock,simulatedSpins;
         String lastBonus;
         Long lastBonusAt;
+        // Simulated events feed only the live hint counters, not the live gameplay mode.
+        // Hint sampling must never consume gameplay RNG.
+        JugglerGodSettingHint.State hint;
+        boolean hintExtreme;
+        final RandomGenerator hintRandom = new SecureRandom();
+
+        void onNormalStop(boolean internallyWonBonus){
+            hint=JugglerGodSettingHint.advance(hint,true,true,internallyWonBonus,
+                    false,false,setting,hintExtreme,hintRandom);
+        }
+        void onBonusStart(){
+            hint=JugglerGodSettingHint.advance(hint,false,false,false,
+                    true,false,setting,hintExtreme,hintRandom);
+        }
+        void onBonusEnd(){
+            hint=JugglerGodSettingHint.advance(hint,false,false,false,
+                    false,true,setting,hintExtreme,hintRandom);
+        }
 
         State(Connection db,RoleWeights weights,RandomGenerator random,int machineId,int setting,String period,
               int bonusScalePpm,int bonusStockScalePpm,int smallRoleScalePpm,int precursorTwoHighPpm,int referenceBase,int godDenominator,int godInGodBigStock,int guaranteedBigs,
@@ -224,9 +244,10 @@ public final class JugglerGodMachineDataSimulator {
             try(var statement=db.createStatement()){statement.execute("PRAGMA foreign_keys=ON");statement.execute("PRAGMA busy_timeout=5000");}
             db.setAutoCommit(false);
             try{
-                var machineRows=query(db,"SELECT machine_type FROM machines WHERE machine_id=? AND deleted=0",machineId);
+                var machineRows=query(db,"SELECT machine_type,machine_runtime_json FROM machines WHERE machine_id=? AND deleted=0",machineId);
                 if(machineRows.isEmpty())throw new IllegalArgumentException("Missing machine");
                 String machineType=(String)machineRows.getFirst().get("machine_type");
+                String originalRuntime=(String)machineRows.getFirst().get("machine_runtime_json");
                 boolean extreme="JUGGLER_GOD_EXTREME".equals(machineType);
                 if(!extreme&&!"JUGGLER_GOD".equals(machineType))throw new IllegalArgumentException("Wrong machine type");
 
@@ -260,6 +281,10 @@ public final class JugglerGodMachineDataSimulator {
                         normalBigPpm,normalRegPpm,heavenPpm,games,
                         n(stats,"total_games"),n(stats,"big_count"),n(stats,"reg_count"),n(stats,"current_games"),
                         n(stats,"today_difference"),n(stats,"today_max_difference"),now);
+                JsonObject preservedRuntime=originalRuntime==null||originalRuntime.isBlank()
+                        ?new JsonObject():JsonParser.parseString(originalRuntime).getAsJsonObject();
+                s.hint=JugglerGodSettingHint.read(preservedRuntime);
+                s.hintExtreme=extreme;
                 long beforeBig=s.big,beforeReg=s.reg;
 
                 String key=cursorKey(period,machineId);
@@ -275,6 +300,7 @@ public final class JugglerGodMachineDataSimulator {
                     if(c.continuationGamePending){
                         c.continuationGamePending=false;
                         s.advanceContinuationGame();
+                        s.onNormalStop(true); // A counted forced continuation is a winning normal game.
                         startBonus(s,c,"BIG",1,true,true);
                         continue;
                     }
@@ -290,6 +316,7 @@ public final class JugglerGodMachineDataSimulator {
                         // A fresh GOD overrides any lingering normal-game anticipation.
                         c.mode=Mode.NORMAL;c.hotRemaining=0;c.roleStreak=0;
                         s.advanceNormalGame(c,GameRules.payout(InternalRole.GOD));
+                        s.onNormalStop(true);
                         s.godHistory((int)s.current);
                         c.godStartPending=true;
                         c.heavenAfterGod=true;
@@ -327,6 +354,7 @@ public final class JugglerGodMachineDataSimulator {
 
                     s.advanceNormalGame(c,GameRules.payout(role));
                     String bonus=GameRules.bonus(role);
+                    s.onNormalStop(bonus!=null);
                     if(bonus!=null){
                         // A bonus consumes HIGH/ULTRA and any accumulated small-role streak.
                         if(!originHeaven)c.mode=Mode.NORMAL;
@@ -349,6 +377,13 @@ public final class JugglerGodMachineDataSimulator {
                 execute(db,"UPDATE machine_period_stats SET total_games=?,big_count=?,reg_count=?,current_games=?,today_difference=?,today_max_difference=?,last_bonus_type=COALESCE(?,last_bonus_type),last_bonus_at=CASE WHEN ? IS NULL THEN last_bonus_at ELSE ? END WHERE machine_id=? AND business_period_id=?",
                         s.total,s.big,s.reg,s.current,s.difference,s.max,s.lastBonus,s.lastBonus,s.lastBonusAt,machineId,period);
                 putMetadata(db,key,c.json());
+                // Synchronize hint with the same committed transaction as data/history.
+                // Never copy the simulator's approximation of gameplay state into runtime.
+                if(!query(db,"SELECT session_id FROM player_sessions WHERE machine_id=? AND lifecycle IN ('ACTIVE','SUSPENDED_GRACE') LIMIT 1",machineId).isEmpty())
+                    throw new DomainException("MACHINE_OCCUPIED");
+                JugglerGodSettingHint.write(preservedRuntime,s.hint);
+                execute(db,"UPDATE machines SET machine_runtime_json=?,updated_at=? WHERE machine_id=? AND deleted=0",
+                        preservedRuntime.toString(),now,machineId);
                 db.commit();
                 return new MachineDataSimulator.Result(machineId,setting,s.simulatedSpins,s.big-beforeBig,s.reg-beforeReg,s.difference,s.max,s.current);
             }catch(Exception error){db.rollback();throw error;}
@@ -426,6 +461,7 @@ public final class JugglerGodMachineDataSimulator {
         c.activeEntryCharged=false;
         c.activeHistoryGames=history;
         s.recordBonusHit(type,history);
+        s.onBonusStart();
     }
 
     private static void playBonusRound(State s,Cursor c)throws Exception{
@@ -471,6 +507,7 @@ public final class JugglerGodMachineDataSimulator {
 
     private static void finishActive(State s,Cursor c)throws Exception{
         s.finishBonus();
+        s.onBonusEnd();
         c.activeBonus="NONE";c.activeRemaining=0;c.activeInsideGod=false;
         c.activeNeedsEntry=false;c.activeEntryCharged=false;c.activeHistoryGames=0;
     }

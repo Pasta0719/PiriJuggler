@@ -69,6 +69,91 @@ class MachineDataSimulatorContinuityTest {
         return ((Number)db.rows("SELECT "+column+" FROM machine_period_stats WHERE machine_id=? AND business_period_id=?",id,period()).getFirst().get(column)).longValue();
     }
 
+    private JsonObject liveGodRuntime(int machineId)throws Exception {
+        String raw=(String)db.rows("SELECT machine_runtime_json FROM machines WHERE machine_id=?",machineId)
+                .getFirst().get("machine_runtime_json");
+        return raw==null||raw.isBlank()?new JsonObject():JsonParser.parseString(raw).getAsJsonObject();
+    }
+
+    @Test void godSimAdvancesHintThrough99AndRevealsOn100thMiss() throws Exception {
+        int id=create(MachineType.JUGGLER_GOD,51);
+        JsonObject seeded=liveGodRuntime(id);
+        seeded.addProperty("settingHintChain",7);
+        seeded.addProperty("settingHintGames",0);
+        seeded.addProperty("settingHintColor","OFF");
+        db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",seeded.toString(),id);
+        // Guaranteed no bonus from HIGH random: samples normal miss over 100 spins.
+        var first=JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,
+                id,1,99,period(),new HighRandom(),NOW+900);
+        assertEquals(99,first.games());
+        JsonObject at99=liveGodRuntime(id);
+        assertEquals(7,at99.get("settingHintChain").getAsInt());
+        assertEquals(99,at99.get("settingHintGames").getAsInt());
+        assertEquals("OFF",at99.get("settingHintColor").getAsString());
+        assertEquals(99,stat("current_games",id));
+
+        // 100th completed simulated third-stop is a miss: setting 1,
+        // seven-chain hint is deterministically PURPLE.
+        JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,
+                id,1,1,period(),new HighRandom(),NOW+1000);
+        JsonObject at100=liveGodRuntime(id);
+        assertEquals("PURPLE",at100.get("settingHintColor").getAsString());
+        assertEquals(0,at100.get("settingHintChain").getAsInt());
+        assertEquals(0,at100.get("settingHintGames").getAsInt());
+        assertEquals(100,stat("current_games",id));
+
+        // The public UI and the next actual session must see the same color.
+        var seat=db.seat(UUID.randomUUID(),id,NOW+1100);
+        assertEquals("PURPLE",seat.publicState().get("settingHintColor").getAsString());
+    }
+
+    @Test void godSimBonusAndNormalSpinsCarryHintAcrossSeparateCommands() throws Exception {
+        int id=create(MachineType.JUGGLER_GOD_EXTREME,52);
+        // Simulator's normal data includes bonus payout rounds as budget.
+        // Starting a guaranteed simulated BIG counts one chain bonus.
+        JsonObject synthetic=new JsonObject();
+        synthetic.addProperty("version",4);
+        synthetic.addProperty("kind","JUGGLER_GOD_EXTREME");
+        com.google.gson.JsonArray stock=new com.google.gson.JsonArray();
+        stock.add("BIG");
+        synthetic.add("stock",stock);
+        putCursor(id,synthetic.toString());
+        var bonus=JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,
+                id,1,30,period(),new HighRandom(),NOW+1200);
+        assertEquals(1,bonus.big());
+        JsonObject afterBonus=liveGodRuntime(id);
+        assertEquals(1,afterBonus.get("settingHintChain").getAsInt());
+        assertEquals(0,afterBonus.get("settingHintGames").getAsInt());
+        assertEquals("OFF",afterBonus.get("settingHintColor").getAsString());
+
+        JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,
+                id,1,99,period(),new HighRandom(),NOW+1300);
+        JsonObject at99=liveGodRuntime(id);
+        assertEquals(1,at99.get("settingHintChain").getAsInt());
+        assertEquals(99,at99.get("settingHintGames").getAsInt());
+        assertEquals(99,stat("current_games",id));
+        var resumed=db.seat(UUID.randomUUID(),id,NOW+1400);
+        assertEquals(99,resumed.machineState().get("settingHintGames").getAsInt());
+    }
+
+    @Test void godSimPreservesLiveGameplayEntitlementsWhileChangingOnlyHint() throws Exception {
+        int id=create(MachineType.JUGGLER_GOD,53);
+        JsonObject original=liveGodRuntime(id);
+        original.addProperty("settingHintChain",3);
+        original.addProperty("settingHintGames",41);
+        original.addProperty("settingHintColor","OFF");
+        db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",original.toString(),id);
+        JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,
+                id,1,1,period(),new HighRandom(),NOW+1500);
+        JsonObject updated=liveGodRuntime(id);
+        assertEquals(42,updated.get("settingHintGames").getAsInt());
+        for(String property:new String[]{"settingHintChain","settingHintGames","settingHintColor"}){
+            original.remove(property);
+            updated.remove(property);
+        }
+        assertEquals(original,updated,"simulation must not overwrite the real HEAVEN/GOD state");
+    }
+
     @Test void ordinaryPartialBigResumesBeforeAnyNewNormalGame() throws Exception {
         int id=create(MachineType.JUGGLER,1);
         putCursor(id,"{\"version\":2,\"kind\":\"JUGGLER\",\"freeReplay\":false,\"activeBonus\":\"BIG\",\"bonusRemaining\":3,\"entryCharged\":false}");
