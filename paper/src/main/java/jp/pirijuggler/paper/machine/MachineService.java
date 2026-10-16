@@ -122,6 +122,56 @@ public final class MachineService implements Listener, CommandExecutor {
     private void main() { if (!Bukkit.isPrimaryThread()) throw new IllegalStateException("Machine state requires Paper main thread"); }
     public boolean ready() { main(); return !stopped && state != null; }
     public PiriDatabase.State snapshot() { main(); return state; }
+    /**
+     * Admin-only simulation preflight: release a dead/suspended cabinet lock without
+     * losing the player's held credit or unresolved bonus entitlement. The caller
+     * must already have determined that automatic (offline/grace) or explicit
+     * operator-authorized release is appropriate.
+     *
+     * The reservation prevents racing with accepted gameplay/economy packets;
+     * all DB persistence is on the single DB worker.
+     */
+    public void releaseForSimulation(int machineId, Consumer<String> finished) {
+        main();
+        if(!ready()){finished.accept("DB_ERROR");return;}
+        List<Session> occupied=state.sessions().stream()
+                .filter(s->s.machine()==machineId&&s.ownsLock()).toList();
+        if(pendingMachines.contains(machineId)||occupied.stream().anyMatch(s->pendingPlayers.contains(s.player()))){
+            finished.accept("BUSY");return;
+        }
+        pendingMachines.add(machineId);
+        for(Session s:occupied)pendingPlayers.add(s.player());
+        plugin.executors().database(
+                ()->new Saved<>(database.releaseMachineForSimulation(machineId,System.currentTimeMillis()),database.state()),
+                (saved,error)->{
+                    if(saved!=null)state=saved.state;
+                    try{
+                        if(error!=null){
+                            plugin.getLogger().log(Level.SEVERE,"Simulation lock recovery failed machine="+machineId,error);
+                            finished.accept("SIM_RELEASE_FAILED");
+                            return;
+                        }
+                        for(Session previous:occupied){
+                            engine(machineId).forget(previous.id());
+                            Player player=Bukkit.getPlayer(previous.player());
+                            if(player!=null&&player.isOnline()){
+                                JsonObject body=previous.identity();
+                                body.addProperty("reason","ADMIN_SIM_RELEASE");
+                                send(player,PacketType.SESSION_SUSPENDED,body);
+                            }
+                        }
+                        remote.broadcastSnapshot(machineId);
+                        finished.accept(null);
+                    } finally {
+                        pendingMachines.remove(machineId);
+                        for(Session previous:occupied){
+                            pendingPlayers.remove(previous.player());
+                            afterPlayerOperation(previous.player());
+                        }
+                    }
+                });
+    }
+
     public void updateRemoteDataLamp(JsonObject data) { main(); if (ready()) remote.updateDataLamp(data); }
     private boolean busy(int id) { return pendingMachines.contains(id) || state.busy(id); }
     private GameEngine engine(int machineId) {
