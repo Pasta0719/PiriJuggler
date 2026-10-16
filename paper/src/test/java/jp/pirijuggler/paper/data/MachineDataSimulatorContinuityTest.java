@@ -111,8 +111,13 @@ class MachineDataSimulatorContinuityTest {
         int id=create(MachineType.JUGGLER_GOD_EXTREME,52);
         // Simulator's normal data includes bonus payout rounds as budget.
         // Starting a guaranteed simulated BIG counts one chain bonus.
-        putCursor(id,"{\\"version\\":4,\\"kind\\":\\"JUGGLER_GOD_EXTREME\\","
-                + "\\"stock\\":[\\"BIG\\"]}");
+        JsonObject synthetic=new JsonObject();
+        synthetic.addProperty("version",4);
+        synthetic.addProperty("kind","JUGGLER_GOD_EXTREME");
+        com.google.gson.JsonArray stock=new com.google.gson.JsonArray();
+        stock.add("BIG");
+        synthetic.add("stock",stock);
+        putCursor(id,synthetic.toString());
         var bonus=JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,
                 id,1,30,period(),new HighRandom(),NOW+1200);
         assertEquals(1,bonus.big());
