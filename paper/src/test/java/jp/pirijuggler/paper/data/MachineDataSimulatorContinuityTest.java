@@ -154,6 +154,36 @@ class MachineDataSimulatorContinuityTest {
         assertEquals(original,updated,"simulation must not overwrite the real HEAVEN/GOD state");
     }
 
+    @Test void simIgnoresAnUnrelatedActiveOrDisconnectedMachineSession() throws Exception {
+        int other=create(MachineType.SKILL_STOP,61);
+        int target=create(MachineType.JUGGLER_GOD,62);
+        UUID player=UUID.randomUUID();
+        db.seat(player,other,NOW+10);
+        assertNotNull(MachineDataSimulationService.blockingSession(db.state(),other));
+        assertNull(MachineDataSimulationService.blockingSession(db.state(),target),
+                "unrelated live seat must not prevent simulation of the requested cabinet");
+
+        db.disconnect(player,NOW+20,60_000,null);
+        assertNotNull(MachineDataSimulationService.blockingSession(db.state(),other),
+                "disconnect grace still owns the original cabinet lock");
+        assertNull(MachineDataSimulationService.blockingSession(db.state(),target),
+                "unrelated disconnected seat must not prevent simulation");
+
+        // A genuinely occupied requested machine is still protected.
+        assertNotNull(MachineDataSimulationService.blockingSession(db.state(),other));
+    }
+
+    @Test void simDoesNotCountSafeSuspendedSessionsAsOccupied() throws Exception {
+        int id=create(MachineType.JUGGLER_GOD,63);
+        UUID player=UUID.randomUUID();
+        db.seat(player,id,NOW+10);
+        assertNotNull(MachineDataSimulationService.blockingSession(db.state(),id));
+        db.disconnect(player,NOW+20,60_000,null);
+        db.expire(NOW+60_021);
+        assertNull(MachineDataSimulationService.blockingSession(db.state(),id),
+                "expired grace is SUSPENDED_SAFE and cannot block simulation");
+    }
+
     @Test void ordinaryPartialBigResumesBeforeAnyNewNormalGame() throws Exception {
         int id=create(MachineType.JUGGLER,1);
         putCursor(id,"{\"version\":2,\"kind\":\"JUGGLER\",\"freeReplay\":false,\"activeBonus\":\"BIG\",\"bonusRemaining\":3,\"entryCharged\":false}");
