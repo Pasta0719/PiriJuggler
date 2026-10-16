@@ -58,6 +58,45 @@ class JugglerGodCoreTest extends GameFixture {
         return after;
     }
 
+    @Test void actualHundredthStopPublishesHintAndNextNormalLeverClearsIt() throws Exception {
+        Rig rig=rig(JugglerGodRuntime.initial(),1);
+        Session s=rig.session();
+        var seeded=s.machineState().deepCopy();
+        seeded.addProperty("settingHintChain",7);
+        seeded.addProperty("settingHintGames",99);
+        seeded.addProperty("settingHintColor","OFF");
+        db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",seeded.toString(),s.machine());
+        db.sql("UPDATE player_sessions SET machine_state_json=? WHERE session_id=?",seeded.toString(),s.id().toString());
+        s=db.state().session(s.player());
+        s=playForcedRole(rig,s,InternalRole.CHERRY,3_000_000_000L);
+        assertEquals(Session.GameState.SEATED_READY,s.state());
+        assertEquals("PURPLE",s.publicState().get("settingHintColor").getAsString());
+        assertEquals("PURPLE",com.google.gson.JsonParser.parseString(
+                db.state().machine(s.machine()).runtimeJson()).getAsJsonObject()
+                .get("settingHintColor").getAsString());
+        s=action(rig,s,PacketType.SPACE_ACTION,5_000_000_000L); // BET: retain hint
+        assertEquals("PURPLE",s.publicState().get("settingHintColor").getAsString());
+        s=action(rig,s,PacketType.SPACE_ACTION,6_000_000_000L); // next lever: turn off
+        assertEquals("OFF",s.publicState().get("settingHintColor").getAsString());
+    }
+
+    @Test void actualHundredthBonusDoesNotShowFalseChainEnd() throws Exception {
+        Rig rig=rig(JugglerGodRuntime.initial(),6);
+        Session s=rig.session();
+        var seeded=s.machineState().deepCopy();
+        seeded.addProperty("settingHintChain",6);
+        seeded.addProperty("settingHintGames",99);
+        seeded.addProperty("settingHintColor","OFF");
+        db.sql("UPDATE machines SET machine_runtime_json=? WHERE machine_id=?",seeded.toString(),s.machine());
+        db.sql("UPDATE player_sessions SET machine_state_json=? WHERE session_id=?",seeded.toString(),s.id().toString());
+        s=db.state().session(s.player());
+        s=playForcedRole(rig,s,InternalRole.BIG,9_000_000_000L);
+        var hint=JugglerGodSettingHint.read(s.machineState());
+        assertEquals("OFF",hint.color());
+        assertTrue(hint.chain()>=6);
+        assertTrue(hint.chain()<=7);
+    }
+
     @Test void guaranteedGodStockForcesBigWithoutAdvancingGameCounter() throws Exception {
         var runtime=new JugglerGodRuntime(JugglerGodRuntime.Mode.GOD_CHAIN,0,0,3,true,false,"NONE",2,false,"GOD_GUARANTEED_NEXT");
         Rig rig=rig(runtime,1);
