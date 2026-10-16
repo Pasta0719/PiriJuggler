@@ -10,6 +10,7 @@ import jp.pirijuggler.paper.reel.InternalRole;
 import jp.pirijuggler.paper.session.Session;
 
 import java.util.*;
+import java.security.SecureRandom;
 
 /**
  * Successor engine: current Juggler core plus 1/8192 GOD, 32G heaven,
@@ -23,6 +24,7 @@ public final class JugglerGodGameEngine implements GameEngine {
 
     private final NormalGame delegate;
     private final RandomStreams random;
+    private final SecureRandom settingHintRandom = new SecureRandom();
     private final RoleWeights weights;
     private final long normalBigToHeavenPpm;
     private final long normalRegToHeavenPpm;
@@ -390,7 +392,23 @@ public final class JugglerGodGameEngine implements GameEngine {
             else
                 next=next.withBonusDebug(triggerAudit==null?"NONE":triggerAudit,null);
         }
-        Session after=withRuntime(rawAfter,next);
+        // Store public hint color and private chain counters with the same transaction.
+        // Do not consume gameplay RNG: the hint is visual information only.
+        boolean completedNormalStop=legacy.finished()&&before.state()==Session.GameState.NORMAL_SPINNING;
+        boolean normalHit=completedNormalStop&&(
+                "GOD".equals(before.text("internal_role"))
+                ||GameRules.bonus(InternalRole.valueOf(before.text("internal_role")))!=null);
+        JsonObject savedHint=before.machineState();
+        if(savedHint==null)savedHint=JugglerGodRuntime.fromJson(machine.runtimeJson()).toJson();
+        JugglerGodSettingHint.State hint=JugglerGodSettingHint.advance(
+                JugglerGodSettingHint.read(savedHint),
+                normalLever&&legacy.lever()&&!suppressNormalSpinCount,
+                completedNormalStop,normalHit,
+                bonusStarted!=null,bonusEnded,
+                machine.setting(),"JUGGLER_GOD_EXTREME".equals(machine.type().name()),settingHintRandom);
+        JsonObject machineJson=next.toJson();
+        JugglerGodSettingHint.write(machineJson,hint);
+        Session after=withRuntime(rawAfter,machineJson);
         int normalSpins=suppressNormalSpinCount?0:legacy.normalSpins();
 
         final boolean dropBonusStart=suppressBonusStart;
@@ -403,7 +421,7 @@ public final class JugglerGodGameEngine implements GameEngine {
         return new GameTransition(
                 legacy.transaction(),before,after,legacy.bet(),legacy.payout(),normalSpins,
                 legacy.finished(),legacy.lever(),bonusStarted,bonusEnded,
-                legacy.publicDelayMs(),legacy.packets(),legacy.afterStart(),scheduled,next.toJsonString()
+                legacy.publicDelayMs(),legacy.packets(),legacy.afterStart(),scheduled,machineJson.toString()
         );
     }
 
@@ -536,8 +554,12 @@ public final class JugglerGodGameEngine implements GameEngine {
     }
 
     private static Session withRuntime(Session session,JugglerGodRuntime runtime){
+        return withRuntime(session,runtime.toJson());
+    }
+
+    private static Session withRuntime(Session session,JsonObject runtime){
         var values=new LinkedHashMap<>(session.snapshot());
-        values.put("machine_state_json",runtime.toJsonString());
+        values.put("machine_state_json",runtime.toString());
         return new Session(values);
     }
 
