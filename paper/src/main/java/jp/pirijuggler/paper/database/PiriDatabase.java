@@ -7,6 +7,7 @@ import jp.pirijuggler.paper.machine.Machine;
 import jp.pirijuggler.paper.machine.MachineType;
 import jp.pirijuggler.paper.game.god.GodMachineRuntime;
 import jp.pirijuggler.paper.game.JugglerGodRuntime;
+import jp.pirijuggler.paper.game.JugglerGodSettingHint;
 import jp.pirijuggler.paper.game.pachinko.PachinkoRuntime;
 import jp.pirijuggler.paper.reel.StopCatalogue;
 import jp.pirijuggler.paper.reel.StopSolver;
@@ -180,7 +181,7 @@ public final class PiriDatabase implements AutoCloseable {
             machine=requireMachine(id);
             String machineState=switch(machine.type()){
                 case GOD -> GodMachineRuntime.fromJson(machine.runtimeJson()).gameplay().toJsonString();
-                case JUGGLER_GOD, JUGGLER_GOD_EXTREME -> JugglerGodRuntime.fromJson(machine.runtimeJson()).toJsonString();
+                case JUGGLER_GOD, JUGGLER_GOD_EXTREME -> JugglerGodSettingHint.preserve(machine.runtimeJson(),JugglerGodRuntime.fromJson(machine.runtimeJson()).toJson());
                 case SKILL_STOP -> existing!=null&&existing.machine()==id?existing.text("machine_state_json"):null;
                 case PACHINKO -> existing!=null&&existing.machine()==id
                         ? PachinkoRuntime.fromJson(existing.text("machine_state_json")).toJsonString()
@@ -209,7 +210,7 @@ public final class PiriDatabase implements AutoCloseable {
                     int nextReg=runtime.additionalRegStock()-(big?0:1);
                     String type=big?"BIG":"REG";
                     JugglerGodRuntime release=runtime.release(nextBig,nextReg,"RECOVERY_STOCK_RELEASE_"+type);
-                    machineState=release.toJsonString();
+                    machineState=JugglerGodSettingHint.preserve(machine.runtimeJson(),release.toJson());
                     sql("UPDATE machines SET machine_runtime_json=?,updated_at=? WHERE machine_id=?",machineState,now,id);
                     sql("UPDATE player_sessions SET game_state=?,current_bet=0,bonus_type=?,bonus_payout_count=0,lamp_on=0,notice_state='NONE',machine_state_json=?,last_activity=? WHERE player_uuid=?",
                             "BONUS_PENDING_"+type,type,machineState,now,player.toString());
@@ -392,7 +393,8 @@ public final class PiriDatabase implements AutoCloseable {
                 throw new DomainException("INVALID_STATE");
             JugglerGodRuntime runtime=JugglerGodRuntime.fromJson(
                     session.machineState()!=null?session.machineState().toString():machine.runtimeJson());
-            String next=runtime.forceRole(role).toJsonString();
+            String next=JugglerGodSettingHint.preserve(
+                    session.machineState()!=null?session.machineState().toString():machine.runtimeJson(),runtime.forceRole(role).toJson());
             sql("UPDATE player_sessions SET machine_state_json=?,last_activity=? WHERE session_id=?",
                     next,now,session.id().toString());
             sql("UPDATE machines SET machine_runtime_json=?,updated_at=? WHERE machine_id=?",
