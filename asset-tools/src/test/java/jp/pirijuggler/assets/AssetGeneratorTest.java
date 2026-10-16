@@ -33,6 +33,29 @@ class AssetGeneratorTest {
         }
         var source=generator.lock().getAsJsonObject("symbolShapes");assertEquals(source.get("sourceSha256").getAsString(),AssetGenerator.sha(Files.readAllBytes(ROOT.resolve("docs/v3-section-121.txt"))));
     }
+    @Test void shippedReelImagesMatchApprovedFabricJar() throws Exception {
+        var hashes=JsonParser.parseString(Files.readString(ROOT.resolve("asset-tools/src/test/resources/shipped-reel-art-sha256.json"))).getAsJsonObject();
+        assertEquals(16,hashes.size());
+        for(var e:hashes.entrySet()){
+            Path path=ROOT.resolve("fabric/src/main/resources/assets/piri/textures/"+e.getKey());
+            assertTrue(Files.isRegularFile(path),e.getKey());
+            assertEquals(e.getValue().getAsString(),AssetGenerator.sha(Files.readAllBytes(path)),e.getKey());
+            var png=ImageIO.read(path.toFile());
+            assertNotNull(png,e.getKey());
+            assertTrue(png.getWidth()>0&&png.getHeight()>0,e.getKey());
+        }
+    }
+    @Test void assetRegenerationDoesNotOverwriteRealSymbolArt(@org.junit.jupiter.api.io.TempDir Path temp) throws Exception {
+        Path spec=temp.resolve("docs/spec-lock.json");
+        Files.createDirectories(spec.getParent());
+        Files.copy(ROOT.resolve("docs/spec-lock.json"),spec);
+        Path custom=temp.resolve("fabric/src/main/resources/assets/piri/textures/symbols/seven.png");
+        Files.createDirectories(custom.getParent());
+        byte[] original=new byte[]{13,37,42,7};
+        Files.write(custom,original);
+        AssetGenerator.main(new String[]{temp.toString()});
+        assertArrayEquals(original,Files.readAllBytes(custom));
+    }
     @Test void bitmapWordGapIsExactlyTwentyPixelsAndHasNoAntialias() throws Exception {
         var generator=new AssetGenerator(ROOT);assertEquals(23,generator.textColumns("PIRI"));assertEquals(62,generator.textColumns("PIRI CHANCE"));
         var image=new BufferedImage(400,80,BufferedImage.TYPE_INT_ARGB);var g=AssetGenerator.graphics(image);generator.glyphs(g,"PIRI CHANCE",200,40,5,Color.WHITE);g.dispose();
