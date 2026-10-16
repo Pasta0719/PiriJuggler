@@ -1,7 +1,7 @@
 # JUGGLER_GOD image assets
 
 このフォルダは JUGGLER_GOD 専用の差し替え素材です。
-初期状態では通常の JUGGLER で使っている画像をそのままコピーしてあります。
+通常機種・GOD系の図柄は、稼働中の Fabric JAR に同梱されていた画像を正規素材として反映しています。
 ここだけ差し替えると通常 JUGGLER には影響しません。
 
 ## リール図柄
@@ -23,3 +23,6 @@ JUGGLER_GOD の画面表示とワールド上の筐体表示は、この専用�
 通常 JUGGLER の元画像:
 `assets/piri/textures/symbols/`
 `assets/piri/textures/lamp/`
+
+`asset-tools/src/test/resources/shipped-reel-art-sha256.json` は図柄14枚とGOD用ランプ2枚のSHA-256固定検証表です。
+`regeneratePiriAssets` は既存の通常機種 `symbols/*.png` を上書きしません。

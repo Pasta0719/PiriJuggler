@@ -128,7 +128,11 @@ public final class AssetGenerator {
         Path root=Path.of(args[0]);var hashes=new TreeMap<String,String>();
         for(var entry:new AssetGenerator(root).generate().entrySet()) {
             var path=root.resolve("fabric/src/main/resources/assets/piri/textures/"+entry.getKey());Files.createDirectories(path.getParent());
-            var bytes=png(entry.getValue());Files.write(path,bytes);hashes.put(entry.getKey(),sha(bytes));
+            var bytes=png(entry.getValue());
+            // Preserve real user-provided symbols when regenerating deterministic placeholder assets.
+            // Removing a specific symbol PNG explicitly opts in to regenerating that placeholder.
+            if(!entry.getKey().startsWith("symbols/")||!Files.isRegularFile(path)) Files.write(path,bytes);
+            hashes.put(entry.getKey(),sha(bytes));
         }
         Path manifest=root.resolve("asset-tools/src/test/resources/image-sha256.json");Files.createDirectories(manifest.getParent());
         Files.writeString(manifest,new GsonBuilder().setPrettyPrinting().create().toJson(hashes)+"\n");
