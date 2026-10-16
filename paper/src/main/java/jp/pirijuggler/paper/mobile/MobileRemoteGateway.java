@@ -768,6 +768,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 #cabinet.godlike{overflow:hidden}
 
 #lamp{position:absolute;left:350px;top:405px;width:300px;height:170px;object-fit:contain;z-index:5}
+#settingHint{position:absolute;left:392px;top:572px;width:216px;height:90px;z-index:5;pointer-events:none;display:none;background-repeat:no-repeat;background-size:216px 810px}
 #skillChallenge{position:absolute;left:410px;top:580px;width:180px;height:140px;display:flex;align-items:center;justify-content:center;z-index:5}
 #skillChallengeImg{display:none;max-width:100%;max-height:100%;object-fit:contain}
 #skillRemaining{display:none}
@@ -875,6 +876,7 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 <div id="cabinet"></div><div id="reelBacking"></div>
 <div id="reel0" class="reelWindow"></div><div id="reel1" class="reelWindow"></div><div id="reel2" class="reelWindow"></div>
 <img id="lamp" src="/assets/lamp/piri_chance_off.png" alt="">
+<div id="settingHint" aria-hidden="true"></div>
 <div id="skillChallenge"><img id="skillChallengeImg" alt=""></div><div id="skillRemaining"></div>
 <div id="replayText"></div><div id="countText"></div><div id="stockLamp"><div id="stockInner"><span id="stockText">STOCK</span></div></div>
 <div id="statusPanel">
@@ -1329,6 +1331,13 @@ function applyState(j){
  $("replayText").textContent=gs==="REPLAY_READY"?"REPLAY":"";
  $("countText").textContent=(gs.startsWith("BIG_")||gs.startsWith("REG_"))?(skillstop&&currentState.skillRemaining!=null?"残り "+currentState.skillRemaining+"G":"COUNT "+Number(currentState.bonusCount||0)):"";
  $("stockLamp").style.display=godlike?"flex":"none";$("stockLamp").classList.toggle("on",godlike&&!!currentState.stockLampOn);
+ const hint=$("settingHint"),hintFrames={OFF:0,WHITE:1,BLUE:2,GREEN:3,YELLOW:4,PURPLE:5,RED:6,GOLD:7,RAINBOW:8};
+ const hintColor=String(currentState.settingHintColor||"OFF").toUpperCase();
+ hint.style.display=godlike?"block":"none";
+ if(godlike){
+  hint.style.backgroundImage='url("'+asset("lamp/setting_hint_atlas.png")+'")';
+  hint.style.backgroundPosition="0 "+(-90*(hintFrames[hintColor]||0))+"px";
+ }
  if(skillstop){
   const challenge=currentState.skillChallenge&&currentState.skillChallenge!=="AUTO"?String(currentState.skillChallenge).toLowerCase():"",img=$("skillChallengeImg");
   if(challenge){img.src=asset("symbols/"+challenge+".png");img.style.display="block"}else{img.removeAttribute("src");img.style.display="none"}

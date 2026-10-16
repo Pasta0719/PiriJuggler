@@ -858,7 +858,18 @@ public final class MachineService implements Listener, CommandExecutor {
         long ticks=Math.max(1,(event.delayMs()+49)/50);
         plugin.getServer().getScheduler().runTaskLater(plugin,()->{
             if(stopped||state==null||!player.isOnline())return;Session current=state.session(player.getUniqueId());
-            if(current!=null&&current.id().equals(sessionId)){send(player,event.packet());if(event.packet().packetType()!=PacketType.PUBLIC_STATE)remote.publishOwnerPacket(machine,event.packet());}
+            if(current!=null&&current.id().equals(sessionId)){
+                send(player,event.packet());
+                if(event.packet().packetType()==PacketType.PUBLIC_STATE){
+                    // A third-stop hint is revealed to owner and spectators at the same
+                    // visual completion point, not when the stop button was first pressed.
+                    JsonObject payload=event.packet().payload();
+                    if(payload.has("settingHintColor")
+                            &&!"OFF".equals(payload.get("settingHintColor").getAsString())
+                            &&payload.has("stoppedMask")&&payload.get("stoppedMask").getAsInt()==7)
+                        remote.broadcastSnapshot(machine);
+                }else remote.publishOwnerPacket(machine,event.packet());
+            }
         },ticks);
     }
     private void closeRequest(Player player, UUID id, int machine, long sequence) {

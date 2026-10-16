@@ -34,6 +34,7 @@ public final class RemoteMachineViewState {
     private final StopMotion[] stops = new StopMotion[3];
     private int stoppedMask;
     private boolean lampOn, lampBlink;
+    private String settingHintColor="OFF";
     private long lampChangedAt;
     private long credit, pay, bonusCount;
     private long totalGames, bigCount, regCount;
@@ -81,6 +82,7 @@ public final class RemoteMachineViewState {
         }
         state.stoppedMask = body.get("stoppedMask").getAsInt();
         state.lampOn = body.get("lampOn").getAsBoolean();
+        state.settingHintColor=body.has("settingHintColor")?body.get("settingHintColor").getAsString():"OFF";
         state.lampBlink = false;
         state.lampChangedAt = now;
         state.credit = body.get("credit").getAsLong();
@@ -220,6 +222,7 @@ public final class RemoteMachineViewState {
         return !lampBlink || elapsed >= 1_000_000_000L || (elapsed / 100_000_000L) % 2 == 0;
     }
 
+    public String settingHintColor(){return settingHintColor;}
     public int machineId() { return machineId; }
     public UUID world() { return world; }
     public String worldName() { return worldName; }

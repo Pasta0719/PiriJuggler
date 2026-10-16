@@ -222,5 +222,6 @@ public final class SlotViewState {
     public boolean godImpactActive(){return godImpactAt!=Long.MIN_VALUE&&time.getAsLong()-godImpactAt<GOD_IMPACT_NANOS;}
     public long godImpactAgeMillis(){return godImpactAt==Long.MIN_VALUE?-1L:Math.max(0L,(time.getAsLong()-godImpactAt)/1_000_000L);}
     public boolean stockLampOn(){return state!=null&&state.has("stockLampOn")&&state.get("stockLampOn").getAsBoolean();}
+    public String settingHintColor(){return state!=null&&state.has("settingHintColor")?state.get("settingHintColor").getAsString():"OFF";}
     public String value(String name){return state!=null&&state.has(name)?state.get(name).getAsString():"—";}
 }

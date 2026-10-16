@@ -108,7 +108,11 @@ class PiriDatabaseTest {
         assertEquals("REPLAY",live.forcedRole());
         assertEquals(19,live.hotRemaining());
         assertEquals(7,live.roleStreak());
-        assertEquals(live.toJsonString(),db.state().machine(id).runtimeJson());
+        assertEquals(live.toJsonString(),
+                jp.pirijuggler.paper.game.JugglerGodRuntime.fromJson(db.state().machine(id).runtimeJson()).toJsonString());
+        assertEquals(after.machineState().get("settingHintColor").getAsString(),
+                com.google.gson.JsonParser.parseString(db.state().machine(id).runtimeJson())
+                        .getAsJsonObject().get("settingHintColor").getAsString());
         code("MACHINE_OCCUPIED",()->db.forceJugglerGodRoleForSeatedOwner(id,other,"GRAPE",NOW+2));
 
         db.forceJugglerGodRoleForSeatedOwner(id,player,"NONE",NOW+2);
