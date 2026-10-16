@@ -247,6 +247,29 @@ public final class PiriDatabase implements AutoCloseable {
         transaction(() -> { if(motion!=null)new GameStore(this).saveMotion(motion); sql("UPDATE player_sessions SET lifecycle='SUSPENDED_GRACE',lock_expires_at=?,last_activity=? WHERE player_uuid=? AND lifecycle='ACTIVE'",
                 now + graceMs, now, player.toString()); return null; });
     }
+    /**
+     * An OP explicitly requested a historical simulation on this cabinet, or the
+     * current owner is already disconnected/suspended. Settle unresolved spins
+     * using the ordinary audited recovery path, then safely release only this
+     * cabinet's lock. Wallet/credit/held medals remain in player_sessions for
+     * the existing /piri recover cashout flow. No player session is deleted.
+     */
+    public List<UUID> releaseMachineForSimulation(int machineId,long now) throws Exception {
+        return transaction(() -> {
+            requireMachine(machineId);
+            RecoveryStore recovery=recovery();
+            List<UUID> affected=new ArrayList<>();
+            for(Session session:sessions()){
+                if(session.machine()!=machineId||!session.ownsLock())continue;
+                if(!session.ready())recovery.settleRemoteLogin(session,now);
+                sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL,last_activity=? WHERE session_id=?",
+                        now,session.id().toString());
+                affected.add(session.player());
+            }
+            return List.copyOf(affected);
+        });
+    }
+
     public void expire(long now) throws Exception {
         transaction(() -> {
             RecoveryStore recovery=recovery();
