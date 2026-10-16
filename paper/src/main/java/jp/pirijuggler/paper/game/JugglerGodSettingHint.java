@@ -1,6 +1,7 @@
 package jp.pirijuggler.paper.game;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.util.random.RandomGenerator;
 
 /**
@@ -70,6 +71,17 @@ public final class JugglerGodSettingHint {
         // Count from the actual bonus end, not the bonus-start presentation.
         if (bonusEnded) games=0;
         return new State(chain,games,color);
+    }
+
+    /** Keep the three hint fields through runtime normalization and debug updates. */
+    public static String preserve(String original,JsonObject normalized) {
+        JsonObject old=null;
+        if(original!=null&&!original.isBlank()){
+            try{old=JsonParser.parseString(original).getAsJsonObject();}
+            catch(RuntimeException ignored){old=null;}
+        }
+        write(normalized,read(old));
+        return normalized.toString();
     }
 
     public static void write(JsonObject target, State state) {
