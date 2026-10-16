@@ -189,15 +189,6 @@ public final class RemoteMachineSync {
                 copyInt(source, body, "stopIndex");
                 copyInt(source, body, "durationMs");
                 broadcast(machineId, PacketType.REMOTE_MACHINE_STOP, body);
-                // Delayed PUBLIC_STATE packets are owner-only. At the authoritative
-                // third stop publish a fresh spectator snapshot when a hint lights.
-                Session stopped=currentSession(machineId);
-                if(stopped!=null&&stopped.number("stopped_mask")==7){
-                    JsonObject hintState=stopped.publicState();
-                    if(hintState.has("settingHintColor")
-                            &&!"OFF".equals(hintState.get("settingHintColor").getAsString()))
-                        broadcastSnapshot(machineId);
-                }
                 Machine machine=currentMachine(machineId);
                 if(machine!=null&&slotAudioMachine(machine.type())){
                     Session live=currentSession(machineId);JsonObject ps=live==null?null:live.publicState();
