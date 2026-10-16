@@ -6,6 +6,7 @@ import jp.pirijuggler.common.reel.GodStopControl;
 import jp.pirijuggler.common.reel.Reel;
 import jp.pirijuggler.paper.game.GameRules;
 import jp.pirijuggler.paper.game.JugglerGodRuntime;
+import jp.pirijuggler.paper.game.JugglerGodSettingHint;
 import jp.pirijuggler.paper.game.JugglerGodTransitions;
 import jp.pirijuggler.paper.game.JugglerGodOdds;
 import jp.pirijuggler.paper.game.SkillStopBonus;
@@ -258,7 +259,7 @@ public final class RecoveryStore {
         // BONUS-in-BONUS confirmation is a successor-specific suspended state. Never
         // reinterpret it as a fresh ordinary JUGGLER game during recovery.
         if(!"NONE".equals(runtime.pendingBonusHit()))
-            return settlePendingJugglerGodOverlay(before,values,stats,runtime,setting,now);
+            return persistSettledJugglerHint(before,values,settlePendingJugglerGodOverlay(before,values,stats,runtime,setting,now));
 
         switch(before.state()){
             case NORMAL_BETTED,REPLAY_READY -> {
@@ -302,7 +303,19 @@ public final class RecoveryStore {
         }
         String settledEvent=runtime.lastEvent().startsWith("RECOVERY_STOCK_PRIORITY_")
                 ?runtime.lastEvent():"RECOVERY_SETTLED";
-        return runtime.clearPresentation(settledEvent).toJsonString();
+        return persistSettledJugglerHint(before,values,runtime.clearPresentation(settledEvent).toJsonString());
+    }
+
+    private static String persistSettledJugglerHint(Session before,Map<String,Object> values,String raw){
+        JsonObject normalized=com.google.gson.JsonParser.parseString(raw).getAsJsonObject();
+        // Recovery may simulate entire normal/bonus games. Never publish a stale
+        // partially reconstructed chain; safe-ready states retain their hint.
+        JugglerGodSettingHint.State hint=before.state()==Session.GameState.SEATED_READY
+                ?JugglerGodSettingHint.read(before.machineState())
+                :new JugglerGodSettingHint.State(0,0,"OFF");
+        JugglerGodSettingHint.write(normalized,hint);
+        values.put("machine_state_json",normalized.toString());
+        return normalized.toString();
     }
 
     private JugglerGodRuntime loadJugglerGodRuntime(Session before) throws Exception {
