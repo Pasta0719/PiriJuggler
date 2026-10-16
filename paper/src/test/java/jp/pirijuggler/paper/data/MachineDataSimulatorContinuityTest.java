@@ -184,6 +184,44 @@ class MachineDataSimulatorContinuityTest {
                 "expired grace is SUSPENDED_SAFE and cannot block simulation");
     }
 
+    @Test void simReleasePreservesFundsAndAllowsImmediateSimulation() throws Exception {
+        int id=create(MachineType.JUGGLER_GOD,71);
+        UUID player=UUID.randomUUID();
+        db.seat(player,id,NOW+10);
+        db.sql("UPDATE player_sessions SET credit=47,held_medals=12 WHERE player_uuid=?",player.toString());
+        assertTrue(db.state().busy(id));
+
+        assertEquals(List.of(player),db.releaseMachineForSimulation(id,NOW+20));
+        assertFalse(db.state().busy(id));
+        var remaining=db.state().session(player);
+        assertNotNull(remaining);
+        assertEquals(jp.pirijuggler.paper.session.Session.Lifecycle.SUSPENDED_SAFE,remaining.lifecycle());
+        assertEquals(47,remaining.number("credit"));
+        assertEquals(12,remaining.number("held_medals"));
+        var result=JugglerGodMachineDataSimulator.run(directory.resolve("piri.db"),weights,config,
+                id,1,25,period(),new HighRandom(),NOW+30);
+        assertEquals(25,result.games());
+        assertEquals(25,stat("current_games",id));
+    }
+
+    @Test void simReleaseOnlyUnlocksTheTargetCabinet() throws Exception {
+        int target=create(MachineType.JUGGLER_GOD,72);
+        int other=create(MachineType.JUGGLER_GOD,73);
+        UUID a=UUID.randomUUID(),b=UUID.randomUUID();
+        db.seat(a,target,NOW+10);
+        db.seat(b,other,NOW+11);
+        db.disconnect(a,NOW+12,60_000,null);
+        assertTrue(db.state().busy(target));
+        assertTrue(db.state().busy(other));
+        assertEquals(List.of(a),db.releaseMachineForSimulation(target,NOW+20));
+        assertFalse(db.state().busy(target));
+        assertTrue(db.state().busy(other));
+        assertEquals(jp.pirijuggler.paper.session.Session.Lifecycle.ACTIVE,db.state().session(b).lifecycle());
+        assertEquals(jp.pirijuggler.paper.session.Session.Lifecycle.SUSPENDED_SAFE,db.state().session(a).lifecycle());
+        assertEquals(0,db.releaseMachineForSimulation(target,NOW+21).size(),
+                "repeated administrative simulation release is idempotent");
+    }
+
     @Test void ordinaryPartialBigResumesBeforeAnyNewNormalGame() throws Exception {
         int id=create(MachineType.JUGGLER,1);
         putCursor(id,"{\"version\":2,\"kind\":\"JUGGLER\",\"freeReplay\":false,\"activeBonus\":\"BIG\",\"bonusRemaining\":3,\"entryCharged\":false}");
