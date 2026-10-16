@@ -77,6 +77,7 @@ public final class SlotScreen extends Screen {
         }
         if(godMachine)textureFitActual(c,name,lamp.x(),lamp.y(),lamp.w(),lamp.h(),1,1);
         else texture(c,name,lamp.x(),lamp.y(),lamp.w(),lamp.h(),512,256,1);
+        if(godMachine)SettingHintTexture.draw(c,SlotLayout.SETTING_HINT,view.settingHintColor());
         if(view.skillChallengeTexture()!=null){
             var challenge=SlotLayout.SKILL_CHALLENGE;
             textureFitActual(c,view.skillChallengeTexture(),challenge.x(),challenge.y(),challenge.w(),challenge.h(),1,1);
