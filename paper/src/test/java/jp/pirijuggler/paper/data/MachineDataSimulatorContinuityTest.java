@@ -72,7 +72,7 @@ class MachineDataSimulatorContinuityTest {
     private JsonObject liveGodRuntime(int machineId)throws Exception {
         String raw=(String)db.rows("SELECT machine_runtime_json FROM machines WHERE machine_id=?",machineId)
                 .getFirst().get("machine_runtime_json");
-        return JsonParser.parseString(raw).getAsJsonObject();
+        return raw==null||raw.isBlank()?new JsonObject():JsonParser.parseString(raw).getAsJsonObject();
     }
 
     @Test void godSimAdvancesHintThrough99AndRevealsOn100thMiss() throws Exception {
