@@ -4,6 +4,9 @@ import jp.pirijuggler.paper.PiriJugglerPlugin;
 import jp.pirijuggler.paper.game.RoleWeights;
 import jp.pirijuggler.paper.game.SkillStopWeights;
 import jp.pirijuggler.paper.machine.Machine;
+import jp.pirijuggler.paper.database.PiriDatabase;
+import jp.pirijuggler.paper.session.Session;
+import org.bukkit.Bukkit;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import java.security.SecureRandom;
@@ -53,8 +56,15 @@ public final class MachineDataSimulationService {
         catch(NumberFormatException error){sender.sendMessage(Component.text("INVALID_STATE"));return true;}
         var machine=state.machine(machineId);
         if(machine==null){sender.sendMessage(Component.text("INVALID_STATE"));return true;}
-        if(state.sessions().stream().anyMatch(session->session.ownsLock())){
-            sender.sendMessage(Component.text("LIVE_PLAY_ACTIVE"));
+        // A single-machine simulation must not be stopped by a lock on any
+        // unrelated cabinet (including intentionally suspended SKILL_STOP games).
+        Session blocking=blockingSession(state,machineId);
+        if(blocking!=null){
+            sender.sendMessage(Component.text("MACHINE_OCCUPIED id="+machineId
+                    +" lifecycle="+blocking.lifecycle()
+                    +" gameState="+blocking.state()
+                    +" player="+blocking.player()
+                    +" online="+(Bukkit.getPlayer(blocking.player())!=null)));
             return true;
         }
         if(!supported(machine)){
@@ -140,6 +150,12 @@ public final class MachineDataSimulationService {
             sender.sendMessage(Component.text("SIMULATION_ALL_DONE machines="+results.size()+" targetSpinsEach="+games+" actualSpins="+totalSpins+" BIG="+totalBig+" REG="+totalReg+" DIFF_SUM="+signed(totalDifference)));
         });
         return true;
+    }
+
+    static Session blockingSession(PiriDatabase.State state,int machineId){
+        return state.sessions().stream()
+                .filter(session->session.machine()==machineId&&session.ownsLock())
+                .findFirst().orElse(null);
     }
 
     private static boolean supported(Machine machine){
