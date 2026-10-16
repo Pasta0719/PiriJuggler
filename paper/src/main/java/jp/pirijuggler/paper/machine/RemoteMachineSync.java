@@ -352,6 +352,16 @@ public final class RemoteMachineSync {
             body.add("displayStops", stops(machine.left(), machine.center(), machine.right()));
             body.addProperty("stoppedMask", 7);
             body.addProperty("lampOn", false);
+            // A stopped machine can retain its 100G hint until the next normal lever.
+            String hintColor="OFF";
+            String rawRuntime=machine.runtimeJson();
+            if(rawRuntime!=null&&!rawRuntime.isBlank()){
+                try{
+                    JsonObject persisted=com.google.gson.JsonParser.parseString(rawRuntime).getAsJsonObject();
+                    if(persisted.has("settingHintColor"))hintColor=persisted.get("settingHintColor").getAsString();
+                }catch(RuntimeException ignored){hintColor="OFF";}
+            }
+            body.addProperty("settingHintColor",hintColor);
             body.addProperty("credit", 0);
             body.addProperty("pay", 0);
             body.addProperty("bonusCount", 0);
@@ -368,6 +378,8 @@ public final class RemoteMachineSync {
             body.add("displayStops", publicState.getAsJsonObject("displayStops").deepCopy());
             body.addProperty("stoppedMask", publicState.get("stoppedMask").getAsInt());
             body.addProperty("lampOn", publicState.get("lampOn").getAsBoolean());
+            body.addProperty("settingHintColor",publicState.has("settingHintColor")
+                    ?publicState.get("settingHintColor").getAsString():"OFF");
             body.addProperty("credit", publicState.get("credit").getAsLong());
             body.addProperty("pay", publicState.get("pay").getAsLong());
             body.addProperty("bonusCount", publicState.get("bonusCount").getAsLong());
