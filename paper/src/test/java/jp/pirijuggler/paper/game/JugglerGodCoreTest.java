@@ -420,7 +420,7 @@ class JugglerGodCoreTest extends GameFixture {
         Session s=rig.session();
         for(int i=1;i<=3;i++){
             s=playForcedRole(rig,s,InternalRole.CHERRY,3_000_000_000L*i);
-            String prior=JugglerGodRuntime.fromJson(db.state().machine(s.machine()).runtimeJson()).toJsonString();
+            String prior=db.state().machine(s.machine()).runtimeJson();
             assertEquals("USER_CLOSE_SAFE",db.closeSession(s.player(),s.id(),s.machine(),s.sequence()+1,NOW+i*1000,60_000));
             assertFalse(db.state().busy(s.machine()));
             s=db.seat(s.player(),s.machine(),NOW+i*1000+1);
