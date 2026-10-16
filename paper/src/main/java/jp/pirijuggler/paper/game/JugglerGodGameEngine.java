@@ -399,7 +399,10 @@ public final class JugglerGodGameEngine implements GameEngine {
                 "GOD".equals(before.text("internal_role"))
                 ||GameRules.bonus(InternalRole.valueOf(before.text("internal_role")))!=null);
         JsonObject savedHint=before.machineState();
-        if(savedHint==null)savedHint=JugglerGodRuntime.fromJson(machine.runtimeJson()).toJson();
+        if(savedHint==null){
+            try{savedHint=com.google.gson.JsonParser.parseString(machine.runtimeJson()).getAsJsonObject();}
+            catch(RuntimeException ignored){savedHint=new JsonObject();}
+        }
         JugglerGodSettingHint.State hint=JugglerGodSettingHint.advance(
                 JugglerGodSettingHint.read(savedHint),
                 normalLever&&legacy.lever()&&!suppressNormalSpinCount,
