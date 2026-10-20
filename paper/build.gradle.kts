@@ -26,6 +26,12 @@ tasks.withType<Test>().configureEach {
 tasks.processResources {
     inputs.property("version", project.version)
     filesMatching("plugin.yml") { expand("version" to project.version) }
+    // The canonical hint atlas is owned by Fabric resources. Paper also
+    // contains a historical snapshot of the same path, which would win
+    // duplicatesStrategy.EXCLUDE and silently ship obsolete GOLD pixels.
+    // Exclude only this stale Paper copy: tasks.jar below pulls the updated
+    // atlas from Fabric's source into mobile-assets/textures.
+    exclude("mobile-assets/textures/juggler_god/lamp/setting_hint_atlas.png")
 }
 
 tasks.jar {
