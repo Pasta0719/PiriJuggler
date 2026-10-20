@@ -17,6 +17,12 @@ public final class PatchRoyalGoldHint {
         BufferedImage atlas = ImageIO.read(source.toFile());
         if (atlas == null || atlas.getWidth() != 240 || atlas.getHeight() != 900)
             throw new IllegalArgumentException("Expected 240x900 hint atlas: " + source);
+        // Idempotent: this source atlas can already be GOLD A after merging.
+        int center=atlas.getRGB(100,756);
+        if(((center>>>16)&255)>240 && ((center>>>8)&255)>220 && (center&255)>130){
+            System.out.println("Royal GOLD A already applied; no changes made");
+            return;
+        }
         int modified = 0;
         for (int y = 700; y < 800; y++) {
             double t = Math.min(1, Math.max(0, (y - 725.0) / 54.0));
