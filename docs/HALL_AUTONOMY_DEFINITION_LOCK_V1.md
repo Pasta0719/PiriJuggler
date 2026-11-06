@@ -272,6 +272,8 @@
 - 方針開始日は`startDay`を含む。初回28日維持は`startDay`から28日間を意味し、`min_end_day=startDay.plusDays(27)`、`max_end_day=startDay.plusDays(83)`、評価による終了は次の営業日から有効。84日目の終了判定はその日の営業終了後、次の日から差替。現在日のplannedSettingを事後変更しない。
 - 7日ごとの評価は`startDay.plusDays(7*k)`（k=1,2,...）の営業日開始時点までに**完了した7日間**を評価し、同日内の実稼働は使わない。単純経過日数で判定し、サーバー停止日も日数に含むが実観測日には含まない。
 
+- §4の「04:00直後に実イベントが先行してPLANNINGだけ先行作成する」場合も、**そのDBトランザクション内で前日までのCLOSED実績からpolicy更新を一度だけ確定させ、最新revisionに基づく正規seedを保存する**。当日の重いforecastだけ後続ワーカーへ遅延する。policy更新で失敗したときは当日policyを「前日版を維持」として一度だけ確定し、そのrevisionでseedを保存、監査警告を残す。後から当日のpolicy/seedを変更してはならない。翌日以降に再評価する。これにより当日イベント先行とseed確定の循環・不整合を防ぐ。
+
 ### 15.2 学習値・政策効果の比較対象
 - `expectedGamesAtOldSettings` はポリシー判定対象の台について、評価窓の各営業日開始時点に保存した`HallForecast.predGames`を**「その前営業日の最終実設定で固定した反実仮想」**として再計算した合計。過去の予測構成hash・機種・配置・需要スナップショットは`hall_setting_decisions.forecast_json`内の`baselinePredGames`として投入前に保存する。後日の実測に合わせて再推定しない。
 - `observedGames`は同じ台集合・同じ日集合の`REAL_VERIFIED`な`hall_game_events(origin='REAL')`の`game_delta`合計。`lift=(observedGames - baselinePredGames)/max(1,baselinePredGames)`。集計母集団はpolicy条件に合致した日の**変更可能かつ実際に設定適用済の台**のみ。PENDING台・手動強制台・未対応機種・品質不明日を除外。
