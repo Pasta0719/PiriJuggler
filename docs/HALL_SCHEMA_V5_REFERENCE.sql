@@ -170,6 +170,21 @@ CREATE UNIQUE INDEX ux_hall_layout_active_machine
   ON hall_layout_overrides(machine_id)
   WHERE ended_day IS NULL;
 
+CREATE TABLE hall_seat_cycles (
+  cycle_id TEXT PRIMARY KEY,
+  player_uuid TEXT NOT NULL,
+  machine_id INTEGER NOT NULL,
+  opened_at INTEGER NOT NULL,
+  closed_at INTEGER,
+  cashout_at INTEGER,
+  quality TEXT NOT NULL CHECK(quality IN ('REAL_VERIFIED','UNKNOWN')),
+  FOREIGN KEY(machine_id) REFERENCES machines(machine_id),
+  CHECK(closed_at IS NULL OR closed_at >= opened_at),
+  CHECK(cashout_at IS NULL OR (closed_at IS NOT NULL AND cashout_at >= closed_at))
+);
+CREATE INDEX ix_hall_seat_cycles_closed ON hall_seat_cycles(closed_at,quality);
+CREATE INDEX ix_hall_seat_cycles_player ON hall_seat_cycles(player_uuid,closed_at);
+
 -- Final step inside transaction (execute only after statements above succeeded):
 -- UPDATE metadata SET value='5' WHERE key='schema_version' AND value='4';
 -- Verify one row updated. COMMIT. All future startups must accept exactly 5.
