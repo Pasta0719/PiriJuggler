@@ -166,6 +166,9 @@ CREATE TABLE hall_layout_overrides (
 CREATE UNIQUE INDEX ux_hall_layout_active_position
   ON hall_layout_overrides(island_id,position)
   WHERE ended_day IS NULL;
+CREATE UNIQUE INDEX ux_hall_layout_active_machine
+  ON hall_layout_overrides(machine_id)
+  WHERE ended_day IS NULL;
 
 -- Final step inside transaction (execute only after statements above succeeded):
 -- UPDATE metadata SET value='5' WHERE key='schema_version' AND value='4';
