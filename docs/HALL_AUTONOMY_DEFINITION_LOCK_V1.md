@@ -186,4 +186,50 @@
 5. v4→v5移行直前/直後のDB整合性検査を行い、`player_sessions`, `player_wallet`, `medal_tokens`, `machines`, `setting_history`, `business_periods`の既存レコードを破壊しない。
 6. 初回から完全自動、全台busy、0台、1台、サーバー3日停止、当日複数起動、同一日にplan途中クラッシュ、手動pin競合、未知機種、手動でOFF、現金0円の全ケースで例外停止せず既存台と資産を保護。
 
+
+## 13. 最終仕様閉鎖 — 追加の曖昧さを残さない契約
+
+### 13.1 状態遷移と閉店後の遅延反映
+- `hall_days.status` の有効遷移は `PLANNING→OPEN→CLOSED`、稼働/入出金が完全に0の既存OPEN日のみ `OPEN→NO_ACTIVITY`、予測生成失敗の `PLANNING→FAILED→PLANNING`（同日再試行）。過去日の遡及復元だけは `CLOSED` を直接生成できる。全てDBトランザクション内で条件付きUPDATE。
+- `PLANNING/FAILED`状態で実遊技や金銭APPLIEDが来ても**ゲーム・経済の処理を止めない**。トランザクションと同一DB executorで`hall_day`を先に作り実績を記録。日次プラン未確定台は既存設定で遊技する。計画の生成開始時点で既に当日発生した実績を予測の学習には使わない。
+- 04:00に前日を閉じた後で、過去のAPPLIED経済イベントの漏れを再収集した場合、過去`CLOSED`日の実現現金集計は再計算して訂正する。理由ログ/当初計画/シードは不変。監査ログに`LATE_LEDGER_RECONCILIATION`として旧金額、新金額、取引IDを追加する。
+- 現金イベント確定日の判定は `economy_transactions` の`status`が`APPLIED`に変わった時刻を元とする。既存DBに専用確定時刻が無い場合、その更新処理が書いた`updated_at`を使用。管理者が後から監査情報を書き足して`updated_at`を書き換える実装は禁止。
+- 毎日の`hall_days.real_cash_in/out/realized_gross`は`hall_economy_events`を集約して再計算できる値であり、原本はイベント行と既存APPLIEDトランザクション。日次カウンタを直接増分更新する場合も冪等キー制約を確認した後に実行。
+- `hall_machine_days.applied_setting`は**営業日内の最後に実機へ適用された設定**。途中手動変更があった場合は`setting_history`の時刻付変更履歴と`hall_game_events.setting`を正として出玉率を設定別に集計。日次行だけから「終日同じ設定」を推定しない。
+- 金銭イベントにmachine_idが取得できなければ`NULL`。機種・台別現金利益は非対応のため推定配賦もしない。
+
+### 13.2 月間目標の数学的定義
+- 月は`hallDay`の年月。たとえば11/1 03:59 JSTの実績は10月の残高に属する。月内の日数`D`は暦月の日数（28〜31）、現在日番号`d`。
+- 予測日次貸出`L`は当日の全店128試行の`predictedCashIn`、有効な予測が一つも無ければ0。月間目標額`M = round2(D * L * targetMargin)`。当月累積確定粗利`A = sum(realizedGross for hallDay of this month strictly before today)`。当月の当日目安`T = (M-A)/(D-d+1)`。
+- `L=0`なら`M=0,T=0`。データ不足で実現粗利にLEGACY_UNVERIFIEDを含む場合は`A`にその期間を足さず、残期間推定`T = round2(L*targetMargin)`を使い品質`FORECAST_ESTIMATED`で表示する。過去の未確定を確定扱いしない。
+- 急な設定変化を防ぐため、`base=round2(L*targetMargin)`として、`base>0`なら`T=clamp(T,0.5*base,1.5*base)`、`base=0`なら`T=0`。日々の`T`が負の場合も0にクリップする。Tは「最適化の目安」であり達成保証ではない。
+- 7日平滑化は直近7**暦営業日**の有効な生targetMarginの単純平均（データ0日は0.12を入れる）。毎日更新した平滑済の値をさらに平均しない。手動targetは翌日から固定し、平均を適用しない。
+- 数値演算は`BigDecimal`、丸めは金額が`scale=2 HALF_UP`、比率は内部計算`MathContext.DECIMAL64`、保存時の表示は小数最大6桁とする。予測専用の乱数・分位計算にdoubleを使うことは許容し、最終金銭出力だけBigDecimalで確定する。
+
+### 13.3 制約の扱いと「設定が入った」の定義
+- `PIN`は指示した`setting`そのもの、`minSetting`は下限であって設定値の固定ではない。台別PINとminSettingが両立しないときはルール追加を拒否。台が現在busyでも未来PIN/ルールの登録自体は可能だが、適用はfreeになるまでPENDING。即時設定を試みる`/piri setting`のみbusyなら拒否。
+- 既存`auto_setting=false`は手動固定同等の優先制約で、その日の`hall_machine_days`にplanned=currentSettingを記録。後日`auto_setting=true`にした場合も当日中は元設定を維持し翌日から再び自動候補に含める。
+- ある台に設定を1回でも適用した事実は`setting_history`へ残す。ただし「計画と同じ設定だったためUPDATE不要」という場合でも当日の`apply_status=APPLIED`を記録し、同じ値の`setting_history`を増やさない。変更なしの理由は`NO_CHANGE`をauditに記録。
+- 設定候補で`busy`台は当日plannedの対象には含めるが実機適用不可。日中の実際の`machine.setting`は旧設定である。月間期待粗利予測ではbusy台は**現設定**として評価し、将来いつ解放されるか不明な時間の利益変化を推定しない。free後の再適用は最新のhallDayのみ。
+
+### 13.4 機種別予測の実装判定
+- `MachineType`のうち設定が実抽選へ渡される機種だけ設定候補へ参加可能。`PACHINKO`は設定差が無いため投入設定は変更しない。ゲームエンジン未登録の`OKIDOKI/DISC`は未対応、既存設定を維持。これをエラーとしてサーバーを停止しない。
+- 既存のゲームエンジンと同じ結果分布を生むread-only forecast adapterは**元のロジックから移植した決定論的純粋関数**または**乱数を外部注入した元コードの純粋な呼び出し**として実装。適切なデータが無い状態を勝手に設定別機械割の創作値で埋めない。
+- adapterテストでは機種ごとに同一seed・同一初期状態で最低100,000試行を走らせ、実ゲームの独立RNGサンプルと役/ボーナス/払出の頻度の95%信頼区間が交差すること、状態遷移の不変条件を維持することを確認。照合に落ちたadapterは`UNMODELLED`に降格する。テストで実ゲームに手動のforce roleを注入しない。
+- 各台128試行の出玉実現シミュレーションは、(機種,設定,状態hash)ごとに予測G数まで純粋に前進させる。低確率GOD等はサンプル分位から反映し、各候補のスコア比較で同一台の`sampleIndex`に同じシード派生乱数を使用（common random numbers）。試行順序はday→candidateIndex→machineId→sampleIndex昇順。
+- 実際の0G、空セッション、換金額0は**ゼロとして記録**する。未実装のadapter・破損した持越し状態・欠測のpayoutは**UNKNOWN/UNMODELLED**に降格しゼロで補完しない。
+- `HallForecast`は`predictedCashIn, predictedCashOut, predictedGross`が出玉のばらつきに従う推定値であり、最適化でゼロ未満になる可能性を残す。「設定6だから店が必ず赤字」「設定1だから必ず黒字」と決め打ちしない。
+
+### 13.5 設定投入理由の固定フォーマット
+- `reasonCodes`は`POLICY_MATCH, POLICY_RUN, PREVIOUS_KEEP, PREVIOUS_RAISE, TRAFFIC_RECOVERY, MARGIN_TARGET, MANUAL_PIN, MANUAL_RULE, LEGACY_PROFILE, LOCKED_PENDING, UNMODELLED, NO_CHANGE`から選ぶ。複数付与可能。
+- `reasons_json`は`{"schemaVersion":1,"reasons":[{"code":"POLICY_MATCH","policyId":"...","evidence":{"kind":"NUMBER_SUFFIX","target":"7","machineId":107}}],"decisionScore":0.123456,"inputCutoffDay":"YYYY-MM-DD","modelVersion":"hall-v1"}`の構造。ポリシーが条件に一致したが設定最適化で不採用なら`rejected_reasons_json`に同じevidenceと`NOT_SELECTED_FOR_TARGET`を追加。変更しない場合は`NO_CHANGE`。
+- 項目順は`policyId`→`code`昇順、台配列は`machineId`昇順、JSONオブジェクトキーは辞書順に整列してUTF-8で永続化。同じ入力とseedに対するbyte-level再現性を満たす。
+- 公開回答に見せるのは保存済理由のみ。後日データを元にした後付け推測や稼働結果によるラベル変更は禁止。
+
+### 13.6 コマンドの厳密な失敗と表示
+- `/piri hall plan`, `status`, `preview`, `explain`, `history`が結果を生成できない場合は`HALL_NOT_READY`、日付が過去/不正なら`INVALID_DATE`、台番号不在なら`INVALID_MACHINE`、権限不足なら`NO_PERMISSION`、規則競合なら`HALL_CONFLICT`、DB失敗なら`HALL_DB_ERROR`を返す。警告・エラーは同じ理由コードでhall_audit_logとPaper logに保存。
+- `/piri hall history [days]`の省略は7日、指定は整数1..90。結果はhallDay降順→machineId昇順。現行日を含めない。OPの`plan [day]`は既に確定した日のみ一覧を表示し、未計画の未来日は`preview`へ誘導する。
+- `hall explain`で`apply_status=PENDING`の場合は「予定・未適用」と表示、実際に高設定が入ったと偽らない。入った理由として公開するのは`APPLIED`のみ。当日以外はCLOSED/NO_ACTIVITYになってから非OPへ公開。
+- `hall preview`は読み取り専用で既存計画を変えず、未来日の実績を捏造しない。`hall rule add`のJSONはコマンド分割後の残り引数を半角スペースで再結合してパーサーへ渡す。予期しない引数/無効型/範囲超過は設定を一切変更せず失敗表示。
+
 **以上を親仕様に加えて実装対象とし、曖昧な「実装しやすい方」を勝手に採らない。**
