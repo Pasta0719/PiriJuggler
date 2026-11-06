@@ -118,7 +118,7 @@
 - `/piri event next <profile>`: **呼び出し時の翌hallDay**に1回だけ適用。指定profileはその日の**明示的・完全な手動配分**とする。既存`StartupProfile.allocate`を独立hall乱数で**1回だけ**実行し、返ったすべての対象台のsettingを当日のハード制約として固定（既存のSUFFIX/RUN/ALL、分布、minSetting6/minSetting5Plusを同じ意味で適用）。経営予測・監査は続けるが設定最適化がこれを変更しない。`auto_setting=false`や当日PINは配分対象から除外し、その分profileの最低台数保証が成立しない場合は残り対象で最大限満たして警告。`events.weekday`のデフォルトnormalは明示指示でない。`special_dates`に日付がある場合と、weekdayがnormal以外の場合だけ同様の完全手動profileを適用。前日profileの自動継続は禁止。
 - スコープの優先度: MACHINE_PIN > 当日MANUAL_SETTING > DATE_PROFILE > MACHINE_TYPE > ISLAND > DAY > MARGIN > 自律ポリシー。手動同士の「設定値の直接衝突」は新しい指定を拒否し、上位pinを解除しなければ変更できない。利益目標は設定値指示ではないので他と衝突しない。
 - `/piri hall auto off`は当日以降自動配分を停止・設定維持。 `auto on`は次のhallDayから再開。途中の日付で既存計画を上書きしない。
-- `/piri hall rule add <kind> <JSON>` の許容kind: `DATE_TAIL`, `WEEKDAY`, `NUMBER_SUFFIX`, `CORNER_1`, `CORNER_2`, `RUN_2`, `RUN_3`, `MACHINE_TYPE`, `KEEP`, `RAISE`。JSONは `{"target":"7","minSetting":4,"startDay":"2026-11-07","endDay":"2026-12-07"}` 型で、`target`はkindに応じて0..9の数字/曜日MONDAY..SUNDAY/機種enum/島ID/台番号、`minSetting`は1..6、日はISO8601 date、`startDay<=endDay`。対象存在・指定期間重複・台別pinとの矛盾を検証。未知キー・非型一致は拒否。 `KEEP/RAISE` はそれぞれ前日据え置き/前日より1以上上げるという条件、最終設定6を超えない。
+- `/piri hall rule add <kind> <JSON>` の許容kind: `DATE_TAIL`, `WEEKDAY`, `NUMBER_SUFFIX`, `ZOROME`, `DAY_NUMBER_MATCH`, `CORNER_1`, `CORNER_2`, `RUN_2`, `RUN_3`, `MACHINE_TYPE`, `KEEP`, `RAISE`。JSONは `{"target":"7","minSetting":4,"startDay":"2026-11-07","endDay":"2026-12-07"}` 型で、`target`はkindに応じて0..9の数字/曜日MONDAY..SUNDAY/機種enum/島ID/台番号、`minSetting`は1..6、日はISO8601 date、`startDay<=endDay`。対象存在・指定期間重複・台別pinとの矛盾を検証。未知キー・非型一致は拒否。 `KEEP/RAISE` はそれぞれ前日据え置き/前日より1以上上げるという条件、最終設定6を超えない。
 - `/piri hall target <marginPercent>`は整数/小数%で`0..100`、入力例`12`→0.12。 `target auto`で次営業日から自動化。手動変更は**翌営業日以降**に反映。無期限。
 - `/piri hall layout set`の`position`は島の通し番号1..9999、同じ島の同位置二重指定は拒否。`layout clear`は当日配置を壊さず翌日から自動位置判定。書込みは監査。
 - `preview`はDB・secret・PRNG等を変更しない。既存seedがあればそれを利用、未確定日なら日付と現在保存済secretから導出する仮シードを用いる（生成済計画ではないことを表示）。前日から任意の日へのプレビューは、未知の未来実績を補間せず現在実績の静止スナップショットで比較。
@@ -160,7 +160,7 @@
 
 ## 10. 論理スキーマ上の追加拘束
 親仕様の表名・フィールド名を必須とし、少なくとも次のDDL条件を満たす:
-- `hall_days.day TEXT PRIMARY KEY`、`status TEXT NOT NULL CHECK IN('PLANNING','OPEN','CLOSED','NO_ACTIVITY','FAILED')`、各 monetary は`TEXT`で非NULLのcanonical decimal（小数点以下2桁固定）、各計測counterは`INTEGER`で>=0。未知/未予測にはNULLを使い、0と混ぜない。
+- `hall_days.day TEXT PRIMARY KEY`、`status TEXT NOT NULL CHECK IN('PLANNING','OPEN','CLOSED','NO_ACTIVITY','FAILED')`、金額は`TEXT`のcanonical decimal（小数点以下2桁固定）。**実績**`real_cash_in, real_cash_out, realized_gross`は`NOT NULL DEFAULT '0.00'`。**予測**`monthly_target, daily_target, predicted_cash_in, predicted_cash_out, predicted_gross`は算出前`NULL`、算出後canonical decimal。計測counterは`INTEGER`で>=0。未知とゼロを混同しない。テーブル定義が本文と異なる場合は`HALL_SCHEMA_V5_REFERENCE.sql`を優先する。
 - `hall_machine_days PRIMARY KEY(day,machine_id)`、`CHECK(planned_setting BETWEEN 1 AND 6)`（不明な機種や非対象台も現設定をplannedとして入れる）、`applied_setting`はNULL許可、`CHECK(apply_status IN('PENDING','APPLIED','SKIPPED','FAILED'))`。
 - `hall_setting_decisions PRIMARY KEY(day,machine_id)`、設定に1〜6のCHECK、FOREIGN KEY(day,machine_id)→hall_machine_days。未採用候補の理由/候補IDは`reasons_json`に記録。SQL insert/updateは適用/理由/履歴で二重計上不可。
 - `hall_economy_events.transaction_id TEXT PRIMARY KEY`、operationは`LOAN,PACHINKO_LOAN,PRIZE_TO_VAULT`限定。`occurred_at`はAPPLIEDに遷移した確定時刻、`day`はその時刻のhallDay。amountDecimalはVault通貨で小数2位HALF_UPへ丸めた正の値。DBの元取引が二重になってもhall eventは一度きり。
@@ -297,5 +297,29 @@
 - §9Aにある`ZOROME`、`DAY_NUMBER_MATCH`は自動テーマ候補に**含める**。手動ruleの許容kindにも追加する。対象の実機が無い場合は選択候補から除外する。
 - `RUN_2/3`**自動方針**は、候補生成時に存在する連続区間から一様抽選した区間の全台に対して、`weightedDraw(setting, minSetting=4)`を実施して同時に高設定を試みる（その他台は通常抽選）。未存在なら当日無効。**手動RUN**は毎日、そのルールの対象島に存在する候補区間のうち辞書式（islandId、先頭position、machineId列の昇順）で最初の区間**1本だけ**をハード下限として選ぶ。対象が存在しなければ警告のみ、別島へ勝手に対象を変えない。複数のRUNルールがあれば優先順位の高いルールから区間を選び、すでに強制対象の台との重複があっても高いminSettingを適用する。ただしPINに矛盾すれば新規ルールを拒否する。
 - `weightedDraw`は1〜6の非負重みを合計で正規化し、サンプル`nextDouble()`の区間探索で抽選。自律方針の一致台では設定4,5,6の重みに方針倍率を掛ける。手動下限がある場合はその未満の重みを0にして再正規化。合計0なら候補を無効にし、現在設定を採用して監査ログを残す。
+
+
+## 16. 機械構成・キャッシュ・運用上の境界契約
+
+### 16.1 物理配置判定の正規化
+- `Machine.Location.facing`がNORTH/SOUTHなら台列候補の水平軸はX、EAST/WESTならZ。Facing不正/未登録はUNKNOWN。他world・異なるY・異なるfacingの台を同列にしない。
+- 同軸に1〜3ブロック離れた台があり、他方向に複数接続候補が生じた台の連結成分はすべて位置UNKNOWNとする。距離が同じ候補を勝手に選択しない。台のphysical位置は端=corner1、端から2台目=corner2、列長3未満はcorner判定UNKNOWN。両端から該当する場合もその台は1台として数える。
+- 島IDは`world UUID + ':' + facing + ':' + Y + ':' + sorted machine_id list`をSHA-256でハッシュした小文字hexの先頭16桁を自動生成。前日位置変更で島IDが変わるのは許容するが、配置の決定時点の島IDを`position_json`へ保存し後日に改変しない。手動`hall_layout_overrides`があれば`island_id`はその手動文字列、positionは明示数値を優先。
+- 自動島と手動島は同じIDで混合しない。手動配置の島に属する台は、自動のジオメトリ島から除外して残りを再連結する。台番号順は島の物理位置の代用に使わない。
+
+### 16.2 予測用キャッシュとタイムアウト
+- `HallForecastEngine`の生シミュレーションはDB executorやメインスレッドで実行しない。初回起動時に予測計算が終わらなくても遊技を止めず、計画はPLANNING、既存設定を維持。
+- 予測バッチは1台・1機種ごとの性能生成について**30秒の処理期限**を設ける。期限超過は該当台だけUNMODELLED、監査警告を残し、次の1分チェックで再試行する。30秒が過ぎた未完処理はキャンセルし、完了していない計算の部分標本を確定予測として採用しない。
+- 完了済みキャッシュは`(type, setting, configHash, modelVersion, stateHash)`でDB保存。原則**最新90日利用されなかったキーだけ**を日次閉店時に削除。未完・壊れたキャッシュはロード時に無視し再計算する。性能キャッシュを削除しても実際の台履歴・設定理由・現金実績は消さない。
+- 1日の最適化処理自体は**60秒以内**に終える。timeout時は最適化結果を破棄し`FAILED`で既存設定維持、次回チェックで再実行。timeoutで探索回数だけ削って確定結果を偽装しない。main-threadで待機しない。
+- `UNMODELLED`台は日別台行を`SKIPPED`として記録し、当日中に後からadapterが完成しても既存の確定計画を黙って更新しない。別日からモデル対象に加える。
+
+### 16.3 並び・コードの再現と統計単位
+- `HallDecision`、`HallForecast`などのJava recordは保存JSONと別表現でよいが、**永続化されるカラムとJSONフィールド名の意味**はDDL・§13.5・§15を唯一の正とする。
+- エンジン側`GameTransition.bet/payout`が両方0の非金銭アクションは、receiptは既存のとおり作るが`hall_game_events`には`game_delta=0`のイベントを作ってもよい。この場合には実稼働・差枚・金額が増えないこと。イベントID重複で収支が変わらないこと。
+- `CashOut`はメダルをアイテム化する処理で、現金`PRIZE_TO_VAULT`ではない。real_cash_outへ計上するのはVaultへの景品売却がAPPLIEDになったときだけ。
+- 店読み上の「実際に投入した設定」は`hall_game_events.setting`に記録されたゲーム時点の設定。営業日の最後の`applied_setting`だけでは途中手動変更時の設定割合を断定しない。機種別出玉率はBETの実単位で計算する。
+- 個別台の表示が終日0Gの場合、設定は`appliedSetting`のまま表示、出玉率は`N/A`。0Gを100%や0%の出玉率と偽らない。
+
 
 **以上を親仕様に加えて実装対象とし、曖昧な「実装しやすい方」を勝手に採らない。**
