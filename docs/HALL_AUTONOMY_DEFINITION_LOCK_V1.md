@@ -260,4 +260,38 @@
 - すべての営業日時刻はUnix epoch milliseconds。内部日付の比較/並びはISO8601文字列（YYYY-MM-DD）。全日付欄は日本時間で書込み、UTCシステム時計でもJST所属を間違えない。
 
 
+
+## 15. 監査で検出した最後の計算上の未確定要素を固定
+
+### 15.1 方針シードの循環参照回避
+- 当日方針を決める前に`policyRevision`を含む「当日最終seed」を使ってはならない（方針更新でrevisionが変わるため循環する）。
+- 営業日`d`の方針更新判定・候補選択は、前日までにDBで確定した`previousPolicyRevision`と`secret`から独立`policySeed(d) = first64bits(SHA256(secretBytes || UTF8("POLICY") || 0x00 || UTF8(d) || 0x00 || UTF8(previousRevision)))`を導出し、`SplittableRandom(policySeed)`で行う。
+- 方針更新をDBで一度だけ反映して`newPolicyRevision`を確定した**後**、§14.1の`seed(day)`を生成して日次計画へ使う。再起動時は保存済policyRevision/seedを読み、方針更新を再実行しない。
+- 方針開始日は`startDay`を含む。初回28日維持は`startDay`から28日間を意味し、`min_end_day=startDay.plusDays(27)`、`max_end_day=startDay.plusDays(83)`、評価による終了は次の営業日から有効。84日目の終了判定はその日の営業終了後、次の日から差替。現在日のplannedSettingを事後変更しない。
+- 7日ごとの評価は`startDay.plusDays(7*k)`（k=1,2,...）の営業日開始時点までに**完了した7日間**を評価し、同日内の実稼働は使わない。単純経過日数で判定し、サーバー停止日も日数に含むが実観測日には含まない。
+
+### 15.2 学習値・政策効果の比較対象
+- `expectedGamesAtOldSettings` はポリシー判定対象の台について、評価窓の各営業日開始時点に保存した`HallForecast.predGames`を**「その前営業日の最終実設定で固定した反実仮想」**として再計算した合計。過去の予測構成hash・機種・配置・需要スナップショットは`hall_setting_decisions.forecast_json`内の`baselinePredGames`として投入前に保存する。後日の実測に合わせて再推定しない。
+- `observedGames`は同じ台集合・同じ日集合の`REAL_VERIFIED`な`hall_game_events(origin='REAL')`の`game_delta`合計。`lift=(observedGames - baselinePredGames)/max(1,baselinePredGames)`。集計母集団はpolicy条件に合致した日の**変更可能かつ実際に設定適用済の台**のみ。PENDING台・手動強制台・未対応機種・品質不明日を除外。
+- `baselinePredGames`の投入前記録がない営業日は評価対象から除外、観測日数にも数えない。`lift`推定に必要な実ゲーム合計>=5000、観測日>=7の双方が揃わない場合は`INSUFFICIENT_DATA`としてstrengthを変えず、28日経過後であっても84日までは維持。
+- 方針は実験的に「稼働を増やした」と断定しない。liftは他の要因を含む**相関的な営業成績指標**であり、監査説明は`OBSERVED_LIFT`とする。出玉抽選への補正に使わない。
+
+### 15.3 換金率を学習するためのセッション定義
+- `sessionCount`はhall導入後の**実プレイヤーの着席〜離席サイクル**数（source=REAL、player UUID・machine ID・seatBegin timestamp・seatEnd timestampを保存）。サーバー再接続による同一セッション復元は新規着席としてカウントしない。セッションが異なる機種へ移動したときはその台の新サイクル。過去のDBにサイクル終端が無い場合はUNKNOWNとしてカウントしない。
+- `cashoutCount`は同じサイクルの離席直後30分以内に、そのプレイヤーの`PRIZE_TO_VAULT(APPLIED)`が初めて確定した件数。複数回の景品換金は1回として数える。30分内に別台を遊技していた場合は最後に離席した台のサイクルへだけ帰属する。同時刻ならmachineId昇順の1件。
+- `hall_seat_cycles`を追加する: `cycle_id TEXT PRIMARY KEY, player_uuid TEXT NOT NULL, machine_id INTEGER NOT NULL, opened_at INTEGER NOT NULL, closed_at INTEGER, cashout_at INTEGER, quality TEXT NOT NULL, FOREIGN KEY(machine_id) REFERENCES machines(machine_id)`。座席復元・離席の記録は実際の`MachineService`の状態遷移時に同期し、サーバー停止で正確な終端が無い場合は`quality='UNKNOWN'`。完全観測サイクルだけを28日窓で計測し、30件未満なら`pCashout=0.60`。
+- `cashoutCount`と`sessionCount`の窓は`seatEnd`が属するhallDayから過去28**暦営業日**、未観測・継続中サイクルは数えない。観測した実換金は`hall_economy_events`から算出するため二重登録しない。
+
+### 15.4 予測分位・比較時の境界
+- 128試行のp05は各試行の**全台Gross合計**を昇順ソートした7番目（1-based、nearest-rank: `ceil(0.05*128)=7`）、p95は122番目（`ceil(0.95*128)=122`）。台別p05を合計して全店p05とみなすことは禁止。全台同じsample indexの合計を用いる。
+- cashIn/cashOut/grossの平均は128試行の算術平均、VarianceはGrossの標本分散`sum((g-mean)^2)/(128-1)`。信頼幅は同じソート方法。評価用doubleから保存用decimalへの丸めは`HALF_UP(scale=2)`。
+- 状態依存の性能キャッシュに必要なsample数は初回10,000G/機種・設定・状態hash、推定RTPの95%CI半幅が1.0 percentage point超なら100,000Gまで増やす（10,000Gずつ）。サンプル終了条件はCI半幅<=0.01または100,000G。95%CIの半幅は**1.96*(sample SD of netReturnPerGame)/sqrt(n) / max(epsilon, meanBetPerGame)**、epsilon=1e-9。variance=0なら半幅0。ただし単一状態の吸収や未抽選ならUNMODELLED。
+- ベースライン需要の700?などの隠れ係数は設けない。任意の追加ヒューリスティックを足さず、§6.2の300G事前・実績平滑・設定倍率・曜日/特定日倍率を用いる。サーバー負荷が高い場合、候補探索の結果を勝手に短縮して**完了扱い**せず、FAILEDと再試行を記録する。
+
+### 15.5 曖昧な機能名の排除
+- `policyMatch`の種別ごとの挙動は§9Aの表を唯一の正とする。親仕様の説明例にだけ出る「島移動ローテーション」「複合条件」「末尾2桁」「機種カテゴリー」などは**初期v1では任意機能として実装しない**。拡張時は新しいpolicy kind、match関数、保存スキーマと合格テストを定義してから実装する。Codexが勝手にルールの意味を作らない。
+- §9Aにある`ZOROME`、`DAY_NUMBER_MATCH`は自動テーマ候補に**含める**。手動ruleの許容kindにも追加する。対象の実機が無い場合は選択候補から除外する。
+- `RUN_2/3`方針は、候補生成時に存在する連続区間から一様抽選した区間の全台に対して、`weightedDraw(setting, minSetting=4)`を実施して同時に高設定を試みる（その他台は通常抽選）。未存在なら当日無効。手動RUN指定は§9Aのハード下限制約。
+- `weightedDraw`は1〜6の非負重みを合計で正規化し、サンプル`nextDouble()`の区間探索で抽選。自律方針の一致台では設定4,5,6の重みに方針倍率を掛ける。手動下限がある場合はその未満の重みを0にして再正規化。合計0なら候補を無効にし、現在設定を採用して監査ログを残す。
+
 **以上を親仕様に加えて実装対象とし、曖昧な「実装しやすい方」を勝手に採らない。**
