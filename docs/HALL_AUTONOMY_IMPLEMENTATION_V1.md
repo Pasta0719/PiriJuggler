@@ -125,7 +125,7 @@
 - `hall_policies` (policy_id PK, kind, params_json, strength, start_day, min_end_day, max_end_day, ended_at, creation_reason_json, revision, statistics_json)
 - `hall_setting_decisions` (day, machine_id PK複合, old_setting, proposed_setting, score_json, reasons_json, rejected_reasons_json, forecast_json, seed, created_at, superseded_by_manual_at)
 - `hall_manual_overrides` (override_id PK, scope MACHINE|TYPE|ISLAND|DAY|MARGIN|PROFILE, scope_value, payload_json, start_day, end_day NULL=無期限, priority, actor_uuid NULL=console, created_at, revoked_at)
-- `hall_economy_events` (transaction_id PK, day, occurred_at, operation, amount_decimal TEXT, player_uuid, machine_id nullable, source REAL, status APPLIED)。既存`economy_transactions`の`APPLIED`完了時に同一トランザクションまたは確実な再試行可能ジャーナルで1件登録。バックフィル時の不明な日帰属は`LEGACY_UNVERIFIED`へ。
+- `hall_economy_events` (transaction_id PK, day, occurred_at, operation, amount_decimal TEXT, player_uuid, machine_id nullable, origin TEXT CHECK(origin='REAL'), status TEXT CHECK(status='APPLIED'))。既存`economy_transactions`の`APPLIED`完了時に同一トランザクションまたは確実な再試行可能ジャーナルで1件登録。バックフィル時の不明な日帰属は`LEGACY_UNVERIFIED`へ。
 - `hall_performance_cache` (machine_type, setting, config_hash, model_version PK複合, sample_games, expected_bet, expected_payout, variance, confidence_json, updated_at)
 - `hall_audit_log` (id PK, day, machine_id nullable, kind, payload_json, created_at)。エラー・監査・設定保留・手動操作を記録。
 
