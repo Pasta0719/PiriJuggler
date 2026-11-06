@@ -1,0 +1,147 @@
+# HALL_AUTONOMY_DEFINITION_LOCK_V1.md — 実装解釈固定契約 v1.1
+
+> **必ず先に読む**: `docs/HALL_AUTONOMY_IMPLEMENTATION_V1.md` の補完契約。曖昧語・任意選択を機械的な仕様へ変換する。本書の精密な式・条件は、親仕様にある「例」「程度」「など」「適切に」「必要なら」「選べる」より優先。原ゲームの抽選・状態遷移は `SPEC.md` と現行エンジンを優先。**仕様にない挙動を「なんとなく」追加しない。**
+
+## 1. 入出力と初期化
+
+- 対象ホールは常に `hall_id=1`。ホールごとの設定ファイル・複数店舗管理画面は作らない。
+- 対象台: `MachineType` が実行可能なゲームエンジンとforecast adapterを持ち、`deleted=false, enabled=true`である台。自動設定の候補は更に `autoSetting=true`かつ当日の台別PINが無い台。disabled/deleted台は一切変更しない。
+- 列挙型は `JUGGLER, JUGGLER_GOD, JUGGLER_GOD_EXTREME, OKIDOKI, GOD, DISC, SKILL_STOP, PACHINKO`。旧コードで未実装の機種や未登録のエンジン/forecast adapterは `UNMODELLED`、現設定を維持、監査ログに記録。既存の遊技可能全エンジンにはread-only adapterを実装すること。単一のJUGGLER機械割表で全機種を推定しない。
+- `hall.enabled=true`をデフォルトとし、既存configに`hall`が無い時は全デフォルトが有効。手動でOFFにした場合、**現在設定の維持**のみを行い、旧固定profileを自動代入しない。再ONした次の営業日から計画を再開。同日の未確定初期化だけはその日に計画してよい。
+- インストール・更新で既存の設定/DB/遊技メダルをリセットしない。初回計画の対象は「その日の未確定・安全に変更できる台」のみ。
+
+## 2. 用語の固定
+
+| 用語 | 定義 |
+| --- | --- |
+| `hallDay` | JSTの日時から4時間引いたLocalDate。04:00に切替 |
+| `business_period` | 既存のJVMプロセス単位period。hallDayとは別物 |
+| `realBet` | 実セッションで確定したBET枚数/玉数の合計 |
+| `realPayout` | 実セッションで確定した払出枚数/玉数の合計 |
+| `realGames` | 実セッションで確定したゲーム数。従来statsのnormalSpinsとの重複加算禁止 |
+| `actualReturnRate` | `realBet>0 ? realPayout/realBet : null` |
+| `REALIZED_GROSS` | 実入金（APPLIED貸出）-実出金（APPLIED景品→Vault） |
+| `expectedGross` | 既存機械抽選に基づく遊技・貸出・交換の予測純入金額 |
+| `estimatedLiability` | 未交換メダル等の推定将来交換額。**現金実績ではない** |
+| `highSetting` | 設定4/5/6 |
+| `policy` | 設定候補に重みを与える、投入前に確定した28〜84日継続テーマ |
+| `dayPlan` | 当該hallDayに1回だけ生成する台別plannedSettingの集合 |
+| `proposedSetting` | 計画上の設定。busy台では現在設定と異なっていてよい |
+| `appliedSetting` | 実機に適用が完了した設定。適用していない日はNULL、差異をUI表示 |
+| `confidence` | 予測サンプル数・95%信頼区間・品質区分の組 |
+| `publicHistory` | CLOSED/NO_ACTIVITYになった日付の、設定結果・実績・投入時の説明だけ |
+| `manualOverride` | 管理者が明示した指示。既定曜日normal等は指示ではない |
+
+## 3. データ品質・明確な降格
+- 品質区分は `REAL_VERIFIED`, `FORECAST_ESTIMATED`, `LEGACY_UNVERIFIED`, `UNMODELLED`, `UNKNOWN` の5種。実測ゲーム統計は`REAL_VERIFIED`のみを方針学習に用いる。過去の `/piri sim` 混入が判別できない期間は**必ず** `LEGACY_UNVERIFIED`。推測してREALに昇格させない。
+- 未回収の実金銭取引は `UNKNOWN`。Vault外部コールの`CALL_STARTED/REVIEW_REQUIRED`を推定で `APPLIED`にしてはいけない。
+- 予測できない台は`UNMODELLED`として現設定据置きし、残りの台だけ最適化する。既存で遊技可能なのにadapterが欠けた状態を**完成としない**。
+- 台数0/1や稼働0日にも営業日の生成は成功する。1台では角・並び法則は不適用。1日すべてUNMODELLEDでもその日の計画は成立し、既存設定を維持。
+- オーナーが旧`/piri sim`を実行しても、以後のhall REALカウンタは増えない。旧「公開データランプにシミュレーションが載る」現行挙動は別機能として維持可能。
+
+## 4. 日次更新・同時実行の一意性
+1. `ensureDay(now)`は1分ごと・起動完了直後・台がfreeになった直後に要求。DB executor上で単一フライトを保証し、重複要求は既存実行へ合流。別スレッドで同じ日を同時生成しない。
+2. 現在日より前のOPEN日をCLOSED化。該当日にゲーム実績がなく現金イベントもなければNO_ACTIVITY。**終了時刻を過去に捏造しない**、境界のUTCミリ秒を`closed_at`に採用。
+3. 当日`hall_days(day)`が存在すれば新しいseed・policies・decisionsを生成しない。ただしPENDING適用は再試行。実際の資産・ロック状態を再検証してから適用。
+4. 生成前に`hall_days`、当日の台別計画・policyRevision・seedを単一SQLite transactionで確定。算出中に実ゲームが進む場合は`snapshotRevision`を再取得し、最大3回再計算。3回とも競合した場合は当日をFAILEDとして既存設定維持、次のチェックで再試行。FAILEDレコードとseedは残して同じseedで再計算。
+5. 生成済みの同日計画は編集禁止。後から管理者がsetting/pinを変えた場合は元の計画を上書きせず、`superseded_by_manual_at`と別のoverride記録を追加。public historyは**最終的にその日に実際に使われた設定と設定変更時刻**を、必要なら複数エントリで表示。
+6. 設定を変える前に`pendingMachines`、`state.busy`、セッションのACTIVE/GRACE、内部ボーナス/未完状態を既存機械エンジンで再確認。未確認ならPENDINGを維持。強制清算は**禁止**。適用できた瞬間に`setting_history`、`hall_machine_days.applied_setting`、`apply_status`を同じSQLite transactionに記録。
+7. 途中クラッシュ時: DBにAPPLIEDがあるが実機キャッシュが古い場合はDBから再読込、PENDINGだが設定が既に同値なら履歴重複を作らずAPPLIEDへ修復する。DBの`machine.setting`を正とする。書込失敗時は不完全な新設定をクライアントへ配信しない。
+8. オンラインのプレイヤーがいるかどうかと営業開始の有無は無関係。リアル稼働ゼロなら全候補が同じ見込みになりうるが、自動計画を生成・維持する。
+
+## 5. 分布・乱数・再現性
+- `hall_seed_secret`を初回移行で暗号学的乱数256bitとして一度発行し、metadataに保存（プレイヤー非公開）。`seed(day)=first64bits(SHA-256(secret || UTF8(day) || UTF8(policyRevision) || UTF8(modelVersion)))`、byte orderはbig-endian。シードはhall_daysにも保存。シードと秘密文字列を公開履歴/APIに返さない。
+- 擬似乱数はJava `SplittableRandom(seed)`、乱数消費順序は`machine_id`昇順、候補index昇順、policy_id昇順。細部の再現性テストは同一Java21/モデル版を基準。
+- 初回設定事前分布は既存 `events.profiles.normal.distribution` を `[55,25,12,5,2,1]`（settings1..6の重み）として利用。ただし管理者が設定を変えていればその最新の分布を読み、その日確定後はsnapshotとconfigHashを保存。通常日は固定比率を**強制しない**。
+- 自律policyが台に一致した場合、`s>=4`に対する設定重みを `multiplier=1.7+0.8*strength`、`strength ∈[0,1]`とする。同時policyの倍率は積をとり上限3.0、非対象台は1.0。これを候補生成に用い、配分最適化後の設定6率を固定しない。
+- **候補0〜47**はpolicyに沿う重み、**48〜63**はpolicy倍率を無効化した探索候補。固定台を先に埋める。同じ候補が出たら最大4096回再抽選。配置空間が64種類未満なら生成可能なユニーク集合で打ち切り、監査ログに候補数を記録する。
+- 新しい日付が同じseedになる確率は極小でも0ではないため、翌日seedが前日と一致した場合だけ `hash(... || byte(1))`で再導出する。
+- 候補と比較対象は固定済台も含めるが、最適化による変更はeligible台のみ。
+
+## 6. 予測器（端末ゲームへの副作用ゼロ）
+**入力**: `HallForecastInput(day, machineId, type, setting, runtimeSnapshot, configHash, modelVersion, observedHistory, seed)`。
+**出力**: `HallForecast(cashIn,cashOut,gross,estimatedLiability,variance,p05Gross,predGames,predBet,predPayout,quality,samples)`。
+
+### 6.1 既存ゲームエンジン対応
+- 実機の`MachineType`ごとに**pure/read-only** forecast adapter を作る。シミュレートした`GameTransition`のbet,payout,normalSpinsと各機種固有のBONUS/ストック状態を使用する。元DB・実機のRNG・プレイヤー/機械stateを絶対に更新しない。
+- `JUGGLER`は通常RoleWeightsとリプレイ/ボーナス、`JUGGLER_GOD`/ `EXTREME`は固有の小役・ストック・天国・GOD挙動、`GOD`はGOD runtime、`SKILL_STOP`は設定別役抽選と目押し成功率、`PACHINKO`は玉貸/賞球・RUSH継続を独立モデルとする。
+- 目押し成功率は過去実プレイに実測があるならその推定値、無ければ**50%**とする。継続/やめ時の実測がなければ下記6.2のデフォルトを利用。ゲームエンジンが公開していない内部値を適当に創作してはいけない。
+- `OKIDOKI`, `DISC`はエンジン未登録のままなら`UNMODELLED`。将来ゲームエンジン導入時、必ず同時にforecast adapterを実装。
+- Stateに依存するモードは現在の機械runtimeをコピーして開始し、GOD/ボーナスストックを日付変更でリセットしない。DBの現物には書込禁止。観測不能な状態はUNMODELLEDに降格。
+
+### 6.2 日別需要（全員プレイヤーは実在した分のみ実績）
+- 実績7/28/90日平均`dailyRealGames`を算出（計測可能な営業日は0Gも含める）。窓の実測日数が0なら`baseDemand=300G/day`。1日以上あれば窓内実測平均の加重平均（有効な窓の重みを再正規化）を`empiricalDemand`、`n`を有効な観測日数とし`baseDemand=(n*empiricalDemand+14*300)/(n+14)`。台に実績が無い場合は同機種の結果を先に使い、それも無ければ300。重み50/35/15は二重カウントを許容する平滑化係数であり累計数値を足す意味ではない。
+- 設定による見込み稼働の変化は `predGames=round(clamp(baseDemand*(1+0.03*(setting-3)), 0, 3000))`。高設定の客への訴求を模した近似であり抽選挙動ではない。日ごとの曜日/特定日効果は、実測された同条件の平均比から `[0.8,1.5]`にクリップした倍率を掛ける。サンプル5日未満は倍率1.0。
+- 0台の店舗は全指標0。台の休止日は実測稼働0と数えない。過去シミュレーションだけの日は実測がなく未知として扱う。
+
+### 6.3 投資・交換の行動（初期モデルを固定）
+- 1人の仮想セッションの目安は300G。台ごとの`predGames`を300G以下のセッションに分割し、最後のみ端数Gとする。0Gならセッション0。
+- 各セッションは`initialCarryMedals`が不明なら0枚開始。最初のBETに必要な枚数/玉数が無い時は実機`economy.loan_medals`枚を`economy.loan_amount`で借りたと予測。以後同じ規則で足りない分だけ追加貸出。内部リプレイ・ボーナスBET・PACHINKO球貸は実ゲームのルールに準拠。
+- 終了時に保有枚数のうち **60%のセッション**が景品へ換金に進むものとし、各セッションで`uniform<0.60`により決定。交換先は既存景品の`medal_cost`と`vault_value`に従って、最大価値を実現する合法の整数個数組合せを選ぶ（同価値なら大→中→小の個数が多い組合せを選ぶ）。交換しないメダル/残りは`estimatedLiability`へ景品表の最大可換価値で推定。実際のプライズ外部コールは一切しない。
+- 実セッションの交換率が28日で**30件以上**観測されれば`pCashout=(cashoutCount+12)/(sessionCount+20)`に切替（Beta(12,8)事前分布）。閾値未満は0.60。閾値到達で実測分へ徐々に寄せる。
+- 各候補の現金予測は台ごと128試行し、全台合計の`cashIn`, `cashOut`, `gross`平均および分散・5%下方分位を採用。台のGOD等低確率イベントは100,000G上限の性能サンプル分布を保持して使用。各候補ごとに純ゲーム抽選をフル再計算せず、同じseedで保存された標本分布を比較する（共通乱数方式）。
+- 遊技者の持ちメダルの正確な全店在庫が存在しないため、`initialCarryMedals=0`は**予測の仮定**。出玉実績や売上実績として記録しない。予測にはこの系統誤差があるとUI表示。
+- 予測の信頼区間は128試行の標本分布から5%/95%分位を使用。単一状態しかサンプルできない・非数・overflowの場合は`UNMODELLED`で維持。
+
+## 7. 固定スコア式・探索手順
+対象配置`C`について:
+1. `profitFit = 1 - min(1, abs(predGross - dailyTarget)/max(1000,abs(dailyTarget)))`
+2. `traffic = clamp(predGamesTotal / max(1,1.25*baselineGamesTotal),0,1)`。baselineGamesTotalは全eligible台を現設定に保った場合の予測G。
+3. `pattern = policyMatchHigh / max(1, eligibleHighCount)`。`policyMatchHigh`=高設定になったeligible台のうち投入**前**に有効な主方針に一致する台数。高設定0台ならpattern=0。ただし主方針が0件/適用候補0件ならpattern=1。
+4. `continuity = 1 - Σ(abs(newSetting-oldSetting)/5)/max(1,eligibleCount)`（予測上の設定を比較。前日変更自体がローテーション方針なら該当台を計算から除外）。
+5. `risk = 1 - clamp(max(0, -p05Gross)/max(1000,predCashIn),0,1)`。
+**総合** `score = .40*profitFit + .25*traffic + .20*pattern + .10*continuity + .05*risk`。五項すべて[0,1]の絶対値であり、候補集合が変わっても再正規化しない。forecast未知で評価不能な台は固定扱いにして関連分母から除外。目標粗利ゼロでもprofitFitを計算できる。tieはスコア差`<=1e-12`、その際は設定配列（machine_id昇順）の辞書式順序が小さい方を採用、全同値なら候補indexが小さい方。
+
+**局所探索**: 最良上位8配置を対象に、1配置最大1000試行。試行回数カウントは「改善しなかった手」も含む。1手で(1)ランダム台の設定±1（範囲1..6）、または(2)2台の設定交換を等確率で選択。手動/disabled/locked固定は変更対象に選ばない。`RUN変更`は(2)の交換で実現。改善した場合のみ置換。各候補の新スコアは同じ式で再計算。全候補空なら既存設定をそのまま計画とする。候補が少ない場合は全候補を使う。上位8を各1000試行してもメインスレッドを占有しない。
+
+## 8. ポリシー生成・変更条件
+- 初回に候補可能台が3台未満なら`NUMBER_SUFFIX`のみ（存在する末尾）を1件、3台以上なら `DATE_TAIL`, `NUMBER_SUFFIX`, `CORNER_2`, `MACHINE_TYPE`, `RUN_2`, `RAISE`, `KEEP` から**データ上成立する**種類を最大2件選ぶ。10台以上なら3件選ぶ。選択はseedで決定、同一条件種類の重複選択は禁止。
+- 各policysの`strength`初期値0.5、適用倍率2.1。パラメータ（末尾数字、対象曜日、対象機種、対象島等）は配置実態からのみ選ぶ（存在しない機種や島は候補にしない）。有効期間28日、最大84日。
+- 7日ごとに観測可能な稼働差分`lift=(observedGames - expectedGamesAtOldSettings)/max(1,expectedGamesAtOldSettings)`を求める。対象台で`REAL_VERIFIED`の観測ゲームが合計**5000G以上**かつ活動日**7日以上**ある場合だけ政策効果を評価。それ以外は`INSUFFICIENT_DATA`で継続。
+- 観測が十分なら`strength=clamp(strength+0.1*clamp(lift,-1,1),0.1,1.0)`。期間28日未満は終了禁止。28日経過後、`lift< -0.10`が2回連続なら方針を終了し、新しい候補へ差替。84日で無条件終了→新方針生成。
+- 店読みの確率的例外は**候補48..63のテーマ外探索**として実現。別の「店の性格」「根拠のない周期」生成は禁止。
+- 実出玉率は`realPayout/realBet`として保存し、期待出玉率からの偏差を次回の上げ/据置/移動テーマの対象選定に使う。高設定の不発を補償するように当選率を操作しない。
+- 28日ごとの再評価と7日ごとの調整の整合: **7日ごと=強度調整のみ**、**28日目以降=終了/差替可能**。
+
+## 9. 手動ルールの厳密な解釈
+- `/piri hall pin <id> <setting> [date|forever]`の省略は**当日限り**、日付指定はそのhallDayの04:00から次日04:00まで、foreverは無期限。過去日を指定したら拒否。
+- `/piri hall unpin <id>`は対象台の現在のpinと当日以降の予約pinを解除。解除した当日はその台の現在設定を保ち、**次営業日から**自動に復帰。explicit `auto_setting=false` は自動ONにしない。
+- `/piri setting <id> <setting>` と管理画面の変更は当日限定のmanual override。変更時点が04:00より前なら前hallDayに帰属。busy時は拒否。
+- `/piri event next <profile>`: **呼び出し時の翌hallDay**に1回だけ適用。profileの分布を使って最初の自動候補を作り、特定`pattern`の台を優先的に事前固定、残りは最適化。現行config`weekday: MONDAY..SUNDAY normal`と`default_profile: normal`は**明示的イベントではない**ので自律運営を上書きしない。`special_dates`に日付が明記されている場合のみその日の手動イベントにする。weekdayが`normal`以外なら明示的週次イベントと解釈。前日profileの自動継続は禁止。
+- スコープの優先度: MACHINE_PIN > 当日MANUAL_SETTING > DATE_PROFILE > MACHINE_TYPE > ISLAND > DAY > MARGIN > 自律ポリシー。手動同士の「設定値の直接衝突」は新しい指定を拒否し、上位pinを解除しなければ変更できない。利益目標は設定値指示ではないので他と衝突しない。
+- `/piri hall auto off`は当日以降自動配分を停止・設定維持。 `auto on`は次のhallDayから再開。途中の日付で既存計画を上書きしない。
+- `/piri hall rule add <kind> <JSON>` の許容kind: `DATE_TAIL`, `WEEKDAY`, `NUMBER_SUFFIX`, `CORNER_1`, `CORNER_2`, `RUN_2`, `RUN_3`, `MACHINE_TYPE`, `KEEP`, `RAISE`。JSONは `{"target":"7","minSetting":4,"startDay":"2026-11-07","endDay":"2026-12-07"}` 型で、`target`はkindに応じて0..9の数字/曜日MONDAY..SUNDAY/機種enum/島ID/台番号、`minSetting`は1..6、日はISO8601 date、`startDay<=endDay`。対象存在・指定期間重複・台別pinとの矛盾を検証。未知キー・非型一致は拒否。 `KEEP/RAISE` はそれぞれ前日据え置き/前日より1以上上げるという条件、最終設定6を超えない。
+- `/piri hall target <marginPercent>`は整数/小数%で`0..100`、入力例`12`→0.12。 `target auto`で次営業日から自動化。手動変更は**翌営業日以降**に反映。無期限。
+- `/piri hall layout set`の`position`は島の通し番号1..9999、同じ島の同位置二重指定は拒否。`layout clear`は当日配置を壊さず翌日から自動位置判定。書込みは監査。
+- `preview`はDB・secret・PRNG等を変更しない。既存seedがあればそれを利用、未確定日なら日付と現在保存済secretから導出する仮シードを用いる（生成済計画ではないことを表示）。前日から任意の日へのプレビューは、未知の未来実績を補間せず現在実績の静止スナップショットで比較。
+- 非OPには現在のpolicy/secret/計画/当日設定および未終了日の正解を開示しない。public explain/historyはCLOSED日だけ。
+
+## 10. 論理スキーマ上の追加拘束
+親仕様の表名・フィールド名を必須とし、少なくとも次のDDL条件を満たす:
+- `hall_days.day TEXT PRIMARY KEY`、`status TEXT NOT NULL CHECK IN('PLANNING','OPEN','CLOSED','NO_ACTIVITY','FAILED')`、各 monetary は`TEXT`で非NULLのcanonical decimal（小数点以下2桁固定）、各計測counterは`INTEGER`で>=0。未知/未予測にはNULLを使い、0と混ぜない。
+- `hall_machine_days PRIMARY KEY(day,machine_id)`、`CHECK(planned_setting BETWEEN 1 AND 6)`（不明な機種や非対象台も現設定をplannedとして入れる）、`applied_setting`はNULL許可、`CHECK(apply_status IN('PENDING','APPLIED','SKIPPED','FAILED'))`。
+- `hall_setting_decisions PRIMARY KEY(day,machine_id)`、設定に1〜6のCHECK、FOREIGN KEY(day,machine_id)→hall_machine_days。未採用候補の理由/候補IDは`reasons_json`に記録。SQL insert/updateは適用/理由/履歴で二重計上不可。
+- `hall_economy_events.transaction_id TEXT PRIMARY KEY`、operationは`LOAN,PACHINKO_LOAN,PRIZE_TO_VAULT`限定。`occurred_at`はAPPLIEDに遷移した確定時刻、`day`はその時刻のhallDay。amountDecimalはVault通貨で小数2位HALF_UPへ丸めた正の値。DBの元取引が二重になってもhall eventは一度きり。
+- `hall_game_events`を追加し `transaction_id TEXT PRIMARY KEY, hall_day TEXT NOT NULL, machine_id INTEGER NOT NULL, machine_type TEXT NOT NULL, setting INTEGER NOT NULL, bet INTEGER NOT NULL CHECK(bet>=0), payout INTEGER NOT NULL CHECK(payout>=0), game_delta INTEGER NOT NULL CHECK(game_delta>=0), origin TEXT NOT NULL CHECK(origin IN('REAL','SIMULATED')), committed_at INTEGER NOT NULL`。**実ゲームのcommitと同じDB transaction**で`REAL`を記録。新hall実績は`origin='REAL'`のみ集約。ゲーム差分を手作業で推測しない。
+- `hall_manual_overrides`は `override_id`一意、scope/date/actor/createdAt/revokedAtを保存。`hall_audit_log`は日付順のインデックスを張る。対応する逆参照FKは既存表を壊さない範囲で作成。
+- `hall_layout_overrides`を追加: `machine_id INTEGER PRIMARY KEY, island_id TEXT NOT NULL, position INTEGER NOT NULL CHECK(position BETWEEN 1 AND 9999), starts_day TEXT NOT NULL, ended_day TEXT, UNIQUE(island_id,position,starts_day)`。配置の変更履歴を失わないため実テーブルは複合キー`(machine_id,starts_day)`も許容するが、同時有効な島位置衝突は必ず禁止。
+- `hall_settings`またはmetadataに`hall_seed_secret`, `auto_enabled`, `manual_target_margin`を保持。金額は全てcanonical decimal文字列、浮動小数で計上しない。旧実金銭取引のfloatは `BigDecimal.valueOf(double)`から変換しHALF_UPで小数2位へ丸め、丸め前値と元IDを監査に保持。
+- v4→v5の失敗時は明示エラーと元DB保全。起動中のmigrationはゲーム受付前。バックアップはSQLiteのBackup API/チェックポイント等で整合を保ち、WALのファイルコピー単体をバックアップと称しない。
+- v5起動中のplugin reloadを含めバージョン二重昇格なし。旧`schema-v4.sql`と既存モデルとの互換性を維持。
+
+## 11. 実装時の判断不要ルール
+- 1つの仕様が曖昧なら**既存ゲーム・資産を保護する最も保守的な挙動**（現設定維持、監査ログ、再試行）を取る。勝手な高設定大量投入や設定1へのリセットをしない。
+- 最適化予測が実装困難だからという理由で機械割を全機種一律にしたり、実ログと混ぜたり、疑似データを実績に入れたりすることは禁止。
+- 現行ソースとの仕様矛盾はこの文書の補完範囲→親仕様の自律設定範囲→既存SPEC.mdのゲーム不変条件の順に解決。ゲーム本体の変更が必要な場合は必要なアダプタだけを追加し、抽選仕様を変更しない。
+- 既存 `/piri sim` は実グラフ更新コマンドとして残しつつ、hallのreal ledgerから除外する。予測は別のpure simulatorでのみ行う。
+- すべての`reasonCodes`は配置決定時に固定保存。決定後の実出玉・勝ち負けにより理由を変更しない。
+
+## 12. 受入テストの数値基準（追加）
+1. seed+過去実績+configHash+policyRevision同一→決定配列・理由・予測値がbyte単位一致（同Java21 build）。
+2. `46枚貸し/1,000円`を10回借り、途中に同じメダルを何回再BETしても貸出記録は**10,000円**のみ。52枚を1,000円景品に交換したら実現粗利は**9,000円**。出玉の払出と現金粗利は別集計。別日の景品交換は**その交換日に出金**。
+3. 経済イベント同じtransaction_idを100回再処理しても1件のみ。SIMゲームを10万回流してもhall realGames/realBet/realPayoutおよびrealizedGrossは不変。
+4. 11/7 03:59→11/6営業日、11/7 04:00→11/7営業日。04:00を跨いだACTIVE, GRACE, unresolved GOD / BONUSは旧設定を維持し、遊技の完了前に新設定を適用しない。
+5. v4→v5移行直前/直後のDB整合性検査を行い、`player_sessions`, `player_wallet`, `medal_tokens`, `machines`, `setting_history`, `business_periods`の既存レコードを破壊しない。
+6. 初回から完全自動、全台busy、0台、1台、サーバー3日停止、当日複数起動、同一日にplan途中クラッシュ、手動pin競合、未知機種、手動でOFF、現金0円の全ケースで例外停止せず既存台と資産を保護。
+
+**以上を親仕様に加えて実装対象とし、曖昧な「実装しやすい方」を勝手に採らない。**
