@@ -49,6 +49,14 @@
 7. 途中クラッシュ時: DBにAPPLIEDがあるが実機キャッシュが古い場合はDBから再読込、PENDINGだが設定が既に同値なら履歴重複を作らずAPPLIEDへ修復する。DBの`machine.setting`を正とする。書込失敗時は不完全な新設定をクライアントへ配信しない。
 8. オンラインのプレイヤーがいるかどうかと営業開始の有無は無関係。リアル稼働ゼロなら全候補が同じ見込みになりうるが、自動計画を生成・維持する。
 
+### 04:00直後の最初の遊技/経済イベントとの競合
+
+- 04:00を越えた最初のゲームやVault APPLIEDがスケジュールの1分間隔のensureDayより先に到着しても、その処理を欠落させない。DB書込側が対象hallDay未存在を検知した場合、同じDB executor上で当日行を`PLANNING`として最小作成（既存secretと日付から同一seed、modelVersion/configHash、当日初期目標を使用）し、当該実イベントを書き込んでから後続の通常ensureDayが残りの決定計画を補完する。PLANNING作成は`INSERT ... ON CONFLICT DO NOTHING`で冪等。
+- 計画作成はその日の開始後に到着した実イベントを入力スナップショットから除外し、前日までの`CLOSED`実績だけで設定を決める。次の日付の実現粗利・実稼働は、その日設定決定の評価根拠に遡及反映しない。
+- Vaultの`APPLIED`化が先にcommitされ、hall ledger書込前にクラッシュした場合、起動時と定期ensureDayで`economy_transactions`のAPPLIED行から存在しないtransaction_idを読み、`updated_at`で本来のhallDayに帰属させて埋める。**後から埋めた日**に計上しない。元statusがREVIEW_REQUIRED等なら自動でAPPLIEDにしない。
+- 経済イベントの日付の外部キーを満たすため、過去日の穴を補填する場合も、日付行の最小作成を行う。過去日の予測や設定計画は捏造しない。実績だけ復元する行は`NO_ACTIVITY`でなく`CLOSED`にし、`data_quality=LEGACY_UNVERIFIED`に設定する。
+- 同じ時刻帯の複数トランザクションはtransaction_idによりちょうど一回計上、台別realBet/realPayoutも`hall_game_events`を正として再集計できること。
+
 ## 5. 分布・乱数・再現性
 - `hall_seed_secret`を初回移行で暗号学的乱数256bitとして一度発行し、metadataに保存（プレイヤー非公開）。`seed(day)=first64bits(SHA-256(secret || UTF8(day) || UTF8(policyRevision) || UTF8(modelVersion)))`、byte orderはbig-endian。シードはhall_daysにも保存。シードと秘密文字列を公開履歴/APIに返さない。
 - 擬似乱数はJava `SplittableRandom(seed)`、乱数消費順序は`machine_id`昇順、候補index昇順、policy_id昇順。細部の再現性テストは同一Java21/モデル版を基準。
