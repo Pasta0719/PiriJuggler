@@ -258,4 +258,4 @@ DBアクセスは既存DB executor、重いforecastは既存simulator executor�
 ## 14. Codexへ渡す実装指示（コピー可）
 
 **作業ブランチ**: GitHubの `feature/hall-autonomy-spec-v1` をチェックアウトして実装を始めること。mainには本書・定義ロック・DDLがまだないため、main単独から着手してはいけない。実装コミットと検証証跡は別の実装ブランチに作成してPRを出し、本仕様ブランチの3文書を必ず含めること。
-> `docs/HALL_AUTONOMY_IMPLEMENTATION_V1.md`、`docs/HALL_AUTONOMY_DEFINITION_LOCK_V1.md`、`docs/HALL_SCHEMA_V5_REFERENCE.sql`を順に実装仕様として読み、リポジトリを監査してからPaper側へ1店舗の完全自律設定投入・粗利/稼働予測・店読み方針・手動介入を実装してください。現行`SPEC.md`の既存仕様を守りつつ、明記された§70–72の自動設定については本書を優先。v4→v5無破壊移行、ゲーム状態保護、REAL/SIM分離、04:00日次処理の冪等性、各機種実際の機械割/状態に基づいたread-only予測、確定時根拠ログを必須とします。実装・テスト・ビルド・Paper/Fabricランタイム検証まで一貫して行い、確認結果と変更ファイルを提示してください。
+> `docs/HALL_AUTONOMY_DEFINITION_LOCK_V1.md`、`docs/HALL_SCHEMA_V5_REFERENCE.sql`、`docs/HALL_AUTONOMY_IMPLEMENTATION_V1.md`、既存`SPEC.md`を順に実装仕様として読み、リポジトリを監査してからPaper側へ1店舗の完全自律設定投入・粗利/稼働予測・店読み方針・手動介入を実装してください。現行`SPEC.md`の既存仕様を守りつつ、明記された§70–72の自動設定については本書を優先。v4→v5無破壊移行、ゲーム状態保護、REAL/SIM分離、04:00日次処理の冪等性、各機種実際の機械割/状態に基づいたread-only予測、確定時根拠ログを必須とします。実装・テスト・ビルド・Paper/Fabricランタイム検証まで一貫して行い、確認結果と変更ファイルを提示してください。
