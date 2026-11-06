@@ -116,6 +116,40 @@
 - `preview`はDB・secret・PRNG等を変更しない。既存seedがあればそれを利用、未確定日なら日付と現在保存済secretから導出する仮シードを用いる（生成済計画ではないことを表示）。前日から任意の日へのプレビューは、未知の未来実績を補間せず現在実績の静止スナップショットで比較。
 - 非OPには現在のpolicy/secret/計画/当日設定および未終了日の正解を開示しない。public explain/historyはCLOSED日だけ。
 
+## 9A. ポリシー型の完全定義（Codexが意味を推測しない）
+
+本節の型名・一致条件・条件成立の単位が唯一の正解。自動テーマも手動ルールも同じmatch関数を使う。台は当日04:00時点のMachineと有効なlayout overrideを評価する。高設定誘導は一致台にのみ適用、非一致台を禁止する意味ではない。
+
+| kind | 必須target | match(台, day) の意味 |
+| --- | --- | --- |
+| `DATE_TAIL` | "0"〜"9" | 当日の日付の末尾数字（dayOfMonth%10）がtargetと一致した日の**全対象台** |
+| `WEEKDAY` | "MONDAY"〜"SUNDAY" | 当日のJST曜日がtargetと一致した日の**全対象台** |
+| `NUMBER_SUFFIX` | "0"〜"9" | machine_id % 10 がtargetに一致する台 |
+| `ZOROME` | "*" | 台番号の10進表記が2桁以上かつ**全桁同一**の台（11, 222, 3333等） |
+| `DAY_NUMBER_MATCH` | "*" | machine_id % 10 == dayOfMonth % 10 |
+| `CORNER_1` | "*" または島ID | 対象列の端から1番目。島ID指定ならその島に限定 |
+| `CORNER_2` | "*" または島ID | 対象列の端から2番目。島ID指定ならその島に限定 |
+| `RUN_2` | "*" または島ID | 同一島の隣接連続2台に設定4以上を優先配置する**組合せ条件** |
+| `RUN_3` | "*" または島ID | 同一島の隣接連続3台に設定4以上を優先配置する**組合せ条件** |
+| `MACHINE_TYPE` | MachineType enum名 | その機種の全対象台 |
+| `KEEP` | "*" またはMachineType enum名 | 前hallDayに適用済みの設定がある台を、その設定と同値にする組合せ条件 |
+| `RAISE` | "*" またはMachineType enum名 | 前hallDay適用設定が1〜5の台を、それより**1以上高い設定**にする条件 |
+
+- `RUN_2/3`は単体台のmatch倍率ではなく、該当連続区間を候補として生成・局所探索する際に方針達成スコアへ寄与する。連続とは同島position連番で、欠番やdisabled/deletedを跨がない。
+- `KEEP/RAISE`は台別旧設定が観測できる場合のみ有効。前日未適用/UNKNOWNならmatchなし。正しく比較可能な台が0なら方針の候補に入れない。
+- 手動 rule JSON は `{"target":"7","minSetting":4,"startDay":"2026-11-07","endDay":"2026-12-07"}` を基本形とする。`target`は上表の形式に限定、`minSetting`省略時4、`startDay`省略時は次hallDay、`endDay`省略時は無期限、追加キーは拒否。kind`KEEP`の`minSetting`は意味を持たず指定を拒否、`RAISE`では最低設定との最大値を採用。`RUN_2/3`では区間の全台に`minSetting`を適用。`ZOROME/DAY_NUMBER_MATCH`は`target="*"`だけ許可。
+- 末尾テーマは高設定投入を**確定**するルールではない。一方、管理者の手動ruleの`minSetting`は対象台に対する**最低設定制約**として最適化の前に固定する（複数手動制約がある場合は最大値。ただしより上位のPINと衝突する場合はコマンドを拒否）。手動固定で粗利が目標に届かなくても変更しない。
+- 自動テーマの個数は eligible台`0→0,1..2→1,3..9→2,10以上→3`。候補型は上表から「台/日付条件が今後28日の中で少なくとも一度成立」するものだけ選ぶ。policy_id昇順で重複kindを除き、`SplittableRandom`により候補配列のインデックスを均等抽選（候補配列はkind名→target昇順の辞書順で安定ソート）。選択した候補は28日間維持。候補不足なら存在数で打ち切る。
+- 28日以後の差替時は、同時に生きているkindと同じものは選ばない。候補が存在しない場合は方針を0件にしてもシステムを停止しない。
+- 機種を対象にする場合、設定によって抽選分布に変化がない`MachineType`は高設定誘導候補にしない。**現行PACHINKOゲームはmachine.settingを抽選に参照しない**ため、自動設定変更対象ではない（現設定維持、営業収支予測/分析対象にはなる）。GODは設定値を参照している。OKIDOKI/DISCは遊技エンジン未登録なら対象外。将来PACHINKOに設定差を実装した場合のみ別バージョンで対象へ追加する。
+
+## 9B. パチンコとメダルの異なる集計経路
+
+- `GameTransition.bet/payout`だけで機種全体のBET/払出を集計できると仮定しない。現行`PachinkoGameEngine`には遷移のbet/payoutが0で、玉の消費/賞球が`PachinkoRuntime`側の変化として表現される経路がある。パチンコ用`HallPachinkoAccountingAdapter`で前後runtimeの実玉消費・賞球イベントを、**成立した各アクションのみに対して**抽出し`hall_game_events`へ記録する。台別現金貸出はPACHINKO_LOANからのみ。
+- `GOD`は通常ゲームのLEVER時BETと結果完了時払出が別transitionになりうる。`hall_game_events`は状態遷移ごとの受払`bet,payout`を丸ごと記録し、`game_delta=0`のBET処理も含める。1アクション=1 transaction_idの冪等性を利用し、BETと払出を二重計上しない。
+- 台別の「当日実出玉率」は種別ごとのBET/払出実単位で求める。メダル枚数とパチンコ玉を**合算して率を算出しない**。店舗の現金収支のみ全機種横断集計する。
+- シミュレーションは`hall_game_events(origin='REAL')`を作ってはならない。検証用SIM行は専用テストDBかテスト専用明示フラグ下に限定する。
+
 ## 10. 論理スキーマ上の追加拘束
 親仕様の表名・フィールド名を必須とし、少なくとも次のDDL条件を満たす:
 - `hall_days.day TEXT PRIMARY KEY`、`status TEXT NOT NULL CHECK IN('PLANNING','OPEN','CLOSED','NO_ACTIVITY','FAILED')`、各 monetary は`TEXT`で非NULLのcanonical decimal（小数点以下2桁固定）、各計測counterは`INTEGER`で>=0。未知/未予測にはNULLを使い、0と混ぜない。
