@@ -118,7 +118,8 @@ public final class HyperDogClientReels {
             sessionId.toString().equals(b.get("sessionId").getAsString())&&
             b.get("machineId").getAsInt()==machineId;
     }
-    private void reset(){
+    /** Clear per-connection reel state on Minecraft disconnect without affecting other machines. */
+    public void reset(){
         opened=false;sessionId=null;spinId=null;machineId=0;presentation="NORMAL";
         Arrays.fill(stops,-1);Arrays.fill(pressed,-1);Arrays.fill(starts,0);
         localReceivedAt=0;serverStartedAt=0;
