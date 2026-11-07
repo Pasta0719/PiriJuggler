@@ -1,4 +1,4 @@
-# ORIGINAL AT — PHASE 08 Numerical verification and final real-Minecraft release gate
+# HYPER_DOG — PHASE 08 Numerical verification and final real-Minecraft release gate
 
 Status: **NOT_STARTED — SPEC_LOCKED**
 
