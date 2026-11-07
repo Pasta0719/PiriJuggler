@@ -31,7 +31,7 @@ No changes to `SkillStopControl`, `FixedReels`, `StopSolver`, `ReelRound`, `Mach
 
 The new common solver and isolated Paper-side round have **not yet been wired into the production machine dispatcher and Fabric cabinet**, because HYPER_DOG's normal-game engine and screen are separate later Phase work. Therefore the original acceptance clause demanding a **real Paper/Fabric stop-path capture** (input, all three reels, restart and end-to-end player view) has not been performed. The seven user-supplied symbol PNGs are also not in the repo. **Do not set Phase 02 to COMPLETE on this evidence alone.**
 
-CI is run by the repository's standard `Piri build` workflow after these commits; the final branch-head result should be checked before acceptance. If CI fails, fix regressions before any subsequent Phase.
+**GitHub Actions Piri build PASS** for all new Java source/tests through commit `c94e0a9bc357` (run [42371550379](https://github.com/Pasta0719/PiriJuggler/actions/runs/42371550379), conclusion `success`). The Paper-side tests also passed in run [42371489302](https://github.com/Pasta0719/PiriJuggler/actions/runs/42371489302). Later changes to phase documentation do not introduce game code. This verifies the production build and JUnit test task, **not the real Minecraft player stop path**.
 
 ## Next concrete integration
 
