@@ -1,4 +1,4 @@
-# ORIGINAL AT — PHASE 02 Reels, symbols, and server-authoritative stops
+# HYPER_DOG — PHASE 02 Reels, symbols, and server-authoritative stops
 
 Status: **NOT_STARTED — SPEC_LOCKED**
 
