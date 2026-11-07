@@ -1,4 +1,4 @@
-# ORIGINAL AT — PHASE 06 Lamp progression, flashes, TOTAL, and rainbow-seven CZ
+# HYPER_DOG — PHASE 06 Lamp progression, flashes, TOTAL, and rainbow-seven CZ
 
 Status: **NOT_STARTED — SPEC_LOCKED**
 
