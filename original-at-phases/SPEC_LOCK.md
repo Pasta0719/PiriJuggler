@@ -1,4 +1,4 @@
-# オリジナルAT新機種 — 設計正本（Phase計画ドラフト）
+# HYPER_DOG — 設計正本（Phase計画ドラフト）
 
 **状態：初期実装仕様を固定。Phase実装・実Minecraft試験は別途。未決定事項は [IMPLEMENTATION_DECISIONS_V1.md](IMPLEMENTATION_DECISIONS_V1.md) で解消済み。**
 
@@ -45,7 +45,7 @@
 
 ## 6. 実装上の全判断は固定済み
 
-- 正式機種型は`ORIGINAL_AT`、管理表示名は`Piri AT`。筐体のロゴ表示は禁止。
+- 正式機種型は`HYPER_DOG`、管理表示名は`HYPER_DOG`。筐体のロゴ表示は禁止。
 - 21コマ×3本のリール物理配列、5ライン、中段固定の特殊出目、最大4コマ／レア・確定役の最大20コマ引込み、AT赤7の重複役後専用再回転は**[IMPLEMENTATION_DECISIONS_V1.md](IMPLEMENTATION_DECISIONS_V1.md)** に固定。
 - 右期待度3灯を出すのは**新規の正の上乗せ付与があるGのみ**。0枚なら消灯。色の全分布表と第三停止フラッシュの保証、ランプの強さ・点灯段階は確定表に記載。
 - 上位初期第6GのTOTALは初期5G付与のみ。第6Gの通常上乗せと重複したら`TOTAL→+N→残枚`のFIFO。
