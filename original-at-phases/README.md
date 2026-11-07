@@ -1,14 +1,16 @@
 # PiriJuggler オリジナルAT新機種 — Phase設計（ユーザー確認用）
 
-**計画状態：DRAFT / 未承認。実装未着手。** 作成日 2026-11-07。
+**計画状態：初期実装仕様を確定済み／ゲームコード実装は未着手。** 作成日 2026-11-07。ユーザーの実機確認後の演出微調整は可能。
 
 このフォルダは既存の `phases/`, `next-machine-phases/`, `skill-stop-phases/` を置き換えない。新しい「AT直撃・下位/上位AT・上位CZ」の専用計画であり、引退した単体GOD機種とは別物。
 
 ## 読む順番
-1. [SPEC_LOCK.md](SPEC_LOCK.md) — ユーザー確定のゲーム性と、試作として承認された表示案、未確定事項を分離。
-2. [PHASE_MAP.json](PHASE_MAP.json) — 8 Phase の順序と依存関係。
-3. [PHASE_01_DESIGN_FREEZE.md](PHASE_01_DESIGN_FREEZE.md) から順に、**そのPhaseだけ**を実行。
-4. 既存 `CHANGE_SAFETY_POLICY.md` と `CODEX_START.md` は常に優先。
+1. [SPEC_LOCK.md](SPEC_LOCK.md) — ユーザーが決めた機能・ゲーム性の正本。
+2. [IMPLEMENTATION_DECISIONS_V1.md](IMPLEMENTATION_DECISIONS_V1.md) — 旧「未決定・確認待ち」を**実装できる具体値・時刻・順序にすべて決定**した文書。
+3. [REEL_DESIGN_V1.md](REEL_DESIGN_V1.md) — 21コマ×3本の具体配列・4コマ通常／確定引込み。
+4. [reference/pirijuggler_new_machine_calibrated_v5.json](reference/pirijuggler_new_machine_calibrated_v5.json) と[シミュレーター](reference/piri_simulate_full_v1.py) — 数値の固定実装基準。
+5. [PHASE_MAP.json](PHASE_MAP.json) — 8 Phase の順序と依存関係。
+6. [PHASE_01_DESIGN_FREEZE.md](PHASE_01_DESIGN_FREEZE.md) から順に、**そのPhaseだけ**を実行。既存 `CHANGE_SAFETY_POLICY.md` と `CODEX_START.md` は常に優先。
 
 ## Phase02リール配列の先行設計
 
@@ -28,10 +30,9 @@
 
 **依存関係**：01→02→03→04→05→06→07→08。01の後、ユーザーが図柄画像を未提供でも02の**配列設計・停止制御のロジック実装は進める**。ただし02の最終Fabric描画受入は実画像なしではCOMPLETEにしない（表示部分のみBLOCKED）。**リール配列表をユーザーに要求しない。**各Phase内で必要な実ランタイム検証ができない場合も同様。
 
-## 承認の考え方
-- 【確定】過去のユーザー指示から直接決まった構造・役・出目・CZ・ランプの色順などは変更不可。
-- 【試作OK】以前の提案でユーザーが「それで一旦やってみる」と認めた演出は仮採用。実Minecraftで見てから変更できる。
-- 【数値候補】シミュレーションv5は実装基準候補。既存ゲーム性を保ち、実装後に機械割を照合する。
-- 【要確認】演出競合など正確な仕様がない部分は Phase01 または対象Phase着手前に**まとめて**確認。質問を小出しにしない。勝手に確定に昇格させない。
+## 設計の位置づけ
+- 【ユーザー確定】ゲームの構造・枚数・出目・CZ・ランプの色順・4コマ通常と確定引込みは変更不可。
+- 【初期実装値を決定】演出のタイミング/色割合/ランプ位置/重複時の表示順/音/ID/素材契約まで**全件決定**。実機を見て違和感があった部分だけ、ユーザー指示により改訂する。
+- 【数値の実装正本】v5 JSONを固定。機械割は独立シミュレーションの報告値であり、Paper実装で再照合する。
+- 【実行待ち】Phase 01〜08はまだ未着手。既存のコード・既存Phase・`CODEX_START.md`の入口は変更していない。**設計の未確定は0件**であり、残っているのはPhaseの実装とユーザー図柄画像の受領、実Minecraftでの受入だけ。
 
-本ブランチには計画文書だけを置く。既存の `CODEX_START.md` や `PHASE_MAP.json` の入口設定はユーザーによる計画承認後に別途変更する。
