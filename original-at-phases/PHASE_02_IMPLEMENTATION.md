@@ -29,7 +29,7 @@ No changes to `SkillStopControl`, `FixedReels`, `StopSolver`, `ReelRound`, `Mach
 
 ## Pending Phase 02 acceptance
 
-The new common solver and isolated Paper-side round have **not yet been wired into the production machine dispatcher and Fabric cabinet**, because HYPER_DOG's normal-game engine and screen are separate later Phase work. Therefore the original acceptance clause demanding a **real Paper/Fabric stop-path capture** (input, all three reels, restart and end-to-end player view) has not been performed. The seven user-supplied symbol PNGs are also not in the repo. **Do not set Phase 02 to COMPLETE on this evidence alone.**
+The new common solver and isolated Paper-side round have **not yet been wired into the production machine dispatcher and Fabric cabinet**, because HYPER_DOG's normal-game engine and screen are separate later Phase work. Therefore the original acceptance clause demanding a **real Paper/Fabric stop-path capture** (input, all three reels, restart and end-to-end player view) has not been performed. The seven approved symbol PNGs were subsequently committed in `e950b32df36d8065b726e6499e2a5082af0c7bba`; real Fabric cabinet rendering remains unverified. **Do not set Phase 02 to COMPLETE on this evidence alone.**
 
 **GitHub Actions Piri build PASS** for all new Java source/tests through commit `c94e0a9bc357` (run [42371550379](https://github.com/Pasta0719/PiriJuggler/actions/runs/42371550379), conclusion `success`). The Paper-side tests also passed in run [42371489302](https://github.com/Pasta0719/PiriJuggler/actions/runs/42371489302). Later changes to phase documentation do not introduce game code. This verifies the production build and JUnit test task, **not the real Minecraft player stop path**.
 
@@ -57,7 +57,7 @@ Preserve the newly tested solver and round API; connect `HYPER_DOG` in Paper's m
 
 **Safety boundary**
 - Previously supported machine game engines, probabilities, stored data, and persistent machine types are unchanged. Only the authenticated Fabric network receiver has an existing-file modification; that change is a guarded, additive HYPER_DOG-only hook.
-- Final Phase 02 status remains \`IN_PROGRESS\` until real Paper/Fabric Minecraft runtime capture and final seven PNG assets are available, in accordance with the locked completion criteria.
+- Final Phase 02 status remains \`IN_PROGRESS\` until real Paper/Fabric Minecraft runtime capture; all seven approved PNG assets are now present, in accordance with the locked completion criteria.
 
 
 ## Verified CI for continuation
@@ -65,3 +65,20 @@ Preserve the newly tested solver and round API; connect `HYPER_DOG` in Paper's m
 - [Piri build run 42379006836](https://github.com/Pasta0719/PiriJuggler/actions/runs/42379006836) — **SUCCESS**, fixes red-seven auto-stop validation order in \`5636c2c99bbd\`.
 - [Piri build run 42379156812](https://github.com/Pasta0719/PiriJuggler/actions/runs/42379156812) — **SUCCESS**, verifies \`d8827c0d6d63\` (Fabric receiver hook, 12-profile Paper↔Fabric envelope roundtrip JUnit, all existing test suites, runtime helper build and production packaging).
 - These CI successes verify source tests and packaging, NOT real Minecraft Paper/Fabric gameplay acceptance. Do not conflate a Gradle runtime-helper *build* with running a runtime scenario.
+
+
+## Approved HYPER_DOG symbol artwork — 2026-11-07
+
+The user approved recolored variations of their original orange long-body cat-like figure. All seven **actual PNG files** are committed at `fabric/src/main/resources/assets/piri/textures/gui/original_at/symbols/`, without modifying existing machine textures:
+
+| Filename | Appearance |
+| --- | --- |
+| `replay.png` | Orange |
+| `red7.png` | Aqua/cyan (symbol's legacy name does **not** indicate red appearance) |
+| `rainbow7.png` | Rainbow gradient |
+| `bar.png` | Purple |
+| `grape.png` | Gold/yellow, distinguished from orange replay |
+| `cherry.png` | Red |
+| `watermelon.png` | Green |
+
+Each file is 256×256, RGBA8, transparent-background PNG. Committed at [e950b32](https://github.com/Pasta0719/PiriJuggler/commit/e950b32df36d8065b726e6499e2a5082af0c7bba). The `HyperDogReelImageMapping` paths map directly to these files; the dedicated Fabric cabinet screen has not yet been integrated, so asset presence is not proof of visible gameplay.
