@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "DRAFT_DESIGN_REVIEW_NOT_IMPLEMENTED",
-  "description": "Original AT reel strip pre-design. User supplies symbol artwork; development designs all three arrays and stop control.",
+  "description": "Original AT reel strip pre-design. User supplies only symbol artwork; development designs all three arrays and stop control. Weak cherry uses left+center on middle row, strong cherry uses all three on middle row.",
   "length": 21,
   "index_rule": "index 0..20, ring; visible top=i-1, middle=i, bottom=i+1 mod 21",
   "lines": [
@@ -45,24 +45,24 @@
       "GRAPE",
       "REPLAY",
       "CHERRY",
-      "CHERRY",
-      "CHERRY",
       "GRAPE",
       "REPLAY",
       "WATERMELON",
+      "GRAPE",
       "BAR",
-      "GRAPE",
+      "REPLAY",
       "RED7",
+      "GRAPE",
+      "CHERRY",
+      "REPLAY",
       "WATERMELON",
-      "REPLAY",
-      "CHERRY",
-      "CHERRY",
-      "GRAPE",
-      "REPLAY",
-      "GRAPE",
       "RAINBOW7",
+      "GRAPE",
+      "REPLAY",
+      "BAR",
       "WATERMELON",
-      "REPLAY"
+      "RED7",
+      "RAINBOW7"
     ],
     "CENTER": [
       "GRAPE",
@@ -71,20 +71,20 @@
       "BAR",
       "GRAPE",
       "REPLAY",
-      "RED7",
+      "CHERRY",
       "RAINBOW7",
-      "GRAPE",
+      "CHERRY",
       "REPLAY",
       "WATERMELON",
       "BAR",
       "GRAPE",
-      "REPLAY",
+      "CHERRY",
       "RED7",
       "RAINBOW7",
       "GRAPE",
       "REPLAY",
-      "WATERMELON",
-      "BAR",
+      "GRAPE",
+      "REPLAY",
       "RED7"
     ],
     "RIGHT": [
@@ -97,24 +97,19 @@
       "WATERMELON",
       "RAINBOW7",
       "GRAPE",
+      "CHERRY",
       "REPLAY",
-      "WATERMELON",
       "RED7",
       "GRAPE",
       "REPLAY",
-      "BAR",
+      "CHERRY",
       "RAINBOW7",
       "GRAPE",
       "REPLAY",
       "WATERMELON",
-      "RED7",
+      "CHERRY",
       "BAR"
     ]
-  },
-  "cherry_assumption": {
-    "weak": "LEFT stop=14 shows upper/middle CHERRY only; provisional interpretation of 左中で2連形",
-    "strong": "LEFT stop=3 shows upper/middle/lower CHERRY",
-    "verify_with_user_at_phase01": true
   },
   "special_middle_line": {
     "CHANCE": [
@@ -141,6 +136,16 @@
       "RAINBOW7",
       "NOT_RAINBOW7",
       "RAINBOW7"
+    ],
+    "WEAK_CHERRY": [
+      "CHERRY",
+      "CHERRY",
+      "NOT_CHERRY"
+    ],
+    "STRONG_CHERRY": [
+      "CHERRY",
+      "CHERRY",
+      "CHERRY"
     ]
   },
   "stop_control_proposal": {
@@ -158,5 +163,10 @@
     "cz_manual_stop": "CENTER",
     "CZ_is_zero_bet_zero_payout": true
   },
-  "stage": "Only exact arrays and proof conditions; game balance and AT/normal allocation not implemented."
+  "stage": "Only exact arrays and proof conditions; game balance and AT/normal allocation not implemented.",
+  "cherry_assumption": {
+    "weak": "MIDDLE ROW: LEFT=CHERRY and CENTER=CHERRY, RIGHT != CHERRY (left+middle 2-reel line)",
+    "strong": "MIDDLE ROW: LEFT=CENTER=RIGHT=CHERRY (three-reel line)",
+    "interpretation": "Interpret 左中 as left and middle reels; retain review note only for mid-row specificity."
+  }
 }
