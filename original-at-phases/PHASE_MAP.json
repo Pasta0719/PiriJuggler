@@ -20,9 +20,10 @@
       "title": "Dedicated reels and authoritative stop control",
       "status": "IN_PROGRESS",
       "requires": [
-        "Phase01",
-        "user symbol assets"
-      ]
+        "Phase01"
+      ],
+      "symbol_artwork_required_for_final_fabric_acceptance": true,
+      "evidence": "original-at-phases/PHASE_02_IMPLEMENTATION.md"
     },
     {
       "number": 3,
