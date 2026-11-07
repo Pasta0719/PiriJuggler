@@ -1,4 +1,4 @@
-# ORIGINAL AT — PHASE 04 Lower and upper AT, initial games, BAR, CZ, comeback
+# HYPER_DOG — PHASE 04 Lower and upper AT, initial games, BAR, CZ, comeback
 
 Status: **NOT_STARTED — SPEC_LOCKED**
 
