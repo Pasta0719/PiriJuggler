@@ -37,8 +37,8 @@
 - 操作音等は既存の登録済み`bet/lever/stop/notice/notice_strong/payout/tenpai/bonus_start/bonus_end`を流用。新規サウンドファイル不要。筐体装飾は文字なし、リール/ランプ/小型液晶が主役。
 
 ## 5. 数値モデルの位置づけ
-- 数値の**固定実装基準**：`pirijuggler_new_machine_calibrated_v5.json`（SHA検証済みの既存会話成果物。Phase01でバイト一致のままリポジトリ登録）。対応シミュレーター：`piri_simulate_full_v1.py`。対応レポート：`piri_simulation_report_v5.md`。
-- SHA256(v5 JSON)=`af1ae6f88e6593116692f987534c406673fbbfa73cb25f52615a7f1674c20ab3`、SHA256(sim.py)=`f8ad162cb844bd31e37058732f960ea9db88c0e7e66290acc061e61f253d0664`。**Phase01でバイト一致の実ファイルを本リポジトリへ持込み**、値の手入力や別の数値の混入を禁止する。
+- 数値の**固定実装基準**：`pirijuggler_new_machine_calibrated_v5.json`（[reference/pirijuggler_new_machine_calibrated_v5.json](reference/pirijuggler_new_machine_calibrated_v5.json) として登録済み）。対応シミュレーター：[reference/piri_simulate_full_v1.py](reference/piri_simulate_full_v1.py)。対応レポート：[reference/piri_simulation_report_v5.md](reference/piri_simulation_report_v5.md)。
+- SHA256(v5 JSON)=`af1ae6f88e6593116692f987534c406673fbbfa73cb25f52615a7f1674c20ab3`、SHA256(sim.py)=`f8ad162cb844bd31e37058732f960ea9db88c0e7e66290acc061e61f253d0664`。**実ファイルを本ブランチのreference/に保存済み**。Phase01では上記SHA256を再検証し、値の手入力や別の数値の混入を禁止する。
 - 設定別単独AT倍率は 1:0.2476 / 2:0.2951 / 3:0.3742 / 4:0.4380 / 5:0.5007 / 6:0.7620。モード分母は LOW_A8192、LOW_B4096、NORMAL_A512、NORMAL_B256、HIGH96、SUPER_HIGH12。
 - 独立乱数のv5合算 **4億3,200万有料G**での実測機械割：**96.97 / 99.17 / 102.55 / 104.79 / 107.29 / 115.78%**。目標との最大乖離0.22ポイント。これはMinecraft実装の機械割や実停止制御の検証ではない。
 - BAR確率や通常/AT役確率、移行表、上乗せ振り分け、上位CZ 5G50%、32G引き戻し、0BET扱いなどは **v5 JSON全項目を正として**参照する。シミュレーションと食い違う演出変更をしたら機械割を再試算する。
