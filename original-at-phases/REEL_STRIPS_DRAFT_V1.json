@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "DRAFT_DESIGN_REVIEW_NOT_IMPLEMENTED",
-  "description": "Original AT reel strip pre-design. User supplies only symbol artwork; development designs all three arrays and stop control. Weak cherry uses left+center on middle row, strong cherry uses all three on middle row.",
+  "description": "User supplies images only. Design uses 21-position independent physical strips. MISS/GRAPE/REPLAY complete within <=4 slips for every press index and stop order, with zero false payout. Rare roles, BAR, AT-entry RED7 and CZ RAINBOW7 must be pulled even if >4 slots.",
   "length": 21,
   "index_rule": "index 0..20, ring; visible top=i-1, middle=i, bottom=i+1 mod 21",
   "lines": [
@@ -42,73 +42,73 @@
   ],
   "reels": {
     "LEFT": [
+      "RED7",
       "GRAPE",
       "REPLAY",
+      "RAINBOW7",
       "CHERRY",
       "GRAPE",
       "REPLAY",
       "WATERMELON",
-      "GRAPE",
-      "BAR",
-      "REPLAY",
-      "RED7",
-      "GRAPE",
       "CHERRY",
+      "BAR",
+      "GRAPE",
       "REPLAY",
       "WATERMELON",
       "RAINBOW7",
       "GRAPE",
       "REPLAY",
-      "BAR",
       "WATERMELON",
       "RED7",
-      "RAINBOW7"
+      "GRAPE",
+      "REPLAY",
+      "BAR"
     ],
     "CENTER": [
-      "GRAPE",
-      "REPLAY",
       "WATERMELON",
-      "BAR",
+      "RED7",
       "GRAPE",
       "REPLAY",
       "CHERRY",
+      "BAR",
+      "GRAPE",
+      "REPLAY",
+      "BAR",
       "RAINBOW7",
-      "CHERRY",
-      "REPLAY",
-      "WATERMELON",
-      "BAR",
       "GRAPE",
+      "REPLAY",
       "CHERRY",
+      "CHERRY",
+      "GRAPE",
+      "REPLAY",
       "RED7",
       "RAINBOW7",
+      "WATERMELON",
       "GRAPE",
-      "REPLAY",
-      "GRAPE",
-      "REPLAY",
-      "RED7"
+      "REPLAY"
     ],
     "RIGHT": [
+      "BAR",
+      "GRAPE",
+      "REPLAY",
+      "RAINBOW7",
+      "CHERRY",
       "GRAPE",
       "REPLAY",
       "BAR",
-      "RED7",
-      "GRAPE",
-      "REPLAY",
-      "WATERMELON",
-      "RAINBOW7",
-      "GRAPE",
-      "CHERRY",
-      "REPLAY",
-      "RED7",
-      "GRAPE",
-      "REPLAY",
-      "CHERRY",
       "RAINBOW7",
       "GRAPE",
       "REPLAY",
       "WATERMELON",
       "CHERRY",
-      "BAR"
+      "GRAPE",
+      "REPLAY",
+      "RED7",
+      "WATERMELON",
+      "GRAPE",
+      "REPLAY",
+      "CHERRY",
+      "RED7"
     ]
   },
   "special_middle_line": {
@@ -146,16 +146,41 @@
       "CHERRY",
       "CHERRY",
       "CHERRY"
+    ],
+    "AT_ENTRY_RED7": [
+      "RED7",
+      "RED7",
+      "RED7"
     ]
   },
   "stop_control_proposal": {
     "server_authoritative": true,
+    "stop_max_slip_common": 4,
+    "common_roles": [
+      "MISS",
+      "GRAPE",
+      "REPLAY"
+    ],
+    "common_roles_must_complete_every_stop_order": true,
+    "guaranteed_extended_roles": [
+      "WATERMELON",
+      "WEAK_CHERRY",
+      "STRONG_CHERRY",
+      "CHANCE",
+      "STRONG_CHANCE",
+      "BAR",
+      "AT_ENTRY_RED7",
+      "CZ_WIN",
+      "CZ_LOSE"
+    ],
+    "guaranteed_extended_slip_max": 20,
+    "guaranteed_extended_slip_approved": true,
+    "override_slip_on_guaranteed_results": true,
+    "no_teleport": "Play the actual intervening reel rotation before stopping; no symbol jumping",
     "first_select_by_legal_completion": true,
-    "preferred_slip_max": 4,
-    "extended_slip_max": 20,
-    "extended_slip_requires_phase01_approval": true,
-    "pressed_index_effect": "Select minimum allowed slip on pressed reel from valid remaining completions, retaining candidate continuations for subsequent stop buttons.",
-    "never_assign_wrong_role": true,
+    "unconfirmed_premium_lines_forbidden": true,
+    "at_entry_display": "AT win guarantees middle RED7/RED7/RED7; when entry overlaps a payable role, preserve the server-determined payout and show RED7 as an entry presentation, never change the drawn role or award",
+    "pressed_index_effect": "Common roles use <=4 slip and preserve safe completion under every later input/order; guaranteed roles use 0..20 for deterministically valid completion.",
     "cz_auto_stop": [
       "LEFT",
       "RIGHT"
@@ -163,10 +188,10 @@
     "cz_manual_stop": "CENTER",
     "CZ_is_zero_bet_zero_payout": true
   },
-  "stage": "Only exact arrays and proof conditions; game balance and AT/normal allocation not implemented.",
+  "stage": "Specified physical arrays + stop proof requirements, not yet imported into Minecraft game code.",
   "cherry_assumption": {
     "weak": "MIDDLE ROW: LEFT=CHERRY and CENTER=CHERRY, RIGHT != CHERRY (left+middle 2-reel line)",
     "strong": "MIDDLE ROW: LEFT=CENTER=RIGHT=CHERRY (three-reel line)",
-    "interpretation": "Interpret 左中 as left and middle reels; retain review note only for mid-row specificity."
+    "interpretation": "Weak is left+center cherries aligned on middle row; strong is 3 middle-row cherries; developer-arranged, user provided 2/3-coin pattern."
   }
 }
