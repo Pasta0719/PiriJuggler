@@ -1,4 +1,4 @@
-# PiriJuggler オリジナルAT新機種 — Phase設計（ユーザー確認用）
+# PiriJuggler オリジナルAT新機種 — Phase実装仕様
 
 **計画状態：初期実装仕様を確定済み／ゲームコード実装は未着手。** 作成日 2026-11-07。ユーザーの実機確認後の演出微調整は可能。
 
@@ -6,11 +6,12 @@
 
 ## 読む順番
 1. [SPEC_LOCK.md](SPEC_LOCK.md) — ユーザーが決めた機能・ゲーム性の正本。
-2. [IMPLEMENTATION_DECISIONS_V1.md](IMPLEMENTATION_DECISIONS_V1.md) — 旧「未決定・確認待ち」を**実装できる具体値・時刻・順序にすべて決定**した文書。
+2. [IMPLEMENTATION_DECISIONS_V1.md](IMPLEMENTATION_DECISIONS_V1.md) — 演出競合・UI・機種型など**全項目の確定判断**。
 3. [REEL_DESIGN_V1.md](REEL_DESIGN_V1.md) — 21コマ×3本の具体配列・4コマ通常／確定引込み。
-4. [reference/pirijuggler_new_machine_calibrated_v5.json](reference/pirijuggler_new_machine_calibrated_v5.json) と[シミュレーター](reference/piri_simulate_full_v1.py) — 数値の固定実装基準。
-5. [PHASE_MAP.json](PHASE_MAP.json) — 8 Phase の順序と依存関係。
-6. [PHASE_01_DESIGN_FREEZE.md](PHASE_01_DESIGN_FREEZE.md) から順に、**そのPhaseだけ**を実行。既存 `CHANGE_SAFETY_POLICY.md` と `CODEX_START.md` は常に優先。
+4. [PRESENTATION_RULES_V1.json](PRESENTATION_RULES_V1.json) — 色・点灯数・演出時刻・座標の実装用JSON。
+5. [reference/pirijuggler_new_machine_calibrated_v5.json](reference/pirijuggler_new_machine_calibrated_v5.json) と[シミュレーター](reference/piri_simulate_full_v1.py) — 数値の固定実装基準。
+6. [PHASE_MAP.json](PHASE_MAP.json) — 8 Phase の順序と依存関係。
+7. [PHASE_01_DESIGN_FREEZE.md](PHASE_01_DESIGN_FREEZE.md) から順に、**そのPhaseだけ**を実行。既存 `CHANGE_SAFETY_POLICY.md` と `CODEX_START.md` は常に優先。
 
 ## Phase02リール配列の先行設計
 
@@ -28,7 +29,7 @@
 | 07 | データランプ・管理画面・観覧/遠隔・音・復帰統合 | 既存システムとの接続 |
 | 08 | v5数値の実装照合・実Minecraft総合受入・回帰 | 完成判定と証跡 |
 
-**依存関係**：01→02→03→04→05→06→07→08。01の後、ユーザーが図柄画像を未提供でも02の**配列設計・停止制御のロジック実装は進める**。ただし02の最終Fabric描画受入は実画像なしではCOMPLETEにしない（表示部分のみBLOCKED）。**リール配列表をユーザーに要求しない。**各Phase内で必要な実ランタイム検証ができない場合も同様。
+**依存関係**：01→02→03→04→05→06→07→08。01の後、ユーザーが図柄画像を未提供でも02の**配列設計・停止制御のロジック実装は進める**。ただし02の最終Fabric描画受入は実画像なしではCOMPLETEにしない（表示部分のみBLOCKED）。**リール配列表をユーザーに要求しない。** 各Phase内で必要な実ランタイム検証ができない場合も同様。
 
 ## 設計の位置づけ
 - 【ユーザー確定】ゲームの構造・枚数・出目・CZ・ランプの色順・4コマ通常と確定引込みは変更不可。
