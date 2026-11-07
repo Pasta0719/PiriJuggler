@@ -36,3 +36,25 @@ The new common solver and isolated Paper-side round have **not yet been wired in
 ## Next concrete integration
 
 Preserve the newly tested solver and round API; connect `HYPER_DOG` in Paper's machine creation/session/persistence path, pass server-authoritative pressedIndex/stopIndex/slip/duration to Fabric, draw the dedicated seven texture paths, and capture a real 3-stop Paper/Fabric runtime trace. Reuse the 666,792 matrix as a regression test. Never declare unexecuted runtime verification PASS.
+
+
+## Continuation — Paper/Fabric transport contract (2026-11-07)
+
+**New isolated source files**
+- \`paper/src/main/java/jp/pirijuggler/paper/reel/HyperDogStopSession.java\` — server-owned per-spin stop protocol over existing \`Envelope\` / \`PacketType\`, client input validation, separate client sequence and automatic transitions, monotonic input rejection, support for replaying the last 3 stops after a reconnect, and JSON snapshot serialization.
+- \`fabric/src/main/java/jp/pirijuggler/fabric/ui/HyperDogClientReels.java\` — client-side stop and symbol display model, consuming only SPIN_START and REEL_STOP after HYPER_DOG OPEN_MACHINE; 3-column/3-row symbols and dedicated PNG paths without revealing the server's internal role.
+- \`fabric/src/test/java/jp/pirijuggler/fabric/ui/HyperDogClientReelsTest.java\` — 12-role Paper packet → EnvelopeCodec → Fabric model integration tests, including correct stops, roundtrip reconnect, no hidden role transmitted, duplicate and foreign-spin packets.
+- \`original-at-phases/validate_symbol_assets.py\` — validates seven user-supplied PNGs against 256×256 RGBA specification, CRC, complete PNG structure. Does not create substitute graphics.
+
+**Updated production receiver**
+- \`fabric/src/main/java/jp/pirijuggler/fabric/PiriJugglerClient.java\` attaches an isolated HYPER_DOG renderer data model to existing authenticated incoming packets only when the new machine type is open; the existing slot screen dispatch and existing machine rendering paths are not changed.
+- \`HyperDogRound\` now keeps server automatic CZ/AT stop events out of the client's sequence counter. In a timed CZ spin, left auto-stops at 500ms, right at 700ms, only center accepts player input after 900ms. The AT red-seven presentation completes automatic stops at 720ms and reserves 320ms before unlocking a next game.
+- The adapter is deliberately **not yet** registered as a production GameEngine and never creates a playable HYPER_DOG machine. Full economic game-engine/session integration requires exact Phase03–04 logic; the cabinet requires Phase05. Adding the new enum alone now would advertise an unusable machine and is explicitly avoided. The actual Paper→Minecraft networking transport and final 7-PNG Fabric rendering are **not yet proven in a live Minecraft session**.
+
+**Failure and fix tracked**
+- Two initial CI runs \`42378504168\` and \`42378613943\` failed one new test: AT red-seven manual input after the three auto-stops returned \`ALREADY_STOPPED\` rather than \`INVALID_STATE\`. The server adapter's validation priority was corrected in commit \`5636c2c99bbd\`.
+- Subsequent \`Piri build\` jobs were started for the corrected server adapter and isolated Fabric receiver. Record conclusive success/failure separately; no CI job is counted PASS while still in progress.
+
+**Safety boundary**
+- Previously supported machine game engines, probabilities, stored data, and persistent machine types are unchanged. Only the authenticated Fabric network receiver has an existing-file modification; that change is a guarded, additive HYPER_DOG-only hook.
+- Final Phase 02 status remains \`IN_PROGRESS\` until real Paper/Fabric Minecraft runtime capture and final seven PNG assets are available, in accordance with the locked completion criteria.
