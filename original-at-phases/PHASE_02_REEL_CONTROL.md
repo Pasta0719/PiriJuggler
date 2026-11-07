@@ -1,12 +1,14 @@
 # HYPER_DOG — PHASE 02 Reels, symbols, and server-authoritative stops
 
-Status: **NOT_STARTED — SPEC_LOCKED**
+Status: **IN_PROGRESS — JAVA_STOP_SOLVER_AND_TESTS_ADDED**
+
+**実装・検証レポート:** [PHASE_02_IMPLEMENTATION.md](PHASE_02_IMPLEMENTATION.md)。Java停止ソルバー、Paper停止ラウンド、全666,792履歴のローカル検証PASS。実Paper/Fabric経路・実Minecraft受入は未実施であり本PhaseをCOMPLETEとはしない。
 
 ## 先行設計・静的検証（実装前に作成済み）
 - **[REEL_DESIGN_V1.md](REEL_DESIGN_V1.md)**：左・中・右それぞれ21コマの**更新後の配列**、通常4コマ停止、レア・確定引込み、AT赤7揃い、役別合法出目。
 - **[REEL_STRIPS_DRAFT_V1.json](REEL_STRIPS_DRAFT_V1.json)**：機械可読のリール配列と形状制約。
 - **[validate_reels.py](validate_reels.py)**：9,261最終停止3つ組の静的設計検証。実Minecraftの停止ソルバー・実機試験とは別。
-- **21コマ配列と停止条件は設計確定済み。** ハズレ・ブドウ・リプレイは全停止順/全押下位置で4コマ以内、レア役・BAR・AT赤7・CZ虹7は4コマを超えても確定引込み（最大20コマ）。赤7は元役入賞・払出の後、無償の再回転で必ず揃える。**本Phaseの実コード・実Minecraft受入は未着手**。
+- **21コマ配列と停止条件は設計確定済み。** ハズレ・ブドウ・リプレイは全停止順/全押下位置で4コマ以内、レア役・BAR・AT赤7・CZ虹7は4コマを超えても確定引込み（最大20コマ）。赤7は元役入賞・払出の後、無償の再回転で必ず揃える。**Javaコア・Paper側単独ラウンドは実装済み。Minecraft本体への接続と実機受入は未着手**。
 
 ## 実装対象
 - **ユーザーが用意するのは図柄画像のみ。左・中・右3本の図柄の並び順（配列）は本Phaseで開発側が設計・決定する。** 配列表の提出をユーザーに求めない。
