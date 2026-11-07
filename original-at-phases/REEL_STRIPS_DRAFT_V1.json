@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "status": "SPEC_LOCKED_NOT_IMPLEMENTED",
+  "description": "User artwork only; exact 21-slot physical strips and stop control are fixed for HYPER_DOG initial implementation.",
+  "length": 21,
+  "index_rule": "index 0..20, ring; visible top=i-1, middle=i, bottom=i+1 mod 21",
+  "lines": [
+    [
+      -1,
+      -1,
+      -1
+    ],
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      -1,
+      0,
+      1
+    ],
+    [
+      1,
+      0,
+      -1
+    ]
+  ],
+  "symbols": [
+    "GRAPE",
+    "REPLAY",
+    "CHERRY",
+    "WATERMELON",
+    "RED7",
+    "BAR",
+    "RAINBOW7"
+  ],
+  "reels": {
+    "LEFT": [
+      "RED7",
+      "GRAPE",
+      "REPLAY",
+      "RAINBOW7",
+      "CHERRY",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "CHERRY",
+      "BAR",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "RAINBOW7",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "RED7",
+      "GRAPE",
+      "REPLAY",
+      "BAR"
+    ],
+    "CENTER": [
+      "WATERMELON",
+      "RED7",
+      "GRAPE",
+      "REPLAY",
+      "CHERRY",
+      "BAR",
+      "GRAPE",
+      "REPLAY",
+      "BAR",
+      "RAINBOW7",
+      "GRAPE",
+      "REPLAY",
+      "CHERRY",
+      "CHERRY",
+      "GRAPE",
+      "REPLAY",
+      "RED7",
+      "RAINBOW7",
+      "WATERMELON",
+      "GRAPE",
+      "REPLAY"
+    ],
+    "RIGHT": [
+      "BAR",
+      "GRAPE",
+      "REPLAY",
+      "RAINBOW7",
+      "CHERRY",
+      "GRAPE",
+      "REPLAY",
+      "BAR",
+      "RAINBOW7",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "CHERRY",
+      "GRAPE",
+      "REPLAY",
+      "RED7",
+      "WATERMELON",
+      "GRAPE",
+      "REPLAY",
+      "CHERRY",
+      "RED7"
+    ]
+  },
+  "special_middle_line": {
+    "CHANCE": [
+      "RED7",
+      "BAR",
+      "RED7"
+    ],
+    "STRONG_CHANCE": [
+      "RED7",
+      "BAR",
+      "RAINBOW7"
+    ],
+    "BAR": [
+      "BAR",
+      "BAR",
+      "BAR"
+    ],
+    "CZ_WIN": [
+      "RAINBOW7",
+      "RAINBOW7",
+      "RAINBOW7"
+    ],
+    "CZ_LOSE": [
+      "RAINBOW7",
+      "NOT_RAINBOW7",
+      "RAINBOW7"
+    ],
+    "WEAK_CHERRY": [
+      "CHERRY",
+      "CHERRY",
+      "NOT_CHERRY"
+    ],
+    "STRONG_CHERRY": [
+      "CHERRY",
+      "CHERRY",
+      "CHERRY"
+    ],
+    "AT_ENTRY_RED7": [
+      "RED7",
+      "RED7",
+      "RED7"
+    ]
+  },
+  "stage": "Specified physical arrays + stop proof requirements, not yet imported into Minecraft game code.",
+  "stop_control_spec": {
+    "server_authoritative": true,
+    "stop_max_slip_common": 4,
+    "common_roles": [
+      "MISS",
+      "GRAPE",
+      "REPLAY"
+    ],
+    "common_roles_must_complete_every_stop_order": true,
+    "guaranteed_extended_roles": [
+      "WATERMELON",
+      "WEAK_CHERRY",
+      "STRONG_CHERRY",
+      "CHANCE",
+      "STRONG_CHANCE",
+      "BAR",
+      "AT_ENTRY_RED7",
+      "CZ_WIN",
+      "CZ_LOSE"
+    ],
+    "guaranteed_extended_slip_max": 20,
+    "guaranteed_extended_slip_approved": true,
+    "override_slip_on_guaranteed_results": true,
+    "no_teleport": "Play the actual intervening reel rotation before stopping; no symbol jumping",
+    "first_select_by_legal_completion": true,
+    "unconfirmed_premium_lines_forbidden": true,
+    "at_entry_display": "AT win guarantees middle RED7/RED7/RED7; when entry overlaps a payable role, preserve the server-determined payout and show RED7 as an entry presentation, never change the drawn role or award",
+    "pressed_index_effect": "Common roles use <=4 slip and preserve safe completion under every later input/order; guaranteed roles use 0..20 for deterministically valid completion.",
+    "cz_auto_stop": [
+      "LEFT",
+      "RIGHT"
+    ],
+    "cz_manual_stop": "CENTER",
+    "CZ_is_zero_bet_zero_payout": true
+  },
+  "cherry_rule": {
+    "weak": "MIDDLE ROW: LEFT=CHERRY and CENTER=CHERRY, RIGHT != CHERRY (left+middle 2-reel line)",
+    "strong": "MIDDLE ROW: LEFT=CENTER=RIGHT=CHERRY (three-reel line)",
+    "interpretation": "Weak is left+center cherries aligned on middle row; strong is 3 middle-row cherries; developer-arranged, user provided 2/3-coin pattern."
+  },
+  "machine_type": "HYPER_DOG"
+}
