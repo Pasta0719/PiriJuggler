@@ -122,12 +122,14 @@ public final class HyperDogStopSession {
             if(reel==null) {
                 events.add(ErrorPackets.rejected(sequence,ErrorCode.INVALID_STATE));return events;
             }
-            if((round.stoppedMask()&reel.bit())!=0){
-                events.add(ErrorPackets.rejected(sequence,ErrorCode.ALREADY_STOPPED));return events;
-            }
+            // Non-manual presentation paths reject input regardless of auto-stop progress.
+            // A complete red-seven animation is still input-locked, not a user stop.
             if(round.role()==HyperDogReelControl.Role.AT_ENTRY_RED7 ||
                 (isCz() && reel!=Reel.CENTER)) {
                 events.add(ErrorPackets.rejected(sequence,ErrorCode.INVALID_STATE));return events;
+            }
+            if((round.stoppedMask()&reel.bit())!=0){
+                events.add(ErrorPackets.rejected(sequence,ErrorCode.ALREADY_STOPPED));return events;
             }
             if(nowMs<startedEpochMs || nowMs-startedEpochMs < (isCz()?900:650)){
                 events.add(ErrorPackets.rejected(sequence,ErrorCode.STOP_TOO_EARLY));return events;
