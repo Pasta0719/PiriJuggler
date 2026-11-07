@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "SPEC_LOCKED_NOT_IMPLEMENTED",
-  "description": "User artwork only; exact 21-slot physical strips and stop control are fixed for original AT initial implementation.",
+  "description": "User artwork only; exact 21-slot physical strips and stop control are fixed for HYPER_DOG initial implementation.",
   "length": 21,
   "index_rule": "index 0..20, ring; visible top=i-1, middle=i, bottom=i+1 mod 21",
   "lines": [
@@ -193,5 +193,6 @@
     "weak": "MIDDLE ROW: LEFT=CHERRY and CENTER=CHERRY, RIGHT != CHERRY (left+middle 2-reel line)",
     "strong": "MIDDLE ROW: LEFT=CENTER=RIGHT=CHERRY (three-reel line)",
     "interpretation": "Weak is left+center cherries aligned on middle row; strong is 3 middle-row cherries; developer-arranged, user provided 2/3-coin pattern."
-  }
+  },
+  "machine_type": "HYPER_DOG"
 }
