@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "status": "PLAN_DRAFT_NOT_APPROVED",
+  "scope": "Original AT direct-win machine. Independent from retired standalone GOD and existing NEXT machine.",
+  "entrypoint": "original-at-phases/README.md",
+  "spec": "original-at-phases/SPEC_LOCK.md",
+  "one_phase_per_run": true,
+  "legacy_phases_unchanged": true,
+  "phases": [
+    {
+      "number": 1,
+      "file": "original-at-phases/PHASE_01_DESIGN_FREEZE.md",
+      "title": "Design lock / v5 parameter import / approvals",
+      "status": "NOT_STARTED"
+    },
+    {
+      "number": 2,
+      "file": "original-at-phases/PHASE_02_REEL_CONTROL.md",
+      "title": "Dedicated reels and authoritative stop control",
+      "status": "NOT_STARTED",
+      "requires": [
+        "Phase01",
+        "user symbol assets"
+      ]
+    },
+    {
+      "number": 3,
+      "file": "original-at-phases/PHASE_03_NORMAL_MODE.md",
+      "title": "Machine family / normal game / six-mode lottery",
+      "status": "NOT_STARTED",
+      "requires": [
+        "Phase02"
+      ]
+    },
+    {
+      "number": 4,
+      "file": "original-at-phases/PHASE_04_AT_CZ_ECONOMY.md",
+      "title": "Lower and upper AT / BAR / CZ / comeback / persistence",
+      "status": "NOT_STARTED",
+      "requires": [
+        "Phase03"
+      ]
+    },
+    {
+      "number": 5,
+      "file": "original-at-phases/PHASE_05_FABRIC_CABINET.md",
+      "title": "Fabric cabinet and input layout / status displays",
+      "status": "NOT_STARTED",
+      "requires": [
+        "Phase04"
+      ]
+    },
+    {
+      "number": 6,
+      "file": "original-at-phases/PHASE_06_PRESENTATION.md",
+      "title": "Lamp animation / reel flash / TOTAL / CZ rainbow seven",
+      "status": "NOT_STARTED",
+      "requires": [
+        "Phase05"
+      ]
+    },
+    {
+      "number": 7,
+      "file": "original-at-phases/PHASE_07_ECOSYSTEM.md",
+      "title": "Admin / data lamp / remote world-mobile / sounds / recovery",
+      "status": "NOT_STARTED",
+      "requires": [
+        "Phase06"
+      ]
+    },
+    {
+      "number": 8,
+      "file": "original-at-phases/PHASE_08_FINAL_ACCEPTANCE.md",
+      "title": "Economy calibration / full runtime regression / release",
+      "status": "NOT_STARTED",
+      "requires": [
+        "Phase07"
+      ]
+    }
+  ]
+}
