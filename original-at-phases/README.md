@@ -10,6 +10,10 @@
 3. [PHASE_01_DESIGN_FREEZE.md](PHASE_01_DESIGN_FREEZE.md) から順に、**そのPhaseだけ**を実行。
 4. 既存 `CHANGE_SAFETY_POLICY.md` と `CODEX_START.md` は常に優先。
 
+## Phase02リール配列の先行設計
+
+[REEL_DESIGN_V1.md](REEL_DESIGN_V1.md) に**21コマ×3本の具体的な配列・停止例・停止制御案**を先行記録。配列JSONと9,261通りを列挙する静的検証スクリプトも追加済み。これは実装完了や4コマ滑り保証ではない。図柄画像のみユーザー提供で、配列・ソルバーは開発側が担当する。
+
 ## 実行順
 | Phase | 作業 | 成果物 |
 | --- | --- | --- |
