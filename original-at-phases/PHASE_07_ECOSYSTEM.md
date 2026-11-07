@@ -1,6 +1,6 @@
 # ORIGINAL AT — PHASE 07 Admin, data lamp, remote view, mobile, audio, recovery
 
-Status: **NOT_STARTED — PLAN_DRAFT**
+Status: **NOT_STARTED — SPEC_LOCKED**
 
 ## 実装対象
 - `ORIGINAL_AT`の設定投入・種類変更・ホール粗利運営、データランプ履歴/AT初当たり/上位・CZ・BAR・引き戻し記録と差枚集計を整合させる。既存のBIG/REGに虚偽集計しない。機種表示名は`Piri AT`だが筐体には文字を置かない。

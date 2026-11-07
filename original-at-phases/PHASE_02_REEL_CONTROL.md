@@ -1,6 +1,6 @@
 # ORIGINAL AT — PHASE 02 Reels, symbols, and server-authoritative stops
 
-Status: **NOT_STARTED — PLAN_DRAFT**
+Status: **NOT_STARTED — SPEC_LOCKED**
 
 ## 先行設計・静的検証（実装前に作成済み）
 - **[REEL_DESIGN_V1.md](REEL_DESIGN_V1.md)**：左・中・右それぞれ21コマの**更新後の配列**、通常4コマ停止、レア・確定引込み、AT赤7揃い、役別合法出目。

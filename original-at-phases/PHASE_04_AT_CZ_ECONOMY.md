@@ -1,6 +1,6 @@
 # ORIGINAL AT — PHASE 04 Lower and upper AT, initial games, BAR, CZ, comeback
 
-Status: **NOT_STARTED — PLAN_DRAFT**
+Status: **NOT_STARTED — SPEC_LOCKED**
 
 ## 実装対象
 - 下位初期無料1Gの150枚保証・役加算、下位AT差枚消化・レア役上乗せ・CZ権利累積。

@@ -1,6 +1,6 @@
 # ORIGINAL AT — PHASE 03 Machine identity, normal game, and six-mode lottery
 
-Status: **NOT_STARTED — PLAN_DRAFT**
+Status: **NOT_STARTED — SPEC_LOCKED**
 
 ## 実装対象
 - 既存機種を維持した独立新機種型・Paper専用ゲームエンジン・設定1〜6。旧GODの未完了部分は再利用しない。

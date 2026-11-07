@@ -1,6 +1,6 @@
 # ORIGINAL AT — PHASE 06 Lamp progression, flashes, TOTAL, and rainbow-seven CZ
 
-Status: **NOT_STARTED — PLAN_DRAFT**
+Status: **NOT_STARTED — SPEC_LOCKED**
 
 ## 実装対象
 - 右3灯：**正の上乗せ付与Gだけ**レバーON1灯、第1停止2灯化または色変化、第2停止3灯化または色変化（変化なしも可）。**0枚上乗せは消灯**。色序列は白＜青＜緑＜黄＜紫＜赤＜虹。**枚数別色分布・最終灯数分布・色/灯数の変化時刻は [IMPLEMENTATION_DECISIONS_V1.md](IMPLEMENTATION_DECISIONS_V1.md) 第18〜24項に完全定義済み。**

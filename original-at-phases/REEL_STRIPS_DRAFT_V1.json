@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "status": "DRAFT_DESIGN_REVIEW_NOT_IMPLEMENTED",
-  "description": "User supplies images only. Design uses 21-position independent physical strips. MISS/GRAPE/REPLAY complete within <=4 slips for every press index and stop order, with zero false payout. Rare roles, BAR, AT-entry RED7 and CZ RAINBOW7 must be pulled even if >4 slots.",
+  "status": "SPEC_LOCKED_NOT_IMPLEMENTED",
+  "description": "User artwork only; exact 21-slot physical strips and stop control are fixed for original AT initial implementation.",
   "length": 21,
   "index_rule": "index 0..20, ring; visible top=i-1, middle=i, bottom=i+1 mod 21",
   "lines": [
@@ -153,7 +153,8 @@
       "RED7"
     ]
   },
-  "stop_control_proposal": {
+  "stage": "Specified physical arrays + stop proof requirements, not yet imported into Minecraft game code.",
+  "stop_control_spec": {
     "server_authoritative": true,
     "stop_max_slip_common": 4,
     "common_roles": [
@@ -188,8 +189,7 @@
     "cz_manual_stop": "CENTER",
     "CZ_is_zero_bet_zero_payout": true
   },
-  "stage": "Specified physical arrays + stop proof requirements, not yet imported into Minecraft game code.",
-  "cherry_assumption": {
+  "cherry_rule": {
     "weak": "MIDDLE ROW: LEFT=CHERRY and CENTER=CHERRY, RIGHT != CHERRY (left+middle 2-reel line)",
     "strong": "MIDDLE ROW: LEFT=CENTER=RIGHT=CHERRY (three-reel line)",
     "interpretation": "Weak is left+center cherries aligned on middle row; strong is 3 middle-row cherries; developer-arranged, user provided 2/3-coin pattern."

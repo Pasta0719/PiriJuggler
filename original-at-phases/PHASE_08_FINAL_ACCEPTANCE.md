@@ -1,6 +1,6 @@
 # ORIGINAL AT — PHASE 08 Numerical verification and final real-Minecraft release gate
 
-Status: **NOT_STARTED — PLAN_DRAFT**
+Status: **NOT_STARTED — SPEC_LOCKED**
 
 ## 実装対象
 - v5数値正本とPaperの全乱数判定・モード遷移・上乗せ・BET/配当・連続役・特別区間の実装を自動照合。

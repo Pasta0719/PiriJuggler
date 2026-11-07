@@ -1,6 +1,6 @@
 # ORIGINAL AT — PHASE 01 Design lock, approval, and numerical source
 
-Status: **NOT_STARTED — PLAN_DRAFT**
+Status: **NOT_STARTED — SPEC_LOCKED**
 
 ## 実装対象
 - 会話で確定した仕様と試作承認案の差分を、`SPEC_LOCK.md`へ反映してレビュー承認を得る。

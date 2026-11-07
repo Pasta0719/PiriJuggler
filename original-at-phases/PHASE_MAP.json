@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "PLAN_DRAFT_NOT_APPROVED",
+  "status": "SPEC_LOCKED_IMPLEMENTATION_NOT_STARTED",
   "scope": "Original AT direct-win machine. Independent from retired standalone GOD and existing NEXT machine.",
   "entrypoint": "original-at-phases/README.md",
   "spec": "original-at-phases/SPEC_LOCK.md",
@@ -77,5 +77,8 @@
         "Phase07"
       ]
     }
-  ]
+  ],
+  "implementation_decisions": "original-at-phases/IMPLEMENTATION_DECISIONS_V1.md",
+  "numeric_reference": "original-at-phases/reference/pirijuggler_new_machine_calibrated_v5.json",
+  "spec_has_open_decisions": false
 }

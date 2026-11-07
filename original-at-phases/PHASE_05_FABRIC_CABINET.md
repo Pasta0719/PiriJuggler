@@ -1,6 +1,6 @@
 # ORIGINAL AT — PHASE 05 Existing controls, cabinet, indicators and tiny display
 
-Status: **NOT_STARTED — PLAN_DRAFT**
+Status: **NOT_STARTED — SPEC_LOCKED**
 
 ## 実装対象
 - 現行 `SlotLayout.java` の LEVER→BET→左中右停止ボタン、リール直下CREDIT/BET/PAY/MEDALS、データランプは既存と同配置。MAX BETを端へ移すUI改変禁止。
