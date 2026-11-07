@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "SPEC_LOCKED_IMPLEMENTATION_NOT_STARTED",
+  "status": "PHASE_02_IN_PROGRESS",
   "scope": "Original AT direct-win machine. Independent from retired standalone GOD and existing NEXT machine.",
   "entrypoint": "original-at-phases/README.md",
   "spec": "original-at-phases/SPEC_LOCK.md",
@@ -11,13 +11,14 @@
       "number": 1,
       "file": "original-at-phases/PHASE_01_DESIGN_FREEZE.md",
       "title": "Design lock / v5 parameter import / approvals",
-      "status": "NOT_STARTED"
+      "status": "COMPLETE",
+      "evidence": "original-at-phases/PHASE_01_VERIFICATION.md"
     },
     {
       "number": 2,
       "file": "original-at-phases/PHASE_02_REEL_CONTROL.md",
       "title": "Dedicated reels and authoritative stop control",
-      "status": "NOT_STARTED",
+      "status": "IN_PROGRESS",
       "requires": [
         "Phase01",
         "user symbol assets"
