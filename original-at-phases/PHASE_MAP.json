@@ -80,5 +80,6 @@
   ],
   "implementation_decisions": "original-at-phases/IMPLEMENTATION_DECISIONS_V1.md",
   "numeric_reference": "original-at-phases/reference/pirijuggler_new_machine_calibrated_v5.json",
-  "spec_has_open_decisions": false
+  "spec_has_open_decisions": false,
+  "machine_type": "HYPER_DOG"
 }
