@@ -1,4 +1,4 @@
-# ORIGINAL AT — PHASE 05 Existing controls, cabinet, indicators and tiny display
+# HYPER_DOG — PHASE 05 Existing controls, cabinet, indicators and tiny display
 
 Status: **NOT_STARTED — SPEC_LOCKED**
 
