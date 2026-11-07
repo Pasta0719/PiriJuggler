@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "status": "DRAFT_DESIGN_REVIEW_NOT_IMPLEMENTED",
+  "description": "Original AT reel strip pre-design. User supplies symbol artwork; development designs all three arrays and stop control.",
+  "length": 21,
+  "index_rule": "index 0..20, ring; visible top=i-1, middle=i, bottom=i+1 mod 21",
+  "lines": [
+    [
+      -1,
+      -1,
+      -1
+    ],
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      -1,
+      0,
+      1
+    ],
+    [
+      1,
+      0,
+      -1
+    ]
+  ],
+  "symbols": [
+    "GRAPE",
+    "REPLAY",
+    "CHERRY",
+    "WATERMELON",
+    "RED7",
+    "BAR",
+    "RAINBOW7"
+  ],
+  "reels": {
+    "LEFT": [
+      "GRAPE",
+      "REPLAY",
+      "CHERRY",
+      "CHERRY",
+      "CHERRY",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "BAR",
+      "GRAPE",
+      "RED7",
+      "WATERMELON",
+      "REPLAY",
+      "CHERRY",
+      "CHERRY",
+      "GRAPE",
+      "REPLAY",
+      "GRAPE",
+      "RAINBOW7",
+      "WATERMELON",
+      "REPLAY"
+    ],
+    "CENTER": [
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "BAR",
+      "GRAPE",
+      "REPLAY",
+      "RED7",
+      "RAINBOW7",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "BAR",
+      "GRAPE",
+      "REPLAY",
+      "RED7",
+      "RAINBOW7",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "BAR",
+      "RED7"
+    ],
+    "RIGHT": [
+      "GRAPE",
+      "REPLAY",
+      "BAR",
+      "RED7",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "RAINBOW7",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "RED7",
+      "GRAPE",
+      "REPLAY",
+      "BAR",
+      "RAINBOW7",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "RED7",
+      "BAR"
+    ]
+  },
+  "cherry_assumption": {
+    "weak": "LEFT stop=14 shows upper/middle CHERRY only; provisional interpretation of 左中で2連形",
+    "strong": "LEFT stop=3 shows upper/middle/lower CHERRY",
+    "verify_with_user_at_phase01": true
+  },
+  "special_middle_line": {
+    "CHANCE": [
+      "RED7",
+      "BAR",
+      "RED7"
+    ],
+    "STRONG_CHANCE": [
+      "RED7",
+      "BAR",
+      "RAINBOW7"
+    ],
+    "BAR": [
+      "BAR",
+      "BAR",
+      "BAR"
+    ],
+    "CZ_WIN": [
+      "RAINBOW7",
+      "RAINBOW7",
+      "RAINBOW7"
+    ],
+    "CZ_LOSE": [
+      "RAINBOW7",
+      "NOT_RAINBOW7",
+      "RAINBOW7"
+    ]
+  },
+  "stop_control_proposal": {
+    "server_authoritative": true,
+    "first_select_by_legal_completion": true,
+    "preferred_slip_max": 4,
+    "extended_slip_max": 20,
+    "extended_slip_requires_phase01_approval": true,
+    "pressed_index_effect": "Select minimum allowed slip on pressed reel from valid remaining completions, retaining candidate continuations for subsequent stop buttons.",
+    "never_assign_wrong_role": true,
+    "cz_auto_stop": [
+      "LEFT",
+      "RIGHT"
+    ],
+    "cz_manual_stop": "CENTER",
+    "CZ_is_zero_bet_zero_payout": true
+  },
+  "stage": "Only exact arrays and proof conditions; game balance and AT/normal allocation not implemented."
+}
