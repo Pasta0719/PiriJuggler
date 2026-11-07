@@ -1,4 +1,4 @@
-# ORIGINAL AT — PHASE 03 Machine identity, normal game, and six-mode lottery
+# HYPER_DOG — PHASE 03 Machine identity, normal game, and six-mode lottery
 
 Status: **NOT_STARTED — SPEC_LOCKED**
 
