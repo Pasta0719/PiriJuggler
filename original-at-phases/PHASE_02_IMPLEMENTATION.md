@@ -58,3 +58,10 @@ Preserve the newly tested solver and round API; connect `HYPER_DOG` in Paper's m
 **Safety boundary**
 - Previously supported machine game engines, probabilities, stored data, and persistent machine types are unchanged. Only the authenticated Fabric network receiver has an existing-file modification; that change is a guarded, additive HYPER_DOG-only hook.
 - Final Phase 02 status remains \`IN_PROGRESS\` until real Paper/Fabric Minecraft runtime capture and final seven PNG assets are available, in accordance with the locked completion criteria.
+
+
+## Verified CI for continuation
+
+- [Piri build run 42379006836](https://github.com/Pasta0719/PiriJuggler/actions/runs/42379006836) — **SUCCESS**, fixes red-seven auto-stop validation order in \`5636c2c99bbd\`.
+- [Piri build run 42379156812](https://github.com/Pasta0719/PiriJuggler/actions/runs/42379156812) — **SUCCESS**, verifies \`d8827c0d6d63\` (Fabric receiver hook, 12-profile Paper↔Fabric envelope roundtrip JUnit, all existing test suites, runtime helper build and production packaging).
+- These CI successes verify source tests and packaging, NOT real Minecraft Paper/Fabric gameplay acceptance. Do not conflate a Gradle runtime-helper *build* with running a runtime scenario.
