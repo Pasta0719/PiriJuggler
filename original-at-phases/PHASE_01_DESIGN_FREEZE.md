@@ -4,7 +4,7 @@ Status: **NOT_STARTED — PLAN_DRAFT**
 
 ## 実装対象
 - 会話で確定した仕様と試作承認案の差分を、`SPEC_LOCK.md`へ反映してレビュー承認を得る。
-- `pirijuggler_new_machine_calibrated_v5.json` と `piri_simulate_full_v1.py` をSHA256照合のうえ専用 `reference/` に追加し、全確率・役払い出し・BET・0BET・状態遷移・上乗せ表・BAR権利・引き戻しの構造検証を実行。
+- **専用`reference/`に登録済み**の`pirijuggler_new_machine_calibrated_v5.json`と`piri_simulate_full_v1.py`を所定SHA256で再検査し、全確率・役払い出し・BET・0BET・状態遷移・上乗せ表・BAR権利・引き戻しの構造検証を実行。必要に応じてシミュレーターを同一seedで再実行。
 - **[IMPLEMENTATION_DECISIONS_V1.md](IMPLEMENTATION_DECISIONS_V1.md) に全件決定済み**。機種ID`ORIGINAL_AT`、役重複ATの`元役停止→無償赤7再回転`、上乗せがないGは右演出なし、6G目TOTAL→+N、音・画像契約・CZロック・各ランプをそのまま実装する。**基本4コマ、レア役・BAR・虹7・AT赤7の確定引込みはユーザー決定済み**。新しい確認事項を実装都合で作らず、数値も独断で変更しない。
 - 素材は**256×256 RGBAの図柄7枚**に確定。画像がなくてもリール配列とソルバーは図柄IDで先行でき、実画像受入のみ納品後に行う。
 
