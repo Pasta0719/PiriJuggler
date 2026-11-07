@@ -4,8 +4,8 @@ Status: **NOT_STARTED — PLAN_DRAFT**
 
 ## 実装対象
 - 現行 `SlotLayout.java` の LEVER→BET→左中右停止ボタン、リール直下CREDIT/BET/PAY/MEDALS、データランプは既存と同配置。MAX BETを端へ移すUI改変禁止。
-- 中央3リール、左右上に告知ランプ各1灯（既存告知のタイミングに合わせる）。左側に状態3灯と上乗せ小液晶、右側に上乗せ期待度ランプ3灯を配置。
-- 通常時とAT中の残り枚数・+N・TOTAL Nを表示できるUI状態を追加。操作ラベル以外の固定の装飾文字を置かない。
+- 中央3リール、左右上に告知ランプ各1灯（既存告知`lampOn`のタイミングを維持）。左側に状態3灯と上乗せ小液晶、右側に期待度ランプ3灯を配置。**画面の全座標・ランプ色・点滅・液晶表示時間は [IMPLEMENTATION_DECISIONS_V1.md](IMPLEMENTATION_DECISIONS_V1.md) の10〜17項で固定。**
+- 通常時とAT中の残り枚数・`+N`・`TOTAL N`を表示できるUI状態を追加。**右演出は正の新規上乗せがあるGだけ**、0枚なら消灯。下位1GのTOTALと上位6GのTOTAL、6G目上乗せとのFIFO順まで実装。操作ラベル以外の固定装飾文字を置かない。
 - 独立機種の画面は `MachineScreenFactory` で新クラスへルーティングし、既存 `SlotScreen` / `GodScreen` を変えずに実装する。
 
 ## 完了条件
