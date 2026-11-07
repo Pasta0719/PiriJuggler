@@ -200,12 +200,19 @@
       1,
       1
     ],
-    "final_count_two": [
-      1,
-      2,
-      2
-    ],
-    "second_lamp_at_first_stop_probability": 0.5,
+    "final_count_two": {
+      "on_first_stop": [
+        1,
+        2,
+        2
+      ],
+      "on_second_stop": [
+        1,
+        1,
+        2
+      ],
+      "probability_each": 0.5
+    },
     "final_count_three": [
       1,
       2,
