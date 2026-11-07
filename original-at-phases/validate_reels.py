@@ -21,23 +21,22 @@ def marks(stops):
     found = set()
     for line in lines:
         row = tuple(symbol(reel, stops[reel], line[reel]) for reel in range(3))
-        if len(set(row)) == 1 and row[0] in ("GRAPE", "REPLAY", "WATERMELON", "BAR", "RAINBOW7"):
+        if len(set(row)) == 1 and row[0] in ("GRAPE", "REPLAY", "WATERMELON", "BAR", "RAINBOW7", "CHERRY"):
             found.add(row[0])
     middle = tuple(symbol(reel, stops[reel]) for reel in range(3))
     if middle == ("RED7", "BAR", "RED7"):
         found.add("CHANCE")
     if middle == ("RED7", "BAR", "RAINBOW7"):
         found.add("STRONG_CHANCE")
-    if stops[0] == 14:
+    if middle[0] == middle[1] == "CHERRY" and middle[2] != "CHERRY":
         found.add("WEAK_CHERRY")
-    if stops[0] == 3:
+    if middle == ("CHERRY",) * 3:
         found.add("STRONG_CHERRY")
     return found
 
 def legal(role, stops):
     found = marks(stops)
     middle = tuple(symbol(reel, stops[reel]) for reel in range(3))
-    cherry_visible = any(symbol(0, stops[0], dy) == "CHERRY" for dy in (-1, 0, 1))
     if role == "CZ_WIN":
         return found == {"RAINBOW7"} and middle == ("RAINBOW7",) * 3
     if role == "CZ_LOSE":
@@ -45,17 +44,17 @@ def legal(role, stops):
     if role == "BAR":
         return found == {"BAR"} and middle == ("BAR",) * 3
     if role == "MISS":
-        return not found and not cherry_visible
-    if role in ("WEAK_CHERRY", "STRONG_CHERRY"):
-        return found == {role}
-    return found == {role} and not cherry_visible
+        return not found
+    if role == "STRONG_CHERRY":
+        return found == {"STRONG_CHERRY", "CHERRY"}
+    return found == {role}
 
 expected = {
-    "MISS": 4426, "REPLAY": 283, "GRAPE": 320,
-    "WATERMELON": 73, "WEAK_CHERRY": 391,
-    "STRONG_CHERRY": 441, "CHANCE": 9,
-    "STRONG_CHANCE": 6, "BAR": 7,
-    "CZ_WIN": 4, "CZ_LOSE": 25
+    "MISS": 7814, "REPLAY": 497, "GRAPE": 504,
+    "WATERMELON": 40, "WEAK_CHERRY": 96,
+    "STRONG_CHERRY": 15, "CHANCE": 4,
+    "STRONG_CHANCE": 2, "BAR": 8,
+    "CZ_WIN": 4, "CZ_LOSE": 60
 }
 all_positions = list(itertools.product(range(n), repeat=3))
 assert len(all_positions) == 9261
@@ -74,8 +73,8 @@ for role, count in expected.items():
                 slip = (pressed - completion[reel]) % n
                 assert 0 <= slip <= 20
 
-assert tuple(symbol(0, 14, offset) for offset in (-1, 0, 1)) == ("CHERRY", "CHERRY", "GRAPE")
-assert tuple(symbol(0, 3, offset) for offset in (-1, 0, 1)) == ("CHERRY",) * 3
+assert tuple(symbol(reel, pos) for reel, pos in enumerate((2, 6, 0))) == ("CHERRY", "CHERRY", "GRAPE")
+assert tuple(symbol(reel, pos) for reel, pos in enumerate((2, 6, 9))) == ("CHERRY",) * 3
 for role, fixed in (
     ("CHANCE", ("RED7", "BAR", "RED7")),
     ("STRONG_CHANCE", ("RED7", "BAR", "RAINBOW7")),
