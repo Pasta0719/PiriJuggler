@@ -12,9 +12,11 @@ public final class HyperDogReelControl {
     public record Choice(int pressedIndex, int stopIndex, int slip, int durationMs) {}
 
     private static final Icon[][] STRIPS = {
-        parse("RED7 GRAPE REPLAY RAINBOW7 CHERRY GRAPE REPLAY WATERMELON CHERRY BAR GRAPE REPLAY WATERMELON RAINBOW7 GRAPE REPLAY WATERMELON RED7 GRAPE REPLAY BAR"),
-        parse("WATERMELON RED7 GRAPE REPLAY CHERRY BAR GRAPE REPLAY BAR RAINBOW7 GRAPE REPLAY CHERRY CHERRY GRAPE REPLAY RED7 RAINBOW7 WATERMELON GRAPE REPLAY"),
-        parse("BAR GRAPE REPLAY RAINBOW7 CHERRY GRAPE REPLAY BAR RAINBOW7 GRAPE REPLAY WATERMELON CHERRY GRAPE REPLAY RED7 WATERMELON GRAPE REPLAY CHERRY RED7")
+        // v2, user-approved 2026-11-08: precisely one of each premium at 7-symbol
+        // intervals on every reel; the 3x21 physical strip is still server-owned.
+        parse("RED7 GRAPE REPLAY WATERMELON GRAPE REPLAY CHERRY BAR GRAPE REPLAY CHERRY GRAPE REPLAY WATERMELON RAINBOW7 GRAPE REPLAY CHERRY GRAPE REPLAY WATERMELON"),
+        parse("RED7 REPLAY GRAPE WATERMELON GRAPE REPLAY WATERMELON BAR REPLAY GRAPE WATERMELON GRAPE REPLAY CHERRY RAINBOW7 GRAPE REPLAY CHERRY GRAPE REPLAY CHERRY"),
+        parse("RED7 GRAPE REPLAY WATERMELON REPLAY GRAPE WATERMELON BAR GRAPE REPLAY WATERMELON REPLAY GRAPE CHERRY RAINBOW7 REPLAY GRAPE CHERRY REPLAY GRAPE CHERRY")
     };
     private static final int[][] LINES = {{-1,-1,-1},{0,0,0},{1,1,1},{-1,0,1},{1,0,-1}};
     private static final int GRAPE=1, REPLAY=2, WATERMELON=4, CHERRY=8, BAR=16,
@@ -109,26 +111,70 @@ public final class HyperDogReelControl {
     private static boolean middle(int[] s,Icon a,Icon b,Icon c) {
         return STRIPS[0][s[0]]==a&&STRIPS[1][s[1]]==b&&STRIPS[2][s[2]]==c;
     }
-    private static int marks(int[] s) {
-        int flags=0;
-        for (int[] row:LINES) {
+    private static boolean premium(Icon symbol) {
+        return symbol==Icon.RED7 || symbol==Icon.BAR || symbol==Icon.RAINBOW7;
+    }
+    /**
+     * Any complete line consisting exclusively of premium symbols is a
+     * reach-looking hit, even if the three symbols differ. Only the *single*
+     * outcome-specific premium line may be visible for an earned role.
+     */
+    private static boolean premiumLineAllowed(Role role,int[] s) {
+        int premiumLines=0;
+        boolean earned=false;
+        for(int[] row:LINES) {
             Icon a=STRIPS[0][Math.floorMod(s[0]+row[0],LENGTH)];
-            if (a!=STRIPS[1][Math.floorMod(s[1]+row[1],LENGTH)] ||
-                a!=STRIPS[2][Math.floorMod(s[2]+row[2],LENGTH)])continue;
-            flags|=switch(a) {
-                case GRAPE -> GRAPE; case REPLAY -> REPLAY; case WATERMELON -> WATERMELON;
-                case CHERRY -> CHERRY; case BAR -> BAR; case RAINBOW7 -> RAINBOW7; case RED7 -> RED7;
+            Icon b=STRIPS[1][Math.floorMod(s[1]+row[1],LENGTH)];
+            Icon c=STRIPS[2][Math.floorMod(s[2]+row[2],LENGTH)];
+            if(!premium(a)||!premium(b)||!premium(c))continue;
+            premiumLines++;
+            boolean center=row[0]==0 && row[1]==0 && row[2]==0;
+            earned |= switch(role) {
+                case BAR -> a==Icon.BAR && b==Icon.BAR && c==Icon.BAR; // all five lines
+                case AT_ENTRY_RED7 -> center && a==Icon.RED7 && b==Icon.RED7 && c==Icon.RED7;
+                case CZ_WIN -> center && a==Icon.RAINBOW7 && b==Icon.RAINBOW7 && c==Icon.RAINBOW7;
+                case CHANCE -> center && a==Icon.RED7 && b==Icon.BAR && c==Icon.RED7;
+                case STRONG_CHANCE -> center && a==Icon.RED7 && b==Icon.BAR && c==Icon.RAINBOW7;
+                default -> false;
             };
         }
+        return switch(role) {
+            case BAR, AT_ENTRY_RED7, CZ_WIN, CHANCE, STRONG_CHANCE -> premiumLines==1 && earned;
+            default -> premiumLines==0;
+        };
+    }
+    private static int marks(int[] s) {
+        int flags=0;
+        for(int[] row:LINES) {
+            Icon a=STRIPS[0][Math.floorMod(s[0]+row[0],LENGTH)];
+            Icon b=STRIPS[1][Math.floorMod(s[1]+row[1],LENGTH)];
+            Icon c=STRIPS[2][Math.floorMod(s[2]+row[2],LENGTH)];
+            if(a==b&&a==c) {
+                flags|=switch(a) {
+                    case GRAPE -> GRAPE; case REPLAY -> REPLAY; case WATERMELON -> WATERMELON;
+                    case CHERRY -> CHERRY; case BAR -> BAR; case RAINBOW7 -> RAINBOW7;
+                    case RED7 -> RED7;
+                };
+                // A strong cherry line must have the left cherry in TOP/BOTTOM,
+                // never in the middle. Full 5-line alignment is supported.
+                if(a==Icon.CHERRY && row[0]!=0)flags|=STRONG_CHERRY;
+            }
+            // Weak cherry is a two-reel horizontal alignment on TOP or BOTTOM.
+            if(row[0]==row[1] && row[1]==row[2] && row[0]!=0 &&
+               a==Icon.CHERRY && b==Icon.CHERRY && c!=Icon.CHERRY)
+                flags|=WEAK_CHERRY;
+        }
         Icon left=STRIPS[0][s[0]],center=STRIPS[1][s[1]],right=STRIPS[2][s[2]];
-        if(left==Icon.RED7&&center==Icon.BAR&&right==Icon.RED7) flags|=CHANCE;
-        if(left==Icon.RED7&&center==Icon.BAR&&right==Icon.RAINBOW7) flags|=STRONG_CHANCE;
-        if(left==Icon.CHERRY&&center==Icon.CHERRY&&right!=Icon.CHERRY)flags|=WEAK_CHERRY;
-        if(middle(s,Icon.CHERRY,Icon.CHERRY,Icon.CHERRY))flags|=STRONG_CHERRY;
+        if(left==Icon.RED7&&center==Icon.BAR&&right==Icon.RED7)flags|=CHANCE;
+        if(left==Icon.RED7&&center==Icon.BAR&&right==Icon.RAINBOW7)flags|=STRONG_CHANCE;
         if(middle(s,Icon.RED7,Icon.RED7,Icon.RED7))flags|=AT_ENTRY_RED7;
         return flags;
     }
     private static boolean legal(Role role,int[] s,int flags) {
+        // BAR is the only result permitting a LEFT middle-row cherry; the BAR
+        // itself may align on ANY valid payline, including bottom/diagonals.
+        if(role!=Role.BAR && STRIPS[0][s[0]]==Icon.CHERRY)return false;
+        if(!premiumLineAllowed(role,s))return false;
         return switch(role) {
             case MISS -> flags==0;
             case GRAPE -> flags==GRAPE;
@@ -138,10 +184,11 @@ public final class HyperDogReelControl {
             case STRONG_CHERRY -> flags==(STRONG_CHERRY|CHERRY);
             case CHANCE -> flags==CHANCE;
             case STRONG_CHANCE -> flags==STRONG_CHANCE;
-            case BAR -> flags==BAR&&middle(s,Icon.BAR,Icon.BAR,Icon.BAR);
+            case BAR -> flags==BAR;
             case AT_ENTRY_RED7 -> flags==(AT_ENTRY_RED7|RED7)&&middle(s,Icon.RED7,Icon.RED7,Icon.RED7);
             case CZ_WIN -> flags==RAINBOW7&&middle(s,Icon.RAINBOW7,Icon.RAINBOW7,Icon.RAINBOW7);
-            case CZ_LOSE -> flags==0&&STRIPS[0][s[0]]==Icon.RAINBOW7&&STRIPS[2][s[2]]==Icon.RAINBOW7&&STRIPS[1][s[1]]!=Icon.RAINBOW7;
+            case CZ_LOSE -> flags==0&&STRIPS[0][s[0]]==Icon.RAINBOW7&&
+                    STRIPS[2][s[2]]==Icon.RAINBOW7&&STRIPS[1][s[1]]!=Icon.RAINBOW7;
         };
     }
     public HyperDogReelControl(){}
