@@ -115,6 +115,41 @@ try:
     check("nine actual symbol paths per completed spin",all(len(r.get("visibleTextures",[]))==9
           and all(p.startswith("gui/original_at/symbols/") for p in r["visibleTextures"])
           for r in c["rounds"]))
+    # Independent validation of the actual 3x3 symbols produced in 57 real
+    # Paper/Fabric rounds. This does not trust the production Java legality
+    # table or the client sprite model to declare a role visually legal.
+    spec=json.loads((ROOT/"original-at-phases/REEL_STRIPS_V2.json").read_text(encoding="utf-8"))
+    strips=[spec["reels"][name] for name in ("LEFT","CENTER","RIGHT")]
+    premium={"RED7","BAR","RAINBOW7"}
+    targets={
+        "BAR":(None,("BAR","BAR","BAR")),
+        "AT_ENTRY_RED7":((0,0,0),("RED7","RED7","RED7")),
+        "CZ_WIN":((0,0,0),("RAINBOW7","RAINBOW7","RAINBOW7")),
+        "CHANCE":((0,0,0),("RED7","BAR","RED7")),
+        "STRONG_CHANCE":((0,0,0),("RED7","BAR","RAINBOW7"))
+    }
+    premium_valid=True;left_middle_valid=True;normal_cherry_visible=True
+    all_roles=set()
+    for result in s["rounds"]:
+        role=result["role"];stops=result["stops"];all_roles.add(role)
+        if role!="BAR" and strips[0][stops[0]]=="CHERRY":left_middle_valid=False
+        premium_lines=[]
+        for off in spec["lines"]:
+            syms=tuple(strips[i][(stops[i]+off[i])%21] for i in range(3))
+            if all(x in premium for x in syms):premium_lines.append((tuple(off),syms))
+        target=targets.get(role)
+        if target is None:
+            if premium_lines:premium_valid=False
+        elif len(premium_lines)!=1 or premium_lines[0][1]!=target[1] or (
+            target[0] is not None and premium_lines[0][0]!=target[0]
+        ):premium_valid=False
+        if role in ("WEAK_CHERRY","STRONG_CHERRY") and not any(
+            strips[0][(stops[0]+row)%21]=="CHERRY" for row in (-1,1)
+        ):normal_cherry_visible=False
+    check("all 12 role profiles exercised in real Minecraft",len(all_roles)==12)
+    check("all real displayed five-line premium triples are earned single matches",premium_valid)
+    check("left-middle cherry never stopped except BAR",left_middle_valid)
+    check("weak/strong cherry always displayed at top or bottom on left",normal_cherry_visible)
     manifest["passed"]=True
 except Exception as exc:
     manifest["failure"]=str(exc)

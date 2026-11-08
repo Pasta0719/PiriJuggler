@@ -36,6 +36,8 @@ jobs:
             sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
           fi
           chmod +x gradlew
+      - name: Verify current v2 strip independently from the Java solver
+        run: python original-at-phases/validate_reels.py
       - name: Build real production code and all regression tests
         run: |
           ./gradlew --parallel --build-cache :common:test :paper:test :fabric:test :common:jar :paper:jar :fabric:remapJar --console=plain
