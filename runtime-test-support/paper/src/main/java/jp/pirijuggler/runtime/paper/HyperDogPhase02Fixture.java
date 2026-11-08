@@ -68,7 +68,9 @@ public final class HyperDogPhase02Fixture {
             open.addProperty("expectedNextClientSequence",1);
             send(Envelope.current(PacketType.OPEN_MACHINE,open));
         }
-        if(current==null && started<TOTAL_ROUNDS && now-lastFinish>=400)start(now);
+        // Allow Fabric to observe the third-stop frame before sending the next SPIN_START.
+        // The previous 400ms gap could overwrite a client-complete spin during slow CI ticks.
+        if(current==null && started<TOTAL_ROUNDS && now-lastFinish>=1100)start(now);
         if(current!=null) {
             for(Envelope packet:current.tick(now)) {
                 if(packet.packetType()==PacketType.REEL_STOP)automaticStops++;
