@@ -1,5 +1,8 @@
 # HYPER_DOG Phase 02 — Implementation evidence
 
+> **2026-11-08 FINAL ACCEPTANCE: PASS / Phase 02 COMPLETE.** See [PHASE_02_RUNTIME_ACCEPTANCE.md](PHASE_02_RUNTIME_ACCEPTANCE.md) and successful [real Paper/Fabric run #42442118865](https://github.com/Pasta0719/PiriJuggler/actions/runs/42442118865). Older "pending/unverified" paragraphs below are retained as dated implementation history and are superseded by this verified run. Full hall machine registration and economic game engine are not part of Phase 02.
+
+
 **State: IN_PROGRESS — stop logic implemented and locally verified. Real Paper/Fabric Minecraft runtime acceptance not yet demonstrated.**
 **Date: 2026-11-07 JST.** No changes to existing slot machine logic.
 
