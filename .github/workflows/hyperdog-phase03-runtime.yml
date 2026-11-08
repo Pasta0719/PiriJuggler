@@ -42,6 +42,14 @@ jobs:
       - name: Compile and execute complete root regression
         run: |
           ./gradlew --parallel --build-cache test :common:jar :paper:jar :fabric:remapJar --console=plain
+      - name: Ensure fresh Java trace exists even after Gradle test cache restore
+        run: |
+          if [ ! -s paper/build/reports/hyperdog-phase03-trace.json ]; then
+            ./gradlew :paper:test \
+              --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogNormalGameTest' \
+              --rerun-tasks --no-build-cache --console=plain
+          fi
+          test -s paper/build/reports/hyperdog-phase03-trace.json
       - name: Independently compare seeded Java games against v5 Python oracle
         run: |
           python original-at-phases/verify_phase03_trace.py
