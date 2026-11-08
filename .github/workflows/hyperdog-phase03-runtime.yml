@@ -69,6 +69,10 @@ jobs:
       - name: 100 normal games on actual Paper/Fabric path
         run: |
           xvfb-run -a -s "-screen 0 1280x720x24" python runtime-test-support/run_hyperdog_phase03.py
+      - name: Runtime progress and failure classification
+        if: always()
+        run: |
+          python runtime-test-support/hyperdog_acceptance_diagnostics.py summarize HYPER_DOG_PHASE_03 "$GITHUB_STEP_SUMMARY"
       - name: Persist evidence
         if: always()
         uses: actions/upload-artifact@v4

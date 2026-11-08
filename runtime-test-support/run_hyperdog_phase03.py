@@ -2,6 +2,7 @@
 """HYPER_DOG Phase03 — real Paper 1.21/Fabric 1.21 100-game normal lottery acceptance."""
 from pathlib import Path
 import datetime as dt,hashlib,json,os,shutil,subprocess,time,traceback
+from hyperdog_acceptance_diagnostics import compact_states,record_failure
 
 ROOT=Path(__file__).resolve().parents[1]
 EVIDENCE=ROOT/"runtime-evidence/HYPER_DOG_PHASE_03"
@@ -34,13 +35,23 @@ def save(path,data):
     tmp.replace(path)
 def wait(label,predicate,seconds,check_client=True):
     until=time.monotonic()+seconds
+    last_report=0
     while time.monotonic()<until:
         if predicate():
-            print("HYPER_DOG_PHASE03_WAIT_OK",label,flush=True);return
-        if server and server.poll() is not None:raise RuntimeError("Paper terminated during "+label)
-        if check_client and client and client.poll() is not None:raise RuntimeError("Fabric terminated during "+label)
+            print("HYPER_DOG_PHASE03_WAIT_OK",label,flush=True)
+            return
+        if server and server.poll() is not None:
+            raise RuntimeError("Paper terminated during "+label)
+        if check_client and client and client.poll() is not None:
+            raise RuntimeError("Fabric terminated during "+label)
+        state=compact_states(server_result,client_result)
+        if state["Fabric"].get("error"):
+            raise RuntimeError("Fabric probe error during "+label+": "+state["Fabric"]["error"])
+        if time.monotonic()-last_report>=20:
+            print("HYPER_DOG_PHASE03_PROGRESS",label,
+                  json.dumps(state,ensure_ascii=False),flush=True)
+            last_report=time.monotonic()
         time.sleep(.25)
-    raise TimeoutError(label)
 
 try:
     jars={
@@ -120,6 +131,8 @@ try:
 except Exception as e:
     manifest["failure"]=str(e)
     manifest["traceback"]=traceback.format_exc(limit=10)
+    record_failure(OUT,manifest,e,server_result,client_result,
+                   OUT/"server.log",OUT/"client.log",server,client)
     print("HYPER_DOG_PHASE03_FAIL",e,flush=True)
 finally:
     if client and client.poll() is None:

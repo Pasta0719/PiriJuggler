@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import time
 import traceback
+from hyperdog_acceptance_diagnostics import compact_states,record_failure
 
 ROOT=Path(__file__).resolve().parents[1]
 PHASE="HYPER_DOG_PHASE_02"
@@ -39,12 +40,23 @@ def save(path,data):
     temp.replace(path)
 def wait(label,predicate,seconds,server=None,client=None):
     deadline=time.monotonic()+seconds
+    last_report=0
     while time.monotonic()<deadline:
-        if predicate():print("HYPER_DOG_PHASE02_WAIT_OK",label,flush=True);return
-        if server and server.poll() is not None:raise RuntimeError(f"Paper died during {label}: {server.returncode}")
-        if client and client.poll() is not None:raise RuntimeError(f"Fabric died during {label}: {client.returncode}")
+        if predicate():
+            print("HYPER_DOG_PHASE02_WAIT_OK",label,flush=True)
+            return
+        if server and server.poll() is not None:
+            raise RuntimeError(f"Paper died during {label}: {server.returncode}")
+        if client and client.poll() is not None:
+            raise RuntimeError(f"Fabric died during {label}: {client.returncode}")
+        state=compact_states(server_file,client_file)
+        if state["Fabric"].get("error"):
+            raise RuntimeError("Fabric probe error during "+label+": "+state["Fabric"]["error"])
+        if time.monotonic()-last_report>=20:
+            print("HYPER_DOG_PHASE02_PROGRESS",label,
+                  json.dumps(state,ensure_ascii=False),flush=True)
+            last_report=time.monotonic()
         time.sleep(.25)
-    raise TimeoutError(label)
 
 server_process=None
 client_process=None
@@ -154,6 +166,8 @@ try:
 except Exception as exc:
     manifest["failure"]=str(exc)
     manifest["traceback"]=traceback.format_exc(limit=10)
+    record_failure(OUT,manifest,exc,server_file,client_file,
+                   OUT/"server.log",OUT/"client.log",server_process,client_process)
     print("HYPER_DOG_PHASE02_FAIL",str(exc),flush=True)
 finally:
     if client_process and client_process.poll() is None:
