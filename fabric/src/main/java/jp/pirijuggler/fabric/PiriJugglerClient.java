@@ -47,9 +47,25 @@ public final class PiriJugglerClient implements ClientModInitializer {
                 var envelope = EnvelopeCodec.decode(payload.bytes());
                 HANDSHAKE.receive(envelope); SESSION.receive(envelope, HANDSHAKE.canUseSlot());
                 if (HANDSHAKE.canUseSlot()) {
-                    // No existing machine reads this optional model; it only handles the new HYPER_DOG type.
-                    if (envelope.packetType()==PacketType.OPEN_MACHINE || HYPER_DOG_REELS.opened())
+                    // HYPER_DOG uses its own Phase02 reel-only screen; legacy SlotUi must
+                    // never parse its protocol as an existing JUGGLER machine.
+                    boolean openingHyper = envelope.packetType()==PacketType.OPEN_MACHINE
+                            && envelope.payload().has("machineType")
+                            && "HYPER_DOG".equals(envelope.payload().get("machineType").getAsString());
+                    boolean wasHyper = HYPER_DOG_REELS.opened();
+                    if (wasHyper && envelope.packetType()==PacketType.OPEN_MACHINE && !openingHyper) {
+                        HYPER_DOG_REELS.reset(); // Switch back to a legacy machine
+                        context.client().setScreen(null);
+                    } else if (openingHyper || wasHyper) {
                         HYPER_DOG_REELS.receive(envelope);
+                        if (openingHyper) {
+                            SlotUi.reset();
+                            context.client().setScreen(new HyperDogReelPreviewScreen(HYPER_DOG_REELS));
+                        } else if (!HYPER_DOG_REELS.opened()) {
+                            context.client().setScreen(null);
+                        }
+                        return;
+                    }
                     if (RemoteMachineRegistry.isRemote(envelope.packetType())) {
                         REMOTE.receive(envelope);
                         Integer success=REMOTE.pollSkillSuccessSound();
