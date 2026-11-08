@@ -82,10 +82,10 @@ class HyperDogNormalGameTest {
             assertEquals(g.resumeAfterAt(),loaded.resumeAfterAt());
             assertEquals(g.snapshot(),loaded.snapshot());
         }
-        JsonObject tampered=g.snapshot();tampered.addProperty("setting",0);
-        assertThrows(IllegalArgumentException.class,()->HyperDogNormalGame.restore(tampered));
-        tampered=g.snapshot();tampered.addProperty("credits",-1);
-        assertThrows(IllegalArgumentException.class,()->HyperDogNormalGame.restore(tampered));
+        JsonObject invalidSetting=g.snapshot();invalidSetting.addProperty("setting",0);
+        assertThrows(IllegalArgumentException.class,()->HyperDogNormalGame.restore(invalidSetting));
+        JsonObject invalidCredit=g.snapshot();invalidCredit.addProperty("credits",-1);
+        assertThrows(IllegalArgumentException.class,()->HyperDogNormalGame.restore(invalidCredit));
     }
     @Test void trueBarPreemptsBothIndependentAndLinkedDrawAndIsUpperTicket() {
         for(int seed=0;seed<256;seed++){
