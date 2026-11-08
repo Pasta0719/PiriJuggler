@@ -120,13 +120,7 @@ public final class HyperDogPhase02Probe {
         result.addProperty("error",error);
         result.add("availableTextures",new Gson().toJsonTree(available));
         result.add("rounds",completed);
-        try{
-            Path dest=Path.of(System.getProperty("piri.runtime.clientResult"));
-            Files.createDirectories(dest.toAbsolutePath().getParent());
-            Files.writeString(dest,result.toString());
-        }catch(java.nio.file.FileSystemException locked){
-            // Python monitor may concurrently read, next tick will retry.
-        }catch(java.io.IOException failure){throw new java.io.UncheckedIOException(failure);}
+        AtomicTestEvidence.write(Path.of(System.getProperty("piri.runtime.clientResult")),result.toString());
     }
     private HyperDogPhase02Probe(){}
 }

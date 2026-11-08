@@ -23,6 +23,12 @@ tasks.withType<Test>().configureEach {
     }
 }
 
+// Track the deterministic trace as a real output of :paper:test.
+// UP-TO-DATE / FROM-CACHE restores the file used by the independent oracle.
+tasks.named<Test>("test") {
+    outputs.file(layout.buildDirectory.file("reports/hyperdog-phase03-trace.json"))
+}
+
 tasks.processResources {
     from(rootProject.file("original-at-phases/reference/pirijuggler_new_machine_calibrated_v5.json")) {
         into("hyperdog")

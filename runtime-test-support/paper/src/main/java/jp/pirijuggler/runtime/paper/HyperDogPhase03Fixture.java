@@ -177,11 +177,6 @@ public final class HyperDogPhase03Fixture {
         out.addProperty("setting",game.setting());
         out.add("normalSnapshot",game.snapshot()); // NEVER sent on network
         out.add("rounds",completed);
-        try{
-            Files.createDirectories(resultPath.toAbsolutePath().getParent());
-            Files.writeString(resultPath,out.toString());
-        }catch(java.nio.file.FileSystemException locked){
-            // Retry writing after external Windows/CI monitor releases its reader.
-        }catch(java.io.IOException failure){throw new java.io.UncheckedIOException(failure);}
+        AtomicTestEvidence.write(resultPath,out.toString());
     }
 }

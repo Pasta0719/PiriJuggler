@@ -124,11 +124,6 @@ public final class HyperDogPhase02Fixture {
         result.addProperty("rejected",rejected);
         result.addProperty("snapshotRestored",restoredOnce);
         result.add("rounds",rounds);
-        try {
-            Files.createDirectories(output.toAbsolutePath().getParent());
-            Files.writeString(output,result.toString());
-        }catch(java.nio.file.FileSystemException conflict){
-            plugin.getLogger().fine("HYPER_DOG fixture temporary result file lock "+conflict);
-        }catch(java.io.IOException error){throw new java.io.UncheckedIOException(error);}
+        AtomicTestEvidence.write(output,result.toString());
     }
 }

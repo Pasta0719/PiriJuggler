@@ -129,12 +129,7 @@ public final class HyperDogPhase03Probe {
         j.addProperty("renderedFrames",rendered);j.addProperty("screenshot",screenshot);
         j.addProperty("error",error);j.add("textures",new Gson().toJsonTree(pngs));
         j.add("rounds",rounds);
-        try{
-            Path path=Path.of(System.getProperty("piri.runtime.clientResult"));
-            Files.createDirectories(path.toAbsolutePath().getParent());
-            Files.writeString(path,j.toString());
-        }catch(java.nio.file.FileSystemException sharing){/* next tick */}
-        catch(java.io.IOException ex){throw new java.io.UncheckedIOException(ex);}
+        AtomicTestEvidence.write(Path.of(System.getProperty("piri.runtime.clientResult")),j.toString());
     }
     private HyperDogPhase03Probe(){}
 }
