@@ -160,7 +160,7 @@ class HyperDogNormalGameTest {
             for(int game=0;game<400;game++){
                 assertEquals(a.snapshot(),b.snapshot());
                 if(!a.replayFree()){a.bet();b.bet();}
-                var x=a.lever(),y=b.lever();
+                var x=a.lever();var y=b.lever();
                 assertEquals(x,y);assertEquals(a.snapshot(),b.snapshot());
                 b=HyperDogNormalGame.restore(b.snapshot());
                 assertEquals(a.finish(),b.finish());
