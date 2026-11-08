@@ -1,3 +1,5 @@
+> **2026-11-08 現行進捗**：HYPER_DOG Phase 02の最新リール配列は **[v2設計](REEL_DESIGN_V2.md)**。全9,261最終出目の独立検証、全666,792停止操作履歴、実Paper/Fabric 57ラウンド・171停止、全12役・5ライン偽混合リーチ目排除の実機受入 [18/18 PASS](PHASE_02_V2_RUNTIME_ACCEPTANCE.md)。Phase 02 COMPLETE、Phase 03 NOT_STARTED。v1は履歴。既存機種は変更なし。
+
 # PiriJuggler HYPER_DOG — Phase実装仕様
 
 **計画状態：初期実装仕様を確定済み／ゲームコード実装は未着手。** 作成日 2026-11-07。ユーザーの実機確認後の演出微調整は可能。

@@ -1,4 +1,4 @@
-> **2026-11-08 V2 REVISION**：この文書の既存PASS結果は旧配列v1のもの。現在の承認変更（特殊図柄間隔7・混合5ライン禁止・左チェリー上/下段・BAR例外）は [REEL_DESIGN_V2.md](REEL_DESIGN_V2.md)。新しい網羅テスト＋実Paper/Fabric受入を別途実施。
+> **2026-11-08 V2 REVISION ACCEPTED**：この文書の旧PASS結果は旧配列v1の履歴。新しい承認変更（特殊図柄間隔7・混合5ライン禁止・左チェリー上/下段・BAR例外）は [REEL_DESIGN_V2.md](REEL_DESIGN_V2.md)。新網羅テスト＋実Paper/Fabric再受入は [PHASE_02_V2_RUNTIME_ACCEPTANCE.md](PHASE_02_V2_RUNTIME_ACCEPTANCE.md) にて18/18 PASS。
 
 # HYPER_DOG Phase 02 — Implementation evidence
 

@@ -1,10 +1,10 @@
-> **2026-11-08 現在**：ユーザー承認の特殊図柄/チェリー停止v2に更新中。v1の実機合格は保持するがv2への新たな実Paper/Fabric受入が必要。新仕様：[REEL_DESIGN_V2.md](REEL_DESIGN_V2.md)。
+> **2026-11-08 更新**：ユーザー承認の特殊図柄/チェリー停止v2の実機再受入に成功。詳細は [PHASE_02_V2_RUNTIME_ACCEPTANCE.md](PHASE_02_V2_RUNTIME_ACCEPTANCE.md)、[Actions #42464236837](https://github.com/Pasta0719/PiriJuggler/actions/runs/42464236837)。v1の実機証跡も独立した履歴として保持。
 
 # HYPER_DOG — PHASE 02 Reels, symbols, and server-authoritative stops
 
-Status: **IN_PROGRESS — V2_USER_APPROVED_REEL_REVISION_REVALIDATION**
+Status: **COMPLETE — V2_REAL_PAPER_FABRIC_ACCEPTANCE_PASS**
 
-**最終実機証跡:** [PHASE_02_RUNTIME_ACCEPTANCE.md](PHASE_02_RUNTIME_ACCEPTANCE.md)。[GitHub Actions #42442118865](https://github.com/Pasta0719/PiriJuggler/actions/runs/42442118865) にて実Paper/Fabric 57ラウンド・171停止、7種実画像表示・復帰、全回帰PASS。詳細実装履歴は [PHASE_02_IMPLEMENTATION.md](PHASE_02_IMPLEMENTATION.md)。機種登録・抽選経済・完成筐体は後続Phase。
+**現行v2実機証跡:** [PHASE_02_V2_RUNTIME_ACCEPTANCE.md](PHASE_02_V2_RUNTIME_ACCEPTANCE.md)。[GitHub Actions #42464236837](https://github.com/Pasta0719/PiriJuggler/actions/runs/42464236837) にて実Paper/Fabric 57ラウンド・171停止、7種実画像表示・復帰、v2混合特殊3連/左チェリー禁止の独立チェック18項目PASS、全回帰PASS。旧v1の証跡は [PHASE_02_RUNTIME_ACCEPTANCE.md](PHASE_02_RUNTIME_ACCEPTANCE.md)。詳細実装履歴は [PHASE_02_IMPLEMENTATION.md](PHASE_02_IMPLEMENTATION.md)。機種登録・抽選経済・完成筐体は後続Phase。
 
 ## 先行設計・静的検証（実装前に作成済み）
 - **[REEL_DESIGN_V2.md](REEL_DESIGN_V2.md)**：左・中・右それぞれ21コマの**更新後の配列**、通常4コマ停止、レア・確定引込み、AT赤7揃い、役別合法出目。

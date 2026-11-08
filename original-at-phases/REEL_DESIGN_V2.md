@@ -72,4 +72,4 @@ BAR下段の例外は、別の役を加算する意味ではない。サーバ�
 
 ## Phase 02の改訂経緯
 
-v1版の[実Paper/Fabric 57ラウンド受入](PHASE_02_RUNTIME_ACCEPTANCE.md)は**旧配列v1の実績**。v2はユーザー要求による承認変更なので、新配列を使った再試験を行う。過去の証跡を削除・書換えず、v2用の新ランを記録する。Phase03は未着手。
+v1版の[実Paper/Fabric 57ラウンド受入](PHASE_02_RUNTIME_ACCEPTANCE.md)は**旧配列v1の実績**。v2はユーザー要求による承認変更であり、新配列の再試験は [実機受入 #42464236837](https://github.com/Pasta0719/PiriJuggler/actions/runs/42464236837) で18/18 PASS。過去の証跡を削除・書換えず、v2用の新ランを記録する。Phase03は未着手。
