@@ -29,7 +29,7 @@ public final class HyperDogPhase02Probe {
     private static String error="";
     private static boolean screenshot,checkedAssets;
     private static final Set<String> available=new LinkedHashSet<>();
-    private static long startedAt=System.currentTimeMillis();
+    private static long finalRoundCompletedAt=-1L;
 
     public static boolean enabled(){return "hyperdog02-main".equals(System.getProperty("piri.runtime.scenario"));}
     public static void tick(MinecraftClient client){
@@ -74,6 +74,8 @@ public final class HyperDogPhase02Probe {
                         round.add("stops",stops);round.add("visibleTextures",paths);
                         completed.add(round);
                     }
+                    if(completed.size()==TARGET && finalRoundCompletedAt<0L)
+                        finalRoundCompletedAt=System.currentTimeMillis();
                     if(completed.size()==TARGET && !screenshot && screen.renderedFrames()>2){
                         screenshot=true;
                         ScreenshotRecorder.saveScreenshot(client.runDirectory,"hyperdog-phase02-57-rounds.png",client.getFramebuffer(),text->{});
@@ -81,7 +83,11 @@ public final class HyperDogPhase02Probe {
                 }
             }
             write(client);
-            if(completed.size()==TARGET && screenshot && System.currentTimeMillis()-startedAt>6000){
+            // Paper finalizes each round after its dwell interval. Do not exit
+            // as soon as the 3rd packet arrives; leave the server time to persist
+            // the 57th result and leave screenshot capture time to complete.
+            if(completed.size()==TARGET && screenshot && finalRoundCompletedAt>=0L
+                    && System.currentTimeMillis()-finalRoundCompletedAt>=6000){
                 // Client is safe to exit. Paper fixture remains the source of all role evidence.
                 client.scheduleStop();
             }
