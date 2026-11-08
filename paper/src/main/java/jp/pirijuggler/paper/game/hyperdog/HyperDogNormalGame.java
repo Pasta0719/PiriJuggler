@@ -288,12 +288,17 @@ public final class HyperDogNormalGame {
     private static JsonObject loadModel(){
         try(InputStream stream=HyperDogNormalGame.class.getClassLoader().getResourceAsStream("hyperdog/v5.json")){
             if(stream==null)throw new IllegalStateException("HYPER_DOG v5 model not packaged");
-            byte[] bytes=stream.readAllBytes();
+            // Git on Windows can checkout the JSON with CRLF; the approved v5
+            // checksum is for canonical LF bytes. Normalize only line endings.
+            String canonical=new String(stream.readAllBytes(),StandardCharsets.UTF_8)
+                    .replace("\r\n","\n");
             StringBuilder sha=new StringBuilder();
-            for(byte b:MessageDigest.getInstance("SHA-256").digest(bytes))
+            for(byte b:MessageDigest.getInstance("SHA-256")
+                    .digest(canonical.getBytes(StandardCharsets.UTF_8)))
                 sha.append(String.format(Locale.ROOT,"%02x",b&255));
-            if(!MODEL_SHA256.equals(sha.toString()))throw new IllegalStateException("HYPER_DOG v5 sha mismatch");
-            return JsonParser.parseString(new String(bytes,StandardCharsets.UTF_8)).getAsJsonObject();
+            if(!MODEL_SHA256.equals(sha.toString()))
+                throw new IllegalStateException("HYPER_DOG v5 canonical SHA-256 mismatch: "+sha);
+            return JsonParser.parseString(canonical).getAsJsonObject();
         }catch(Exception e){throw new ExceptionInInitializerError(e);}
     }
 }
