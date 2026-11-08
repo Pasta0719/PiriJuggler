@@ -99,7 +99,7 @@ public final class HyperDogPhase03Fixture {
     }
     private void finishRound(){
         HyperDogNormalGame.Outcome result=game.finish();
-        if(result.serial()!=completed.size()+1||roundOutcome!=result)
+        if(result.serial()!=completed.size()+1||!roundOutcome.equals(result))
             throw new IllegalStateException("mismatched normal game/physical outcome");
         JsonObject row=new JsonObject();
         row.addProperty("number",result.serial());
