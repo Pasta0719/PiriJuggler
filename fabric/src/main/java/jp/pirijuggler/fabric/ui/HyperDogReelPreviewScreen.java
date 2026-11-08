@@ -59,14 +59,30 @@ public final class HyperDogReelPreviewScreen extends Screen {
         return true;
     }
 
+    /** Phase03+ uses the same real client sequence and physical LEVER/BET path. */
+    public boolean requestPlay() {
+        if(!reels.opened()||(reels.spinning()&&!reels.complete()))return false;
+        var session=PiriJugglerClient.session();
+        if(session.sessionId()==null||session.machineId()!=reels.machineId())return false;
+        JsonObjectBuilder b=new JsonObjectBuilder();
+        b.add("sessionId",session.sessionId().toString());
+        b.add("machineId",session.machineId());
+        b.add("clientSequence",session.takeSequence());
+        ClientPlayNetworking.send(new PiriPayload(
+                EnvelopeCodec.encode(Envelope.current(PacketType.SPACE_ACTION,b.build()))));
+        return true;
+    }
+
     @Override public boolean keyPressed(int key,int scan,int modifiers) {
         PacketType action=SlotKeys.action(key,scan);
-        return action!=null && requestStop(action);
+        return action==PacketType.SPACE_ACTION && (!reels.spinning()||reels.complete())
+                ?requestPlay():action!=null&&requestStop(action);
     }
     @Override public boolean mouseClicked(double mx,double my,int button){
         if(button!=0)return false;
         var v=SlotLayout.Viewport.fit(width,height);
         double x=v.logicalX(mx),y=v.logicalY(my);
+        if((x>=300&&x<590)&&(y>=780&&y<1040))return requestPlay();
         if(y>=865 && y<975) {
             if(x>=720 && x<900)return requestStop(PacketType.STOP_LEFT);
             if(x>=990 && x<1170)return requestStop(PacketType.STOP_CENTER);

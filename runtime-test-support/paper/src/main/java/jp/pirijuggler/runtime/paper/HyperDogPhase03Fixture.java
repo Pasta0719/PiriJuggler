@@ -122,7 +122,9 @@ public final class HyperDogPhase03Fixture {
         completed.add(row);
         round=null;roundOutcome=null;lastFinish=System.currentTimeMillis();
         if(completed.size()==TARGET)finished=true;
-        sendPublic();
+        // Allow the last physical symbol-stop animation to finish before
+        // advertising that the next BET/LEVER can be accepted.
+        Bukkit.getScheduler().runTaskLater(plugin,this::sendPublic,8L);
     }
     private void tick(){
         try{
