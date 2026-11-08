@@ -1,6 +1,8 @@
+> **2026-11-08 現在**：ユーザー承認の特殊図柄/チェリー停止v2に更新中。v1の実機合格は保持するがv2への新たな実Paper/Fabric受入が必要。新仕様：[REEL_DESIGN_V2.md](REEL_DESIGN_V2.md)。
+
 # HYPER_DOG — PHASE 02 Reels, symbols, and server-authoritative stops
 
-Status: **COMPLETE — REAL_PAPER_FABRIC_ACCEPTANCE_PASS**
+Status: **IN_PROGRESS — V2_USER_APPROVED_REEL_REVISION_REVALIDATION**
 
 **最終実機証跡:** [PHASE_02_RUNTIME_ACCEPTANCE.md](PHASE_02_RUNTIME_ACCEPTANCE.md)。[GitHub Actions #42442118865](https://github.com/Pasta0719/PiriJuggler/actions/runs/42442118865) にて実Paper/Fabric 57ラウンド・171停止、7種実画像表示・復帰、全回帰PASS。詳細実装履歴は [PHASE_02_IMPLEMENTATION.md](PHASE_02_IMPLEMENTATION.md)。機種登録・抽選経済・完成筐体は後続Phase。
 

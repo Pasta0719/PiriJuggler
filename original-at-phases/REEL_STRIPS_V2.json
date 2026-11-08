@@ -1,0 +1,181 @@
+{
+  "schema_version": 2,
+  "status": "CURRENT_APPROVED_REEL_V2",
+  "approval": "2026-11-08 user confirmed new stop rules",
+  "length": 21,
+  "index_rule": "0..20 circular, TOP=index-1, MIDDLE=index, BOTTOM=index+1 (mod 21)",
+  "lines": [
+    [
+      -1,
+      -1,
+      -1
+    ],
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      -1,
+      0,
+      1
+    ],
+    [
+      1,
+      0,
+      -1
+    ]
+  ],
+  "symbols": [
+    "RED7",
+    "BAR",
+    "RAINBOW7",
+    "GRAPE",
+    "REPLAY",
+    "CHERRY",
+    "WATERMELON"
+  ],
+  "reels": {
+    "LEFT": [
+      "RED7",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "GRAPE",
+      "REPLAY",
+      "CHERRY",
+      "BAR",
+      "GRAPE",
+      "REPLAY",
+      "CHERRY",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "RAINBOW7",
+      "GRAPE",
+      "REPLAY",
+      "CHERRY",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON"
+    ],
+    "CENTER": [
+      "RED7",
+      "REPLAY",
+      "GRAPE",
+      "WATERMELON",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "BAR",
+      "REPLAY",
+      "GRAPE",
+      "WATERMELON",
+      "GRAPE",
+      "REPLAY",
+      "CHERRY",
+      "RAINBOW7",
+      "GRAPE",
+      "REPLAY",
+      "CHERRY",
+      "GRAPE",
+      "REPLAY",
+      "CHERRY"
+    ],
+    "RIGHT": [
+      "RED7",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "REPLAY",
+      "GRAPE",
+      "WATERMELON",
+      "BAR",
+      "GRAPE",
+      "REPLAY",
+      "WATERMELON",
+      "REPLAY",
+      "GRAPE",
+      "CHERRY",
+      "RAINBOW7",
+      "REPLAY",
+      "GRAPE",
+      "CHERRY",
+      "REPLAY",
+      "GRAPE",
+      "CHERRY"
+    ]
+  },
+  "premium_rules": {
+    "one_each_per_reel": [
+      "RED7",
+      "BAR",
+      "RAINBOW7"
+    ],
+    "evenly_spaced_indices": [
+      0,
+      7,
+      14
+    ],
+    "all_premium_three_symbol_lines": "Forbidden on every one of five paylines, including mixed special symbols, unless the exact earned result is being displayed",
+    "exceptions": [
+      "BAR on any payline",
+      "AT_ENTRY_RED7 three RED7 on middle",
+      "CZ_WIN three RAINBOW7 on middle",
+      "CHANCE RED7/BAR/RED7 on middle",
+      "STRONG_CHANCE RED7/BAR/RAINBOW7 on middle"
+    ],
+    "no_additional_premium_lines": true
+  },
+  "cherry_rules": {
+    "left_middle": "Forbidden for every role other than BAR",
+    "weak": "LEFT and CENTER cherries aligned horizontally on TOP or BOTTOM; RIGHT at that row not cherry",
+    "strong": "Three cherries on any of 5 paylines with LEFT cherry at TOP or BOTTOM",
+    "bar_exception": "BAR aligned on any payline; LEFT MIDDLE cherry allowed for BAR only; (6,6,6) yields BAR bottom with LEFT MIDDLE cherry"
+  },
+  "unchanged": {
+    "normal_slip_max": 4,
+    "normal_roles": [
+      "MISS",
+      "GRAPE",
+      "REPLAY"
+    ],
+    "guaranteed_slip_max": 20,
+    "guaranteed_roles": [
+      "WATERMELON",
+      "WEAK_CHERRY",
+      "STRONG_CHERRY",
+      "CHANCE",
+      "STRONG_CHANCE",
+      "BAR",
+      "AT_ENTRY_RED7",
+      "CZ_WIN",
+      "CZ_LOSE"
+    ],
+    "CZ_AUTO": [
+      "LEFT",
+      "RIGHT"
+    ],
+    "CZ_MANUAL": "CENTER",
+    "AT_announcement": "single unpaid RED7 confirmation after true role payout"
+  },
+  "expected_legal_stop_counts": {
+    "MISS": 5716,
+    "REPLAY": 706,
+    "GRAPE": 780,
+    "WATERMELON": 119,
+    "WEAK_CHERRY": 195,
+    "STRONG_CHERRY": 99,
+    "CHANCE": 1,
+    "STRONG_CHANCE": 1,
+    "BAR": 5,
+    "AT_ENTRY_RED7": 1,
+    "CZ_WIN": 1,
+    "CZ_LOSE": 18
+  }
+}

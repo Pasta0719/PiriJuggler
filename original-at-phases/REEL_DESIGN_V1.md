@@ -1,3 +1,5 @@
+> **HISTORICAL / SUPERSEDED BY [REEL_DESIGN_V2.md](REEL_DESIGN_V2.md) (2026-11-08)**。旧配列と旧受入証跡は履歴として保持。現行実装には使わない。
+
 # Phase 02 先行設計：3リール配列・停止制御 v1（4コマ通常／確定役引込み）
 
 **状態：初期実装用の具体配列・制御方針を固定済み。Paper/Fabricへの実装と実Minecraft受入は未着手。**

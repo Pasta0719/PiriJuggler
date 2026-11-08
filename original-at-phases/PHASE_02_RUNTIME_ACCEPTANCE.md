@@ -1,3 +1,5 @@
+> **HISTORICAL ACCEPTANCE**：このレポートは旧配列v1の実Paper/Fabric受入証跡。2026-11-08のユーザー指定によるv2配列変更の受入結果ではない。v2の再受入を別途実施する。
+
 # HYPER_DOG — Phase 02 final acceptance
 
 **Status: COMPLETE — 2026-11-08 (JST). Phase 03 remains NOT_STARTED.**

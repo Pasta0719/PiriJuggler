@@ -1,3 +1,5 @@
+> **2026-11-08 V2 REVISION**：この文書の既存PASS結果は旧配列v1のもの。現在の承認変更（特殊図柄間隔7・混合5ライン禁止・左チェリー上/下段・BAR例外）は [REEL_DESIGN_V2.md](REEL_DESIGN_V2.md)。新しい網羅テスト＋実Paper/Fabric受入を別途実施。
+
 # HYPER_DOG Phase 02 — Implementation evidence
 
 > **2026-11-08 FINAL ACCEPTANCE: PASS / Phase 02 COMPLETE.** See [PHASE_02_RUNTIME_ACCEPTANCE.md](PHASE_02_RUNTIME_ACCEPTANCE.md) and successful [real Paper/Fabric run #42442118865](https://github.com/Pasta0719/PiriJuggler/actions/runs/42442118865). Older "pending/unverified" paragraphs below are retained as dated implementation history and are superseded by this verified run. Full hall machine registration and economic game engine are not part of Phase 02.

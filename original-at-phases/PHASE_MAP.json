@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "PHASE_02_COMPLETE_PHASE_03_NOT_STARTED",
+  "status": "PHASE_02_V2_REVISION_IN_PROGRESS",
   "scope": "Original AT direct-win machine. Independent from retired standalone GOD and existing NEXT machine.",
   "entrypoint": "original-at-phases/README.md",
   "spec": "original-at-phases/SPEC_LOCK.md",
@@ -18,12 +18,12 @@
       "number": 2,
       "file": "original-at-phases/PHASE_02_REEL_CONTROL.md",
       "title": "Dedicated reels and authoritative stop control",
-      "status": "COMPLETE",
+      "status": "IN_PROGRESS",
       "requires": [
         "Phase01"
       ],
       "symbol_artwork_required_for_final_fabric_acceptance": true,
-      "evidence": "original-at-phases/PHASE_02_RUNTIME_ACCEPTANCE.md"
+      "evidence": "original-at-phases/REEL_DESIGN_V2.md"
     },
     {
       "number": 3,

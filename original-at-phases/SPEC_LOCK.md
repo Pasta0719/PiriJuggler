@@ -1,3 +1,5 @@
+> **2026-11-08 ユーザー最新承認**：リール配列・リーチ目禁止・チェリー停止は [REEL_DESIGN_V2.md](REEL_DESIGN_V2.md) / [REEL_STRIPS_V2.json](REEL_STRIPS_V2.json) を最新正本とする。下記「中段チェリー」「BAR中段固定」「各リール特殊図柄2個」の旧記述はv2により上書き。赤7・BAR・虹7は各1個/7コマ間隔。混合特殊図柄3連は5ライン全面禁止（役成立時の正規演出1ラインのみ例外）。弱チェ左+中のチェリーは上/下段、強チェリー3連は左上/下段、BAR時だけ左チェリー中段可。BARは5ライン揃い可。v5確率・メダル・AT仕様は維持。
+
 # HYPER_DOG — 設計正本（Phase計画ドラフト）
 
 **状態：初期実装仕様を固定。Phase実装・実Minecraft試験は別途。未決定事項は [IMPLEMENTATION_DECISIONS_V1.md](IMPLEMENTATION_DECISIONS_V1.md) で解消済み。**
