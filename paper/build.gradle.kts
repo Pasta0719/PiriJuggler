@@ -24,6 +24,10 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks.processResources {
+    from(rootProject.file("original-at-phases/reference/pirijuggler_new_machine_calibrated_v5.json")) {
+        into("hyperdog")
+        rename { "v5.json" }
+    }
     inputs.property("version", project.version)
     filesMatching("plugin.yml") { expand("version" to project.version) }
     // The canonical hint atlas is owned by Fabric resources. Paper also

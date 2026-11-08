@@ -307,6 +307,9 @@ public final class MachineService implements Listener, CommandExecutor {
             }
             if (action.equals("create") && (args.length == 2 || args.length == 3)) {
                 MachineType type=args.length==3?MachineType.valueOf(args[2].toUpperCase(Locale.ROOT)):MachineType.JUGGLER;
+                // HYPER_DOG Phase03 is an isolated Paper engine, not yet a selectable
+                // production game/economy. Never create a broken public machine.
+                if(type==MachineType.HYPER_DOG)throw new DomainException("MACHINE_NOT_RELEASED");
                 Machine.Location target = target(sender);
                 submit(sender, null, 0, () -> database.create(target, type, System.currentTimeMillis()), id -> { tell(sender, "MACHINE_CREATED " + id + " type=" + type); remote.machineChanged(id); }); return true;
             }
@@ -315,6 +318,7 @@ public final class MachineService implements Listener, CommandExecutor {
                 if(machine==null)throw new DomainException("INVALID_STATE");
                 if(busy(id))throw new DomainException("MACHINE_OCCUPIED");
                 MachineType type=MachineType.valueOf(args[3].toUpperCase(Locale.ROOT));
+                if(type==MachineType.HYPER_DOG)throw new DomainException("MACHINE_NOT_RELEASED");
                 submit(sender,null,id,()->{database.setMachineType(id,type,System.currentTimeMillis());return id;},
                         done->{tell(sender,"MACHINE_TYPE id="+done+" old="+machine.type()+" new="+type);remote.machineChanged(done);});
                 return true;
