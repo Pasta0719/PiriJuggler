@@ -12,7 +12,10 @@ on:
       - 'paper/src/test/java/jp/pirijuggler/paper/game/hyperdog/**'
       - 'paper/src/test/java/jp/pirijuggler/paper/phase07/**'
       - 'fabric/src/main/java/jp/pirijuggler/fabric/network/**'
+      - 'fabric/src/main/java/jp/pirijuggler/fabric/ui/**'
+      - 'fabric/src/main/java/jp/pirijuggler/fabric/render/**'
       - 'fabric/src/test/java/jp/pirijuggler/fabric/network/**'
+      - 'fabric/src/test/java/jp/pirijuggler/fabric/ui/**'
       - 'runtime-test-support/**'
       - '.github/workflows/hyperdog-phase07-runtime.yml'
   workflow_dispatch:
@@ -113,6 +116,7 @@ jobs:
             --tests 'jp.pirijuggler.fabric.ui.HallAudioTest' \
             --tests 'jp.pirijuggler.fabric.ui.HyperDogCabinetStateTest' \
             --tests 'jp.pirijuggler.fabric.ui.HyperDogSymbolAssetsTest' \
+            --tests 'jp.pirijuggler.fabric.ui.UiResourcesTest' \
             :fabric:remapJar --console=plain
       - name: Build isolated real Paper acceptance plugin
         run: |
