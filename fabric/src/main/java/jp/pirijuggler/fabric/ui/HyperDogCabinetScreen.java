@@ -141,6 +141,7 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
         drawPanel(c,SlotLayout.DATA_RIGHT,PANEL,STEEL);
         drawDataLamp(c);
         drawReels(c,vp);
+        drawFlash(c);
         drawAnnouncement(c);
         drawStatusIndicators(c);
         drawAddScreen(c);
@@ -176,6 +177,24 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
             c.drawBorder(x,300,270,390,STEEL);
             if(reels.spinning()&&reels.stopIndex(reel)>=0)
                 c.fill(x,681,x+270,689,0xff54c8ad);
+        }
+    }
+    private void drawFlash(DrawContext c){
+        String tintName=hud.flashColor();
+        int alpha=hud.flashAlphaPercent();
+        if(tintName==null||alpha==0)return;
+        int opacity=Math.round(alpha*255f/100f);
+        if("RAINBOW".equals(tintName)){
+            // Moving translucent bands across all three reels; the artwork remains legible.
+            int[] spectrum={0xfff14954,0xffffa752,0xffefd757,0xff45d48c,0xff548efa,0xffb78cff,0xfff14954};
+            int offset=(int)((hud.flashElapsedMs()/16)%spectrum.length);
+            for(int i=0;i<14;i++){
+                int x=670+i*900/14, end=670+(i+1)*900/14;
+                c.fill(x,300,end,690,(opacity<<24)|(spectrum[(i+offset)%spectrum.length]&0x00ffffff));
+            }
+        }else{
+            int index=Arrays.asList(COLORS).indexOf(tintName);
+            if(index>=0)c.fill(670,300,1570,690,(opacity<<24)|(COLORS_ARGB[index]&0x00ffffff));
         }
     }
     private void drawAnnouncement(DrawContext c){

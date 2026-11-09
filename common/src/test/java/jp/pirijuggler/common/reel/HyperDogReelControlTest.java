@@ -85,7 +85,7 @@ class HyperDogReelControlTest {
                                 assertEquals(b,HyperDogReelControl.Icon.RED7);
                                 assertEquals(c,HyperDogReelControl.Icon.RED7);
                             }
-                            case CZ_WIN -> {
+                            case CZ_WIN, AT_ENTRY_RAINBOW7 -> {
                                 assertArrayEquals(new int[]{0,0,0},line);
                                 assertEquals(a,HyperDogReelControl.Icon.RAINBOW7);
                                 assertEquals(b,HyperDogReelControl.Icon.RAINBOW7);
@@ -107,6 +107,7 @@ class HyperDogReelControlTest {
                 if(java.util.EnumSet.of(HyperDogReelControl.Role.BAR,
                         HyperDogReelControl.Role.AT_ENTRY_RED7,
                         HyperDogReelControl.Role.CZ_WIN,
+                        HyperDogReelControl.Role.AT_ENTRY_RAINBOW7,
                         HyperDogReelControl.Role.CHANCE,
                         HyperDogReelControl.Role.STRONG_CHANCE).contains(role))
                     assertEquals(1,premiumLines,role+" single paid/confirmation premium line");

@@ -8,7 +8,7 @@ public final class HyperDogReelControl {
     public static final int LENGTH = 21;
     public enum Icon { RED7, RAINBOW7, BAR, GRAPE, REPLAY, CHERRY, WATERMELON }
     public enum Role { MISS, REPLAY, GRAPE, WATERMELON, WEAK_CHERRY, STRONG_CHERRY,
-        CHANCE, STRONG_CHANCE, BAR, AT_ENTRY_RED7, CZ_WIN, CZ_LOSE }
+        CHANCE, STRONG_CHANCE, BAR, AT_ENTRY_RED7, CZ_WIN, CZ_LOSE, AT_ENTRY_RAINBOW7 }
     public record Choice(int pressedIndex, int stopIndex, int slip, int durationMs) {}
 
     private static final Icon[][] STRIPS = {
@@ -58,7 +58,7 @@ public final class HyperDogReelControl {
     }
     public static int payout(Role role,boolean inAt) {
         return switch (role) {
-            case MISS, REPLAY, AT_ENTRY_RED7, CZ_WIN, CZ_LOSE -> 0;
+            case MISS, REPLAY, AT_ENTRY_RED7, AT_ENTRY_RAINBOW7, CZ_WIN, CZ_LOSE -> 0;
             case GRAPE -> inAt?30:3;
             case WEAK_CHERRY, STRONG_CHERRY -> 1;
             case WATERMELON, CHANCE, STRONG_CHANCE -> 5;
@@ -132,14 +132,14 @@ public final class HyperDogReelControl {
             earned |= switch(role) {
                 case BAR -> a==Icon.BAR && b==Icon.BAR && c==Icon.BAR; // all five lines
                 case AT_ENTRY_RED7 -> center && a==Icon.RED7 && b==Icon.RED7 && c==Icon.RED7;
-                case CZ_WIN -> center && a==Icon.RAINBOW7 && b==Icon.RAINBOW7 && c==Icon.RAINBOW7;
+                case CZ_WIN, AT_ENTRY_RAINBOW7 -> center && a==Icon.RAINBOW7 && b==Icon.RAINBOW7 && c==Icon.RAINBOW7;
                 case CHANCE -> center && a==Icon.RED7 && b==Icon.BAR && c==Icon.RED7;
                 case STRONG_CHANCE -> center && a==Icon.RED7 && b==Icon.BAR && c==Icon.RAINBOW7;
                 default -> false;
             };
         }
         return switch(role) {
-            case BAR, AT_ENTRY_RED7, CZ_WIN, CHANCE, STRONG_CHANCE -> premiumLines==1 && earned;
+            case BAR, AT_ENTRY_RED7, AT_ENTRY_RAINBOW7, CZ_WIN, CHANCE, STRONG_CHANCE -> premiumLines==1 && earned;
             default -> premiumLines==0;
         };
     }
@@ -186,7 +186,7 @@ public final class HyperDogReelControl {
             case STRONG_CHANCE -> flags==STRONG_CHANCE;
             case BAR -> flags==BAR;
             case AT_ENTRY_RED7 -> flags==(AT_ENTRY_RED7|RED7)&&middle(s,Icon.RED7,Icon.RED7,Icon.RED7);
-            case CZ_WIN -> flags==RAINBOW7&&middle(s,Icon.RAINBOW7,Icon.RAINBOW7,Icon.RAINBOW7);
+            case CZ_WIN, AT_ENTRY_RAINBOW7 -> flags==RAINBOW7&&middle(s,Icon.RAINBOW7,Icon.RAINBOW7,Icon.RAINBOW7);
             case CZ_LOSE -> flags==0&&STRIPS[0][s[0]]==Icon.RAINBOW7&&
                     STRIPS[2][s[2]]==Icon.RAINBOW7&&STRIPS[1][s[1]]!=Icon.RAINBOW7;
         };

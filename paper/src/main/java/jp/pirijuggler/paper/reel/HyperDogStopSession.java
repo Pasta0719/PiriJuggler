@@ -172,7 +172,7 @@ public final class HyperDogStopSession {
         b.addProperty("automatic",automatic);
         return Envelope.current(PacketType.REEL_STOP,b);
     }
-    private String presentation(){return isCz()?"CZ":round.role()==HyperDogReelControl.Role.AT_ENTRY_RED7?"AT_RED7_CONFIRM":"NORMAL";}
+    private String presentation(){return isCz()?"CZ":round.role()==HyperDogReelControl.Role.AT_ENTRY_RED7?"AT_RED7_CONFIRM":round.role()==HyperDogReelControl.Role.AT_ENTRY_RAINBOW7?"RAINBOW7_CONFIRM":"NORMAL";}
     private boolean isCz(){return round.role()==HyperDogReelControl.Role.CZ_WIN||round.role()==HyperDogReelControl.Role.CZ_LOSE;}
     private boolean isAutomatic(Reel reel){return isCz()&&reel!=Reel.CENTER||round.role()==HyperDogReelControl.Role.AT_ENTRY_RED7;}
 

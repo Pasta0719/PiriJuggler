@@ -96,6 +96,26 @@ class HyperDogRoundTest {
         assertEquals("INVALID_STATE",last(s.receive(client(s,PacketType.STOP_LEFT,1,0),3000)).payload().get("errorCode").getAsString());
         assertFalse(s.begin().payload().toString().contains("AT_ENTRY_RED7"));
     }
+    @Test void upperComebackUsesThreeManualRainbowStopsNotCzAutos() {
+        var s=new HyperDogStopSession(UUID.randomUUID(),28,UUID.randomUUID(),
+                HyperDogReelControl.Role.AT_ENTRY_RAINBOW7,1000,new double[]{2,6,9});
+        assertEquals("RAINBOW7_CONFIRM",s.begin().payload().get("mode").getAsString());
+        assertEquals(0,s.tick(3000).size(),"confirmation never auto-stops outer reels");
+        assertEquals("STOP_TOO_EARLY",last(s.receive(client(s,PacketType.STOP_LEFT,1,1),1600))
+                .payload().get("errorCode").getAsString());
+        assertEquals(-1,s.snapshot().round().lastSequence());
+        s.receive(client(s,PacketType.STOP_RIGHT,1,4),1800);
+        var resumed=HyperDogStopSession.fromJson(s.toJson());
+        assertEquals(1,resumed.snapshot().round().history().count());
+        assertEquals("ALREADY_STOPPED",last(resumed.receive(client(resumed,PacketType.STOP_RIGHT,2,4),1900))
+                .payload().get("errorCode").getAsString());
+        resumed.receive(client(resumed,PacketType.STOP_CENTER,2,7),1900);
+        resumed.receive(client(resumed,PacketType.STOP_LEFT,3,11),2000);
+        assertTrue(resumed.complete());
+        assertArrayEquals(new int[]{14,14,14},resumed.snapshot().round().history().stops());
+        assertEquals(3,resumed.snapshot().round().lastSequence());
+        assertTrue(resumed.canStartNextGame(2000));
+    }
     @Test void stopPacketsRoundTripViaProductionCodecAndSnapshotRecovery() {
         var s=new HyperDogStopSession(UUID.randomUUID(),25,UUID.randomUUID(),
                 HyperDogReelControl.Role.GRAPE,3000,new double[]{1,2,3});

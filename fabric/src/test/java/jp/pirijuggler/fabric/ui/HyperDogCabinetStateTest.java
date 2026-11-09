@@ -109,6 +109,57 @@ class HyperDogCabinetStateTest {
         time.set(650);assertFalse(view.active(HyperDogCabinetState.Lamp.LOWER));
         time.set(2000);assertTrue(view.active(HyperDogCabinetState.Lamp.LOWER));
     }
+    @Test void phase06ServerStagesAndThirdStopFlashAreIdempotentAndGuaranteed(){
+        var time=new AtomicLong(1000L);
+        var view=state(time);
+        JsonObject lever=identity();
+        lever.addProperty("atStage","UPPER_AT");
+        lever.addProperty("rightLampActive",true);
+        lever.addProperty("awardRevealed",false);
+        lever.addProperty("rightLampColor","WHITE");
+        lever.addProperty("rightLampCount",1);
+        lever.addProperty("presentationId",77);
+        view.receive(packet(PacketType.PUBLIC_STATE,lever));
+        assertEquals(1,view.rightCount());
+        assertEquals("WHITE",view.color());
+        assertNull(view.flashColor());
+        JsonObject stop=lever.deepCopy();
+        stop.addProperty("rightLampCount",3);
+        stop.addProperty("rightLampColor","YELLOW");
+        view.receive(packet(PacketType.PUBLIC_STATE,stop));
+        assertEquals(3,view.rightCount());
+        assertEquals("YELLOW",view.color());
+        JsonObject commit=stop.deepCopy();
+        commit.addProperty("awardRevealed",true);
+        commit.addProperty("newAward",2000);
+        commit.addProperty("flashEventId",77);
+        commit.addProperty("flashColor","RAINBOW");
+        commit.addProperty("flashAward",2000);
+        commit.addProperty("flashStartedEpochMs",1000);
+        view.receive(packet(PacketType.PUBLIC_STATE,commit));
+        assertEquals("RAINBOW",view.flashColor());
+        assertEquals(35,view.flashAlphaPercent());
+        time.set(1080);
+        assertEquals(0,view.flashAlphaPercent());
+        time.set(1150);
+        assertEquals(35,view.flashAlphaPercent());
+        time.set(1600);
+        assertNull(view.flashColor());
+        view.receive(packet(PacketType.PUBLIC_STATE,commit));
+        assertNull(view.flashColor(),"duplicate packets cannot trigger a new flash");
+        JsonObject invalid=commit.deepCopy();
+        invalid.addProperty("flashEventId",78);
+        invalid.addProperty("flashAward",1999);
+        invalid.addProperty("flashStartedEpochMs",1600);
+        view.receive(packet(PacketType.PUBLIC_STATE,invalid));
+        assertNull(view.flashColor(),"rainbow is only for a true single 2000 award");
+        JsonObject off=identity();
+        off.addProperty("rightLampActive",false);
+        off.addProperty("rightLampColor","RED");
+        off.addProperty("rightLampCount",3);
+        view.receive(packet(PacketType.PUBLIC_STATE,off));
+        assertEquals(0,view.rightCount());
+    }
     @Test void serverIdentifiedFifoDisplaysTotalBeforePlusThenRestoresRemaining(){
         var time=new AtomicLong(100L);var view=state(time);
         var state=identity();state.addProperty("atStage","UPPER_AT");

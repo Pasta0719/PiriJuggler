@@ -9,7 +9,7 @@ public final class HyperDogReelAcceptance {
         {Reel.CENTER,Reel.LEFT,Reel.RIGHT}, {Reel.CENTER,Reel.RIGHT,Reel.LEFT},
         {Reel.RIGHT,Reel.LEFT,Reel.CENTER}, {Reel.RIGHT,Reel.CENTER,Reel.LEFT}
     };
-    private static final int[] COUNTS = {5716,706,780,119,195,99,1,1,5,1,1,18};
+    private static final int[] COUNTS = {5716,706,780,119,195,99,1,1,5,1,1,18,1};
     public static void main(String[] args) {run();}
     public static void run() {
         var solver=new HyperDogReelControl();long histories=0;

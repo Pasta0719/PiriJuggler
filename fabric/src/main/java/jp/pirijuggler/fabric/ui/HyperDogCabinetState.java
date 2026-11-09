@@ -28,6 +28,9 @@ public final class HyperDogCabinetState {
     private String error="";
     private final Deque<DisplayEvent> pending=new ArrayDeque<>();
     private final Set<Long> seen=new HashSet<>();
+    private final Set<Long> seenFlash=new HashSet<>();
+    private long flashStartEpochMs=-1,flashAward;
+    private String flashColor="";
     private DisplayEvent showing;
     private long showingUntil;
     private long lastUpdateMs;
@@ -59,6 +62,15 @@ public final class HyperDogCabinetState {
                         if(seen.add(next.id()))pending.addLast(next);
                     }
                 }
+                // Never replay the same server-confirmed flash after a duplicated PUBLIC_STATE.
+                if(data.has("flashEventId")&&data.has("flashStartedEpochMs")){
+                    long id=data.get("flashEventId").getAsLong();
+                    if(id>0&&seenFlash.add(id)){
+                        flashStartEpochMs=data.get("flashStartedEpochMs").getAsLong();
+                        flashAward=data.get("flashAward").getAsLong();
+                        flashColor=data.get("flashColor").getAsString();
+                    }
+                }
                 advance();
             }
             case DATA_LAMP -> {
@@ -82,7 +94,8 @@ public final class HyperDogCabinetState {
     }
     public void reset(){
         sessionId=null;machineId=0;publicData=null;dataLamp=null;error="";
-        pending.clear();seen.clear();showing=null;showingUntil=0;
+        pending.clear();seen.clear();seenFlash.clear();showing=null;showingUntil=0;
+        flashColor="";flashAward=0;flashStartEpochMs=-1;
         closeRequested=false;lastUpdateMs=0;
     }
     public UUID sessionId(){return sessionId;}
@@ -127,22 +140,49 @@ public final class HyperDogCabinetState {
      * arrives during a state switch.
      */
     public int rightCount(){
+        if(publicData!=null&&publicData.has("rightLampActive")&&!flag("rightLampActive"))return 0;
         long award=number("newAward");
-        if(award<10)return 0;
-        int count=(int)number("rightLampCount");
+        if(!isPresentationPreview()&&award<10)return 0;
         String c=color();
-        return c==null?0:Math.min(3,Math.max(0,count));
+        return c==null?0:Math.min(3,Math.max(0,(int)number("rightLampCount")));
     }
-    public String color(){
-        long award=number("newAward");
-        if(award<10)return null;
-        String value=value("rightLampColor");
-        long minimum=switch(value) {
+    private boolean isPresentationPreview(){
+        return publicData!=null&&publicData.has("rightLampActive")&&flag("rightLampActive")
+                &&!flag("awardRevealed");
+    }
+    private static long minimum(String value){
+        return switch(value){
             case "WHITE" -> 10;case "BLUE" -> 20;case "GREEN" -> 30;
             case "YELLOW" -> 50;case "PURPLE" -> 100;case "RED" -> 500;
             case "RAINBOW" -> 2000;default -> Long.MAX_VALUE;
         };
-        return award>=minimum&&(!"RAINBOW".equals(value)||award==2000)?value:null;
+    }
+    public String color(){
+        String value=value("rightLampColor");
+        if(minimum(value)==Long.MAX_VALUE)return null;
+        if(isPresentationPreview())return value; // Only the stage permitted by Paper, no unrevealed award.
+        long award=number("newAward");
+        return award>=minimum(value)&&(!"RAINBOW".equals(value)||award==2000)?value:null;
+    }
+    /** A flash can only use the actual third-stop award, never a TOTAL or guessed payout. */
+    public String flashColor(){
+        if(flashStartEpochMs<0||!eligibleFlash()||flashElapsedMs()>=600)return null;
+        return flashColor;
+    }
+    private boolean eligibleFlash(){
+        return flashAward>=minimum(flashColor)&&(!"RAINBOW".equals(flashColor)||flashAward==2000);
+    }
+    public long flashElapsedMs(){
+        if(flashStartEpochMs<0)return Long.MAX_VALUE;
+        return Math.max(0L,clock.getAsLong()-flashStartEpochMs);
+    }
+    public int flashAlphaPercent(){
+        if(flashColor()==null||flashElapsedMs()%150>=80)return 0;
+        return switch(flashColor){
+            case "WHITE" -> 26;case "BLUE" -> 28;case "GREEN" -> 30;
+            case "YELLOW" -> 33;case "PURPLE" -> 38;case "RED" -> 42;
+            case "RAINBOW" -> 35;default -> 0;
+        };
     }
     public boolean displayLocked(){
         advance();return showing!=null||!pending.isEmpty();

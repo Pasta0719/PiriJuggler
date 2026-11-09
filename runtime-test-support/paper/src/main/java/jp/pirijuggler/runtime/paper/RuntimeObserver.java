@@ -58,6 +58,7 @@ public final class RuntimeObserver extends JavaPlugin {
             getLogger().info("HYPER_DOG_PHASE04_REAL_JVM_RESTART_FIXTURE "+phase04Boot);
             return;
         }
+        if ("hyperdog06".equals(System.getProperty("piri.runtime.phase"))) {new HyperDogPhase06Fixture(this);getLogger().info("HYPER_DOG_PHASE06_FIXTURE_READY");return;}
         if ("hyperdog05".equals(System.getProperty("piri.runtime.phase"))) {new HyperDogPhase05Fixture(this);getLogger().info("HYPER_DOG_PHASE05_FIXTURE_READY");return;}
         if ("hyperdog04".equals(System.getProperty("piri.runtime.phase"))) {new HyperDogPhase04Fixture(this);getLogger().info("HYPER_DOG_PHASE04_FIXTURE_READY");return;}
         if ("hyperdog03".equals(System.getProperty("piri.runtime.phase"))) {new HyperDogPhase03Fixture(this);getLogger().info("HYPER_DOG_PHASE03_FIXTURE_READY");return;}

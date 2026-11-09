@@ -44,7 +44,7 @@ public final class HyperDogClientReels {
                 if(!matches(b))return;
                 spinId=UUID.fromString(b.get("spinId").getAsString());
                 presentation=b.get("mode").getAsString();
-                if(!Set.of("NORMAL","CZ","AT_RED7_CONFIRM").contains(presentation))
+                if(!Set.of("NORMAL","CZ","AT_RED7_CONFIRM","RAINBOW7_CONFIRM").contains(presentation))
                     throw new IllegalArgumentException("presentation");
                 var phases=b.getAsJsonObject("startPhase");
                 for(Reel reel:Reel.values()){
