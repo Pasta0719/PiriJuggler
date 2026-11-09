@@ -16,6 +16,8 @@ import jp.pirijuggler.paper.economy.MedalToken;
 import jp.pirijuggler.paper.economy.VaultBridge;
 import jp.pirijuggler.paper.game.*;
 import jp.pirijuggler.paper.game.god.*;
+import jp.pirijuggler.paper.game.hyperdog.HyperDogGameEngine;
+import jp.pirijuggler.paper.game.hyperdog.HyperDogFullGame;
 import jp.pirijuggler.paper.reel.InternalRole;
 import jp.pirijuggler.paper.session.AdminSessions;
 import jp.pirijuggler.paper.session.Session;
@@ -94,7 +96,10 @@ public final class MachineService implements Listener, CommandExecutor {
                 .register(MachineType.JUGGLER_GOD_EXTREME,new JugglerGodGameEngine(jugglerGodExtremeGame,random,weights,config,"juggler_god_extreme"))
                 .register(MachineType.GOD,new jp.pirijuggler.paper.game.god.GodGameEngine(random))
                 .register(MachineType.SKILL_STOP,new SkillStopGame(random,new PaperMainThread(plugin),config))
-                .register(MachineType.PACHINKO,new jp.pirijuggler.paper.game.pachinko.PachinkoGameEngine());
+                .register(MachineType.PACHINKO,new jp.pirijuggler.paper.game.pachinko.PachinkoGameEngine())
+                // Native adapter is available only for test-only placed cabinets:
+                // create/type and mobile seating stay release-gated until approval.
+                .register(MachineType.HYPER_DOG,new HyperDogGameEngine());
         remote=new RemoteMachineSync(plugin,()->state,plugin::canUseSlot,(saved,nowNanos)->engine(saved.machine()).capture(saved,nowNanos));
         var gameConfig=jp.pirijuggler.paper.database.StartupProfile.map(config.get("game"));
         graceMs = ((Number) gameConfig.get("disconnect_grace_seconds")).longValue() * 1000;
@@ -689,9 +694,22 @@ public final class MachineService implements Listener, CommandExecutor {
         submit(player, owner, machine.id(), () -> database.seat(owner, machine.id(), System.currentTimeMillis()), seated -> {
             Machine seatedMachine=state.machine(seated.machine());
             JsonObject open=seated.openPacket();open.addProperty("machineType",seatedMachine.type().name());
-            JsonObject publicState=seated.publicState();publicState.addProperty("machineType",seatedMachine.type().name());
-            send(player, PacketType.OPEN_MACHINE, open); send(player, PacketType.PUBLIC_STATE, publicState);
-            engine(seated.machine()).resume(seated,System.nanoTime()).ifPresent(packet->{send(player,packet);remote.publishOwnerPacket(machine.id(),packet);});
+            send(player, PacketType.OPEN_MACHINE, open);
+            if(seatedMachine.type()==MachineType.HYPER_DOG) {
+                var nativeEngine=(HyperDogGameEngine)engine(seated.machine());
+                for(var packet:nativeEngine.resumePackets(seated,System.currentTimeMillis())){
+                    send(player,packet);remote.publishOwnerPacket(machine.id(),packet);
+                }
+                if(seated.machineState()==null||!seated.machineState().has("hyperDog")){
+                    JsonObject publicState=seated.publicState();
+                    publicState.addProperty("machineType","HYPER_DOG");
+                    send(player,PacketType.PUBLIC_STATE,publicState);
+                }
+            }else{
+                JsonObject publicState=seated.publicState();publicState.addProperty("machineType",seatedMachine.type().name());
+                send(player,PacketType.PUBLIC_STATE,publicState);
+                engine(seated.machine()).resume(seated,System.nanoTime()).ifPresent(packet->{send(player,packet);remote.publishOwnerPacket(machine.id(),packet);});
+            }
         });
     }
 
@@ -905,10 +923,44 @@ public final class MachineService implements Listener, CommandExecutor {
             List<Envelope> committed=game.committed(transition,System.nanoTime());
             for(var packet:committed){send(player,packet);remote.publishOwnerPacket(machine,packet);}
             for(var event:game.scheduled(transition))schedule(player,id,machine,event);
+            if(game instanceof HyperDogGameEngine && transition.packets().stream().anyMatch(packet ->
+                    packet.packetType()==PacketType.SPIN_START &&
+                    packet.payload().has("mode") &&
+                    "AT_RED7_CONFIRM".equals(packet.payload().get("mode").getAsString())))
+                scheduleHyperDogRed7Completion(player,id,machine,transition.after().sequence());
             enqueueGameplayPersistence(transition);
         } catch(DomainException error){reject(player,sequence,error.getMessage());}
         catch(ArithmeticException overflow){reject(player,sequence,"INVALID_STATE");}
     }
+    /** Only the automatic RED7 can complete without a client STOP. This runs
+     * after the production animation, then persists the same audited HYPER_DOG
+     * engine transition, never a Fabric-owned award or client-side lottery.
+     */
+    private void scheduleHyperDogRed7Completion(Player player,UUID sessionId,int machine,long expectedSequence){
+        plugin.getServer().getScheduler().runTaskLater(plugin,()->{
+            if(stopped||state==null)return;
+            Session current=state.session(player.getUniqueId());
+            if(current==null||!current.id().equals(sessionId)||
+               current.machine()!=machine||current.sequence()!=expectedSequence||
+               current.lifecycle()!=Session.Lifecycle.ACTIVE)return;
+            Machine cabinet=state.machine(machine);
+            if(cabinet==null||cabinet.type()!=MachineType.HYPER_DOG)return;
+            try{
+                var nativeEngine=(HyperDogGameEngine)engine(machine);
+                var transition=nativeEngine.finalizeAutomaticRed7(current,cabinet,System.currentTimeMillis());
+                if(transition.isEmpty())return;
+                var next=transition.get();
+                applyGameplayMemory(next.after(),next);
+                for(var packet:nativeEngine.committed(next,System.nanoTime())){
+                    send(player,packet);remote.publishOwnerPacket(machine,packet);
+                }
+                enqueueGameplayPersistence(next);
+            }catch(RuntimeException failure){
+                plugin.getLogger().log(Level.SEVERE,"HYPER_DOG_AUTO_RED7_FAILED machine="+machine,failure);
+            }
+        },22L);
+    }
+
     private void schedule(Player player,UUID sessionId,int machine,GameTransition.Scheduled event){
         long ticks=Math.max(1,(event.delayMs()+49)/50);
         plugin.getServer().getScheduler().runTaskLater(plugin,()->{
