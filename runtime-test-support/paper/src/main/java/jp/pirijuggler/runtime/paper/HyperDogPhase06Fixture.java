@@ -196,6 +196,12 @@ public final class HyperDogPhase06Fixture {
                 player=Bukkit.getPlayerExact("PiriRuntimeTest");
                 if(player==null||!player.isOnline()){write();return;}
             }
+            // This isolated visual acceptance fixture is not survival gameplay:
+            // a random frozen-biome spawn previously killed the simulated tester
+            // after round 48, leaving the CI stalled despite valid Paper/Fabric IO.
+            // Never modify damage rules in the production plugin or real worlds.
+            player.setInvulnerable(true);
+            player.setFreezeTicks(0);
             var prod=(PiriJugglerPlugin)Bukkit.getPluginManager().getPlugin("PiriJuggler");
             if(prod==null||!prod.isEnabled()||!prod.canUseSlot(player.getUniqueId())){write();return;}
             if(!ready){
