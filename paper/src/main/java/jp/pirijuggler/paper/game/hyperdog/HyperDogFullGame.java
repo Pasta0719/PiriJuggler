@@ -156,8 +156,7 @@ public final class HyperDogFullGame {
         if(f.comebackPaidLeft<0||f.comebackPaidLeft>32||f.completedAtCount<0||
            f.at!=null&&!f.normal.waitingForAt()||
            f.at==null&&f.normal.waitingForAt()||
-           f.at!=null&&f.comebackPaidLeft!=0||
-           f.at!=null&&f.normal.credits()>f.at.credit()+Long.MAX_VALUE/2)
+           f.at!=null&&f.comebackPaidLeft!=0)
             throw new IllegalArgumentException("inconsistent game snapshot");
         return f;
     }
