@@ -15,6 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.nio.file.Files;
 import java.util.UUID;
 
 /**
@@ -26,9 +27,37 @@ public final class HyperDogPhase07LiveFixture {
     private final JavaPlugin helper;
     private final Path result=Path.of(System.getProperty("piri.runtime.serverResult"));
     private boolean started;
+    private final Path audioTrigger=Path.of(System.getProperty("piri.runtime.phase07AudioTrigger"));
+    private RemoteMachineSync liveRemote;
+    private int liveHyper;
+    private boolean audioTriggered;
     public HyperDogPhase07LiveFixture(JavaPlugin helper){
         this.helper=helper;
         Bukkit.getScheduler().runTaskTimer(helper,this::tick,20L,10L);
+        Bukkit.getScheduler().runTaskTimer(helper,this::emitAudioAfterSubscribersReady,25L,10L);
+    }
+    /** Trigger the actual production spectator audio path after both live clients subscribe.
+     * Never synthesize a successful sound assertion or modify production routing.
+     */
+    private void emitAudioAfterSubscribersReady(){
+        if(liveRemote==null||audioTriggered||!Files.isRegularFile(audioTrigger))return;
+        try{
+            Files.deleteIfExists(audioTrigger);
+            JsonObject spin=new JsonObject();
+            spin.addProperty("spinId",UUID.randomUUID().toString());
+            spin.addProperty("animation","NORMAL");
+            spin.addProperty("rngState","MUST_NEVER_LEAK");
+            spin.addProperty("setting",6);
+            spin.addProperty("premium",true);
+            JsonObject phase=new JsonObject();
+            phase.addProperty("left",0);phase.addProperty("center",7);phase.addProperty("right",14);
+            spin.add("startPhase",phase);
+            liveRemote.publishOwnerPacket(liveHyper,Envelope.current(PacketType.SPIN_START,spin));
+            audioTriggered=true;
+            JsonObject output=JsonParser.parseString(Files.readString(result)).getAsJsonObject();
+            output.addProperty("audioTriggered",true);
+            AtomicTestEvidence.write(result,output.toString());
+        }catch(Exception failure){fail(failure);}
     }
     private void tick(){
         if(started)return;
@@ -93,18 +122,9 @@ public final class HyperDogPhase07LiveFixture {
                 old.addProperty("bigCount",1);old.addProperty("regCount",2);
                 service.updateRemoteDataLamp(old);
                 remote.refreshOnlineViewers();
-                // Test the genuine production copy-only spectator packet path.
-                // A private field is deliberately included to ensure no leak.
-                JsonObject spin=new JsonObject();
-                spin.addProperty("spinId",UUID.randomUUID().toString());
-                spin.addProperty("animation","NORMAL");
-                spin.addProperty("rngState","MUST_NEVER_LEAK");
-                spin.addProperty("setting",6);
-                spin.addProperty("premium",true);
-                JsonObject phase=new JsonObject();
-                phase.addProperty("left",0);phase.addProperty("center",7);phase.addProperty("right",14);
-                spin.add("startPhase",phase);
-                remote.publishOwnerPacket(ready.hyper(),Envelope.current(PacketType.SPIN_START,spin));
+                // Do not emit transient packets before Minecraft clients have subscribed.
+                liveRemote=remote;
+                liveHyper=ready.hyper();
                 JsonObject output=new JsonObject();
                 output.addProperty("ready",true);output.addProperty("hyperMachine",ready.hyper());
                 output.addProperty("legacyMachine",ready.legacy());output.addProperty("period",ready.period());
