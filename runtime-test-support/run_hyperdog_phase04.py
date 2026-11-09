@@ -36,6 +36,8 @@ def save(path,data):
 def wait(label,predicate,seconds,check_client=True):
     until=time.monotonic()+seconds
     last_report=0
+    last_rounds=-1
+    last_advance=time.monotonic()
     while time.monotonic()<until:
         if predicate():
             print("HYPER_DOG_PHASE04_WAIT_OK",label,flush=True)
@@ -45,6 +47,14 @@ def wait(label,predicate,seconds,check_client=True):
         if check_client and client and client.poll() is not None:
             raise RuntimeError("Fabric terminated during "+label)
         state=compact_states(server_result,client_result)
+        if label=="AT/CZ real network acceptance completed":
+            current_rounds=state["Paper"].get("completedRounds",0)
+            if current_rounds>last_rounds:
+                last_rounds=current_rounds
+                last_advance=time.monotonic()
+            elif current_rounds>0 and time.monotonic()-last_advance>55:
+                raise RuntimeError("No Paper AT/CZ game progress for >55s after round "+
+                                   str(current_rounds)+"; likely lost BET/LEVER ACK or stuck stop")
         if state["Fabric"].get("error"):
             raise RuntimeError("Fabric probe error during "+label+": "+state["Fabric"]["error"])
         if time.monotonic()-last_report>=20:
