@@ -146,6 +146,42 @@ try:
     check("actual CZ win and loss both shown with server-selected outcomes",
           any(x["stage"]=="UPPER_CZ" and x["czSuccess"] for x in rounds) and
           any(x["stage"]=="UPPER_CZ" and not x["czSuccess"] for x in rounds))
+    # Independent fixed-v5 specification audit. This uses the canonical
+    # reference JSON, not a copied set of numbers from the Java implementation.
+    model_path=ROOT/"original-at-phases/reference/pirijuggler_new_machine_calibrated_v5.json"
+    model_bytes=model_path.read_bytes()
+    model=json.loads(model_bytes)
+    check("fixed canonical v5 reference SHA256",
+          hashlib.sha256(model_bytes).hexdigest()==
+          "af1ae6f88e6593116692f987534c406673fbbfa73cb25f52615a7f1674c20ab3")
+    paid_profiles={"LOWER_AT","UPPER_AT"}
+    role_payout=model["fixed_requirements"]["payout_regular_or_at"]
+    check("v5 exact payout table for every actual AT/CZ/initial role",
+          all(row["payout"]==(role_payout[row["role"]][row["stage"]]
+                                if row["stage"] in paid_profiles else 0)
+              for row in rounds))
+    check("v5 real role net-difference formula for all Paper AT/CZ spins",
+          all(row["remaining"]==(
+              (model["bar_special"]["normal_direct_upper"]["dedicated_bonus_medals"]
+               if i==0 and row["episode"]==0 else
+               0 if i==0 or row["episode"]!=rounds[i-1]["episode"] or
+                         (row["stage"]=="LOWER_INITIAL" and rounds[i-1]["stage"]=="UPPER_CZ")
+               else rounds[i-1]["remaining"])
+              +row["award"]-(
+                  (row["payout"]-row["bet"]) if row["stage"] in paid_profiles else 0)
+              +(model["bar_special"]["normal_direct_upper"]["dedicated_bonus_medals"]
+                if row["stage"]=="LOWER_AT" and row["role"]=="BAR" else 0)
+          ) for i,row in enumerate(rounds)))
+    check("v5 physical per-spin wallet conservation including every free initial game",
+          all(row["credit"]==(
+              (10000 if i==0 or row["episode"]!=rounds[i-1]["episode"]
+               else rounds[i-1]["credit"])-row["bet"]+row["payout"])
+              for i,row in enumerate(rounds)))
+    strong_chance_amounts={int(amount) for amount in
+        model["lower_at"]["rare_role_addon_weights_percent"]["STRONG_CHANCE"]}
+    check("v5 lower strong-chance exact bonus support and mandatory CZ ticket",
+          all(row["ticket"]==1 and row["award"] in strong_chance_amounts
+              for row in rounds if row["stage"]=="LOWER_AT" and row["role"]=="STRONG_CHANCE"))
     manifest["passed"]=True
 except Exception as e:
     manifest["failure"]=str(e)
