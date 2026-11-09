@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "PHASE_07_IN_PROGRESS",
+  "status": "PHASE_07_COMPLETE",
   "scope": "Original AT direct-win machine. Independent from retired standalone GOD and existing NEXT machine.",
   "entrypoint": "original-at-phases/README.md",
   "spec": "original-at-phases/SPEC_LOCK.md",
@@ -69,10 +69,11 @@
       "number": 7,
       "file": "original-at-phases/PHASE_07_ECOSYSTEM.md",
       "title": "Admin / data lamp / remote world-mobile / sounds / recovery",
-      "status": "IN_PROGRESS",
+      "status": "COMPLETE",
       "requires": [
         "Phase06"
-      ]
+      ],
+      "evidence": "original-at-phases/PHASE_07_RUNTIME_ACCEPTANCE.md"
     },
     {
       "number": 8,
