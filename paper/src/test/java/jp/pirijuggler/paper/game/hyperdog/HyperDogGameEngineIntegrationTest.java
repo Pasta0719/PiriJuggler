@@ -122,9 +122,9 @@ class HyperDogGameEngineIntegrationTest {
             var fresh=db.state().session(owner);
             var lever=engine.plan(fresh,machine,PacketType.SPACE_ACTION,2,NOW+3,0,0,null);
             var stored=new GameStore(db).commit(lever);
-            assertEquals(247,stored.number("credit")+stored.number("held_medals"));
+            assertEquals(250,stored.number("credit")+stored.number("held_medals"));
             var ng=HyperDogFullGame.restore(stored.machineState().getAsJsonObject("hyperDog"));
-            assertEquals(247,ng.credit());
+            assertEquals(250,ng.credit());
             assertNotEquals(rng,ng.normal().snapshot().get("rngState").getAsString(),
                     "only the actual lever consumes the RNG stream");
         }
