@@ -4,6 +4,8 @@ import jp.pirijuggler.fabric.PiriJugglerClient;
 import jp.pirijuggler.fabric.network.RemoteMachineViewState;
 import jp.pirijuggler.fabric.ui.UiConstants;
 import jp.pirijuggler.fabric.ui.JugglerGodAssets;
+import jp.pirijuggler.fabric.ui.HyperDogLampGeometry;
+import jp.pirijuggler.fabric.ui.SlotLayout;
 import jp.pirijuggler.fabric.ui.SettingHintTexture;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
@@ -191,15 +193,14 @@ public final class WorldCabinetRenderer {
             // Mirror HYPER_DOG's *two* upper announcement lamps, three left
             // status windows, three right expectation lamps and its dark LCD.
             // World spectators receive public state only, never hidden lottery data.
-            for(int i=0;i<2;i++){
-                int x=i==0?574:1520;
-                rect(consumers,WHITE,basis,camera,x,230,76,64,.0025,hyperOff,0,0,1,1);
-                if(state.lampVisible(now))
-                    rect(consumers,WHITE,basis,camera,x+7,236,62,52,.0030,0xffffcc6b,0,0,1,1);
-            }
+            for(int i=0;i<2;i++)
+                drawHyperDogLamp(consumers,basis,camera,
+                        HyperDogLampGeometry.announcement(i),state.lampVisible(now),0xffffcc6b);
             for(int i=0;i<3;i++){
-                rect(consumers,WHITE,basis,camera,418,372+61*i,146,36,.0025,hyperOff,0,0,1,1);
-                rect(consumers,WHITE,basis,camera,1583,370+69*i,34,34,.0025,hyperOff,0,0,1,1);
+                drawHyperDogLamp(consumers,basis,camera,
+                        HyperDogLampGeometry.left(i),false,hyperOff);
+                drawHyperDogLamp(consumers,basis,camera,
+                        HyperDogLampGeometry.right(i),false,hyperOff);
             }
             rect(consumers,WHITE,basis,camera,356,575,272,132,.0025,0xff0a0c16,0,0,1,1);
         }else{
@@ -252,6 +253,33 @@ public final class WorldCabinetRenderer {
         stopButton(consumers,basis,camera,720,865,180,110,"LEFT",client.textRenderer,buttonTint);
         stopButton(consumers,basis,camera,990,865,180,110,"CENTER",client.textRenderer,buttonTint);
         stopButton(consumers,basis,camera,1260,865,180,110,"RIGHT",client.textRenderer,buttonTint);
+    }
+
+    /**
+     * Match the exact GUI lamp dimensions. The lens and light sit inside two
+     * successive dark borders, so ON and OFF both retain visible negative space.
+     * The world plane uses four progressively front-facing layers.
+     */
+    private static void drawHyperDogLamp(VertexConsumerProvider c,CabinetPlacement.Basis b,
+                                         Vec3d cam,HyperDogLampGeometry.Layers l,
+                                         boolean lit,int lightColor){
+        drawLampRect(c,b,cam,l.frame(),.00240,0xff404454);
+        drawLampRect(c,b,cam,l.gasket(),.00265,0xff0b0e18);
+        drawLampRect(c,b,cam,l.lens(),.00285,0xff34303b);
+        drawLampRect(c,b,cam,l.emitter(),.00305,lit?lightColor:0xff29242c);
+        if(lit){
+            SlotLayout.Rect e=l.emitter();
+            int pad=Math.max(2,e.w()/10);
+            int top=e.y()+Math.max(1,e.h()/8);
+            int bottom=Math.min(e.y()+e.h()-1,top+Math.max(1,e.h()/7));
+            if(e.w()>pad*2&&bottom>top)
+                rect(c,WHITE,b,cam,e.x()+pad,top,e.w()-pad*2,bottom-top,.0032,0x55ffffff,0,0,1,1);
+        }
+    }
+
+    private static void drawLampRect(VertexConsumerProvider c,CabinetPlacement.Basis b,
+                                     Vec3d cam,SlotLayout.Rect r,double depth,int color){
+        rect(c,WHITE,b,cam,r.x(),r.y(),r.w(),r.h(),depth,color,0,0,1,1);
     }
 
     private static void control(VertexConsumerProvider c,CabinetPlacement.Basis b,Vec3d cam,
