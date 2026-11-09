@@ -21,12 +21,12 @@ class HyperDogNormalGameTest {
         if(game.waitingForAt())game.resumeAfterAt();
     }
 
-    @Test void v6ModelAndSettingChanceAndRolePayouts() {
-        assertEquals("e99ae52bbf431ec76267ce35a0d4de3f13c5e2c55e2d21a2c08011322700b3ac",
+    @Test void v7ModelAndSettingChanceAndRolePayouts() {
+        assertEquals("9818f2083f2bb742981dd986ad67a177851342f4b2d5708f8bdf0a52c2a03d7d",
                 HyperDogNormalGame.parameterSha256());
         var a=HyperDogNormalGame.Mode.values();
         double[] denom={8192,4096,512,256,96,12};
-        double[] mult={.1451,.1830,.2423,.2851,.3424,.5346};
+        double[] mult={.0343,.0545,.0937,.1273,.1601,.2983};
         for(int s=1;s<=6;s++){
             var state=new HyperDogNormalGame(s,6789,100000);
             assertEquals(s,state.setting());
@@ -36,6 +36,24 @@ class HyperDogNormalGameTest {
         assertArrayEquals(new int[]{0,0,3,1,5,5,1,5,15},Arrays.stream(HyperDogNormalGame.Role.values())
                 .mapToInt(HyperDogNormalGame::payout).toArray());
         assertEquals(MachineType.HYPER_DOG,MachineType.valueOf("HYPER_DOG"));
+    }
+    @Test void v7RareRoleAtOverlapCalibratedButStreakGuaranteesPreserved(){
+        assertEquals(.0425,HyperDogNormalGame.effectiveRoleLinkedAtChance(
+                HyperDogNormalGame.Role.WEAK_CHERRY,"WEAK_CHERRY_SINGLE"),1e-13);
+        assertEquals(.51,HyperDogNormalGame.effectiveRoleLinkedAtChance(
+                HyperDogNormalGame.Role.WEAK_CHERRY,"WEAK_CHERRY_2PLUS_CONSECUTIVE"),1e-13);
+        assertEquals(.085,HyperDogNormalGame.effectiveRoleLinkedAtChance(
+                HyperDogNormalGame.Role.WATERMELON,"WATERMELON_SINGLE"),1e-13);
+        assertEquals(.7225,HyperDogNormalGame.effectiveRoleLinkedAtChance(
+                HyperDogNormalGame.Role.STRONG_CHERRY,"STRONG_CHERRY"),1e-13);
+        assertEquals(.1275,HyperDogNormalGame.effectiveRoleLinkedAtChance(
+                HyperDogNormalGame.Role.CHANCE,"CHANCE"),1e-13);
+        assertEquals(.595,HyperDogNormalGame.effectiveRoleLinkedAtChance(
+                HyperDogNormalGame.Role.STRONG_CHANCE,"STRONG_CHANCE"),1e-13);
+        assertEquals(.20,HyperDogNormalGame.effectiveRoleLinkedAtChance(
+                HyperDogNormalGame.Role.REPLAY,"REPLAY_STREAK_4"),1e-13);
+        assertEquals(1.,HyperDogNormalGame.effectiveRoleLinkedAtChance(
+                HyperDogNormalGame.Role.GRAPE,"GRAPE_STREAK_5"),1e-13);
     }
     @Test void separateBetLeverNoDoubleChargeAndReplayFreeBoundary() {
         assertThrows(IllegalArgumentException.class,()->new HyperDogNormalGame(0,1,100));
@@ -154,7 +172,7 @@ class HyperDogNormalGameTest {
                     classes.add(Path.of(type.getProtectionDomain()
                             .getCodeSource().getLocation().toURI()).toString());
                 }
-                var model=HyperDogNormalGame.class.getClassLoader().getResource("hyperdog/v6.json");
+                var model=HyperDogNormalGame.class.getClassLoader().getResource("hyperdog/v7.json");
                 assertNotNull(model);
                 classes.add(Path.of(model.toURI()).getParent().getParent().toString());
                 String javaExecutable=Path.of(System.getProperty("java.home"),"bin",

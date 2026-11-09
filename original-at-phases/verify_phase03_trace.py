@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Independent phase03 Python oracle: verify Java trace with v6 single-AT multiplier and unchanged role/mode probability tables.
+"""Independent phase03 Python oracle: verify Java trace with v7 single-AT multiplier and unchanged role/mode probability tables.
 It recreates the production SplitMix64 stream but independently implements all
 normal-stage role/mode/streak/AT precedence transitions. No Java model import.
 """
 import json,math,pathlib,sys
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
-MODEL=json.loads((ROOT/"original-at-phases/reference/pirijuggler_new_machine_calibrated_v6.json").read_text())
+MODEL=json.loads((ROOT/"original-at-phases/reference/pirijuggler_new_machine_calibrated_v7.json").read_text())
 NORMAL=MODEL["normal_mode"];COMMON=MODEL["normal_and_at_common_role_draw"]
 PAY=MODEL["fixed_requirements"]["payout_regular_or_at"]
 MODES=NORMAL["names"];ROLES=["MISS","REPLAY","GRAPE","WEAK_CHERRY","WATERMELON","CHANCE","STRONG_CHERRY","STRONG_CHANCE","BAR"]
@@ -64,8 +64,10 @@ def verify_entry(e,seed,credits):
         base=NORMAL["base_single_at_hit_denominator_by_mode"][mode]
         mult=NORMAL["single_hit_probability_multiplier_by_setting"][str(setting)]
         single=rng.chance(min(.95,mult/base))
-        linked=trigger is not None and rng.chance(
-            NORMAL["role_linked_at_hit_percent"].get(trigger,0)/100.)
+        linked_probability = NORMAL["role_linked_at_hit_percent"].get(trigger,0)/100. if trigger is not None else 0
+        if name in ("WEAK_CHERRY","WATERMELON","CHANCE","STRONG_CHERRY","STRONG_CHANCE"):
+            linked_probability *= NORMAL["rare_role_linked_at_hit_scale"]
+        linked = trigger is not None and rng.chance(linked_probability)
         selectors=NORMAL["mode_up_table_selector"]
         if trigger is not None and trigger in selectors:
             if rng.chance(NORMAL["mode_up_roll_percent_by_event"].get(trigger,0)/100.):
@@ -106,7 +108,7 @@ def main():
     all_results=[verify_entry(v,trace["seed"],trace["credits"]) for v in trace["settings"]]
     assert len(all_results)==6
     assert all(x["games"]==250 for x in all_results)
-    print("HYPER_DOG_PHASE03_INDEPENDENT_PYTHON_V6_MODEL_PARITY=PASS",json.dumps(all_results))
+    print("HYPER_DOG_PHASE03_INDEPENDENT_PYTHON_V7_MODEL_PARITY=PASS",json.dumps(all_results))
     target=ROOT/"runtime-evidence/HYPER_DOG_PHASE_03"
     target.mkdir(parents=True,exist_ok=True)
     (target/"oracle-verification.json").write_text(json.dumps({"passed":True,"rows":all_results,

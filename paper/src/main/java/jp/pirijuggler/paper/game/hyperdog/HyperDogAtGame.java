@@ -18,7 +18,7 @@ public final class HyperDogAtGame {
                         long award, int ticket, boolean premium, boolean czSuccess) {
         public boolean special() { return stage==Stage.LOWER_INITIAL || stage==Stage.UPPER_INITIAL || stage==Stage.UPPER_CZ; }
     }
-    private static final String MODEL_HASH="e99ae52bbf431ec76267ce35a0d4de3f13c5e2c55e2d21a2c08011322700b3ac";
+    private static final String MODEL_HASH="9818f2083f2bb742981dd986ad67a177851342f4b2d5708f8bdf0a52c2a03d7d";
     private static final JsonObject MODEL=loadModel();
     private static final JsonObject FIX=MODEL.getAsJsonObject("fixed_requirements");
     private static final JsonObject COMMON=MODEL.getAsJsonObject("normal_and_at_common_role_draw");
@@ -203,7 +203,13 @@ public final class HyperDogAtGame {
                         award=pickNumber(table.getAsJsonObject("STRONG_CHANCE"));
                         if(!upper)ticket=1;
                     }
-                    if(upper)award=Math.multiplyExact(award,5);
+                    if(upper&&award>0){
+                        JsonObject factors=UPPER.getAsJsonObject("regular_addons")
+                                .getAsJsonObject("role_multiplier_from_lower_by_role");
+                        if(!factors.has(role.name()))
+                            throw new IllegalStateException("missing upper rare-role award factor: "+role);
+                        award=Math.min(2000L,Math.multiplyExact(award,factors.get(role.name()).getAsLong()));
+                    }
                 }
             }
             if(source==Stage.UPPER_INITIAL)
@@ -443,7 +449,7 @@ public final class HyperDogAtGame {
         specialStreakRole=x.specialStreakRole;pending=x.pending;
     }
     private static JsonObject loadModel(){
-        try(InputStream in=HyperDogAtGame.class.getClassLoader().getResourceAsStream("hyperdog/v6.json")){
+        try(InputStream in=HyperDogAtGame.class.getClassLoader().getResourceAsStream("hyperdog/v7.json")){
             if(in==null)throw new IllegalStateException("v6 model not found");
             String data=new String(in.readAllBytes(),StandardCharsets.UTF_8).replace("\r\n","\n");
             StringBuilder hex=new StringBuilder();

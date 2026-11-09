@@ -30,7 +30,7 @@ public final class HyperDogNormalGame {
             return HyperDogReelControl.Role.valueOf(role.name());
         }
     }
-    private static final String MODEL_SHA256="e99ae52bbf431ec76267ce35a0d4de3f13c5e2c55e2d21a2c08011322700b3ac";
+    private static final String MODEL_SHA256="9818f2083f2bb742981dd986ad67a177851342f4b2d5708f8bdf0a52c2a03d7d";
     private static final JsonObject MODEL=loadModel();
     private static final JsonObject NORMAL=MODEL.getAsJsonObject("normal_mode");
     private static final JsonObject COMMON=MODEL.getAsJsonObject("normal_and_at_common_role_draw");
@@ -164,7 +164,7 @@ public final class HyperDogNormalGame {
                 NORMAL.getAsJsonObject("base_single_at_hit_denominator_by_mode")
                     .get(before.name()).getAsDouble());
         boolean single=roll(chance);
-        double linkedProbability=event==null?0:percent(NORMAL.getAsJsonObject("role_linked_at_hit_percent"),event);
+        double linkedProbability=effectiveRoleLinkedAtChance(role,event);
         boolean linked=event!=null&&roll(linkedProbability);
         JsonObject selectors=NORMAL.getAsJsonObject("mode_up_table_selector");
         if(event!=null && selectors.has(event)){
@@ -261,6 +261,16 @@ public final class HyperDogNormalGame {
                 .get(Integer.toString(setting)).getAsDouble()/
                 NORMAL.getAsJsonObject("base_single_at_hit_denominator_by_mode").get(mode.name()).getAsDouble());
     }
+    /** v7 changes rare-role AT overlap only; replay/grape 4th/5th streak rules stay literal. */
+    static double effectiveRoleLinkedAtChance(Role role,String event){
+        if(event==null)return 0;
+        double base=percent(NORMAL.getAsJsonObject("role_linked_at_hit_percent"),event);
+        return switch(role){
+            case WEAK_CHERRY, WATERMELON, CHANCE, STRONG_CHERRY, STRONG_CHANCE ->
+                    base*NORMAL.get("rare_role_linked_at_hit_scale").getAsDouble();
+            default -> base;
+        };
+    }
     private static double percent(JsonObject table,String key){
         return table.has(key)?table.get(key).getAsDouble()/100.:0.;
     }
@@ -308,8 +318,8 @@ public final class HyperDogNormalGame {
                 j.get("savedEntryMode").isJsonNull()?null:Mode.valueOf(j.get("savedEntryMode").getAsString()));
     }
     private static JsonObject loadModel(){
-        try(InputStream stream=HyperDogNormalGame.class.getClassLoader().getResourceAsStream("hyperdog/v6.json")){
-            if(stream==null)throw new IllegalStateException("HYPER_DOG v6 model not packaged");
+        try(InputStream stream=HyperDogNormalGame.class.getClassLoader().getResourceAsStream("hyperdog/v7.json")){
+            if(stream==null)throw new IllegalStateException("HYPER_DOG v7 model not packaged");
             // Git on Windows can checkout the JSON with CRLF; the approved v5
             // checksum is for canonical LF bytes. Normalize only line endings.
             String canonical=new String(stream.readAllBytes(),StandardCharsets.UTF_8)
@@ -319,7 +329,7 @@ public final class HyperDogNormalGame {
                     .digest(canonical.getBytes(StandardCharsets.UTF_8)))
                 sha.append(String.format(Locale.ROOT,"%02x",b&255));
             if(!MODEL_SHA256.equals(sha.toString()))
-                throw new IllegalStateException("HYPER_DOG v5 canonical SHA-256 mismatch: "+sha);
+                throw new IllegalStateException("HYPER_DOG v7 canonical SHA-256 mismatch: "+sha);
             return JsonParser.parseString(canonical).getAsJsonObject();
         }catch(Exception e){throw new ExceptionInInitializerError(e);}
     }
