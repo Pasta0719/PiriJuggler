@@ -1,0 +1,72 @@
+name: HYPER_DOG Phase 04 AT/CZ Paper/Fabric runtime
+
+on:
+  push:
+    branches: [ plan/original-at-machine-20261107 ]
+    paths:
+      - 'paper/src/main/java/jp/pirijuggler/paper/game/hyperdog/**'
+      - 'paper/src/main/java/jp/pirijuggler/paper/database/PiriDatabase.java'
+      - 'paper/src/main/java/jp/pirijuggler/paper/database/RecoveryStore.java'
+      - 'paper/src/test/java/jp/pirijuggler/paper/game/hyperdog/**'
+      - 'runtime-test-support/**'
+      - '.github/workflows/hyperdog-phase04-runtime.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: hyperdog-phase04-real-runtime
+  cancel-in-progress: true
+
+jobs:
+  phase04-at-cz-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Headless real Minecraft
+        run: |
+          if ! command -v Xvfb >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
+          fi
+          chmod +x gradlew
+      - name: Execute full project JUnit and phase04 economy/recovery regressions
+        run: |
+          ./gradlew --parallel --build-cache test :common:jar :paper:jar :fabric:remapJar --console=plain
+      - name: Compile real Paper and Fabric test helpers
+        run: |
+          ./gradlew --parallel --build-cache \
+            -PruntimeAcceptance=true -PruntimeScenario=hyperdog04-main \
+            -PruntimeEvidencePhase=HYPER_DOG_PHASE_04 \
+            :runtime-test-paper:jar :runtime-test-client:remapJar --console=plain
+      - uses: actions/cache@v4
+        with:
+          path: runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar
+          key: paper-1.21-build-130-ab9bb1afc3cea6978a0c03ce8448aa654fe8a9c4dddf341e7cbda1b0edaa73f5
+      - name: Acquire verified Paper 1.21 build 130
+        shell: pwsh
+        run: ./runtime-test-support/ensure-paper-1.21-130.ps1
+      - name: Verify upper AT / lower AT / guaranteed CZ real player input and reel stop path
+        run: |
+          xvfb-run -a -s "-screen 0 1280x720x24" python runtime-test-support/run_hyperdog_phase04.py
+      - name: Classify failure and report actual progress without hiding assertions
+        if: always()
+        run: |
+          python runtime-test-support/hyperdog_acceptance_diagnostics.py summarize HYPER_DOG_PHASE_04 "$GITHUB_STEP_SUMMARY"
+      - name: Preserve source, server/client packets, and real screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hyperdog-phase04-at-cz-real-runtime
+          path: |
+            runtime-evidence/HYPER_DOG_PHASE_04/**
+            paper/build/test-results/**
+            common/build/test-results/**
+            fabric/build/test-results/**
