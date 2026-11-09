@@ -49,11 +49,11 @@ public final class HyperDogPhase07RestartFixture {
             }
             long now=System.currentTimeMillis();
             try(PiriDatabase db=new PiriDatabase(databaseFile)){
-                db.open(mode.equals("hyperdog04-save")?100:200,now,config,
+                db.open(mode.equals("hyperdog07-save")?100:200,now,config,
                         new SplittableRandom(312),plugin.getLogger()::warning);
                 var store=new HyperDogStateStore(db);
-                if(mode.equals("hyperdog04-save"))save(db,store,now,report);
-                else if(mode.equals("hyperdog04-restore"))restore(db,store,now,report);
+                if(mode.equals("hyperdog07-save"))save(db,store,now,report);
+                else if(mode.equals("hyperdog07-restore"))restore(db,store,now,report);
                 else throw new IllegalArgumentException("unsupported mode");
             }
             report.addProperty("passed",true);

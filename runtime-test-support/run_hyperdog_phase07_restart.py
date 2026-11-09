@@ -90,7 +90,7 @@ try:
         "simulation-distance=2\nspawn-protection=0\ngenerate-structures=false\n"
         "motd=Piri HYPER_DOG Phase07 two-boot acceptance\n",encoding="utf-8")
 
-    first=run_paper("hyperdog04-save",FIRST)
+    first=run_paper("hyperdog07-save",FIRST)
     check("first boot owns two physically stopped reels",
           first.get("physicalStopCount")==2 and first.get("foreignSeatDenied") is True)
     check("before first reboot no pending BAR payout minted",
@@ -98,7 +98,7 @@ try:
     check("isolation database persisted on disk",DB.is_file() and DB.stat().st_size>0)
     check("Paper first process fully terminated",True)
 
-    second=run_paper("hyperdog04-restore",SECOND)
+    second=run_paper("hyperdog07-restore",SECOND)
     check("real separate JVM replayed remaining third stop",
           second.get("physicalStopCountAfterRestart")==3)
     check("BAR payout settled once, neither lost nor duplicated",
