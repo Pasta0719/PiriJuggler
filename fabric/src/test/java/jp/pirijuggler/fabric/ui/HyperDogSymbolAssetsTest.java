@@ -10,6 +10,23 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /** Checks that all seven approved symbols ship in the actual Fabric resource set. */
 class HyperDogSymbolAssetsTest {
+    /** World renders extra rows outside the stop index and crosses the 21-symbol seam. */
+    @Test void spectatorRowsWrapAndNeverUseStrictAuthoritativeStopValidation() {
+        for(int reel=0;reel<3;reel++)for(int middle=-65;middle<84;middle++)
+            for(int row=-2;row<=2;row++){
+                int index=middle+row;
+                String expected=jp.pirijuggler.common.reel.HyperDogReelControl
+                        .icon(jp.pirijuggler.common.reel.Reel.values()[reel],index)
+                        .name().toLowerCase(java.util.Locale.ROOT);
+                assertEquals(expected,UiConstants.symbol("HYPER_DOG",reel,index),
+                        "world reel "+reel+" at visible index "+index);
+            }
+        for(int reel=0;reel<3;reel++)for(int index=0;index<21;index++)
+            assertEquals(UiConstants.symbol(reel,index),
+                    UiConstants.symbol("JUGGLER",reel,index),
+                    "existing reel symbol path must not change");
+    }
+
     @Test void allApprovedSymbolsAreTransparent256PixelPngs() throws IOException {
         List<String> names=List.of("replay","red7","rainbow7","bar","grape","cherry","watermelon");
         for(String name:names) {

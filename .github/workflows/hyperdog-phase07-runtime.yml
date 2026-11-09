@@ -112,6 +112,7 @@ jobs:
             --tests 'jp.pirijuggler.fabric.ui.HyperDogAudioTest' \
             --tests 'jp.pirijuggler.fabric.ui.HallAudioTest' \
             --tests 'jp.pirijuggler.fabric.ui.HyperDogCabinetStateTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogSymbolAssetsTest' \
             :fabric:remapJar --console=plain
       - name: Build isolated real Paper acceptance plugin
         run: |
