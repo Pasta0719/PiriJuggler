@@ -137,6 +137,7 @@ try:
         "BAR":(None,("BAR","BAR","BAR")),
         "AT_ENTRY_RED7":((0,0,0),("RED7","RED7","RED7")),
         "CZ_WIN":((0,0,0),("RAINBOW7","RAINBOW7","RAINBOW7")),
+        "AT_ENTRY_RAINBOW7":((0,0,0),("RAINBOW7","RAINBOW7","RAINBOW7")),
         "CHANCE":((0,0,0),("RED7","BAR","RED7")),
         "STRONG_CHANCE":((0,0,0),("RED7","BAR","RAINBOW7"))
     }
