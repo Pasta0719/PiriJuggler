@@ -93,15 +93,24 @@ public final class WorldCabinetRenderer {
         quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH-.015,.185,.0016,UiConstants.color("DISPLAY_BG"),0,0,1,1);
         quad(consumers,WHITE,basis,camera,.11,dataY,.006,.165,.0020,UiConstants.color("BUTTON_METAL_DARK"),0,0,1,1);
 
-        localText(consumers,client.textRenderer,basis,camera,-.45,dataY+.055,"BIG",.00245f,UiConstants.color("DISPLAY_BIG"),false);
-        localText(consumers,client.textRenderer,basis,camera,-.23,dataY+.055,Long.toString(state.bigCount()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
-        localText(consumers,client.textRenderer,basis,camera,-.45,dataY-.015,"REG",.00245f,UiConstants.color("DISPLAY_REG"),false);
-        localText(consumers,client.textRenderer,basis,camera,-.23,dataY-.015,Long.toString(state.regCount()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
-
-        long bonusTotal=state.bigCount()+state.regCount();
-        String combined=bonusTotal==0?"1/---":String.format(Locale.ROOT,"1/%.1f",state.totalGames()/(double)bonusTotal);
-        localText(consumers,client.textRenderer,basis,camera,.31,dataY+.050,"合算",.00205f,UiConstants.color("DISPLAY_GREEN"),true);
-        localText(consumers,client.textRenderer,basis,camera,.31,dataY-.018,combined,.00285f,UiConstants.color("DISPLAY_WHITE"),true);
+        if("HYPER_DOG".equals(state.machineType())){
+            // The world spectator sees exactly the same three public event counters.
+            localText(consumers,client.textRenderer,basis,camera,-.43,dataY+.060,"AT",.0023f,UiConstants.color("DISPLAY_BIG"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.23,dataY+.060,Long.toString(state.atFirstHits()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.43,dataY-.011,"CZ",.0023f,UiConstants.color("DISPLAY_REG"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.23,dataY-.011,Long.toString(state.czAttempts()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
+            localText(consumers,client.textRenderer,basis,camera,.22,dataY+.050,"UPPER",.0022f,UiConstants.color("DISPLAY_GREEN"),true);
+            localText(consumers,client.textRenderer,basis,camera,.22,dataY-.018,Long.toString(state.upperEntries()),.00285f,UiConstants.color("DISPLAY_WHITE"),true);
+        }else{
+            localText(consumers,client.textRenderer,basis,camera,-.45,dataY+.055,"BIG",.00245f,UiConstants.color("DISPLAY_BIG"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.23,dataY+.055,Long.toString(state.bigCount()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.45,dataY-.015,"REG",.00245f,UiConstants.color("DISPLAY_REG"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.23,dataY-.015,Long.toString(state.regCount()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
+            long bonusTotal=state.bigCount()+state.regCount();
+            String combined=bonusTotal==0?"1/---":String.format(Locale.ROOT,"1/%.1f",state.totalGames()/(double)bonusTotal);
+            localText(consumers,client.textRenderer,basis,camera,.31,dataY+.050,"合算",.00205f,UiConstants.color("DISPLAY_GREEN"),true);
+            localText(consumers,client.textRenderer,basis,camera,.31,dataY-.018,combined,.00285f,UiConstants.color("DISPLAY_WHITE"),true);
+        }
 
         // Cabinet face. JUGGLER_GOD uses layered gold bands instead of a flat color.
         boolean jugglerGod=isJugglerGod(state.machineType());

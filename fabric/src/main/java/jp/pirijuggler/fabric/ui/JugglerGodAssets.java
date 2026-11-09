@@ -19,6 +19,8 @@ public final class JugglerGodAssets {
     private static final Map<Identifier,TextureSize> SIZE_CACHE=new ConcurrentHashMap<>();
 
     public static Identifier texture(String machineType, String ordinaryPath) {
+        if("HYPER_DOG".equals(machineType)&&ordinaryPath.startsWith("symbols/"))
+            return Identifier.of("piri","textures/gui/original_at/"+ordinaryPath);
         Identifier ordinary = Identifier.of("piri", "textures/" + ordinaryPath);
         if (!"JUGGLER_GOD".equals(machineType)&&!"JUGGLER_GOD_EXTREME".equals(machineType)) return ordinary;
         Identifier dedicated = Identifier.of("piri", "textures/juggler_god/" + ordinaryPath);

@@ -206,6 +206,36 @@ class RemoteMachineRegistryTest {
         assertEquals(0,registry.pollAudioEvent().delayMs());
     }
 
+    @Test void hyperDogSpectatorGetsThreeDedicatedCountsAndNoHiddenData(){
+        RemoteMachineRegistry registry=new RemoteMachineRegistry();
+        JsonObject publicView=snapshot(90);
+        publicView.addProperty("machineType","HYPER_DOG");
+        publicView.addProperty("bigCount",0);
+        publicView.addProperty("regCount",0);
+        publicView.addProperty("atFirstHits",4);
+        publicView.addProperty("czAttempts",8);
+        publicView.addProperty("upperEntries",5);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,publicView));
+        var view=registry.view(90);
+        assertNotNull(view);
+        assertEquals("HYPER_DOG",view.machineType());
+        assertEquals(4,view.atFirstHits());
+        assertEquals(8,view.czAttempts());
+        assertEquals(5,view.upperEntries(),"continuations are separate upper entries");
+        assertEquals(0,view.bigCount());assertEquals(0,view.regCount());
+        for(String secret:java.util.List.of("rngState","savedHitMode","modeAfter","setting","internalRole"))
+            assertFalse(registry.machine(90).has(secret));
+        JsonObject invalid=publicView.deepCopy();
+        invalid.addProperty("czAttempts",-1);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,invalid));
+        assertNull(registry.view(90),"malformed remote snapshot must be quarantined");
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,publicView));
+        assertEquals(8,registry.view(90).czAttempts());
+        JsonObject normal=snapshot(91);
+        registry.receive(new Envelope(Protocol.VERSION,PacketType.REMOTE_MACHINE_SNAPSHOT,normal));
+        assertEquals(0,registry.view(91).atFirstHits());
+        assertEquals(14,registry.view(91).bigCount(),"legacy BIG remains intact");
+    }
     private static JsonObject snapshot(int id) {
         JsonObject body = id(id);
         body.addProperty("world", UUID.randomUUID().toString());

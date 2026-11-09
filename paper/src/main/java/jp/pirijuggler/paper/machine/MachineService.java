@@ -10,6 +10,7 @@ import jp.pirijuggler.paper.database.GameStore;
 import jp.pirijuggler.paper.database.PiriDatabase;
 import jp.pirijuggler.paper.database.RecoveryStore;
 import jp.pirijuggler.paper.data.DataLampSnapshot;
+import jp.pirijuggler.paper.data.HyperDogDataLamp;
 import jp.pirijuggler.paper.economy.EconomyStore;
 import jp.pirijuggler.paper.economy.MedalToken;
 import jp.pirijuggler.paper.economy.VaultBridge;
@@ -1121,7 +1122,9 @@ public final class MachineService implements Listener, CommandExecutor {
         plugin.executors().readOnly(() -> {
             try (var connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath)) {
                 try(var pragma=connection.createStatement()){pragma.execute("PRAGMA query_only=ON");pragma.execute("PRAGMA busy_timeout=1000");}
-                return DataLampSnapshot.read(connection, machineId, period);
+                return machine.type()==MachineType.HYPER_DOG
+                        ?HyperDogDataLamp.read(connection,machineId,period)
+                        :DataLampSnapshot.read(connection,machineId,period);
             }
         }, (snapshot, error) -> {
             if (error != null) {
