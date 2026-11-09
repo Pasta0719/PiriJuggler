@@ -39,6 +39,8 @@ jobs:
             --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogGameEngineIntegrationTest' \
             --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogPhase08V7ParityTest' \
             :paper:jar --console=plain
+      - name: Build production remapped Fabric JAR before Loom runtime helper configuration
+        run: ./gradlew --build-cache :common:jar :fabric:remapJar --console=plain
       - name: Build separate test-only Paper helper
         run: ./gradlew --build-cache -PruntimeAcceptance=true :runtime-test-paper:jar --console=plain
       - uses: actions/cache@v4
