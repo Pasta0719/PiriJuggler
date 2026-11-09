@@ -33,6 +33,45 @@ class HyperDogCabinetStateTest {
         j.addProperty("rightLampCount",count);
         s.receive(packet(PacketType.PUBLIC_STATE,j));
     }
+    @Test void illuminatedAtLampsKeepTheApprovedOuterFrameAndDarkMargins(){
+        for(int i=0;i<2;i++){
+            var layers=HyperDogLampGeometry.announcement(i);
+            assertEquals(HyperDogCabinetState.announcementRect(i),layers.frame());
+            assertEquals(76,layers.frame().w());
+            assertEquals(64,layers.frame().h());
+            assertEquals(50,layers.emitter().w());
+            assertEquals(38,layers.emitter().h());
+            assertTrue(layers.emitter().x()-layers.frame().x()>=13);
+            assertTrue(layers.emitter().y()-layers.frame().y()>=13);
+            assertInset(layers);
+        }
+        for(int i=0;i<3;i++){
+            var right=HyperDogLampGeometry.right(i);
+            assertEquals(HyperDogCabinetState.rightLampRect(i),right.frame());
+            assertEquals(14,right.emitter().w());
+            assertEquals(14,right.emitter().h());
+            assertInset(right);
+            var left=HyperDogLampGeometry.left(i);
+            assertEquals(HyperDogCabinetState.leftStatusRect(i),left.frame());
+            assertEquals(132,left.emitter().w());
+            assertEquals(22,left.emitter().h());
+            assertInset(left);
+        }
+    }
+
+    private static void assertInset(HyperDogLampGeometry.Layers layers){
+        var outer=layers.frame();
+        for(var r:List.of(layers.gasket(),layers.lens(),layers.emitter())){
+            assertTrue(r.x()>outer.x() && r.y()>outer.y());
+            assertTrue(r.x()+r.w()<outer.x()+outer.w());
+            assertTrue(r.y()+r.h()<outer.y()+outer.h());
+        }
+        assertTrue(layers.emitter().x()>layers.lens().x());
+        assertTrue(layers.emitter().y()>layers.lens().y());
+        assertTrue(layers.emitter().x()+layers.emitter().w()<layers.lens().x()+layers.lens().w());
+        assertTrue(layers.emitter().y()+layers.emitter().h()<layers.lens().y()+layers.lens().h());
+    }
+
     @Test void canonicalRectanglesMatchLegacyInputForWideTallAndFourByThree(){
         assertEquals(SlotLayout.REELS,new SlotLayout.Rect(670,300,900,390));
         assertEquals(SlotLayout.STATUS,new SlotLayout.Rect(670,710,900,95));
