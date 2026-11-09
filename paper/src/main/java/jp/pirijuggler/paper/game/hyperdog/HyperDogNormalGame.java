@@ -124,8 +124,10 @@ public final class HyperDogNormalGame {
     /** Distinct BET and lever transitions, like existing physical slot machines. */
     public void bet(){
         if(!canBet())throw new IllegalStateException("BET denied");
-        credits=Math.subtractExact(credits,3);
-        in=Math.addExact(in,3);
+        // Check both ledger operations before mutating either field.
+        long nextCredits=Math.subtractExact(credits,3);
+        long nextIn=Math.addExact(in,3);
+        credits=nextCredits;in=nextIn;
         postedBet=true;postedBetAmount=3;
     }
     public Outcome lever(){return leverInternal(null);}
@@ -170,9 +172,12 @@ public final class HyperDogNormalGame {
     public Outcome finish(){
         if(pending==null)throw new IllegalStateException("no unfinished spin");
         Outcome finished=pending;
-        out=Math.addExact(out,finished.payout());
-        credits=Math.addExact(credits,finished.payout());
-        games=Math.addExact(games,1);
+        // Failure at signed-64-bit limits must preserve the whole unsettled
+        // outcome and balance; never persist a partially credited spin.
+        long nextOut=Math.addExact(out,finished.payout());
+        long nextCredits=Math.addExact(credits,finished.payout());
+        long nextGames=Math.addExact(games,1);
+        out=nextOut;credits=nextCredits;games=nextGames;
         pending=null;
         replayFree=finished.role()==Role.REPLAY;
         if(finished.entersAt()){
