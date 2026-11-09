@@ -1,23 +1,23 @@
-> **2026-11-08 現行進捗**：HYPER_DOG Phase 02の最新リール配列は **[v2設計](REEL_DESIGN_V2.md)**。全9,261最終出目の独立検証、全666,792停止操作履歴、実Paper/Fabric 57ラウンド・171停止、全12役・5ライン偽混合リーチ目排除の実機受入 [18/18 PASS](PHASE_02_V2_RUNTIME_ACCEPTANCE.md)。Phase 02 COMPLETE、Phase 03 NOT_STARTED。v1は履歴。既存機種は変更なし。
+> **2026-11-09 現行進捗**：HYPER_DOG Phase01・Phase02 v2・Phase03は**COMPLETE**。Phase03の通常時6モード・v5抽選、別JVMでの保存復元、Paper/Fabric 100G・300停止の受入は [PHASE_03_RUNTIME_ACCEPTANCE.md](PHASE_03_RUNTIME_ACCEPTANCE.md) を参照。Phase04～08はNOT_STARTED。PRはDraftのままで新機種は一般公開しない。
 
 # PiriJuggler HYPER_DOG — Phase実装仕様
 
-**計画状態：初期実装仕様を確定済み／ゲームコード実装は未着手。** 作成日 2026-11-07。ユーザーの実機確認後の演出微調整は可能。
+**実装状態：Phase01～03 COMPLETE、Phase04～08 NOT_STARTED。** 設計作成日 2026-11-07。既存機種の機能・データを保護し、承認された演出仕様を維持する。
 
 このフォルダは既存の `phases/`, `next-machine-phases/`, `skill-stop-phases/` を置き換えない。新しい「AT直撃・下位/上位AT・上位CZ」の専用計画であり、引退した単体GOD機種とは別物。
 
 ## 読む順番
 1. [SPEC_LOCK.md](SPEC_LOCK.md) — ユーザーが決めた機能・ゲーム性の正本。
 2. [IMPLEMENTATION_DECISIONS_V1.md](IMPLEMENTATION_DECISIONS_V1.md) — 演出競合・UI・機種型など**全項目の確定判断**。
-3. [REEL_DESIGN_V1.md](REEL_DESIGN_V1.md) — 21コマ×3本の具体配列・4コマ通常／確定引込み。
+3. [REEL_DESIGN_V2.md](REEL_DESIGN_V2.md) — 現行21コマ×3本の配列・混合リーチ目禁止・通常4コマ／レア役確定引込み。旧v1は履歴。
 4. [PRESENTATION_RULES_V1.json](PRESENTATION_RULES_V1.json) — 色・点灯数・演出時刻・座標の実装用JSON。
 5. [reference/pirijuggler_new_machine_calibrated_v5.json](reference/pirijuggler_new_machine_calibrated_v5.json) と[シミュレーター](reference/piri_simulate_full_v1.py) — 数値の固定実装基準。
 6. [PHASE_MAP.json](PHASE_MAP.json) — 8 Phase の順序と依存関係。
 7. [PHASE_01_DESIGN_FREEZE.md](PHASE_01_DESIGN_FREEZE.md) から順に、**そのPhaseだけ**を実行。既存 `CHANGE_SAFETY_POLICY.md` と `CODEX_START.md` は常に優先。
 
-## Phase02リール配列の先行設計
+## リールと通常ゲームの実機証跡
 
-[REEL_DESIGN_V1.md](REEL_DESIGN_V1.md) に**21コマ×3本の具体的な配列・停止例・停止制御案**を先行記録。配列JSONと9,261通りを列挙する静的検証スクリプトも追加済み。これは実装完了や4コマ滑り保証ではない。図柄画像のみユーザー提供で、配列・ソルバーは開発側が担当する。
+Phase02は [v2設計](REEL_DESIGN_V2.md) / [v2実機受入](PHASE_02_V2_RUNTIME_ACCEPTANCE.md)、Phase03は [実機受入・4条件の完了証跡](PHASE_03_RUNTIME_ACCEPTANCE.md) を参照。通常エンジンが完成していてもAT/CZ差枚処理と製品統合はPhase04以降。
 
 ## 実行順
 | Phase | 作業 | 成果物 |
@@ -37,5 +37,5 @@
 - 【ユーザー確定】ゲームの構造・枚数・出目・CZ・ランプの色順・4コマ通常と確定引込みは変更不可。
 - 【初期実装値を決定】演出のタイミング/色割合/ランプ位置/重複時の表示順/音/ID/素材契約まで**全件決定**。実機を見て違和感があった部分だけ、ユーザー指示により改訂する。
 - 【数値の実装正本】v5 JSONを固定。機械割は独立シミュレーションの報告値であり、Paper実装で再照合する。
-- 【実行待ち】Phase 01〜08はまだ未着手。既存のコード・既存Phase・`CODEX_START.md`の入口は変更していない。**設計の未確定は0件**であり、残っているのはPhaseの実装とユーザー図柄画像の受領、実Minecraftでの受入だけ。
+- 【実行待ち】Phase04～08の実装・実Minecraft受入。図柄7点は受領済みで描画を検証済み。Phase01～03は証跡付きでCOMPLETE、既存Phaseと`CODEX_START.md`の規範は維持。
 

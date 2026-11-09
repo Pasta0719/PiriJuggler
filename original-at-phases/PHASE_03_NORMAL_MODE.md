@@ -1,6 +1,6 @@
 # HYPER_DOG — PHASE 03 Machine identity, normal game, and six-mode lottery
 
-Status: **IN_PROGRESS — NORMAL_ENGINE_AND_RUNTIME_ACCEPTANCE**
+Status: **COMPLETE — 2026-11-09 JST** ([verified runtime acceptance](PHASE_03_RUNTIME_ACCEPTANCE.md))
 
 ## 実装対象
 - 既存機種を維持した独立新機種型・Paper専用ゲームエンジン・設定1〜6。旧GODの未完了部分は再利用しない。
@@ -22,3 +22,7 @@ Status: **IN_PROGRESS — NORMAL_ENGINE_AND_RUNTIME_ACCEPTANCE**
 - 実装Phaseはテストとビルドに加え、対象の機能を実MinecraftのPaper/Fabric経路で検証し、`runtime-evidence/` に再現手順・ログ・必要な画像・結果を残す。実環境が無ければBLOCKED。テスト通過のみでCOMPLETEにしない。
 - 1 run = 1 Phase。前PhaseのCOMPLETEと次Phaseの明示開始承認が無ければ次へ進めない。確定仕様の変更・試作仕様からの逸脱には事前承認が必要。
 - 本Phase計画作成自体はゲームコード変更の許可ではない。
+
+## Phase03 完了記録（2026-11-09 JST）
+
+4受入条件は独立Java/Python v5モデル照合（全6設定×250G）、保存中断・別JVM再起動（BET済み、停止待ち、リプレイ、AT移行の4状態）、実Paper/Fabric 100G・300停止、全体ビルドと既存リール57ラウンド回帰でPASS。[実機受入・ログ・Artifacts](PHASE_03_RUNTIME_ACCEPTANCE.md)を参照。Phase04は未着手。一般プレイヤーの機種選択は引き続き禁止し、AT/CZ経済・製品DB統合をPhase04に委ねる。

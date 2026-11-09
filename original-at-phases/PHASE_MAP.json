@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "PHASE_03_IN_PROGRESS",
+  "status": "PHASE_03_COMPLETE",
   "scope": "Original AT direct-win machine. Independent from retired standalone GOD and existing NEXT machine.",
   "entrypoint": "original-at-phases/README.md",
   "spec": "original-at-phases/SPEC_LOCK.md",
@@ -29,10 +29,11 @@
       "number": 3,
       "file": "original-at-phases/PHASE_03_NORMAL_MODE.md",
       "title": "Machine family / normal game / six-mode lottery",
-      "status": "IN_PROGRESS",
+      "status": "COMPLETE",
       "requires": [
         "Phase02"
-      ]
+      ],
+      "evidence": "original-at-phases/PHASE_03_RUNTIME_ACCEPTANCE.md"
     },
     {
       "number": 4,
