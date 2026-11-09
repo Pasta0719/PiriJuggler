@@ -256,7 +256,8 @@ public final class SlotScreen extends Screen {
         if(games<=0||hits<=0)return "---";
         return "1/"+Math.max(1,Math.round(games/(double)hits));
     }
-    private void drawGraph(DrawContext c,JsonArray graph,float x,float y,float w,float h,long totalGames){
+    // Shared by HYPER_DOG: one canonical graph renderer for all slot families.
+    static void drawGraph(DrawContext c,JsonArray graph,float x,float y,float w,float h,long totalGames){
         if(graph.isEmpty()||totalGames<1)return;
         long min=Long.MAX_VALUE,max=Long.MIN_VALUE;
         for(JsonElement element:graph){JsonObject p=element.getAsJsonObject();long px=p.get("game").getAsLong();if(px<1||px>totalGames)continue;long py=p.get("difference").getAsLong();min=Math.min(min,py);max=Math.max(max,py);}
