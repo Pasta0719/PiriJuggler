@@ -52,6 +52,12 @@ public final class RuntimeObserver extends JavaPlugin {
         if(pachinkoCommand==null)throw new IllegalStateException("piripachinko command missing");
         pachinkoCommand.setExecutor(new PachinkoFixtureCommand(this));
 
+        String phase07Boot=System.getProperty("piri.runtime.phase","");
+        if("hyperdog07-save".equals(phase07Boot)||"hyperdog07-restore".equals(phase07Boot)){
+            new HyperDogPhase07RestartFixture(this,phase07Boot);
+            getLogger().info("HYPER_DOG_PHASE07_TWO_JVM_FIXTURE "+phase07Boot);
+            return;
+        }
         String phase04Boot=System.getProperty("piri.runtime.phase","");
         if ("hyperdog04-save".equals(phase04Boot) || "hyperdog04-restore".equals(phase04Boot)){
             new HyperDogPhase04RestartFixture(this,phase04Boot);
