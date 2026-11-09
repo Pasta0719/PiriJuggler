@@ -105,7 +105,9 @@ public final class HyperDogPhase04Fixture {
                 rejected++;send(ErrorPackets.rejected(seq,ErrorCode.SEQUENCE_OLD));return;
             }
             if(type==PacketType.SPACE_ACTION && round==null && !finished){
-                if(System.currentTimeMillis()-lastFinish<350)return;
+                // Never silently discard a C2S play action after the prior
+                // physical third stop. The client de-duplicates by state key,
+                // so an unacknowledged cooldown could deadlock the entire run.
                 if(game.waitingForBet()){
                     game.bet();acceptedBet++;nextSequence++;
                     accepted(type,seq);sendPublic();
