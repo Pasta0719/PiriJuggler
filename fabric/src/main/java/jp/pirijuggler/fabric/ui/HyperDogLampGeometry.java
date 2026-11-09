@@ -14,9 +14,9 @@ public final class HyperDogLampGeometry {
 
     public static Layers announcement(int index) {
         SlotLayout.Rect r = HyperDogCabinetState.announcementRect(index);
-        // 52x50 frame: 3px rim, 4px gasket, then 6px dark glass;
-        // a 26x24 emitter retains 13px of dark hardware on every side.
-        return new Layers(r, inset(r, 3), inset(r, 7), inset(r, 13));
+        // 104x104 frame: 4px metal rim / 6px gasket / 7px dark lens.
+        // The 70x70 light keeps 17px of hardware around every edge.
+        return new Layers(r, inset(r, 4), inset(r, 10), inset(r, 17));
     }
 
     public static Layers right(int index) {
