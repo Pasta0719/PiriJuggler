@@ -126,8 +126,10 @@ try:
  # the north-facing virtual cabinets rather than buried in random treetops.
  console("time set day")
  console("fill -4 98 -2 5 98 5 minecraft:glass")
- command(owner,"tp @s 1.5 99 1.5 180 0")
- command(spectator,"tp @s 1.5 99 1.5 180 0")
+ # Keep the viewers on independent sight lines: a player occupying the
+ # camera voxel otherwise covers every virtual cabinet in the screenshot.
+ command(owner,"tp @s 0.5 99 1.5 180 0")
+ command(spectator,"tp @s 4.5 99 1.5 180 0")
  wait(lambda:state().get("ready") is True,"test-only HYPER_DOG fixture created",150)
  hyper=state()["hyperMachine"]; legacy=state()["legacyMachine"]
  check("two actual Minecraft clients coexist with test-only HYPER_DOG and Juggler",
