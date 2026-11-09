@@ -4,7 +4,7 @@ The production v5 role odds, modes, CZ and all awards remain frozen. This is an 
 """
 import argparse, json, pathlib, time
 import numpy as np
-from piri_simulate_full_v1 import make_params, simulate, validate
+from piri_simulate_upper_comeback_v6 import make_params, simulate, validate
 
 ROOT=pathlib.Path(__file__).resolve().parent
 
@@ -15,7 +15,7 @@ def measure(setting,multiplier,paid,seed,source):
     p[7]=values
     r=simulate(setting,paid,seed,tuple(p))
     inns,outs,games=r[:3]
-    starts=int(r[9]);n=int(r[23]);upper,lower,win_u,win_l=r[24:]
+    starts=int(r[9]);n=int(r[23]);upper,lower,win_u,win_l=r[24:28]
     return {
         "setting":setting,"multiplier":multiplier,"paid_games":int(n),
         "return_percent":float(100*outs.sum()/inns.sum()),

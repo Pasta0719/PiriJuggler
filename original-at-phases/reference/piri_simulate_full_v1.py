@@ -186,9 +186,7 @@ def simulate(setting, target_paid, seed, p, record_at_max=300000):
     upper_init_index=0;upper_initial_payout=0;lower_initial_payout=0
     upper_force_n=0;upper_force_start=0
     special_streak_n=0;special_streak_role=-1
-    comeback_left=0; comeback_from_upper=False
-    comeback_upper_returns=0; comeback_lower_returns=0
-    comeback_attempts_upper=0; comeback_attempts_lower=0
+    comeback_left=0
     at_session_net=0; at_session_paid=0
     # run until count reaches, but if in AT finish that chain to avoid censored records
     watchdog=0
@@ -225,23 +223,17 @@ def simulate(setting, target_paid, seed, p, record_at_max=300000):
                 else:extra_hits+=1
                 saved_hit_mode=mode
                 at_starts+=1;at_session_net=0;at_session_paid=0
-                if comeback_left>0:
-                    if comeback_from_upper:comeback_upper_returns+=1
-                    else:comeback_lower_returns+=1
-                upper_return=(comeback_left>0 and comeback_from_upper)
                 streak_role=-1;streak_n=0;free_replay=False
-                comeback_left=0;comeback_from_upper=False
+                comeback_left=0
                 tickets=0; bar_guaranteed=False;bar_forced=0;pending_lower_force=0
-                if role==BAR or upper_return:
-                    balance=bar_extra if role==BAR else 0
+                if role==BAR:
+                    balance=bar_extra
                     stage=UPPER_INITIAL;upper_entries+=1
                     upper_init_index=0;upper_initial_payout=0;upper_force_n=0;special_streak_n=0;special_streak_role=-1
                 else:
                     stage=LOWER_INITIAL;lower_entries+=1
             else:
-                if comeback_left>0 and bet==3:
-                    comeback_left-=1
-                    if comeback_left==0:comeback_from_upper=False
+                if comeback_left>0:comeback_left-=1
         elif stage==LOWER_INITIAL:
             special[0]+=1;initial_count[0]+=1
             role=draw_role(cum,0,True)
@@ -313,7 +305,7 @@ def simulate(setting, target_paid, seed, p, record_at_max=300000):
                     if completed_at<=record_at_max:at_net_samples[completed_at-1]=at_session_net
                     if at_session_net>max_at:max_at=at_session_net
                     mode=weighted_pick_row(exits,saved_hit_mode)
-                    comeback_left=32;comeback_from_upper=False;comeback_attempts_lower+=1
+                    comeback_left=32
         elif stage==UPPER_CZ:
             special[2]+=1
             # draw a flag for visual reel outcomes, never use it for success
@@ -339,7 +331,7 @@ def simulate(setting, target_paid, seed, p, record_at_max=300000):
                     if completed_at<=record_at_max:at_net_samples[completed_at-1]=at_session_net
                     if at_session_net>max_at:max_at=at_session_net
                     mode=weighted_pick_row(exits,saved_hit_mode)
-                    comeback_left=32;comeback_from_upper=True;comeback_attempts_upper+=1
+                    comeback_left=32
                 else:
                     stage=LOWER_INITIAL;lower_entries+=1
         elif stage==UPPER_INITIAL:
@@ -371,8 +363,7 @@ def simulate(setting, target_paid, seed, p, record_at_max=300000):
     paid=int(games.sum())
     return (inn,out,games,special,initial_count,cz_counts,bar_counts,two_thousand,upper_rarewrites,
             at_starts,lower_entries,upper_entries,completed_at,sum_at,sum_at_paid,max_at,at_net_samples,
-            single_hits,linked_hits,extra_hits,mean_lower_initial,mean_upper_initial,total_awarded_bonus,paid,
-            comeback_upper_returns,comeback_lower_returns,comeback_attempts_upper,comeback_attempts_lower)
+            single_hits,linked_hits,extra_hits,mean_lower_initial,mean_upper_initial,total_awarded_bonus,paid)
 
 def validate(d):
     tests=[]
@@ -400,7 +391,7 @@ def main():
         for rep in range(args.replicates):
             seed=args.seed+setting*10000+rep
             x=simulate(setting,args.paid_per_replicate,seed,p)
-            inn,out,games,special,initcnt,cz,bar,premium,rewrite,at_starts,lower_enter,upper_enter,atdone,sum_at,sum_at_paid,max_at,samps,single,linked,extra,mean_low_init,mean_up_init,all_bonus,paid,cb_upper,cb_lower,cb_att_upper,cb_att_lower=x
+            inn,out,games,special,initcnt,cz,bar,premium,rewrite,at_starts,lower_enter,upper_enter,atdone,sum_at,sum_at_paid,max_at,samps,single,linked,extra,mean_low_init,mean_up_init,all_bonus,paid=x
             n_samples=min(atdone,len(samps));samples.extend(samps[:n_samples].tolist())
             rec={
                 'seed':seed,'total_paid_games':int(paid),'total_in_medals':int(inn.sum()),'total_out_medals':int(out.sum()),'return_percent':float(out.sum()/inn.sum()*100),
@@ -418,9 +409,7 @@ def main():
                 'mean_upper_initial_medals':float(mean_up_init / initcnt[1]) if initcnt[1] else None,
                 'net_AT_session_cumulative':int(sum_at),'paid_games_within_AT_sessions_cumulative':int(sum_at_paid),
                 'max_observed_at_net_medals':int(max_at),
-                'all_awarded_remaining_bonus_medals_including_initial':int(all_bonus),
-                'upper_comeback_returns':int(cb_upper),'lower_comeback_returns':int(cb_lower),
-                'upper_comeback_windows':int(cb_att_upper),'lower_comeback_windows':int(cb_att_lower)
+                'all_awarded_remaining_bonus_medals_including_initial':int(all_bonus)
             }
             rows.append(rec)
             print('setting',setting,'rep',rep,'paid',paid,'return',round(rec['return_percent'],3),'elapsed',round(time.monotonic()-t0,1),flush=True)
@@ -463,10 +452,6 @@ def main():
             'lower_initial_mean_medals':float(np.mean([x['mean_lower_initial_medals'] for x in rows])) if rows else None,
             'upper_initial_mean_medals':float(np.mean([x['mean_upper_initial_medals'] for x in rows])) if rows else None,
             'all_bonus_awarded':counts('all_awarded_remaining_bonus_medals_including_initial'),
-            'upper_comeback_returns':counts('upper_comeback_returns'),
-            'lower_comeback_returns':counts('lower_comeback_returns'),
-            'upper_comeback_windows':counts('upper_comeback_windows'),
-            'lower_comeback_windows':counts('lower_comeback_windows'),
             'replicates':rows
         }
         report.append(reports)
