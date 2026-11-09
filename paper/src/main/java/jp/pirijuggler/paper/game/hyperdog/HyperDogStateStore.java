@@ -58,6 +58,27 @@ public final class HyperDogStateStore {
                 }
                 throw new DomainException("SEQUENCE_OLD");
             }
+            // The private AT/normal state must reconcile exactly with the
+            // existing session wallet. A malformed server transition may not
+            // mint medals even if it successfully serializes as JSON.
+            long previousBalance=Math.addExact(owner.number("credit"),owner.number("held_medals"));
+            JsonObject previousState=owner.machineState();
+            if(previousState!=null&&previousState.has("hyperDog")){
+                HyperDogFullGame prior=HyperDogFullGame.restore(previousState.getAsJsonObject("hyperDog"));
+                if(prior.credit()!=previousBalance||
+                        game.totalIn()<prior.totalIn()||game.totalOut()<prior.totalOut())
+                    throw new IllegalStateException("HYPER_DOG_PREVIOUS_LEDGER_CORRUPT");
+                long deltaOut=Math.subtractExact(game.totalOut(),prior.totalOut());
+                long deltaIn=Math.subtractExact(game.totalIn(),prior.totalIn());
+                long expected=Math.addExact(Math.subtractExact(previousBalance,deltaIn),deltaOut);
+                if(game.credit()!=expected)
+                    throw new IllegalStateException("HYPER_DOG_LEDGER_MISMATCH");
+            }else{
+                if(game.totalIn()!=0||game.totalOut()!=0||
+                        game.normal().games()!=0||game.at()!=null||
+                        game.credit()!=previousBalance)
+                    throw new IllegalStateException("HYPER_DOG_INITIAL_WALLET_MISMATCH");
+            }
             long balance=game.credit();
             if(balance<0)throw new IllegalArgumentException("negative medals");
             long credit=Math.min(50,balance),held=Math.subtractExact(balance,credit);
