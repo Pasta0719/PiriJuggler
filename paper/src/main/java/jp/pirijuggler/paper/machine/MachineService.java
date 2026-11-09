@@ -325,7 +325,8 @@ public final class MachineService implements Listener, CommandExecutor {
                 if(machine==null)throw new DomainException("INVALID_STATE");
                 if(busy(id))throw new DomainException("MACHINE_OCCUPIED");
                 MachineType type=MachineType.valueOf(args[3].toUpperCase(Locale.ROOT));
-                if(type==MachineType.HYPER_DOG)throw new DomainException("MACHINE_NOT_RELEASED");
+                // Require an unoccupied cabinet as for all other machine types;
+                // do not block HYPER_DOG with a special release gate.
                 submit(sender,null,id,()->{database.setMachineType(id,type,System.currentTimeMillis());return id;},
                         done->{tell(sender,"MACHINE_TYPE id="+done+" old="+machine.type()+" new="+type);remote.machineChanged(done);});
                 return true;
