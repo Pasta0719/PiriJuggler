@@ -154,7 +154,7 @@ finally:
     manifest["finishedAt"]=dt.datetime.now(dt.timezone.utc).isoformat()
     save(OUT/"result.json",manifest);save(EVIDENCE/"result.json",manifest)
     report=[
-        "# HYPER_DOG Phase03 — Paper/Fabric NORMAL and six-mode v5 runtime",
+        "# HYPER_DOG Phase03 — Paper/Fabric NORMAL and six-mode v6 regression runtime",
         "",
         f"- Status: **{'PASS' if manifest['passed'] else 'FAIL'}**",
         f"- Run: \`{RUN}\`",

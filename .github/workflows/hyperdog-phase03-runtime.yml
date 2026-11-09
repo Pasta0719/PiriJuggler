@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  phase03-v5-normal:
+  phase03-v6-normal:
     runs-on: ubuntu-latest
     timeout-minutes: 22
     steps:
@@ -50,7 +50,7 @@ jobs:
               --rerun-tasks --no-build-cache --console=plain
           fi
           test -s paper/build/reports/hyperdog-phase03-trace.json
-      - name: Independently compare seeded Java games against v5 Python oracle
+      - name: Independently compare seeded Java games against v6 Python oracle
         run: |
           python original-at-phases/verify_phase03_trace.py
       - name: Compile isolated runtime client and server helper JARs
@@ -77,7 +77,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hyperdog-phase03-v5-normal-runtime
+          name: hyperdog-phase03-v6-normal-runtime
           path: |
             runtime-evidence/HYPER_DOG_PHASE_03/**
             paper/build/reports/hyperdog-phase03-trace.json

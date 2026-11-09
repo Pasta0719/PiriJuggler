@@ -1,5 +1,7 @@
 > **2026-11-09 現行進捗**：HYPER_DOG Phase01～Phase05は**COMPLETE**。Phase03は[通常時実機受入](PHASE_03_RUNTIME_ACCEPTANCE.md)、Phase04は[AT/CZ・SQLite別JVM復帰受入](PHASE_04_RUNTIME_ACCEPTANCE.md)、Phase05は[Fabric筐体・入力・各画面比率の実機受入](PHASE_05_RUNTIME_ACCEPTANCE.md)を参照。Phase06～08はNOT_STARTED。PRはDraft・未マージ、新機種は未公開。
 
+**2026-11-09 追加仕様**：上位AT→上位CZ失敗後の32有料G引き戻しは**虹7手動3停止→上位AT初期5G**へ復帰。設定別単独AT倍率を再調整した[新v6数値・再シミュレーション](POST_PHASE05_UPPER_COMEBACK_V6.md)が今後の正本。Phase06の実リール演出完成は未着手、Draft・未公開を維持。
+
 # PiriJuggler HYPER_DOG — Phase実装仕様
 
 **実装状態：Phase01～05 COMPLETE、Phase06～08 NOT_STARTED。** 設計作成日 2026-11-07。既存機種の機能・データを保護し、承認された演出仕様を維持する。
