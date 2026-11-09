@@ -183,6 +183,7 @@ public final class PiriDatabase implements AutoCloseable {
                 case GOD -> GodMachineRuntime.fromJson(machine.runtimeJson()).gameplay().toJsonString();
                 case JUGGLER_GOD, JUGGLER_GOD_EXTREME -> JugglerGodSettingHint.preserve(machine.runtimeJson(),JugglerGodRuntime.fromJson(machine.runtimeJson()).toJson());
                 case SKILL_STOP -> existing!=null&&existing.machine()==id?existing.text("machine_state_json"):null;
+                case HYPER_DOG -> existing!=null&&existing.machine()==id?existing.text("machine_state_json"):null;
                 case PACHINKO -> existing!=null&&existing.machine()==id
                         ? PachinkoRuntime.fromJson(existing.text("machine_state_json")).toJsonString()
                         : PachinkoRuntime.fromJson(machine.runtimeJson()).toJsonString();
