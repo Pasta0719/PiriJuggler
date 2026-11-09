@@ -10,6 +10,7 @@ on:
       - 'paper/src/main/java/jp/pirijuggler/paper/mobile/**'
       - 'paper/src/main/java/jp/pirijuggler/paper/machine/**'
       - 'paper/src/test/java/jp/pirijuggler/paper/game/hyperdog/**'
+      - 'paper/src/test/java/jp/pirijuggler/paper/phase07/**'
       - 'fabric/src/main/java/jp/pirijuggler/fabric/network/**'
       - 'fabric/src/test/java/jp/pirijuggler/fabric/network/**'
       - 'runtime-test-support/**'
@@ -38,8 +39,28 @@ jobs:
         run: chmod +x gradlew
       - name: Validate production mobile JavaScript and HYPER_DOG three-counter UI
         run: python runtime-test-support/verify_hyperdog_phase07_mobile.py
-      - name: Full production build and regressions including remote spectator, admin and mobile
-        run: ./gradlew --parallel --build-cache test :common:jar :paper:jar :fabric:remapJar --console=plain
+      # Fast Phase07 gate: run only tests tied to new machine integration.
+      # Full old-machine regression + remapped Fabric build is retained in the
+      # independent Piri build and Phase02-06 CI; do not repeat it in this job.
+      - name: Focused Paper Phase07 ledger, economy, admin and mobile tests
+        run: |
+          ./gradlew --build-cache :paper:test \
+            --tests 'jp.pirijuggler.paper.game.hyperdog.*' \
+            --tests 'jp.pirijuggler.paper.phase07.*' \
+            --tests 'jp.pirijuggler.paper.data.HyperDogDataLampTest' \
+            --tests 'jp.pirijuggler.paper.admin.AdminStoreTest' \
+            --tests 'jp.pirijuggler.paper.mobile.MobileRemotePageParityTest' \
+            --tests 'jp.pirijuggler.paper.machine.RemoteMachineSyncTest' \
+            :paper:jar --console=plain
+      - name: Focused Fabric Phase07 world view and audio compatibility tests
+        run: |
+          ./gradlew --build-cache :fabric:test \
+            --tests 'jp.pirijuggler.fabric.network.RemoteMachineRegistryTest' \
+            --tests 'jp.pirijuggler.fabric.network.RemoteMachineViewStateTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogAudioTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HallAudioTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogCabinetStateTest' \
+            --console=plain
       - name: Build isolated real Paper acceptance plugin
         run: |
           ./gradlew --build-cache -PruntimeAcceptance=true \
