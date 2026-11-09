@@ -1,0 +1,84 @@
+name: HYPER_DOG v7 4k upper and setting payout independent validation
+on:
+  push:
+    branches: [plan/original-at-machine-20261107]
+    paths:
+      - 'original-at-phases/reference/piri_simulate_upper_comeback_v7.py'
+      - 'original-at-phases/reference/audit_upper_entry_v7.py'
+      - 'original-at-phases/reference/pirijuggler_new_machine_calibrated_v7.json'
+      - '.github/workflows/hyperdog-v7-model-validation.yml'
+  workflow_dispatch:
+jobs:
+  payout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'numpy>=1.26,<3' 'numba>=0.60,<0.67'
+      - name: Verify 240M frames per setting and v7 payout targets
+        run: |
+          mkdir -p runtime-evidence/HYPER_DOG_V7_MODEL
+          sha256sum original-at-phases/reference/pirijuggler_new_machine_calibrated_v7.json
+          python -u original-at-phases/reference/piri_simulate_upper_comeback_v7.py \
+            --paid-per-replicate 120000000 --replicates 2 --seed 20261116 \
+            --output runtime-evidence/HYPER_DOG_V7_MODEL/payout.json
+      - name: Print setting payout and confidence
+        run: |
+          python - <<'PY'
+          import json
+          p='runtime-evidence/HYPER_DOG_V7_MODEL/payout.json'
+          x=json.load(open(p))
+          for row in x['settings']:
+              print('V7_PAYOUT',json.dumps({
+                'setting':row['setting'],
+                'target':row['target_percent'],
+                'measured':row['simulated_return_percent'],
+                'delta_pp':row['difference_pp'],
+                'initial_AT_frequency_1_in_normal':row['observed_paid_normal_games_per_at_initial'],
+                'mean_AT_net_medals':row['at_session_net_medals_mean'],
+                'upper_entry_5g_rounds':row['upper_initial_5g_rounds']
+              }),flush=True)
+          assert all(abs(row['difference_pp'])<1.25 for row in x['settings'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hyperdog-v7-machine-payout-240m-per-setting
+          path: runtime-evidence/HYPER_DOG_V7_MODEL/**
+  upper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'numpy>=1.26,<3' 'numba>=0.60,<0.67'
+      - name: Measure post-entry upper AT expectation (exclude 32G reentry)
+        run: |
+          python -u original-at-phases/reference/audit_upper_entry_v7.py \
+            --frames 120000000 --replicates 2 --seed 20261117 \
+            --output runtime-evidence/HYPER_DOG_V7_UPPER/upper.json
+      - name: Print post-entry upper AT per setting
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('runtime-evidence/HYPER_DOG_V7_UPPER/upper.json'))
+          for r in x['settings']:
+              print('V7_UPPER',json.dumps({
+                'setting':r['setting'],
+                'mean':r['upper_session_net_expected_medals'],
+                'median':r['upper_session_net_median_medals'],
+                'upper_entry_1_in_normal':r['upper_entry_per_all_normal_frames_1_in'],
+                'five_thousand_plus_rate':r['upper_session_net_ge_5000']
+              }),flush=True)
+          assert all(3600<=r['upper_session_net_expected_medals']<=4400 for r in x['settings'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hyperdog-v7-upper-award-240m-per-setting
+          path: runtime-evidence/HYPER_DOG_V7_UPPER/**
