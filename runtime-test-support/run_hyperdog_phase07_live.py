@@ -63,7 +63,7 @@ def start_server():
  plugins=SERVER/"plugins"; plugins.mkdir(parents=True,exist_ok=True); shutil.copy2(prod["paper"],plugins); shutil.copy2(helper["paper"],plugins)
  (SERVER/"eula.txt").write_text("eula=true\n"); (SERVER/"server.properties").write_text("\n".join(["server-ip=127.0.0.1","server-port=25612","online-mode=false","enforce-secure-profile=false","max-players=4","view-distance=6","simulation-distance=5","spawn-protection=0","generate-structures=false"])+"\n")
  h=(OUT/"server.log").open("w",encoding="utf-8"); handles.append(h)
- server=subprocess.Popen([JAVA,"-Xms512M","-Xmx1536M","-Dpiri.runtime.phase=hyperdog07-live",f"-Dpiri.runtime.serverResult={server_result}","-jar",str(PAPER),"nogui"],cwd=SERVER,stdin=subprocess.PIPE,stdout=h,stderr=subprocess.STDOUT,text=True,creationflags=FLAGS)
+ server=subprocess.Popen([JAVA,"-Xms512M","-Xmx1536M","-Dpiri.runtime.phase=hyperdog07-live",f"-Dpiri.runtime.serverResult={server_result}",f"-Dpiri.runtime.phase07AudioTrigger={OUT / 'audio-trigger.txt'}","-jar",str(PAPER),"nogui"],cwd=SERVER,stdin=subprocess.PIPE,stdout=h,stderr=subprocess.STDOUT,text=True,creationflags=FLAGS)
  wait(lambda:"Done (" in log(OUT/"server.log") and "PIRI_DATABASE_READY" in log(OUT/"server.log"),"Paper ready",300)
 def console(text):
  server.stdin.write(text+"\n"); server.stdin.flush(); time.sleep(.3)
@@ -119,6 +119,9 @@ try:
  console("op PiriRuntimeTest")
  start_client("phase13-spectator"); spectator="phase13-spectator"
  console("op PiriRuntimeTest2")
+ # Do not let generated-world water drown/respawn the actual observer clients.
+ console("gamemode creative PiriRuntimeTest")
+ console("gamemode creative PiriRuntimeTest2")
  command(owner,"tp @s 0.5 99 0.5")
  command(spectator,"tp @s 0.5 99 0.5")
  wait(lambda:state().get("ready") is True,"test-only HYPER_DOG fixture created",150)
@@ -140,12 +143,21 @@ try:
  check("legacy JUGGLER remains visible as separate machine without HYPER_DOG counters",
        machine_view(spectator,legacy).get("machineType")=="JUGGLER" and
        machine_view(spectator,legacy).get("atFirstHits",0)==0, machine_view(spectator,legacy))
+ # Ask the test-only Paper fixture to send a fresh real SPIN_START now that
+ # both Fabric clients have confirmed subscription. The production audio
+ # broadcast remains untouched; a missing sound still fails this acceptance.
+ (OUT/"audio-trigger.txt").write_text("subscribed\n",encoding="utf-8")
+ wait(lambda:state().get("audioTriggered") is True,
+      "Paper production routing received post-subscription spin trigger",30)
  history=[x for x in client(spectator).get("packets",[]) if x["type"].startswith("REMOTE_MACHINE_")]
  check("production remote packets never forward private RNG, settings or premium info",
        bool(history) and not forbidden(history),{"packets":len(history)})
  wait(lambda:any(p.get("sound")=="lever" and p.get("machineId")==hyper
                  for p in packets(spectator,"REMOTE_MACHINE_SOUND")),
       "real Fabric spectator received HYPER_DOG lever sound via production remote routing",40)
+ check("actual two Fabric clients remain alive as stable world observers",
+       all(not any("drowned" in msg for msg in client(n).get("messages",[]))
+           for n in (owner,spectator)))
  check("HYPER_DOG sound leaves no additional loops active",
        client(spectator).get("hallAudioLoopCount",0)==0 and
        client(spectator).get("remoteLoopCount",0)==0,
