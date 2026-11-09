@@ -86,11 +86,16 @@ public final class WorldCabinetRenderer {
                              CabinetPlacement.Basis basis,Vec3d camera,long now,MinecraftClient client){
         var consumers=context.consumers();
         if("PACHINKO".equals(state.machineType())){drawPachinko(consumers,state,basis,camera,client);return;}
+        // The world-facing HYPER_DOG must match its dedicated Fabric GUI,
+        // not fall through to JUGGLER's burgundy cabinet / cream reels.
+        boolean hyperDog="HYPER_DOG".equals(state.machineType());
+        final int hyperEdge=0xff817a95,hyperCabinet=0xff302f41;
+        final int hyperReel=0xff11121d,hyperPanel=0xff101824,hyperOff=0xff25242c;
 
         // Compact public data lamp above the cabinet.
         double dataY=CabinetPlacement.HEIGHT/2.0+.125;
-        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH,.20,.0010,UiConstants.color("CABINET_EDGE"),0,0,1,1);
-        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH-.015,.185,.0016,UiConstants.color("DISPLAY_BG"),0,0,1,1);
+        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH,.20,.0010,hyperDog?hyperEdge:UiConstants.color("CABINET_EDGE"),0,0,1,1);
+        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH-.015,.185,.0016,hyperDog?hyperPanel:UiConstants.color("DISPLAY_BG"),0,0,1,1);
         quad(consumers,WHITE,basis,camera,.11,dataY,.006,.165,.0020,UiConstants.color("BUTTON_METAL_DARK"),0,0,1,1);
 
         if("HYPER_DOG".equals(state.machineType())){
@@ -115,7 +120,7 @@ public final class WorldCabinetRenderer {
         // Cabinet face. JUGGLER_GOD uses layered gold bands instead of a flat color.
         boolean jugglerGod=isJugglerGod(state.machineType());
         quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH,CabinetPlacement.HEIGHT,0,
-                jugglerGod?UiConstants.color("CABINET_EDGE_LIGHT"):UiConstants.color("CABINET_EDGE"),0,0,1,1);
+                hyperDog?hyperEdge:jugglerGod?UiConstants.color("CABINET_EDGE_LIGHT"):UiConstants.color("CABINET_EDGE"),0,0,1,1);
         if(jugglerGod){
             double innerW=CabinetPlacement.WIDTH-.015,innerH=CabinetPlacement.HEIGHT-.015;
             double bandH=innerH/5.0;
@@ -134,17 +139,17 @@ public final class WorldCabinetRenderer {
                     UiConstants.color("JUGGLER_GOD_GOLD_HIGHLIGHT"),0,0,1,1);
         }else{
             quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.015,CabinetPlacement.HEIGHT-.015,.0006,
-                    UiConstants.color("SKILL_STOP".equals(state.machineType())?"SKILL_STOP_CABINET_BG":"CABINET_BG"),0,0,1,1);
+                    hyperDog?hyperCabinet:UiConstants.color("SKILL_STOP".equals(state.machineType())?"SKILL_STOP_CABINET_BG":"CABINET_BG"),0,0,1,1);
         }
 
         // SlotScreen reel separator: (670,300)-(1570,690), mapped inside CABINET.
         boolean godBlackout=state.godFreeze();
         rect(consumers,WHITE,basis,camera,670,300,900,390,.0010,
-                godBlackout?0xff111111:UiConstants.color("REEL_SEPARATOR"),0,0,1,1);
+                godBlackout?0xff111111:hyperDog?hyperEdge:UiConstants.color("REEL_SEPARATOR"),0,0,1,1);
 
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;
-            int reelBg=isJugglerGod(state.machineType())
+            int reelBg=hyperDog?hyperReel:isJugglerGod(state.machineType())
                     ?UiConstants.color("JUGGLER_GOD_REEL_BG")
                     :UiConstants.color("REEL_BG");
             rect(consumers,WHITE,basis,camera,x,300,270,390,.0015,
@@ -158,11 +163,12 @@ public final class WorldCabinetRenderer {
                 boolean wide=symbol.equals("seven")||symbol.equals("bar");
                 boolean godMachine=isJugglerGod(state.machineType());
                 boolean godLarge=symbol.equals("seven")||symbol.equals("grape")||symbol.equals("replay");
-                double boxW=godMachine?(symbol.equals("bar")?230:godLarge?230:130):(wide?230:130);
-                double boxH=godMachine?(symbol.equals("bar")?150:godLarge?150:130):(symbol.equals("bar")?150:130);
+                boolean hyperSpecial=hyperDog&&(symbol.equals("red7")||symbol.equals("rainbow7")||symbol.equals("bar"));
+                double boxW=hyperDog?(hyperSpecial?166:130):godMachine?(symbol.equals("bar")?230:godLarge?230:130):(wide?230:130);
+                double boxH=hyperDog?(hyperSpecial?166:130):godMachine?(symbol.equals("bar")?150:godLarge?150:130):(symbol.equals("bar")?150:130);
                 double sy=430+(row-fraction)*130-(boxH-130)/2.0;
                 double sw=boxW,sh=boxH;
-                if(godMachine){
+                if(godMachine||hyperDog){
                     var size=JugglerGodAssets.textureSize(state.machineType(),"symbols/"+symbol+".png");
                     double fit=Math.min(boxW/size.width(),boxH/size.height());
                     sw=size.width()*fit;sh=size.height()*fit;
@@ -181,18 +187,35 @@ public final class WorldCabinetRenderer {
             }
         }
 
-        // Exact SlotScreen lamp placement: (350,390,300,170).
-        Identifier lamp=state.lampVisible(now)
-                ?JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_on.png")
-                :JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_off.png");
-        if(isJugglerGod(state.machineType())){
-            double boxW=300,boxH=170;
-            var size=JugglerGodAssets.textureSize(state.machineType(),"lamp/piri_chance_"+(state.lampVisible(now)?"on":"off")+".png");
-            double fit=Math.min(boxW/size.width(),boxH/size.height());
-            double lw=size.width()*fit,lh=size.height()*fit;
-            rect(consumers,lamp,basis,camera,350+(boxW-lw)/2.0,390+(boxH-lh)/2.0,lw,lh,.0025,0xffffffff,0,0,1,1);
+        if(hyperDog){
+            // Mirror HYPER_DOG's *two* upper announcement lamps, three left
+            // status windows, three right expectation lamps and its dark LCD.
+            // World spectators receive public state only, never hidden lottery data.
+            for(int i=0;i<2;i++){
+                int x=i==0?574:1520;
+                rect(consumers,WHITE,basis,camera,x,230,76,64,.0025,hyperOff,0,0,1,1);
+                if(state.lampVisible(now))
+                    rect(consumers,WHITE,basis,camera,x+7,236,62,52,.0030,0xffffcc6b,0,0,1,1);
+            }
+            for(int i=0;i<3;i++){
+                rect(consumers,WHITE,basis,camera,418,372+61*i,146,36,.0025,hyperOff,0,0,1,1);
+                rect(consumers,WHITE,basis,camera,1583,370+69*i,34,34,.0025,hyperOff,0,0,1,1);
+            }
+            rect(consumers,WHITE,basis,camera,356,575,272,132,.0025,0xff0a0c16,0,0,1,1);
         }else{
-            rect(consumers,lamp,basis,camera,350,390,300,170,.0025,0xffffffff,0,0,1,1);
+            // Existing machine appearances remain unchanged.
+            Identifier lamp=state.lampVisible(now)
+                    ?JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_on.png")
+                    :JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_off.png");
+            if(isJugglerGod(state.machineType())){
+                double boxW=300,boxH=170;
+                var size=JugglerGodAssets.textureSize(state.machineType(),"lamp/piri_chance_"+(state.lampVisible(now)?"on":"off")+".png");
+                double fit=Math.min(boxW/size.width(),boxH/size.height());
+                double lw=size.width()*fit,lh=size.height()*fit;
+                rect(consumers,lamp,basis,camera,350+(boxW-lw)/2.0,390+(boxH-lh)/2.0,lw,lh,.0025,0xffffffff,0,0,1,1);
+            }else{
+                rect(consumers,lamp,basis,camera,350,390,300,170,.0025,0xffffffff,0,0,1,1);
+            }
         }
 
         if(isJugglerGod(state.machineType())){
@@ -211,7 +234,7 @@ public final class WorldCabinetRenderer {
                     box.x()+(box.w()-w)/2,box.y()+(box.h()-h)/2,w,h,.0025,0xffffffff,0,0,1,1);
         }
         // Exact status panel: (670,710,900,95), but only public remote fields.
-        rect(consumers,WHITE,basis,camera,670,710,900,95,.0012,UiConstants.color("DISPLAY_BG"),0,0,1,1);
+        rect(consumers,WHITE,basis,camera,670,710,900,95,.0012,hyperDog?hyperPanel:UiConstants.color("DISPLAY_BG"),0,0,1,1);
         text(consumers,client.textRenderer,basis,camera,690,725,"CREDIT",2.0f,UiConstants.color("TEXT_MAIN"));
         text(consumers,client.textRenderer,basis,camera,690,758,Long.toString(state.credit()),3.0f,UiConstants.color("TEXT_MAIN"));
         text(consumers,client.textRenderer,basis,camera,1086,725,"PAY",2.0f,UiConstants.color("TEXT_MAIN"));
