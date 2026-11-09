@@ -204,24 +204,15 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
         }
     }
     private void drawAnnouncement(DrawContext c){
-        for(int i=0;i<2;i++){
-            var r=HyperDogCabinetState.announcementRect(i);
-            drawPanel(c,r,OFF,STEEL);
-            if(hud.announcement()){
-                c.fill(r.x()+7,r.y()+6,r.x()+r.w()-7,r.y()+r.h()-6,0xffffcc6b);
-                c.drawBorder(r.x()+3,r.y()+2,r.w()-6,r.h()-4,0xffffe4a0);
-            }
-        }
+        for(int i=0;i<2;i++)
+            drawLamp(c,HyperDogLampGeometry.announcement(i),hud.announcement(),0xffffcc6b);
     }
+
     private void drawStatusIndicators(DrawContext c){
         var modes=HyperDogCabinetState.Lamp.values();
         int[] colors={GOLD,PURPLE,CYAN};
-        for(int i=0;i<3;i++){
-            var r=HyperDogCabinetState.leftStatusRect(i);
-            boolean lit=hud.active(modes[i]);
-            drawPanel(c,r,lit?colors[i]:OFF,STEEL);
-            if(lit)c.fill(r.x()+6,r.y()+7,r.x()+r.w()-6,r.y()+12,0x60ffffff);
-        }
+        for(int i=0;i<3;i++)
+            drawLamp(c,HyperDogLampGeometry.left(i),hud.active(modes[i]),colors[i]);
         int count=hud.rightCount();
         int tint=OFF;
         String color=hud.color();
@@ -229,11 +220,32 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
             int i=Arrays.asList(COLORS).indexOf(color);
             if(i>=0)tint=COLORS_ARGB[i];
         }
-        for(int i=0;i<3;i++){
-            var r=HyperDogCabinetState.rightLampRect(i);
-            c.fill(r.x()-3,r.y()-3,r.x()+r.w()+3,r.y()+r.h()+3,STEEL);
-            c.fill(r.x(),r.y(),r.x()+r.w(),r.y()+r.h(),i<count?tint:OFF);
+        for(int i=0;i<3;i++)
+            drawLamp(c,HyperDogLampGeometry.right(i),i<count,tint);
+    }
+
+    private static void drawLamp(DrawContext c,HyperDogLampGeometry.Layers lamp,boolean lit,int color){
+        // Metal outer bezel > black inset > dark lens > smaller illuminated
+        // emitter. Neither the inactive nor active state paints to the frame.
+        lampLayer(c,lamp.frame(),STEEL);
+        lampLayer(c,lamp.gasket(),0xff0b0e18);
+        lampLayer(c,lamp.lens(),0xff34303b);
+        var e=lamp.emitter();
+        lampLayer(c,e,lit?color:0xff29242c);
+        if(lit){
+            // Small highlight on the glass, fully within the emitter inset.
+            int left=e.x()+Math.max(2,e.w()/10);
+            int right=e.x()+e.w()-Math.max(2,e.w()/10);
+            int top=e.y()+Math.max(1,e.h()/8);
+            int bottom=Math.min(e.y()+e.h()-1,top+Math.max(1,e.h()/7));
+            if(right>left&&bottom>top)
+                c.fill(left,top,right,bottom,0x55ffffff);
         }
+    }
+
+    private static void lampLayer(DrawContext c,SlotLayout.Rect r,int color){
+        float radius=Math.min(9f,Math.min(r.w(),r.h())/3f);
+        SlotScreen.rounded(c,r.x(),r.y(),r.w(),r.h(),radius,color);
     }
     private void drawAddScreen(DrawContext c){
         var r=HyperDogCabinetState.lcdRect();
