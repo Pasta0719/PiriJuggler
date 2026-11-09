@@ -67,6 +67,7 @@ public final class HyperDogPhase05Fixture {
     private int lowerTicketsIssued,czSuccesses,czFailures,upperRounds,lowerRounds;
     private int episode; // 0: upper -> loss; 1: lower -> guaranteed CZ -> upper
     private long lastAward,upperInitialTotal;
+    private int closeRequests,reseats;
     private int lastSourceFree,resultsPublished;
     private final JsonArray displayEvents=new JsonArray();
     private boolean ready,opened,finished;
@@ -94,7 +95,7 @@ public final class HyperDogPhase05Fixture {
         try{packet=EnvelopeCodec.decode(data);}
         catch(RuntimeException bad){rejected++;write();return;}
         PacketType type=packet.packetType();
-        if(type!=PacketType.SPACE_ACTION && type!=PacketType.STOP_LEFT &&
+        if(type!=PacketType.SPACE_ACTION && type!=PacketType.CLOSE_REQUEST && type!=PacketType.STOP_LEFT &&
            type!=PacketType.STOP_CENTER && type!=PacketType.STOP_RIGHT)return;
         long seq=-1;
         try{
@@ -107,7 +108,18 @@ public final class HyperDogPhase05Fixture {
             if(seq!=nextSequence) {
                 rejected++;send(ErrorPackets.rejected(seq,ErrorCode.SEQUENCE_OLD));return;
             }
-            if(type==PacketType.SPACE_ACTION && round==null && !finished){
+            if(type==PacketType.CLOSE_REQUEST && finished && closeRequests==0){
+                closeRequests++;nextSequence++;
+                accepted(type,seq);
+                JsonObject closed=new JsonObject();
+                closed.addProperty("sessionId",session.toString());closed.addProperty("machineId",MACHINE);
+                send(Envelope.current(PacketType.SESSION_SUSPENDED,closed));
+                Bukkit.getScheduler().runTaskLater(plugin,()->{
+                    if(player!=null && player.isOnline()){
+                        reseats++;sendOpen();sendPublic();
+                    }
+                },24L);
+            }else if(type==PacketType.SPACE_ACTION && round==null && !finished){
                 // Never silently discard a C2S play action after the prior
                 // physical third stop. The client de-duplicates by state key,
                 // so an unacknowledged cooldown could deadlock the entire run.
@@ -275,7 +287,7 @@ public final class HyperDogPhase05Fixture {
                 (game.snapshot().get("betPosted").getAsBoolean()?"NORMAL_BETTED":"REPLAY_READY"):
                 "NORMAL_SPINNING";
         j.addProperty("gameState",state);
-        j.addProperty("credit",game.credit());j.addProperty("bet",game.pending()!=null?game.pending().bet():0);
+        j.addProperty("credit",Math.min(50L,game.credit()));j.addProperty("bet",game.pending()!=null?game.pending().bet():0);
         j.addProperty("pay",0);j.addProperty("gameCount",completed.size());
         j.addProperty("heldMedals",Math.max(0L,game.credit()-50));
         j.addProperty("atStage",game.stage().name());j.addProperty("atRemaining",game.remaining());
@@ -314,6 +326,7 @@ public final class HyperDogPhase05Fixture {
         j.addProperty("upperSeed",upperSeed);
         j.addProperty("stage",game.stage().name());
         j.addProperty("displayEventCount",resultsPublished);
+        j.addProperty("closeRequests",closeRequests);j.addProperty("reseats",reseats);
         j.add("rounds",completed);
         AtomicTestEvidence.write(resultPath,j.toString());
     }
