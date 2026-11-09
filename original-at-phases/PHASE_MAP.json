@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "PHASE_07_COMPLETE",
+  "status": "PHASE_08_IN_PROGRESS",
   "scope": "Original AT direct-win machine. Independent from retired standalone GOD and existing NEXT machine.",
   "entrypoint": "original-at-phases/README.md",
   "spec": "original-at-phases/SPEC_LOCK.md",
@@ -79,7 +79,7 @@
       "number": 8,
       "file": "original-at-phases/PHASE_08_FINAL_ACCEPTANCE.md",
       "title": "Economy calibration / full runtime regression / release",
-      "status": "NOT_STARTED",
+      "status": "IN_PROGRESS",
       "requires": [
         "Phase07"
       ]
