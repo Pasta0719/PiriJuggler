@@ -14,7 +14,8 @@ def measure(setting,multiplier,paid,seed,source):
     values[setting-1]=multiplier
     p[7]=values
     r=simulate(setting,paid,seed,tuple(p))
-    inns,outs,games,_,_,_,_,_,_,starts,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,n,upper,lower,win_u,win_l=r
+    inns,outs,games=r[:3]
+    starts=int(r[9]);n=int(r[23]);upper,lower,win_u,win_l=r[24:]
     return {
         "setting":setting,"multiplier":multiplier,"paid_games":int(n),
         "return_percent":float(100*outs.sum()/inns.sum()),
