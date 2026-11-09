@@ -23,6 +23,20 @@ public final class GameStore {
     }
 
     public Session commit(GameTransition action) throws Exception {
+        // Native HYPER_DOG never passes through BIG/REG statistics. Use the
+        // already-audited dedicated atomic wallet + reel + event journal
+        // transaction. The other machine families retain this entire method.
+        var special=action.after().machineState();
+        if(special!=null&&special.has("hyperDog")){
+            var state=jp.pirijuggler.paper.game.hyperdog.HyperDogFullGame
+                    .restore(special.getAsJsonObject("hyperDog"));
+            var reel=special.has("reel")?special.getAsJsonObject("reel"):null;
+            return new jp.pirijuggler.paper.game.hyperdog.HyperDogStateStore(db)
+                    .commit(action.before().player(),action.before().id(),
+                            action.before().machine(),action.before().sequence(),
+                            action.after().sequence(),state,reel,
+                            action.after().number("last_activity"));
+        }
         return db.transaction(()->{
             Session before=action.before(),after=action.after();String receipt="GAME_TX:"+action.transaction();
             var done=db.rows("SELECT value FROM metadata WHERE key=?",receipt);
