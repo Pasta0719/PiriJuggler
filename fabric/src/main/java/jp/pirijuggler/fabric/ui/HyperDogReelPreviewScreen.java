@@ -16,7 +16,7 @@ import org.lwjgl.glfw.GLFW;
  * Phase02-only 3x3 preview with approved real PNG resources and genuine C2S
  * stop buttons. This is NOT the full Phase05 cabinet/game economy UI.
  */
-public final class HyperDogReelPreviewScreen extends Screen {
+public class HyperDogReelPreviewScreen extends Screen {
     private final HyperDogClientReels reels;
     private int renderedFrames, renderedSymbols;
     private static final int SYMBOL=126;
@@ -32,6 +32,7 @@ public final class HyperDogReelPreviewScreen extends Screen {
     @Override protected void init(){client.mouse.unlockCursor();}
     @Override public void close(){} // The owning engine's Phase03+ session lifecycle controls exit.
 
+    protected final void countRendered(int symbols){renderedFrames++;renderedSymbols+=symbols;}
     public int renderedFrames(){return renderedFrames;}
     public int renderedSymbols(){return renderedSymbols;}
 
