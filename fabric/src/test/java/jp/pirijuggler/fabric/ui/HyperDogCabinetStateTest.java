@@ -37,12 +37,12 @@ class HyperDogCabinetStateTest {
         for(int i=0;i<2;i++){
             var layers=HyperDogLampGeometry.announcement(i);
             assertEquals(HyperDogCabinetState.announcementRect(i),layers.frame());
-            assertEquals(52,layers.frame().w());
-            assertEquals(50,layers.frame().h());
-            assertEquals(26,layers.emitter().w());
-            assertEquals(24,layers.emitter().h());
-            assertTrue(layers.emitter().x()-layers.frame().x()>=13);
-            assertTrue(layers.emitter().y()-layers.frame().y()>=13);
+            assertEquals(104,layers.frame().w());
+            assertEquals(104,layers.frame().h());
+            assertEquals(70,layers.emitter().w());
+            assertEquals(70,layers.emitter().h());
+            assertTrue(layers.emitter().x()-layers.frame().x()>=17);
+            assertTrue(layers.emitter().y()-layers.frame().y()>=17);
             assertInset(layers);
         }
         for(int i=0;i<3;i++){
@@ -61,7 +61,7 @@ class HyperDogCabinetStateTest {
 
     @Test void announcementLightCannotCollideWithDataLampReelsOrOtherHardware(){
         SlotLayout.Rect top=SlotLayout.DATA;
-        SlotLayout.Rect cabinet=SlotLayout.CABINET;
+        SlotLayout.Rect cabinet=HyperDogCabinetState.cabinetRect();
         SlotLayout.Rect reels=SlotLayout.REELS;
         SlotLayout.Rect left=HyperDogCabinetState.announcementRect(0);
         SlotLayout.Rect right=HyperDogCabinetState.announcementRect(1);
@@ -70,7 +70,7 @@ class HyperDogCabinetStateTest {
             assertFalse(overlaps(r,top),"data lamp cannot hide any part of AT lamp");
             assertFalse(overlaps(r,reels),"reel window cannot hide any part of AT lamp");
             assertFalse(overlaps(r,SlotLayout.DATA_LEFT));
-            assertFalse(overlaps(r,SlotLayout.DATA_RIGHT));
+            assertFalse(overlaps(r,HyperDogCabinetState.rightDataRect()),"odds panel cannot cover the right flower");
             assertTrue(r.x()>=cabinet.x() && r.y()>=cabinet.y());
             assertTrue(r.x()+r.w()<=cabinet.x()+cabinet.w());
             assertTrue(r.y()+r.h()<=cabinet.y()+cabinet.h());
@@ -81,8 +81,27 @@ class HyperDogCabinetStateTest {
             assertFalse(overlaps(r,HyperDogCabinetState.lcdRect()));
         }
         assertFalse(overlaps(left,right));
-        assertEquals(6,reels.x()-(left.x()+left.w()));
-        assertEquals(6,right.x()-(reels.x()+reels.w()));
+        assertEquals(18,reels.x()-(left.x()+left.w()),"left reel-to-flower clearance");
+        assertEquals(18,right.x()-(reels.x()+reels.w()),"right reel-to-flower clearance");
+        assertEquals(24,HyperDogCabinetState.rightDataRect().x()-(right.x()+right.w()),
+                "right data panel must be reflowed, not painted over");
+        assertEquals(11,HyperDogCabinetState.rightDataRect().x()-
+                (cabinet.x()+cabinet.w()),"cabinet and sidebar must be distinct");
+        assertFalse(overlaps(cabinet,HyperDogCabinetState.rightDataRect()));
+        assertFalse(overlaps(left,SlotLayout.STATUS));
+        assertFalse(overlaps(right,SlotLayout.STATUS));
+        for(SlotLayout.Control ctrl:SlotLayout.CONTROLS){
+            assertFalse(overlaps(left,ctrl.rect()));
+            assertFalse(overlaps(right,ctrl.rect()));
+        }
+        // Flower must never hide the adjacent text/data; preserve visible hit-free
+        // clearances even after proportional viewport scaling.
+        for(int[] resolution:new int[][]{{1920,1080},{960,540},{1024,768},{3440,1440}}){
+            var viewport=SlotLayout.Viewport.fit(resolution[0],resolution[1]);
+            assertTrue(viewport.scale()>0);
+            assertTrue(reels.x()-left.x()-left.w()>=18);
+            assertTrue(right.x()-reels.x()-reels.w()>=18);
+        }
     }
 
     private static boolean overlaps(SlotLayout.Rect a,SlotLayout.Rect b){
@@ -124,12 +143,16 @@ class HyperDogCabinetStateTest {
             assertEquals(300,vp.logicalY(vp.y()+300*vp.scale()),0.000001);
             assertTrue(vp.x()>=0&&vp.y()>=0);
         }
-        for(int i=0;i<2;i++)assertEquals(new SlotLayout.Rect(i==0?612:1576,302,52,50),
+        assertEquals(new SlotLayout.Rect(290,205,1415,835),
+                HyperDogCabinetState.cabinetRect());
+        assertEquals(new SlotLayout.Rect(1716,325,186,430),
+                HyperDogCabinetState.rightDataRect());
+        for(int i=0;i<2;i++)assertEquals(new SlotLayout.Rect(i==0?548:1588,310,104,104),
                 HyperDogCabinetState.announcementRect(i));
         for(int i=0;i<3;i++){
-            assertEquals(new SlotLayout.Rect(418,372+61*i,146,36),
+            assertEquals(new SlotLayout.Rect(388,372+61*i,146,36),
                     HyperDogCabinetState.leftStatusRect(i));
-            assertEquals(new SlotLayout.Rect(1583,370+69*i,34,34),
+            assertEquals(new SlotLayout.Rect(1583,454+69*i,34,34),
                     HyperDogCabinetState.rightLampRect(i));
         }
         assertEquals(new SlotLayout.Rect(356,575,272,132),
