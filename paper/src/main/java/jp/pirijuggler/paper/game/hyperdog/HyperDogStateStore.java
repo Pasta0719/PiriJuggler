@@ -45,7 +45,20 @@ public final class HyperDogStateStore {
     public Session commit(UUID player,UUID sessionId,int machineId,long expectedSequence,
                           long nextSequence,HyperDogFullGame game,JsonObject reel,long now)
             throws Exception {
+        return commit(player,sessionId,machineId,expectedSequence,nextSequence,game,reel,now,null);
+    }
+
+    /** Native Paper GameEngine supplies server-owned visible stops. Test-only
+     * Phase04/07 fixture callers keep the original overload unchanged.
+     */
+    public Session commit(UUID player,UUID sessionId,int machineId,long expectedSequence,
+                          long nextSequence,HyperDogFullGame game,JsonObject reel,long now,
+                          int[] confirmedDisplayStops) throws Exception {
         Objects.requireNonNull(game);
+        if(confirmedDisplayStops!=null &&
+           (confirmedDisplayStops.length!=3 ||
+             java.util.Arrays.stream(confirmedDisplayStops).anyMatch(n->n<0||n>=21)))
+            throw new DomainException("INVALID_STATE");
         if(nextSequence!=expectedSequence+1||nextSequence<1)
             throw new DomainException("SEQUENCE_OLD");
         return db.transaction(()->{
@@ -151,6 +164,11 @@ public final class HyperDogStateStore {
             // Event ID is session+sequence+type and safe against packet retries/restarts.
             HyperDogEventJournal.append(db,owner,prior,game,nextSequence,now);
             updatePeriodStats(owner,prior,game,now);
+            if(confirmedDisplayStops!=null)
+                db.sql("UPDATE machines SET last_left_stop=?,last_center_stop=?,"+
+                    "last_right_stop=?,updated_at=? WHERE machine_id=?",
+                    confirmedDisplayStops[0],confirmedDisplayStops[1],confirmedDisplayStops[2],
+                    now,machineId);
             List<Map<String,Object>> rows=db.rows(
                     "SELECT * FROM player_sessions WHERE session_id=?",sessionId.toString());
             if(rows.size()!=1)throw new SQLException("committed session vanished");
@@ -165,17 +183,19 @@ public final class HyperDogStateStore {
      */
     private void updatePeriodStats(Session owner,HyperDogFullGame before,
                                    HyperDogFullGame after,long now)throws SQLException {
-        if(before==null)return;
-        long spent=Math.subtractExact(after.totalIn(),before.totalIn());
-        long earned=Math.subtractExact(after.totalOut(),before.totalOut());
+        // The first native transition may include the first 3BET before an
+        // initial HyperDog snapshot exists. Still debit that wager exactly
+        // once; legacy fixture initial snapshots (before!=null) are unchanged.
+        long spent=before==null?after.totalIn():Math.subtractExact(after.totalIn(),before.totalIn());
+        long earned=before==null?after.totalOut():Math.subtractExact(after.totalOut(),before.totalOut());
         int finishedPaid=0;
-        if(before.at()!=null && before.at().pending()!=null &&
+        if(before!=null && before.at()!=null && before.at().pending()!=null &&
            before.at().pending().bet()>0 &&
            (after.at()==null||after.at().pending()==null))finishedPaid=1;
-        else if(before.at()==null&&before.normal().pending()!=null &&
+        else if(before!=null && before.at()==null&&before.normal().pending()!=null &&
                 before.normal().pending().bet()>0 &&
                 after.normal().pending()==null)finishedPaid=1;
-        boolean atEnded=before.at()!=null&&after.at()==null;
+        boolean atEnded=before!=null&&before.at()!=null&&after.at()==null;
         if(spent==0&&earned==0&&finishedPaid==0&&!atEnded)return;
         String period=owner.text("source_business_period_id");
         var rows=db.rows("SELECT total_games,current_games,today_difference,today_max_difference "+
