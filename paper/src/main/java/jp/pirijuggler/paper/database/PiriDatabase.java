@@ -72,8 +72,8 @@ public final class PiriDatabase implements AutoCloseable {
                     for (Session session : sessions()) if (session.ownsLock()) {
                         if(!session.ready()&&!preserveSkill(session)) recovery.settle(session,now);
                     }
-                    sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE lifecycle IN ('ACTIVE','SUSPENDED_GRACE') AND session_id NOT IN (SELECT s.session_id FROM player_sessions s JOIN machines m ON s.machine_id=m.machine_id WHERE m.machine_type='SKILL_STOP' AND s.game_state<>'SEATED_READY')");
-                    sql("UPDATE player_sessions SET lifecycle='SUSPENDED_GRACE',lock_expires_at=? WHERE session_id IN (SELECT s.session_id FROM player_sessions s JOIN machines m ON s.machine_id=m.machine_id WHERE m.machine_type='SKILL_STOP' AND s.game_state<>'SEATED_READY')",Long.MAX_VALUE);
+                    sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE lifecycle IN ('ACTIVE','SUSPENDED_GRACE') AND session_id NOT IN (SELECT s.session_id FROM player_sessions s JOIN machines m ON s.machine_id=m.machine_id WHERE m.machine_type IN ('SKILL_STOP','HYPER_DOG') AND s.game_state<>'SEATED_READY')");
+                    sql("UPDATE player_sessions SET lifecycle='SUSPENDED_GRACE',lock_expires_at=? WHERE session_id IN (SELECT s.session_id FROM player_sessions s JOIN machines m ON s.machine_id=m.machine_id WHERE m.machine_type IN ('SKILL_STOP','HYPER_DOG') AND s.game_state<>'SEATED_READY')",Long.MAX_VALUE);
                     // A true JVM restart ends only ordinary HIGH/ULTRA anticipation and
                     // small-role streaks. Preserve HEAVEN, GOD_CHAIN, confirmed stocks,
                     // saved bonuses and coin balances. Recovery settlement above runs first.
@@ -434,7 +434,7 @@ public final class PiriDatabase implements AutoCloseable {
     private boolean tableExists(String name) throws SQLException { return !rows("SELECT name FROM sqlite_master WHERE type='table' AND name=?", name).isEmpty(); }
     private String metadata(String key) throws SQLException { var rows = rows("SELECT value FROM metadata WHERE key=?", key); return rows.isEmpty() ? null : (String) rows.getFirst().get("value"); }
     private void metadata(String key, String value) throws SQLException { sql("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", key, value); }
-    private boolean preserveSkill(Session session) throws SQLException {return !session.ready()&&requireMachine(session.machine()).type()==MachineType.SKILL_STOP;}
+    private boolean preserveSkill(Session session) throws SQLException {return !session.ready()&&(requireMachine(session.machine()).type()==MachineType.SKILL_STOP || requireMachine(session.machine()).type()==MachineType.HYPER_DOG);}
     private RecoveryStore recovery(){if(recoveryConfig==null||recoverySolver==null)throw new IllegalStateException("Recovery not configured");return new RecoveryStore(this,recoveryConfig,recoverySolver);}
     public int sql(String sql, Object... values) throws SQLException {
         checkThread(); try (PreparedStatement statement = connection.prepareStatement(sql)) {
