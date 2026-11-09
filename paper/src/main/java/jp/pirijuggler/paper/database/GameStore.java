@@ -35,7 +35,12 @@ public final class GameStore {
                     .commit(action.before().player(),action.before().id(),
                             action.before().machine(),action.before().sequence(),
                             action.after().sequence(),state,reel,
-                            action.after().number("last_activity"));
+                            action.after().number("last_activity"),
+                            new int[]{
+                                Math.toIntExact(action.after().number("display_left_stop")),
+                                Math.toIntExact(action.after().number("display_center_stop")),
+                                Math.toIntExact(action.after().number("display_right_stop"))
+                            });
         }
         return db.transaction(()->{
             Session before=action.before(),after=action.after();String receipt="GAME_TX:"+action.transaction();
