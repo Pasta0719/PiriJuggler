@@ -36,6 +36,8 @@ jobs:
             sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
           fi
           chmod +x gradlew
+      - name: Check Phase06 lamp distributions against approved JSON
+        run: python original-at-phases/verify_phase06_presentation.py
       - name: Full legacy and Phase06 unit/integration test and production jars
         run: |
           ./gradlew --parallel --build-cache test :common:jar :paper:jar :fabric:remapJar --console=plain

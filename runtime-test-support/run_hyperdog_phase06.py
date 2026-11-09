@@ -83,7 +83,7 @@ try:
         "level-type=minecraft:normal","motd=Piri HYPER_DOG Phase06 acceptance"])+"\n")
     sl=(OUT/"server.log").open("w",encoding="utf-8");handles.append(sl)
     server=subprocess.Popen([JAVA,"-Xms512M","-Xmx1536M","-Dfile.encoding=UTF-8",
-            "-Dpiri.runtime.phase=hyperdog05",f"-Dpiri.runtime.serverResult={server_result}",
+            "-Dpiri.runtime.phase=hyperdog06",f"-Dpiri.runtime.serverResult={server_result}",
             "-jar",str(PAPER),"nogui"],cwd=SERVER,
             stdin=subprocess.PIPE,stdout=sl,stderr=subprocess.STDOUT,text=True,creationflags=FLAGS)
     wait("real Paper server boot",lambda: "Done (" in (OUT/"server.log").read_text(errors="replace"),210)

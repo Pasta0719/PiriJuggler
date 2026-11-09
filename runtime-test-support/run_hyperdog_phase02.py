@@ -158,7 +158,10 @@ try:
         if role in ("WEAK_CHERRY","STRONG_CHERRY") and not any(
             strips[0][(stops[0]+row)%21]=="CHERRY" for row in (-1,1)
         ):normal_cherry_visible=False
-    check("all 12 role profiles exercised in real Minecraft",len(all_roles)==12)
+    check("all 13 role profiles exercised in real Minecraft",
+          all_roles == {"MISS","REPLAY","GRAPE","WATERMELON","WEAK_CHERRY",
+                        "STRONG_CHERRY","CHANCE","STRONG_CHANCE","BAR",
+                        "AT_ENTRY_RED7","CZ_WIN","CZ_LOSE","AT_ENTRY_RAINBOW7"})
     check("all real displayed five-line premium triples are earned single matches",premium_valid)
     check("left-middle cherry never stopped except BAR",left_middle_valid)
     check("weak/strong cherry always displayed at top or bottom on left",normal_cherry_visible)

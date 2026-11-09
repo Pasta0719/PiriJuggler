@@ -312,7 +312,10 @@ public final class HyperDogPhase06Fixture {
                   completed.size()>70&&game.paidGames()>=3){
             finished=true;
         }
-        Bukkit.getScheduler().runTaskLater(plugin,this::sendPublic,8L);
+        // The public third-stop result must arrive in the same physical stop
+        // transaction. An 8-tick delay clipped the 600ms award flash.
+        // The existing Fabric FIFO still locks the next game during TOTAL/+N.
+        sendPublic();
     }
     private void recordConfirmation(String kind){
         JsonObject row=new JsonObject();
