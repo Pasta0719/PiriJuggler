@@ -861,11 +861,12 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #3a3f49;backgr
 <div class="metric"><div class="k">TOTAL G</div><div id="dTotal" class="v">0</div></div>
 <div class="metric"><div class="k">DIFF</div><div id="dDiff" class="v">0</div></div>
 <div class="metric"><div class="k">MAX DIFF</div><div id="dMax" class="v">0</div></div>
-<div class="metric"><div class="k">BIG</div><div id="dBig" class="v">0</div></div>
-<div class="metric"><div class="k">REG</div><div id="dReg" class="v">0</div></div>
+<div class="metric"><div id="dBigLabel" class="k">BIG</div><div id="dBig" class="v">0</div></div>
+<div class="metric"><div id="dRegLabel" class="k">REG</div><div id="dReg" class="v">0</div></div>
+<div id="dUpperPanel" class="metric hidden"><div class="k">上位AT（継続含む）</div><div id="dUpper" class="v">0</div></div>
 </div>
 <div id="preGraph" class="graphSurface"></div>
-<div class="card"><b>BONUS HISTORY</b><div id="preHistory"></div></div>
+<div class="card"><b id="preHistoryTitle">BONUS HISTORY</b><div id="preHistory"></div></div>
 </div>
 </section>
 
@@ -1042,9 +1043,30 @@ async function openData(id,type){
 function signed(v){v=Number(v||0);return v>0?"+"+v:String(v)}
 function odds(g,h){g=Number(g||0);h=Number(h||0);return g>0&&h>0?"1/"+Math.max(1,Math.round(g/h)):"---"}
 function renderPreData(d){
- $("dCurrent").textContent=d.currentGames||0;$("dTotal").textContent=d.totalGames||0;$("dDiff").textContent=signed(d.todayDifference);$("dMax").textContent=signed(d.todayMaxDifference);$("dBig").textContent=d.bigCount||0;$("dReg").textContent=d.regCount||0;
+ const hyper=d.machineType==="HYPER_DOG";
+ $("dCurrent").textContent=d.currentGames||0;$("dTotal").textContent=d.totalGames||0;
+ $("dDiff").textContent=signed(d.todayDifference);$("dMax").textContent=signed(d.todayMaxDifference);
+ $("dBigLabel").textContent=hyper?"AT初当たり":"BIG";
+ $("dRegLabel").textContent=hyper?"上位CZ回数":"REG";
+ $("dBig").textContent=hyper?(d.atFirstHits||0):(d.bigCount||0);
+ $("dReg").textContent=hyper?(d.czAttempts||0):(d.regCount||0);
+ $("dUpperPanel").classList.toggle("hidden",!hyper);
+ $("dUpper").textContent=hyper?(d.upperEntries||0):0;
+ $("preHistoryTitle").textContent=hyper?"AT・CZ HISTORY":"BONUS HISTORY";
  drawGraph($("preGraph"),d.graph||[],d.totalGames||0);
- const h=$("preHistory");h.textContent="";(d.history||[]).slice(0,20).forEach(function(x){const r=document.createElement("div");r.className="histRow";r.innerHTML="<b>"+x.type+"</b><span>"+x.games+"G</span>";h.append(r)});if(!(d.history||[]).length)h.textContent="-- no bonus yet --";
+ const h=$("preHistory");h.textContent="";
+ (d.history||[]).slice(0,20).forEach(function(x){
+   const r=document.createElement("div");r.className="histRow";
+   const name=document.createElement("b");name.textContent=hyper?hyperEventLabel(x.type):x.type;
+   const value=document.createElement("span");
+   value.textContent=hyper?(x.type==="AT_END"?signed(x.medals):""):(x.games+"G");
+   r.append(name,value);h.append(r);
+ });
+ if(!(d.history||[]).length)h.textContent=hyper?"-- no AT/CZ history yet --":"-- no bonus yet --";
+}
+function hyperEventLabel(type){
+ return ({AT_FIRST_HIT:"AT初当たり",UPPER_ENTRY:"上位AT",CZ_CHALLENGE:"上位CZ",
+   CZ_SUCCESS:"CZ成功",CZ_FAILURE:"CZ失敗",BAR:"BAR",AT_END:"AT終了",COMEBACK:"引き戻し"})[type]||"";
 }
 async function resumeStoredSession(){
  try{

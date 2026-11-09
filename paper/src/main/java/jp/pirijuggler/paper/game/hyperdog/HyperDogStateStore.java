@@ -96,10 +96,16 @@ public final class HyperDogStateStore {
                         :HyperDogReelControl.Role.valueOf(outcome.role().name());
             }else if(game.at()==null && game.normal().pending()!=null){
                 expectedRole=game.normal().pending().reelRole();
-            }else if(game.at()!=null && game.at().stage()==HyperDogAtGame.Stage.RED7_CONFIRM){
-                // AT_RED7_CONFIRM can be parked before/after its automatic reel
-                // motion. Its presentation history is optional until spin starts.
-                if(reel!=null)expectedRole=HyperDogReelControl.Role.AT_ENTRY_RED7;
+            }else if(game.at()!=null &&
+                    (game.at().stage()==HyperDogAtGame.Stage.RED7_CONFIRM ||
+                     game.at().stage()==HyperDogAtGame.Stage.RAINBOW7_CONFIRM)){
+                // Confirmation is not a paid spin: persist its authoritative real
+                // physical stops independently from AT draw and coin accounting.
+                // In particular, RAINBOW7 is manual, survives the second stop and
+                // must never be reinterpreted as automatic CZ outer reels.
+                if(reel!=null)expectedRole=game.at().stage()==HyperDogAtGame.Stage.RED7_CONFIRM
+                        ?HyperDogReelControl.Role.AT_ENTRY_RED7
+                        :HyperDogReelControl.Role.AT_ENTRY_RAINBOW7;
             }
             if(expectedRole!=null||reel!=null){
                 if(reel==null)throw new DomainException("RECOVERY_REQUIRED");

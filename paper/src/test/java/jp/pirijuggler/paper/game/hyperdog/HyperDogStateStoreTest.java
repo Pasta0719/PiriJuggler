@@ -172,6 +172,57 @@ class HyperDogStateStoreTest {
         assertEquals(full.credit()-50,recovered.session().number("held_medals"));
     }
 
+    @Test void upperComebackRainbowTwoManualStopsSurviveTrueRestartWithUnchangedWallet() throws Exception {
+        store.commit(player,session,machine,0,1,full,null,now+1);
+        full.bet();
+        store.commit(player,session,machine,1,2,full,null,now+2);
+        full.normal().leverForced(HyperDogNormalGame.Role.BAR);
+        full.finish();
+        assertEquals(HyperDogAtGame.Stage.RED7_CONFIRM,full.at().stage());
+        store.commit(player,session,machine,2,3,full,null,now+3);
+
+        // Reproduce the upper-origin continuation context using its real AT
+        // constructor and normal owner snapshot, not a fabricated credit value.
+        var initial=full.snapshot();
+        var comeback=new HyperDogAtGame(3,90817L,full.credit(),full.totalIn(),full.totalOut(),false,true);
+        initial.add("at",comeback.snapshot());
+        full=HyperDogFullGame.restore(initial);
+        assertEquals(HyperDogAtGame.Stage.RAINBOW7_CONFIRM,full.at().stage());
+        var physical=new HyperDogStopSession(session,machine,UUID.randomUUID(),
+                HyperDogReelControl.Role.AT_ENTRY_RAINBOW7,now+4,new double[]{0,7,14});
+        for(int i=0;i<2;i++){
+            var reel=i==0?jp.pirijuggler.common.protocol.PacketType.STOP_LEFT:
+                    jp.pirijuggler.common.protocol.PacketType.STOP_CENTER;
+            JsonObject request=new JsonObject();
+            request.addProperty("sessionId",session.toString());
+            request.addProperty("machineId",machine);
+            request.addProperty("clientSequence",i+4);
+            request.addProperty("pressedIndex",0);
+            var packets=physical.receive(Envelope.current(reel,request),now+1600+i*100);
+            assertTrue(packets.stream().anyMatch(p->p.packetType()==PacketType.ACTION_ACCEPTED));
+            full.stopRainbowSeven(i);
+            store.commit(player,session,machine,3+i,4+i,full,physical.toJson(),now+5+i);
+        }
+        long balance=full.credit(), in=full.totalIn(),out=full.totalOut();
+        var saved=physical.toJson(),gameSaved=full.snapshot();
+        assertEquals(3,full.at().rainbowStopMask());
+        db.disconnect(player,now+50,60_000);
+        db.shutdown(now+60,60_000);
+        db.close();
+        db=new PiriDatabase(directory.resolve("piri.db"));
+        db.open(2,now+200,config,new SplittableRandom(42),ignored->{});
+        store=new HyperDogStateStore(db);
+        var loaded=store.load(player,session,machine);
+        assertEquals(gameSaved,loaded.game().snapshot());
+        assertEquals(saved,loaded.reel());
+        assertEquals(3,loaded.game().at().rainbowStopMask());
+        assertEquals(2,HyperDogStopSession.fromJson(loaded.reel()).snapshot().round().history().count());
+        assertEquals(balance,loaded.game().credit());
+        assertEquals(in,loaded.game().totalIn());
+        assertEquals(out,loaded.game().totalOut());
+        assertTrue(db.state().busy(machine));
+    }
+
     @Test void unfinishedSpinRequiresMatchingServerOwnedReelHistory() throws Exception {
         store.commit(player,session,machine,0,1,full,null,now+1);
         full.bet();
