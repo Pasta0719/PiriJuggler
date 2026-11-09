@@ -28,6 +28,11 @@ class HyperDogFullGameTest {
         for(int steps=0;steps<3000&&f.at()!=null;steps++){
             switch(f.at().stage()){
                 case RED7_CONFIRM -> f.confirmRed7();
+                case RAINBOW7_CONFIRM -> {
+                    f.stopRainbowSeven(0);
+                    f.stopRainbowSeven(1);
+                    f.stopRainbowSeven(2);
+                }
                 case LOWER_INITIAL,UPPER_INITIAL,UPPER_CZ -> at(f,HyperDogAtGame.Role.MISS);
                 case LOWER_AT,UPPER_AT -> at(f,HyperDogAtGame.Role.GRAPE);
                 case COMPLETE -> throw new AssertionError("COMPLETE not reconciled");
@@ -68,6 +73,7 @@ class HyperDogFullGameTest {
             success=true;
             assertEquals(1,f.completedAtCount());
             assertEquals(32,f.comebackPaidLeft());
+            assertTrue(f.comebackFromUpper(),"upper CZ failure must remember the last AT");
             assertFalse(f.normal().waitingForAt());
             assertEquals(f.credit(),f.normal().credits());
             assertEquals(f.totalIn(),f.normal().totalBet());
@@ -86,6 +92,55 @@ class HyperDogFullGameTest {
         }
         assertTrue(success,"a non-guaranteed upper CZ must eventually terminate AT");
     }
+
+    @Test void upperOriginComebackReturnsUpperViaThreeDistinctRainbowStops(){
+        var f=full(0);
+        normal(f,HyperDogNormalGame.Role.BAR);
+        drain(f);
+        assertNull(f.at());
+        assertEquals(32,f.comebackPaidLeft());
+        assertTrue(f.comebackFromUpper());
+        assertEquals(f.snapshot(),HyperDogFullGame.restore(f.snapshot()).snapshot());
+        for(int n=0;n<20&&f.at()==null;n++)
+            normal(f,HyperDogNormalGame.Role.STRONG_CHERRY);
+        assertNotNull(f.at());
+        assertEquals(HyperDogAtGame.Stage.RAINBOW7_CONFIRM,f.at().stage());
+        assertEquals(0,f.at().remaining(),"upper comeback may not invent BAR +1000");
+        assertEquals(0,f.comebackPaidLeft());
+        long previousIn=f.totalIn(),previousOut=f.totalOut(),credit=f.credit();
+        assertEquals(1,f.stopRainbowSeven(0));
+        assertThrows(IllegalStateException.class,()->f.stopRainbowSeven(0));
+        var restored=HyperDogFullGame.restore(f.snapshot());
+        assertEquals(1,restored.at().rainbowStopMask());
+        assertEquals(3,restored.stopRainbowSeven(1));
+        assertEquals(7,restored.stopRainbowSeven(2));
+        assertEquals(HyperDogAtGame.Stage.UPPER_INITIAL,restored.at().stage());
+        assertEquals(previousIn,restored.totalIn());
+        assertEquals(previousOut,restored.totalOut());
+        assertEquals(credit,restored.credit());
+        for(int i=0;i<5;i++)at(restored,HyperDogAtGame.Role.MISS);
+        assertEquals(HyperDogAtGame.Stage.UPPER_AT,restored.at().stage());
+        assertTrue(restored.at().upperInitialTotal()>=500);
+    }
+
+    @Test void lowerOriginComebackStillUsesRedSevenAndLowerInitial(){
+        var f=full(53);
+        for(int n=0;n<20&&f.at()==null;n++)
+            normal(f,HyperDogNormalGame.Role.STRONG_CHERRY);
+        assertNotNull(f.at());
+        assertEquals(HyperDogAtGame.Stage.RED7_CONFIRM,f.at().stage());
+        drain(f);
+        assertNull(f.at());
+        assertFalse(f.comebackFromUpper());
+        assertEquals(32,f.comebackPaidLeft());
+        for(int n=0;n<20&&f.at()==null;n++)
+            normal(f,HyperDogNormalGame.Role.STRONG_CHERRY);
+        assertNotNull(f.at());
+        assertEquals(HyperDogAtGame.Stage.RED7_CONFIRM,f.at().stage());
+        f.confirmRed7();
+        assertEquals(HyperDogAtGame.Stage.LOWER_INITIAL,f.at().stage());
+    }
+
     @Test void upperAtBarStocksPreservedAcrossReelAndProcessRestart(){
         var f=full(31);
         normal(f,HyperDogNormalGame.Role.BAR);

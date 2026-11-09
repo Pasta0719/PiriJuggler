@@ -12,7 +12,7 @@ import java.util.*;
  * is accounted for exactly once; unfinished spins can be saved and restored.
  */
 public final class HyperDogAtGame {
-    public enum Stage { RED7_CONFIRM, LOWER_INITIAL, LOWER_AT, UPPER_INITIAL, UPPER_AT, UPPER_CZ, COMPLETE }
+    public enum Stage { RED7_CONFIRM, RAINBOW7_CONFIRM, LOWER_INITIAL, LOWER_AT, UPPER_INITIAL, UPPER_AT, UPPER_CZ, COMPLETE }
     public enum Role { MISS, REPLAY, GRAPE, WEAK_CHERRY, WATERMELON, CHANCE, STRONG_CHERRY, STRONG_CHANCE, BAR }
     public record Round(long serial, Stage stage, Role role, int bet, int payout,
                         long award, int ticket, boolean premium, boolean czSuccess) {
@@ -32,7 +32,7 @@ public final class HyperDogAtGame {
     private Stage stage;
     private long remaining, upperInitialTotal, lowerInitialTotal, totalBonuses, atNet;
     private int tickets, upperBarCharges, futureRareCharges, forcedRareSlots;
-    private int initialIndex, czGame, czForcedGame, rareStreak, specialStreak;
+    private int initialIndex, czGame, czForcedGame, rareStreak, specialStreak, rainbowStopMask;
     private boolean czFromUpper, barGuaranteed, replayFree, betPosted;
     private Role streakRole, specialStreakRole;
     private int postedBet;
@@ -40,14 +40,19 @@ public final class HyperDogAtGame {
 
     public HyperDogAtGame(int setting, long seed, long credit, long totalIn, long totalOut,
                           boolean barDirect) {
+        this(setting,seed,credit,totalIn,totalOut,barDirect,false);
+    }
+    /** Upper comeback requires a separate three-STOP rainbow confirmation. */
+    public HyperDogAtGame(int setting,long seed,long credit,long totalIn,long totalOut,
+                          boolean barDirect,boolean upperComeback) {
         if(setting<1||setting>6||credit<0||totalIn<0||totalOut<0)
             throw new IllegalArgumentException("invalid AT opening ledger");
         this.setting=setting;this.rng=seed;this.credit=credit;
         this.totalIn=totalIn;this.totalOut=totalOut;
         this.remaining=barDirect?MODEL.getAsJsonObject("bar_special").getAsJsonObject("normal_direct_upper")
                 .get("dedicated_bonus_medals").getAsLong():0L;
-        this.stage=Stage.RED7_CONFIRM;
-        this.initialIndex=barDirect?-1:0; // -1 marks direct-upper entry before confirmation
+        this.stage=upperComeback?Stage.RAINBOW7_CONFIRM:Stage.RED7_CONFIRM;
+        this.initialIndex=(barDirect||upperComeback)?-1:0; // -1 marks upper initial entry
     }
     private HyperDogAtGame(int setting) { this.setting=setting; }
     public static String parameterSha256(){return MODEL_HASH;}
@@ -71,6 +76,11 @@ public final class HyperDogAtGame {
             stage==Stage.UPPER_CZ||((stage==Stage.LOWER_AT||stage==Stage.UPPER_AT)&&(betPosted||replayFree)));}
     public Round pending(){return pending;}
     public int czGame(){return czGame;}
+    public int rainbowStopMask(){return rainbowStopMask;}
+    public boolean completedFromUpper(){
+        if(stage!=Stage.COMPLETE)throw new IllegalStateException("AT not completed");
+        return czFromUpper;
+    }
     public long serial(){return serial;}
     public String rngState(){return Long.toUnsignedString(rng);}
 
@@ -79,6 +89,21 @@ public final class HyperDogAtGame {
         if(stage!=Stage.RED7_CONFIRM||pending!=null)throw new IllegalStateException("red7 confirmation state");
         stage=initialIndex<0?Stage.UPPER_INITIAL:Stage.LOWER_INITIAL;
         initialIndex=0;
+    }
+    /** Three real STOP commands, without a new lottery, BET, or payout.
+     * Server-authoritative reel routing and animation are Phase06.
+     */
+    public int stopRainbowSeven(int reel){
+        if(stage!=Stage.RAINBOW7_CONFIRM||pending!=null||reel<0||reel>2)
+            throw new IllegalStateException("rainbow confirmation inactive");
+        int bit=1<<reel;
+        if((rainbowStopMask&bit)!=0)throw new IllegalStateException("duplicate rainbow stop");
+        rainbowStopMask|=bit;
+        if(rainbowStopMask==7){
+            rainbowStopMask=0;initialIndex=0;stage=Stage.UPPER_INITIAL;
+            return 7;
+        }
+        return rainbowStopMask;
     }
     public void bet(){
         if(!waitingForBet()||credit<3)throw new IllegalStateException("BET denied");
@@ -342,7 +367,7 @@ public final class HyperDogAtGame {
             j.addProperty(e.getKey(),e.getValue());
         j.addProperty("tickets",tickets);j.addProperty("upperBarCharges",upperBarCharges);
         j.addProperty("futureRareCharges",futureRareCharges);j.addProperty("forcedRareSlots",forcedRareSlots);
-        j.addProperty("initialIndex",initialIndex);j.addProperty("czGame",czGame);
+        j.addProperty("initialIndex",initialIndex);j.addProperty("rainbowStopMask",rainbowStopMask);j.addProperty("czGame",czGame);
         j.addProperty("czForcedGame",czForcedGame);j.addProperty("rareStreak",rareStreak);
         j.addProperty("specialStreak",specialStreak);j.addProperty("czFromUpper",czFromUpper);
         j.addProperty("barGuaranteed",barGuaranteed);j.addProperty("replayFree",replayFree);
@@ -376,7 +401,7 @@ public final class HyperDogAtGame {
         a.tickets=j.get("tickets").getAsInt();a.upperBarCharges=j.get("upperBarCharges").getAsInt();
         a.futureRareCharges=j.get("futureRareCharges").getAsInt();
         a.forcedRareSlots=j.get("forcedRareSlots").getAsInt();
-        a.initialIndex=j.get("initialIndex").getAsInt();a.czGame=j.get("czGame").getAsInt();
+        a.initialIndex=j.get("initialIndex").getAsInt();a.rainbowStopMask=j.has("rainbowStopMask")?j.get("rainbowStopMask").getAsInt():0;a.czGame=j.get("czGame").getAsInt();
         a.czForcedGame=j.get("czForcedGame").getAsInt();a.rareStreak=j.get("rareStreak").getAsInt();
         a.specialStreak=j.get("specialStreak").getAsInt();
         a.czFromUpper=j.get("czFromUpper").getAsBoolean();
@@ -395,7 +420,8 @@ public final class HyperDogAtGame {
         if(a.credit<0||a.totalIn<0||a.totalOut<0||a.paidGames<0||a.freeGames<0||
            a.serial<0||a.totalBonuses<0||a.tickets<0||a.upperBarCharges<0||
            a.futureRareCharges<0||a.forcedRareSlots<0||a.forcedRareSlots>Integer.MAX_VALUE/2||
-           a.initialIndex< -1||a.initialIndex>5||a.czGame<0||a.czGame>5||
+           a.initialIndex< -1||a.initialIndex>5||a.rainbowStopMask<0||a.rainbowStopMask>7||
+           a.rainbowStopMask!=0&&a.stage!=Stage.RAINBOW7_CONFIRM||a.czGame<0||a.czGame>5||
            a.czForcedGame<0||a.czForcedGame>5||a.postedBet<0||a.postedBet>3||
            a.betPosted!=(a.postedBet==3)||a.pending!=null&&
                 (a.pending.stage()!=a.stage||a.pending.serial()!=a.serial+1||a.betPosted)||
@@ -410,7 +436,7 @@ public final class HyperDogAtGame {
         upperInitialTotal=x.upperInitialTotal;lowerInitialTotal=x.lowerInitialTotal;
         totalBonuses=x.totalBonuses;atNet=x.atNet;tickets=x.tickets;upperBarCharges=x.upperBarCharges;
         futureRareCharges=x.futureRareCharges;forcedRareSlots=x.forcedRareSlots;
-        initialIndex=x.initialIndex;czGame=x.czGame;czForcedGame=x.czForcedGame;
+        initialIndex=x.initialIndex;rainbowStopMask=x.rainbowStopMask;czGame=x.czGame;czForcedGame=x.czForcedGame;
         rareStreak=x.rareStreak;specialStreak=x.specialStreak;
         czFromUpper=x.czFromUpper;barGuaranteed=x.barGuaranteed;replayFree=x.replayFree;
         betPosted=x.betPosted;postedBet=x.postedBet;streakRole=x.streakRole;

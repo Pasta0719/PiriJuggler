@@ -71,6 +71,32 @@ class HyperDogAtGameTest {
         assertEquals(5,direct.freeGames());
     }
 
+
+    @Test void upperComebackHasThreeManualRainbowStopsWithNoRngOrLedgerMovement(){
+        var g=new HyperDogAtGame(4,1234,100000,0,0,false,true);
+        assertEquals(HyperDogAtGame.Stage.RAINBOW7_CONFIRM,g.stage());
+        assertEquals(0,g.remaining());
+        assertFalse(g.canLever());
+        assertFalse(g.waitingForBet());
+        assertThrows(IllegalStateException.class,g::confirmRed7);
+        assertThrows(IllegalStateException.class,()->g.stopRainbowSeven(3));
+        assertThrows(IllegalStateException.class,()->g.stopRainbowSeven(-1));
+        var initial=g.snapshot();
+        assertEquals(1,g.stopRainbowSeven(0));
+        assertThrows(IllegalStateException.class,()->g.stopRainbowSeven(0));
+        assertEquals(3,g.stopRainbowSeven(1));
+        var clone=HyperDogAtGame.restore(g.snapshot());
+        assertEquals(g.snapshot(),clone.snapshot());
+        assertEquals(7,clone.stopRainbowSeven(2));
+        assertEquals(HyperDogAtGame.Stage.UPPER_INITIAL,clone.stage());
+        assertEquals(0,clone.paidGames());
+        assertEquals(0,clone.freeGames());
+        assertEquals(0,clone.totalOut());
+        assertEquals(0,clone.totalIn());
+        assertEquals(100000,clone.credit());
+        assertEquals(initial.get("rng"),clone.snapshot().get("rng"));
+    }
+
     @Test void lowerPaidGrapeAccountingAndTicketBranches(){
         var game=at(91,false);lower(game);
         long base=game.remaining(),credit=game.credit(),in=game.totalIn(),out=game.totalOut();

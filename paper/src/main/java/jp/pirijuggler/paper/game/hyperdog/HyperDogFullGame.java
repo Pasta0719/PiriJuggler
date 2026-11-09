@@ -17,6 +17,7 @@ public final class HyperDogFullGame {
     private long completedAtCount;
     private long lastAtNet;
     private boolean lastExtraComeback;
+    private boolean comebackFromUpper;
 
     public HyperDogFullGame(int setting,long seed,long credits) {
         normal=new HyperDogNormalGame(setting,seed,credits);
@@ -33,6 +34,7 @@ public final class HyperDogFullGame {
     public long completedAtCount(){return completedAtCount;}
     public long lastAtNet(){return lastAtNet;}
     public boolean lastExtraComeback(){return lastExtraComeback;}
+    public boolean comebackFromUpper(){return comebackFromUpper;}
     public boolean waitingForBet(){return at==null?normal.canBet():at.waitingForBet();}
     public boolean canLever(){return at==null?normal.canLever():at.canLever();}
     public HyperDogNormalGame normal(){return normal;}
@@ -45,6 +47,10 @@ public final class HyperDogFullGame {
     public void confirmRed7(){
         if(at==null)throw new IllegalStateException("not in AT");
         at.confirmRed7();
+    }
+    public int stopRainbowSeven(int reel){
+        if(at==null)throw new IllegalStateException("no active AT");
+        return at.stopRainbowSeven(reel);
     }
     public String lever(){
         if(at==null)return normal.lever().role().name();
@@ -81,7 +87,7 @@ public final class HyperDogFullGame {
                 beginAt(false);
                 return;
             }
-            if(game.bet()==3)comebackPaidLeft--;
+            if(game.bet()==3 && --comebackPaidLeft==0)comebackFromUpper=false;
         }
     }
     private void beginAt(boolean directUpper){
@@ -89,8 +95,10 @@ public final class HyperDogFullGame {
         JsonObject n=normal.snapshot();
         int setting=n.get("setting").getAsInt();
         long seed=Long.parseUnsignedLong(n.get("rngState").getAsString());
-        at=new HyperDogAtGame(setting,seed,normal.credits(),normal.totalBet(),normal.totalPayout(),directUpper);
-        comebackPaidLeft=0;
+        boolean upperComeback=comebackPaidLeft>0&&comebackFromUpper;
+        at=new HyperDogAtGame(setting,seed,normal.credits(),normal.totalBet(),normal.totalPayout(),
+                directUpper,upperComeback);
+        comebackPaidLeft=0;comebackFromUpper=false;
     }
     private void endAt(){
         if(at==null||at.stage()!=HyperDogAtGame.Stage.COMPLETE||!normal.waitingForAt())
@@ -105,9 +113,10 @@ public final class HyperDogFullGame {
         restored.resumeAfterAt();
         long count=Math.addExact(completedAtCount,1);
         long net=at.atNet();
+        boolean endedUpper=at.completedFromUpper();
         normal=restored;at=null;
         completedAtCount=count;lastAtNet=net;
-        comebackPaidLeft=32;
+        comebackPaidLeft=32;comebackFromUpper=endedUpper;
     }
 
     /**
@@ -123,6 +132,7 @@ public final class HyperDogFullGame {
         JsonObject j=new JsonObject();
         j.addProperty("gameState",at.pending()!=null?"AT_SPINNING":
                 at.stage()==HyperDogAtGame.Stage.RED7_CONFIRM?"AT_RED7_CONFIRM":
+                at.stage()==HyperDogAtGame.Stage.RAINBOW7_CONFIRM?"AT_RAINBOW7_CONFIRM":
                 at.waitingForBet()?"AT_READY":at.stage().name());
         j.addProperty("credit",at.credit());
         j.addProperty("bet",at.pending()==null?0:at.pending().bet());
@@ -132,6 +142,8 @@ public final class HyperDogFullGame {
         j.addProperty("atInitialTotal",at.stage()==HyperDogAtGame.Stage.UPPER_INITIAL?
                 at.upperInitialTotal():at.stage()==HyperDogAtGame.Stage.LOWER_AT?
                 at.lowerInitialTotal():0L);
+        if(at.stage()==HyperDogAtGame.Stage.RAINBOW7_CONFIRM)
+            j.addProperty("rainbowStoppedMask",at.rainbowStopMask());
         j.addProperty("comebackDisplay",false);
         return j;
     }
@@ -146,6 +158,7 @@ public final class HyperDogFullGame {
         j.addProperty("completedAtCount",completedAtCount);
         j.addProperty("lastAtNet",lastAtNet);
         j.addProperty("lastExtraComeback",lastExtraComeback);
+        j.addProperty("comebackFromUpper",comebackFromUpper);
         return j;
     }
     public static HyperDogFullGame restore(JsonObject j){
@@ -157,7 +170,9 @@ public final class HyperDogFullGame {
         f.completedAtCount=j.get("completedAtCount").getAsLong();
         f.lastAtNet=j.get("lastAtNet").getAsLong();
         f.lastExtraComeback=j.get("lastExtraComeback").getAsBoolean();
+        f.comebackFromUpper=j.has("comebackFromUpper")&&j.get("comebackFromUpper").getAsBoolean();
         if(f.comebackPaidLeft<0||f.comebackPaidLeft>32||f.completedAtCount<0||
+           f.comebackFromUpper&&f.comebackPaidLeft==0||
            f.at!=null&&!f.normal.waitingForAt()||
            f.at==null&&f.normal.waitingForAt()||
            f.at!=null&&f.comebackPaidLeft!=0)
