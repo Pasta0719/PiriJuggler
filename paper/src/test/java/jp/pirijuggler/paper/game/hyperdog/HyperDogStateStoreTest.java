@@ -1,6 +1,10 @@
 package jp.pirijuggler.paper.game.hyperdog;
 
 import com.google.gson.JsonObject;
+import jp.pirijuggler.paper.reel.HyperDogStopSession;
+import jp.pirijuggler.common.reel.HyperDogReelControl;
+import jp.pirijuggler.common.protocol.Envelope;
+import jp.pirijuggler.common.protocol.PacketType;
 import jp.pirijuggler.paper.config.ConfigValidation;
 import jp.pirijuggler.paper.database.PiriDatabase;
 import jp.pirijuggler.paper.machine.DomainException;
@@ -58,8 +62,8 @@ class HyperDogStateStoreTest {
         assertEquals(50,two.number("credit"));assertEquals(447,two.number("held_medals"));
         assertEquals("NORMAL_BETTED",two.text("game_state"));
         full.normal().leverForced(HyperDogNormalGame.Role.BAR);
-        JsonObject reel=new JsonObject();reel.addProperty("spinId",UUID.randomUUID().toString());
-        reel.addProperty("stoppedMask",1);
+        JsonObject reel=new HyperDogStopSession(session,machine,UUID.randomUUID(),
+                HyperDogReelControl.Role.BAR,now+3,new double[]{0,7,14}).toJson();
         var three=store.commit(player,session,machine,2,3,full,reel,now+4);
         assertEquals("NORMAL_SPINNING",three.text("game_state"));
         assertEquals(reel,store.load(player,session,machine).reel());
@@ -76,7 +80,18 @@ class HyperDogStateStoreTest {
         full.finish();
         full.confirmRed7();
         full.at().leverForced(HyperDogAtGame.Role.REPLAY);
-        JsonObject reel=new JsonObject();reel.addProperty("physicalStop",2);
+        var physical=new HyperDogStopSession(session,machine,UUID.randomUUID(),
+                HyperDogReelControl.Role.REPLAY,now+1,new double[]{0,7,14});
+        for(PacketType type:List.of(PacketType.STOP_LEFT,PacketType.STOP_CENTER)){
+            JsonObject request=new JsonObject();
+            request.addProperty("sessionId",session.toString());
+            request.addProperty("machineId",machine);
+            request.addProperty("clientSequence",physical.snapshot().round().lastSequence()+1);
+            request.addProperty("pressedIndex",0);
+            assertTrue(physical.receive(Envelope.current(type,request),now+1600).stream()
+                    .anyMatch(packet->packet.packetType()==PacketType.ACTION_ACCEPTED));
+        }
+        JsonObject reel=physical.toJson();
         store.commit(player,session,machine,1,2,full,reel,now+2);
         JsonObject original=full.snapshot();
         db.disconnect(player,now+3,60000);
@@ -93,7 +108,7 @@ class HyperDogStateStoreTest {
         assertEquals(reel,recovered.reel());
         recovered.game().at().finish();
         assertEquals(HyperDogAtGame.Stage.UPPER_INITIAL,recovered.game().at().stage());
-        assertEquals(0,recovered.game().at().freeGames()==1?0:1);
+        assertEquals(1,recovered.game().at().freeGames());
     }
     @Test void comebackReadyAfterAtMustKeepSamePlayerLockThroughRestartAndAdminRelease() throws Exception {
         // REPLAY / third-stop completion may leave a valuable 32G comeback in
@@ -144,6 +159,25 @@ class HyperDogStateStoreTest {
         assertEquals(32,recovered.game().comebackPaidLeft());
         assertEquals(50,recovered.session().number("credit"));
         assertEquals(full.credit()-50,recovered.session().number("held_medals"));
+    }
+
+    @Test void unfinishedSpinRequiresMatchingServerOwnedReelHistory() throws Exception {
+        store.commit(player,session,machine,0,1,full,null,now+1);
+        full.bet();
+        store.commit(player,session,machine,1,2,full,null,now+2);
+        full.normal().leverForced(HyperDogNormalGame.Role.BAR);
+        assertDom("RECOVERY_REQUIRED",()->store.commit(player,session,machine,2,3,full,null,now+3));
+        var foreign=new HyperDogStopSession(UUID.randomUUID(),machine,UUID.randomUUID(),
+                HyperDogReelControl.Role.BAR,now+2,new double[]{0,7,14}).toJson();
+        assertDom("SESSION_MISMATCH",()->store.commit(player,session,machine,2,3,full,foreign,now+3));
+        var otherRole=new HyperDogStopSession(session,machine,UUID.randomUUID(),
+                HyperDogReelControl.Role.REPLAY,now+2,new double[]{0,7,14}).toJson();
+        assertDom("SESSION_MISMATCH",()->store.commit(player,session,machine,2,3,full,otherRole,now+3));
+        assertEquals(2,db.state().session(player).sequence());
+        var actual=new HyperDogStopSession(session,machine,UUID.randomUUID(),
+                HyperDogReelControl.Role.BAR,now+2,new double[]{0,7,14}).toJson();
+        store.commit(player,session,machine,2,3,full,actual,now+3);
+        assertEquals(actual,store.load(player,session,machine).reel());
     }
 
     @Test void rejectsForeignOwnerAndStaleConcurrentWritesWithoutAnyMutation() throws Exception {
