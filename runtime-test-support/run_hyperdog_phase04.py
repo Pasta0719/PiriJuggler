@@ -99,6 +99,9 @@ try:
     check("Paper and Fabric completed the same 70+ AT/CZ spins",
           n>=70 and s.get("completedRounds")==n and c.get("completedRounds")==n)
     check("real Paper received exactly one lever per spin",s.get("acceptedLevers")==n)
+    check("all client BET and LEVER requests acknowledged without silent loss",
+          c.get("betRequests")==s.get("acceptedBets") and
+          c.get("leverRequests")==s.get("acceptedLevers"))
     check("real Paper exactly three physical stops per spin",
           s.get("manualStops",0)+s.get("automaticStops",0)==3*n)
     check("Fabric client stop requests equal manual physical stops",
