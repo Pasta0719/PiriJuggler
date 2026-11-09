@@ -1,6 +1,6 @@
 > **CURRENT_NUMERIC_REFERENCE / HYPER_DOG：唯一の現行数値正本は [pirijuggler_new_machine_calibrated_v7.json](reference/pirijuggler_new_machine_calibrated_v7.json)（v7）。** `PHASE_MAP.json.numeric_reference` と一致させ、Phase06〜08・本番実装・抽選/配当/機械割検証ではv7を参照する。v5/v6の旧数値・ハッシュ・実測は履歴監査用。矛盾時はv7を優先し、ユーザー承認なしでv7数値を変更しない。
 
-> **2026-11-09 追加承認・最新v7：上位AT平均約4,000枚**。上位有料ATのレア役上乗せを弱チェ/スイカ8倍・チャンス目9倍・強チェ/強チャンス目10倍（単一+2000枚まで）に強化する。上位初期500枚以上、通常CZ50%、実測有料上位純増約12枚/G、小役・BAR・下位ATのゲーム性は維持。設定別機械割のため、通常レア役重複AT抽選に共通0.85倍補正と設定別単独AT倍率再調整を採用（リプレイ/ブドウ4連20%・5連100%は変更なし）。数値と調整理由は[POST_PHASE05_UPPER_4K_V7.md](POST_PHASE05_UPPER_4K_V7.md)。最新数値正本は[calibrated_v7 JSON](reference/pirijuggler_new_machine_calibrated_v7.json)。v6/v5は履歴と回帰のため残す。Phase06–08未開始・未公開。
+> **2026-11-09 追加承認・最新v7：上位AT平均約4,000枚**。上位有料ATのレア役上乗せを弱チェ/スイカ8倍・チャンス目9倍・強チェ/強チャンス目10倍（単一+2000枚まで）に強化する。上位初期500枚以上、通常CZ50%、実測有料上位純増約12枚/G、小役・BAR・下位ATのゲーム性は維持。設定別機械割のため、通常レア役重複AT抽選に共通0.85倍補正と設定別単独AT倍率再調整を採用（リプレイ/ブドウ4連20%・5連100%は変更なし）。数値と調整理由は[POST_PHASE05_UPPER_4K_V7.md](POST_PHASE05_UPPER_4K_V7.md)。最新数値正本は[calibrated_v7 JSON](reference/pirijuggler_new_machine_calibrated_v7.json)。v6/v5は履歴と回帰のため残す。Phase06実機受入完了、Phase07–08未開始・機種未公開。
 
 > **2026-11-09 追加承認：上位引き戻しとv6再調整**：上位AT→上位CZ失敗→32有料G以内の再当選は、CZの左右自動停止を使わない**手動3停止の虹7告知→上位初期5G**で復帰。下位由来の32G再当選は赤7→下位初期1G（BARは既存の直撃上位特典を維持）。リプレイ後0BETの通常ゲームは引き戻しを抽選するが32有料Gから減算しない。**設定1〜6の単独AT当選倍率のみv6に再調整**。すべての既存小役・BAR・CZ・上乗せ分布はv5から維持。詳細は[POST_PHASE05_UPPER_COMEBACK_V6.md](POST_PHASE05_UPPER_COMEBACK_V6.md)に記録（v6時点の履歴）。現行数値はv7 JSONを優先する。旧v5数値・ハッシュ・レポートも履歴。
 

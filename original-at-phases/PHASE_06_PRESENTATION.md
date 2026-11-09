@@ -1,8 +1,8 @@
 # HYPER_DOG — PHASE 06 Lamp progression, flashes, TOTAL, and rainbow-seven CZ
 
-Status: **IN_PROGRESS — SPEC_LOCKED / 実Minecraft受入前**
+Status: **COMPLETE — 実Minecraft Paper/Fabric受入済み（2026-11-09）**
 
-> 演出の色・時間・位置は現時点の承認仕様で初期実装し、実際にプレイした後のユーザーレビューで必要な変更を行う。検証が終わるまでCOMPLETE/公開扱いにしない。
+> Phase06の初期演出は承認仕様に基づき実装・実Minecraft受入済み。**ユーザー本人が実際に遊んだ後の演出調整は別途可能**。Phase06の技術的COMPLETEは機種公開・Phase07/08完了を意味しない。[Phase06実機受入証跡](PHASE_06_RUNTIME_ACCEPTANCE.md)を参照。
 
 **CURRENT_NUMERIC_REFERENCE / HYPER_DOG：唯一の現行数値正本は [pirijuggler_new_machine_calibrated_v7.json](reference/pirijuggler_new_machine_calibrated_v7.json)（v7）。** `PHASE_MAP.json.numeric_reference` と一致させ、抽選・配当・上乗せ・機械割はv7に従う。v5/v6は旧Phase・較正履歴専用。
 
