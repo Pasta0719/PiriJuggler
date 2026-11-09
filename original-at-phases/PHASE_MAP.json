@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "PHASE_05_IN_PROGRESS",
+  "status": "PHASE_05_COMPLETE",
   "scope": "Original AT direct-win machine. Independent from retired standalone GOD and existing NEXT machine.",
   "entrypoint": "original-at-phases/README.md",
   "spec": "original-at-phases/SPEC_LOCK.md",
@@ -49,10 +49,11 @@
       "number": 5,
       "file": "original-at-phases/PHASE_05_FABRIC_CABINET.md",
       "title": "Fabric cabinet and input layout / status displays",
-      "status": "IN_PROGRESS",
+      "status": "COMPLETE",
       "requires": [
         "Phase04"
-      ]
+      ],
+      "evidence": "original-at-phases/PHASE_05_RUNTIME_ACCEPTANCE.md"
     },
     {
       "number": 6,

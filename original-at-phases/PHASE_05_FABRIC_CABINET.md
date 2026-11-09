@@ -1,6 +1,8 @@
 # HYPER_DOG — PHASE 05 Existing controls, cabinet, indicators and tiny display
 
-Status: **NOT_STARTED — SPEC_LOCKED**
+Status: **COMPLETE — 2026-11-09 JST / Fabric専用筐体・実Paper/Fabric UI受入 PASS**
+
+[Phase05 実機・操作・レイアウト・スクリーンショットの受入証跡](PHASE_05_RUNTIME_ACCEPTANCE.md)。最終検証対象コード: [`f0b052ea105bd6f9b32c28d73bc07dc499d835ce`](https://github.com/Pasta0719/PiriJuggler/commit/f0b052ea105bd6f9b32c28d73bc07dc499d835ce)。Phase06〜08は未着手。
 
 ## 実装対象
 - 現行 `SlotLayout.java` の LEVER→BET→左中右停止ボタン、リール直下CREDIT/BET/PAY/MEDALS、データランプは既存と同配置。MAX BETを端へ移すUI改変禁止。

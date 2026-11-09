@@ -1,8 +1,8 @@
-> **2026-11-09 現行進捗**：HYPER_DOG Phase01～Phase04は**COMPLETE**。Phase03の通常時受入は [PHASE_03_RUNTIME_ACCEPTANCE.md](PHASE_03_RUNTIME_ACCEPTANCE.md)、Phase04のAT/CZ、差枚、SQLite別JVM復帰、実Paper/Fabric受入は [PHASE_04_RUNTIME_ACCEPTANCE.md](PHASE_04_RUNTIME_ACCEPTANCE.md) を参照。Phase05～08はNOT_STARTED。PRはDraftのままで新機種は一般公開しない。
+> **2026-11-09 現行進捗**：HYPER_DOG Phase01～Phase05は**COMPLETE**。Phase03は[通常時実機受入](PHASE_03_RUNTIME_ACCEPTANCE.md)、Phase04は[AT/CZ・SQLite別JVM復帰受入](PHASE_04_RUNTIME_ACCEPTANCE.md)、Phase05は[Fabric筐体・入力・各画面比率の実機受入](PHASE_05_RUNTIME_ACCEPTANCE.md)を参照。Phase06～08はNOT_STARTED。PRはDraft・未マージ、新機種は未公開。
 
 # PiriJuggler HYPER_DOG — Phase実装仕様
 
-**実装状態：Phase01～04 COMPLETE、Phase05～08 NOT_STARTED。** 設計作成日 2026-11-07。既存機種の機能・データを保護し、承認された演出仕様を維持する。
+**実装状態：Phase01～05 COMPLETE、Phase06～08 NOT_STARTED。** 設計作成日 2026-11-07。既存機種の機能・データを保護し、承認された演出仕様を維持する。
 
 このフォルダは既存の `phases/`, `next-machine-phases/`, `skill-stop-phases/` を置き換えない。新しい「AT直撃・下位/上位AT・上位CZ」の専用計画であり、引退した単体GOD機種とは別物。
 
@@ -15,9 +15,9 @@
 6. [PHASE_MAP.json](PHASE_MAP.json) — 8 Phase の順序と依存関係。
 7. [PHASE_01_DESIGN_FREEZE.md](PHASE_01_DESIGN_FREEZE.md) から順に、**そのPhaseだけ**を実行。既存 `CHANGE_SAFETY_POLICY.md` と `CODEX_START.md` は常に優先。
 
-## リール・通常ゲーム・AT/CZの実機証跡
+## リール・通常ゲーム・AT/CZ・筐体UIの実機証跡
 
-Phase02は [v2設計](REEL_DESIGN_V2.md) / [v2実機受入](PHASE_02_V2_RUNTIME_ACCEPTANCE.md)、Phase03は [通常時6モードの実機完了証跡](PHASE_03_RUNTIME_ACCEPTANCE.md)、Phase04は [AT/CZ・BAR・32G引戻し・SQLite別JVM復帰の実機完了証跡](PHASE_04_RUNTIME_ACCEPTANCE.md) を参照。製品の新筐体UI・演出・一般公開はPhase05～08の対象であり、Phase04終了時点では未公開。
+Phase02は [v2リール実機受入](PHASE_02_V2_RUNTIME_ACCEPTANCE.md)、Phase03は [通常時6モードの実機完了証跡](PHASE_03_RUNTIME_ACCEPTANCE.md)、Phase04は [AT/CZ・BAR・32G引戻し・SQLite別JVM復帰の実機完了証跡](PHASE_04_RUNTIME_ACCEPTANCE.md)、Phase05は [専用Fabric筐体・実入力・解像度別の実機完了証跡](PHASE_05_RUNTIME_ACCEPTANCE.md) を参照。ランプ・フラッシュ等の演出完成はPhase06、管理/周辺統合はPhase07、総合受入/公開はPhase08の対象。
 
 ## 実行順
 | Phase | 作業 | 成果物 |
@@ -37,5 +37,5 @@ Phase02は [v2設計](REEL_DESIGN_V2.md) / [v2実機受入](PHASE_02_V2_RUNTIME_
 - 【ユーザー確定】ゲームの構造・枚数・出目・CZ・ランプの色順・4コマ通常と確定引込みは変更不可。
 - 【初期実装値を決定】演出のタイミング/色割合/ランプ位置/重複時の表示順/音/ID/素材契約まで**全件決定**。実機を見て違和感があった部分だけ、ユーザー指示により改訂する。
 - 【数値の実装正本】v5 JSONを固定。機械割は独立シミュレーションの報告値であり、Paper実装で再照合する。
-- 【実行待ち】Phase05～08の実装・実Minecraft受入。図柄7点は受領済みで描画を検証済み。Phase01～04は証跡付きでCOMPLETE、既存Phaseと`CODEX_START.md`の規範は維持。
+- 【実行待ち】Phase06～08の実装・実Minecraft受入。図柄7点は受領済みで描画を検証済み。Phase01～05は証跡付きでCOMPLETE、既存Phaseと`CODEX_START.md`の規範は維持。
 
