@@ -34,6 +34,7 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
     private final Set<Integer> pressedKeys=new HashSet<>();
     private String pressedControl="";
     private boolean pressedMouse;
+    private int historyOffset;
     private long leverPressedMs;
 
     public HyperDogCabinetScreen(HyperDogClientReels reels,HyperDogCabinetState hud) {
@@ -113,6 +114,18 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
     @Override public boolean mouseReleased(double mx,double my,int button){
         if(button!=0)return false;
         pressedControl="";pressedMouse=false;return true;
+    }
+    @Override public boolean mouseScrolled(double mx,double my,double horizontal,double vertical){
+        var v=SlotLayout.Viewport.fit(width,height);
+        double x=v.logicalX(mx),y=v.logicalY(my);
+        if(x<34||x>=278||y<455||y>=746)return false;
+        var data=hud.dataLamp();
+        var history=data!=null&&data.has("history")&&data.get("history").isJsonArray()
+                ?data.getAsJsonArray("history"):new com.google.gson.JsonArray();
+        int max=Math.max(0,history.size()-10);
+        if(vertical<0)historyOffset=Math.min(max,historyOffset+10);
+        else if(vertical>0)historyOffset=Math.max(0,historyOffset-10);
+        return vertical!=0;
     }
     @Override public void renderBackground(DrawContext c,int mouseX,int mouseY,float delta){}
 
@@ -235,8 +248,9 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
         fitText(c,"HISTORY",44,467,1.55f,230,WHITE,false);
         if(data!=null&&data.has("history")&&data.get("history").isJsonArray()){
             var history=data.getAsJsonArray("history");
-            for(int i=0;i<Math.min(10,history.size());i++){
-                var item=history.get(i).getAsJsonObject();
+            historyOffset=Math.max(0,Math.min(historyOffset,Math.max(0,history.size()-10)));
+            for(int i=0;i<10&&historyOffset+i<history.size();i++){
+                var item=history.get(historyOffset+i).getAsJsonObject();
                 String type=item.has("type")?item.get("type").getAsString():"AT";
                 String games=item.has("games")?item.get("games").getAsString():"";
                 fitText(c,type,45,523+i*22,1.15f,120,GOLD,false);
