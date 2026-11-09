@@ -95,6 +95,57 @@ class HyperDogStateStoreTest {
         assertEquals(HyperDogAtGame.Stage.UPPER_INITIAL,recovered.game().at().stage());
         assertEquals(0,recovered.game().at().freeGames()==1?0:1);
     }
+    @Test void comebackReadyAfterAtMustKeepSamePlayerLockThroughRestartAndAdminRelease() throws Exception {
+        // REPLAY / third-stop completion may leave a valuable 32G comeback in
+        // SEATED_READY. The old restart predicate protected only non-ready games.
+        store.commit(player,session,machine,0,1,full,null,now+1);
+        full.bet();
+        full.normal().leverForced(HyperDogNormalGame.Role.BAR);
+        full.finish();
+        assertNotNull(full.at());
+        int spins=0;
+        while(full.at()!=null && spins++<12000) {
+            switch(full.at().stage()){
+                case RED7_CONFIRM -> full.confirmRed7();
+                case UPPER_INITIAL,LOWER_INITIAL,UPPER_CZ -> {
+                    full.at().leverForced(HyperDogAtGame.Role.MISS);
+                    full.finish();
+                }
+                case UPPER_AT,LOWER_AT -> {
+                    if(full.waitingForBet())full.bet();
+                    full.at().leverForced(HyperDogAtGame.Role.GRAPE);
+                    full.finish();
+                }
+                default -> throw new AssertionError("unexpected AT state");
+            }
+        }
+        assertNull(full.at(),"test must reach complete AT exit");
+        assertEquals(32,full.comebackPaidLeft());
+        var owned=store.commit(player,session,machine,1,2,full,null,now+2);
+        assertEquals("SEATED_READY",owned.text("game_state"));
+        JsonObject checkpoint=full.snapshot();
+
+        db.disconnect(player,now+3,1000);
+        db.expire(now+2000);
+        assertTrue(db.state().busy(machine),"grace expiry must not evict comeback rights");
+        assertEquals(checkpoint,store.load(player,session,machine).game().snapshot());
+        assertDom("RECOVERY_REQUIRED",()->db.releaseMachineForSimulation(machine,now+2001));
+        db.shutdown(now+3000,1000);
+        db.close();
+        db=new PiriDatabase(directory.resolve("piri.db"));
+        db.open(2,now+6000,config,new SplittableRandom(7),ignored->{});
+        store=new HyperDogStateStore(db);
+        assertTrue(db.state().busy(machine),"32 paid games must survive true JVM restart");
+        assertDom("MACHINE_OCCUPIED",()->db.seat(other,machine,now+6001));
+        var reseated=db.seat(player,machine,now+6001);
+        assertEquals(session,reseated.id());
+        var recovered=store.load(player,session,machine);
+        assertEquals(checkpoint,recovered.game().snapshot());
+        assertEquals(32,recovered.game().comebackPaidLeft());
+        assertEquals(50,recovered.session().number("credit"));
+        assertEquals(full.credit()-50,recovered.session().number("held_medals"));
+    }
+
     @Test void rejectsForeignOwnerAndStaleConcurrentWritesWithoutAnyMutation() throws Exception {
         store.commit(player,session,machine,0,1,full,null,now+1);
         var before=db.state().session(player).snapshot();
