@@ -5,6 +5,8 @@ import jp.pirijuggler.paper.database.PiriDatabase;
 import jp.pirijuggler.paper.machine.DomainException;
 import jp.pirijuggler.paper.machine.MachineType;
 import jp.pirijuggler.paper.session.Session;
+import jp.pirijuggler.paper.reel.HyperDogStopSession;
+import jp.pirijuggler.common.reel.HyperDogReelControl;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -82,6 +84,33 @@ public final class HyperDogStateStore {
             long balance=game.credit();
             if(balance<0)throw new IllegalArgumentException("negative medals");
             long credit=Math.min(50,balance),held=Math.subtractExact(balance,credit);
+            // A prepared game is not recoverable unless its authoritative
+            // physical reel/stop history is persisted in the SAME transaction.
+            HyperDogReelControl.Role expectedRole=null;
+            if(game.at()!=null && game.at().pending()!=null){
+                var outcome=game.at().pending();
+                expectedRole=outcome.stage()==HyperDogAtGame.Stage.UPPER_CZ
+                        ?(outcome.czSuccess()?HyperDogReelControl.Role.CZ_WIN:
+                            HyperDogReelControl.Role.CZ_LOSE)
+                        :HyperDogReelControl.Role.valueOf(outcome.role().name());
+            }else if(game.at()==null && game.normal().pending()!=null){
+                expectedRole=game.normal().pending().reelRole();
+            }else if(game.at()!=null && game.at().stage()==HyperDogAtGame.Stage.RED7_CONFIRM){
+                // AT_RED7_CONFIRM can be parked before/after its automatic reel
+                // motion. Its presentation history is optional until spin starts.
+                if(reel!=null)expectedRole=HyperDogReelControl.Role.AT_ENTRY_RED7;
+            }
+            if(expectedRole!=null||reel!=null){
+                if(reel==null)throw new DomainException("RECOVERY_REQUIRED");
+                final HyperDogStopSession physical;
+                try{physical=HyperDogStopSession.fromJson(reel);}
+                catch(IllegalArgumentException invalid){throw new DomainException("INVALID_STATE");}
+                if(!physical.snapshot().sessionId().equals(sessionId)||
+                   physical.snapshot().machineId()!=machineId ||
+                   expectedRole==null ||
+                   physical.snapshot().round().role()!=expectedRole)
+                    throw new DomainException("SESSION_MISMATCH");
+            }
             JsonObject snapshot=new JsonObject();
             snapshot.addProperty("schema",1);
             snapshot.add("hyperDog",game.snapshot());
