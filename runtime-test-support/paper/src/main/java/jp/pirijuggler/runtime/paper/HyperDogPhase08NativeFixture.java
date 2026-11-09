@@ -154,8 +154,13 @@ public final class HyperDogPhase08NativeFixture {
                             .game().snapshot());
             check(persisted.credit()==playing.number("credit")+playing.number("held_medals"),
                     "isolated SQLite snapshot mismatch");
-            check(scalar(db,"SELECT total_games FROM machine_period_stats WHERE machine_id=?",mid)==30,
-                    "native 30-game period accounting mismatch");
+            // Period total_games is paid game count; REPLAY_READY produces free
+            // spins without a 3-medal bet. 30 physical games must not be
+            // incorrectly charged or counted as 30 *paid* games.
+            long countedPaid=scalar(db,
+                    "SELECT total_games FROM machine_period_stats WHERE machine_id=?",mid);
+            check(countedPaid==betActions,
+                    "native paid-game accounting mismatch: "+countedPaid+" != "+betActions);
             check(scalar(db,"SELECT big_count+reg_count FROM machine_period_stats WHERE machine_id=?",mid)==0,
                     "false legacy B/R in native play");
             check(scalar(db,"SELECT today_difference FROM machine_period_stats WHERE machine_id=?",mid)==
@@ -169,6 +174,8 @@ public final class HyperDogPhase08NativeFixture {
             report.addProperty("games",spins);
             report.addProperty("transportSeed",transportSeed);
             report.addProperty("betActions",betActions);
+            report.addProperty("paidGames",countedPaid);
+            report.addProperty("replayFreeGames",spins-countedPaid);
             report.addProperty("acceptedActions",accepted);
             report.addProperty("physicalStops",physicalStops);
             report.addProperty("automaticStops",automaticStops);
