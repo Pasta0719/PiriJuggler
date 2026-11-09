@@ -24,7 +24,7 @@ for label,weak,chance,strong in CASES:
            '    return 0,False')
     source=base.replace(instr,patch)
     assert source!=base
-    namespace={'__name__':'_exploratory_'}
+    namespace={'__name__':'_exploratory_','__file__':str(HERE/'audit_upper_entry_v6.py')}
     exec(compile(source,str(HERE/'audit_upper_entry_v6.py'),'exec'),namespace)
     params=namespace['make_params'](model)
     for setting in (1,6):
