@@ -241,13 +241,22 @@ public final class PiriDatabase implements AutoCloseable {
             if (sequence <= session.sequence()) throw new DomainException("SEQUENCE_OLD");
             if(motion!=null)new GameStore(this).saveMotion(motion);
             boolean cashout = !rows("SELECT transaction_id FROM cashout_transactions WHERE player_uuid=? AND status<>'COMPLETED'", player.toString()).isEmpty();
-            if (session.ready() && session.number("credit") == 0 && session.number("held_medals") == 0 && !cashout) {
+            // SEATED_READY may still own a 32 paid-game HYPER_DOG comeback.
+            // Explicit CLOSE must not release the machine or delete the player
+            // snapshot while that reward is pending. Legacy types are unchanged.
+            boolean protectedComeback=session.ready() &&
+                    requireMachine(machine).type()==MachineType.HYPER_DOG &&
+                    preserveSkill(session);
+            if (session.ready() && !protectedComeback &&
+                    session.number("credit") == 0 && session.number("held_medals") == 0 && !cashout) {
                 sql("DELETE FROM player_sessions WHERE player_uuid=?", player.toString()); return "SESSION_END";
             }
-            String lifecycle = session.ready() ? "SUSPENDED_SAFE" : "SUSPENDED_GRACE";
+            boolean closeSafe=session.ready()&&!protectedComeback;
+            String lifecycle=closeSafe?"SUSPENDED_SAFE":"SUSPENDED_GRACE";
+            Long expires=closeSafe?null:protectedComeback?Long.MAX_VALUE:Math.addExact(now,graceMs);
             sql("UPDATE player_sessions SET lifecycle=?,lock_expires_at=?,last_activity=?,last_client_sequence=? WHERE player_uuid=?",
-                    lifecycle, session.ready() ? null : now + graceMs, now, sequence, player.toString());
-            return session.ready() ? "USER_CLOSE_SAFE" : "USER_CLOSE_GRACE";
+                    lifecycle, expires, now, sequence, player.toString());
+            return closeSafe?"USER_CLOSE_SAFE":"USER_CLOSE_GRACE";
         });
     }
     public void disconnect(UUID player, long now, long graceMs) throws Exception {
