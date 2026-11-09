@@ -212,7 +212,11 @@ public final class HyperDogCabinetState {
     }
     public static SlotLayout.Rect announcementRect(int index){
         if(index<0||index>1)throw new IllegalArgumentException("lamp");
-        return new SlotLayout.Rect(index==0?574:1520,230,76,64);
+        // Recessed announcement lights live beside the reels, below the
+        // independent top data lamp (bottom y=282). The original y=230
+        // overlapped the top header and hid most of the metal bezel.
+        // x=612..664 / 1576..1628: 6px clear of the reel window.
+        return new SlotLayout.Rect(index==0?612:1576,302,52,50);
     }
     public static SlotLayout.Rect rightLampRect(int index){
         if(index<0||index>2)throw new IllegalArgumentException("lamp");
