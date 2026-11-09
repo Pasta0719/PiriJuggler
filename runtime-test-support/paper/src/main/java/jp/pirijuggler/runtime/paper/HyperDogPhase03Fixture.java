@@ -55,7 +55,11 @@ public final class HyperDogPhase03Fixture {
             seq=body.get("clientSequence").getAsLong();
             if(seq!=nextSequence){rejected++;send(ErrorPackets.rejected(seq,ErrorCode.SEQUENCE_OLD));return;}
             if(type==PacketType.SPACE_ACTION && round==null && !finished){
-                if(System.currentTimeMillis()-lastFinish<350)return;
+                // Do not silently discard a valid SPACE_ACTION during the post-spin animation.
+                // Fabric sends a command once per public state; dropping it without ACK
+                // causes a permanent client/server stall (observed at round 8 after REPLAY).
+                // Client reel-complete gating plus delayed sendPublic already prevents
+                // premature progression, and the fixture state machine serializes inputs.
                 if(game.canBet()){
                     game.bet();acceptedBet++;nextSequence++;
                     accepted(type,seq);sendPublic();
