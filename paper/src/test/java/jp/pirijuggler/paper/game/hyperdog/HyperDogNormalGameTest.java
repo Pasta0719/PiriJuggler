@@ -87,6 +87,37 @@ class HyperDogNormalGameTest {
         JsonObject invalidCredit=g.snapshot();invalidCredit.addProperty("credits",-1);
         assertThrows(IllegalArgumentException.class,()->HyperDogNormalGame.restore(invalidCredit));
     }
+    @Test void overflowNeverPartiallySettlesBetOrThirdStop() {
+        // A corrupted/exhausted inbound total must not debit a player's credits.
+        var base=newGame(431);
+        JsonObject highIn=base.snapshot();
+        highIn.addProperty("in",Long.MAX_VALUE-1);
+        var betOverflow=HyperDogNormalGame.restore(highIn);
+        JsonObject beforeBet=betOverflow.snapshot();
+        assertThrows(ArithmeticException.class,betOverflow::bet);
+        assertEquals(beforeBet,betOverflow.snapshot());
+
+        // A saturated payout ledger cannot silently credit or advance a game.
+        var highOut=newGame(432);
+        highOut.bet();highOut.leverForced(HyperDogNormalGame.Role.BAR);
+        JsonObject highOutSnapshot=highOut.snapshot();
+        highOutSnapshot.addProperty("out",Long.MAX_VALUE-10);
+        var payoutOverflow=HyperDogNormalGame.restore(highOutSnapshot);
+        JsonObject beforePayout=payoutOverflow.snapshot();
+        assertThrows(ArithmeticException.class,payoutOverflow::finish);
+        assertEquals(beforePayout,payoutOverflow.snapshot());
+        assertNotNull(payoutOverflow.pending());
+
+        // Even when out is safe, a near-max credit balance cannot partially
+        // increment the paid-out counter ahead of the overflowing credit.
+        var creditOverflow=new HyperDogNormalGame(1,433,Long.MAX_VALUE);
+        creditOverflow.bet();creditOverflow.leverForced(HyperDogNormalGame.Role.BAR);
+        JsonObject beforeCredit=creditOverflow.snapshot();
+        assertThrows(ArithmeticException.class,creditOverflow::finish);
+        assertEquals(beforeCredit,creditOverflow.snapshot());
+        assertNotNull(creditOverflow.pending());
+    }
+
     @Test void trueBarPreemptsBothIndependentAndLinkedDrawAndIsUpperTicket() {
         for(int seed=0;seed<256;seed++){
             var g=newGame(seed);g.bet();
