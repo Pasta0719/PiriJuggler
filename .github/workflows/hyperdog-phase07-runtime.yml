@@ -42,11 +42,15 @@ jobs:
             sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
           fi
           chmod +x gradlew
-      - name: Build production Paper/Fabric and test-only two-client probes
+      - name: Build production Paper/Fabric and test-only Paper helper
         run: |
           ./gradlew --parallel --build-cache :common:jar :paper:jar :fabric:remapJar \
-            -PruntimeAcceptance=true -PruntimeEvidencePhase=HYPER_DOG_PHASE_07 \
-            :runtime-test-paper:jar :runtime-test-client:remapJar --console=plain
+            -PruntimeAcceptance=true :runtime-test-paper:jar --console=plain
+      - name: Build Fabric probe after the production remapped Fabric JAR exists
+        run: |
+          ./gradlew --build-cache -PruntimeAcceptance=true \
+            -PruntimeEvidencePhase=HYPER_DOG_PHASE_07 \
+            :runtime-test-client:remapJar --console=plain
       - uses: actions/cache@v4
         with:
           path: runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar
