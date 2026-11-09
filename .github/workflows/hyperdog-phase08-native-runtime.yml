@@ -1,0 +1,60 @@
+name: HYPER_DOG Phase08 native Paper game adapter acceptance
+
+on:
+  push:
+    branches: [plan/original-at-machine-20261107]
+    paths:
+      - 'paper/src/main/java/jp/pirijuggler/paper/game/hyperdog/HyperDogGameEngine.java'
+      - 'paper/src/main/java/jp/pirijuggler/paper/game/hyperdog/HyperDogStateStore.java'
+      - 'paper/src/main/java/jp/pirijuggler/paper/database/GameStore.java'
+      - 'paper/src/main/java/jp/pirijuggler/paper/machine/MachineService.java'
+      - 'runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/HyperDogPhase08NativeFixture.java'
+      - 'runtime-test-support/paper/src/main/java/jp/pirijuggler/runtime/paper/RuntimeObserver.java'
+      - 'runtime-test-support/run_hyperdog_phase08_native.py'
+      - '.github/workflows/hyperdog-phase08-native-runtime.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: hyperdog-phase08-native-paper-real
+  cancel-in-progress: true
+
+jobs:
+  native-30-game-paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build production Paper and native adapter tests
+        run: |
+          chmod +x gradlew
+          ./gradlew --build-cache :paper:test \
+            --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogGameEngineIntegrationTest' \
+            --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogPhase08V7ParityTest' \
+            :paper:jar --console=plain
+      - name: Build separate test-only Paper helper
+        run: ./gradlew --build-cache -PruntimeAcceptance=true :runtime-test-paper:jar --console=plain
+      - uses: actions/cache@v4
+        with:
+          path: runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar
+          key: paper-1.21-build-130-ab9bb1afc3cea6978a0c03ce8448aa654fe8a9c4dddf341e7cbda1b0edaa73f5
+      - name: Obtain SHA256-verified Paper 1.21 build 130
+        shell: pwsh
+        run: ./runtime-test-support/ensure-paper-1.21-130.ps1
+      - name: Actual Paper JVM native HYPER_DOG game/ledger/stop/setting test
+        run: python runtime-test-support/run_hyperdog_phase08_native.py
+      - name: Archive production-path SQLite, Paper logs, and role parity
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hyperdog-phase08-native-gameplay-paper
+          path: |
+            runtime-evidence/HYPER_DOG_PHASE_08/native-attempts/**
+            paper/build/test-results/**
