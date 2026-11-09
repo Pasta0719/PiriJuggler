@@ -22,11 +22,11 @@ class HyperDogNormalGameTest {
     }
 
     @Test void v7ModelAndSettingChanceAndRolePayouts() {
-        assertEquals("9818f2083f2bb742981dd986ad67a177851342f4b2d5708f8bdf0a52c2a03d7d",
+        assertEquals("51681c4801dc3d807c77675dae928f1d48353d8a8a22dc34174bd379bba367ec",
                 HyperDogNormalGame.parameterSha256());
         var a=HyperDogNormalGame.Mode.values();
         double[] denom={8192,4096,512,256,96,12};
-        double[] mult={.0343,.0545,.0937,.1273,.1601,.2983};
+        double[] mult={.032,.0545,.0984,.1273,.1601,.291};
         for(int s=1;s<=6;s++){
             var state=new HyperDogNormalGame(s,6789,100000);
             assertEquals(s,state.setting());

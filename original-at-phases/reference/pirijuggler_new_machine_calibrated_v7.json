@@ -1,14 +1,14 @@
 {
   "meta": {
     "version": "calibrated_v7_upper_4k_target",
-    "status": "NUMERIC_PROPOSAL_AFTER_UPPER_4K_PILOT; RUNTIME_NOT_SWITCHED",
+    "status": "INTEGRATED_V7_IN_DRAFT_BRANCH; FINAL_CALIBRATION_HOLDOUT_PENDING",
     "source": "User-selected average upper AT net award target of approximately 4000 medals",
     "prior_source": "pirijuggler_new_machine_calibrated_v6.json",
     "notes": [
       "Upper paid and upper initial rare-role awards use role-specific factors 8,9,10 instead of the v6 universal 5, with 2000 single-award cap.",
       "Upper grape probability and payout, pure paid-stage net ~12 medals/G, upper CZ 50%, five initial guaranteed 100 awards, and BAR benefits remain unchanged.",
       "Normal rare-role linked AT probabilities are scaled by 0.85, while replay/grape streak 4/5 guarantees remain unchanged.",
-      "Six independent normal AT hit multipliers retuned for the original setting 1-6 payout targets, subject to independent final confirmation.",
+      "Six normal AT multipliers retuned using independent 240M-frame simulations with target-setting return feedback.",
       "Former v6 remains immutable as an audit baseline. No automatic game release."
     ],
     "calibration_method": "Upper episode payout simulation, conditional role-link AT frequency recalibration, setting multiplier target search; candidate values pending final 240M/setting."
@@ -177,12 +177,12 @@
       "SUPER_HIGH": 12
     },
     "single_hit_probability_multiplier_by_setting": {
-      "1": 0.0343,
+      "1": 0.032,
       "2": 0.0545,
-      "3": 0.0937,
+      "3": 0.0984,
       "4": 0.1273,
       "5": 0.1601,
-      "6": 0.2983
+      "6": 0.291
     },
     "single_hit_formula": "p_single=min(0.95, setting_multiplier / base_denominator); each paid NORMAL game, independent of role other than BAR direct override",
     "role_linked_at_hit_percent": {

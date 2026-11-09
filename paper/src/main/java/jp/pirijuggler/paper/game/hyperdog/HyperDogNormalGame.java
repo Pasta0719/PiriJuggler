@@ -30,7 +30,7 @@ public final class HyperDogNormalGame {
             return HyperDogReelControl.Role.valueOf(role.name());
         }
     }
-    private static final String MODEL_SHA256="9818f2083f2bb742981dd986ad67a177851342f4b2d5708f8bdf0a52c2a03d7d";
+    private static final String MODEL_SHA256="51681c4801dc3d807c77675dae928f1d48353d8a8a22dc34174bd379bba367ec";
     private static final JsonObject MODEL=loadModel();
     private static final JsonObject NORMAL=MODEL.getAsJsonObject("normal_mode");
     private static final JsonObject COMMON=MODEL.getAsJsonObject("normal_and_at_common_role_draw");
