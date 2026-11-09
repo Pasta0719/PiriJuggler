@@ -140,10 +140,10 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
         c.getMatrices().push();
         c.getMatrices().translate(vp.x(),vp.y(),0);
         c.getMatrices().scale((float)vp.scale(),(float)vp.scale(),1f);
-        drawPanel(c,SlotLayout.CABINET,CABINET,EDGE);
+        drawPanel(c,HyperDogCabinetState.cabinetRect(),CABINET,EDGE);
         drawPanel(c,SlotLayout.DATA,PANEL,EDGE);
         drawPanel(c,SlotLayout.DATA_LEFT,PANEL,STEEL);
-        drawPanel(c,SlotLayout.DATA_RIGHT,PANEL,STEEL);
+        drawPanel(c,HyperDogCabinetState.rightDataRect(),PANEL,STEEL);
         drawDataLamp(c);
         drawReels(c,vp);
         drawFlash(c);
@@ -204,8 +204,28 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
         }
     }
     private void drawAnnouncement(DrawContext c){
-        for(int i=0;i<2;i++)
-            drawLamp(c,HyperDogLampGeometry.announcement(i),hud.announcement(),0xffffcc6b);
+        for(int i=0;i<2;i++){
+            var lamp=HyperDogLampGeometry.announcement(i);
+            drawLamp(c,lamp,hud.announcement(),0xff6b2c49);
+            // Five broad petals, a warm center and a recess: a prominent
+            // original tropical-flower notice, not a flat square indicator.
+            drawFlower(c,lamp.emitter(),hud.announcement());
+        }
+    }
+
+    private static void drawFlower(DrawContext c,SlotLayout.Rect lens,boolean lit){
+        int cx=lens.x()+lens.w()/2, cy=lens.y()+lens.h()/2;
+        final int petal=lit?0xffff5b88:0xff4b3041;
+        final int glint=lit?0xffffb1c7:0xff594052;
+        for(int i=0;i<5;i++){
+            double a=Math.toRadians(-90+i*72);
+            int px=cx+(int)Math.round(Math.cos(a)*15);
+            int py=cy+(int)Math.round(Math.sin(a)*15);
+            SlotScreen.rounded(c,px-16,py-18,32,36,16,petal);
+            SlotScreen.rounded(c,px-7,py-10,12,17,6,glint);
+        }
+        SlotScreen.rounded(c,cx-12,cy-12,24,24,12,lit?0xffffd977:0xff62503b);
+        SlotScreen.rounded(c,cx-5,cy-5,10,10,5,lit?0xfffff0bb:0xff80704b);
     }
 
     private void drawStatusIndicators(DrawContext c){
@@ -306,11 +326,13 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
                 fitText(c,games,155,523+i*22,1.15f,115,WHITE,false);
             }
         }
-        fitText(c,"ODDS",1673,345,1.5f,215,WHITE,false);
-        fitText(c,"AT FIRST ODDS",1673,388,1.25f,215,GOLD,false);
-        fitText(c,at>0?"1/"+Math.max(1L,total/at):"---",1673,424,1.8f,190,WHITE,false);
-        fitText(c,"MAX DIFF",1673,490,1.25f,215,GOLD,false);
-        fitText(c,signed(max),1673,527,1.85f,190,WHITE,false);
+        // The right sidebar is deliberately moved to x=1716 to free room
+        // for the large right flower without covering any data labels.
+        fitText(c,"ODDS",1730,345,1.5f,162,WHITE,false);
+        fitText(c,"AT FIRST ODDS",1730,388,1.25f,162,GOLD,false);
+        fitText(c,at>0?"1/"+Math.max(1L,total/at):"---",1730,424,1.8f,162,WHITE,false);
+        fitText(c,"MAX DIFF",1730,490,1.25f,162,GOLD,false);
+        fitText(c,signed(max),1730,527,1.85f,162,WHITE,false);
     }
     private static long value(com.google.gson.JsonObject data,String key){
         return data!=null&&data.has(key)&&!data.get(key).isJsonNull()?data.get(key).getAsLong():0;
