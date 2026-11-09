@@ -118,6 +118,68 @@ class HyperDogNormalGameTest {
         assertNotNull(creditOverflow.pending());
     }
 
+    @Test void diskSnapshotResumesInFreshJvmWithExactLedgerModeAndRng() throws Exception {
+        // Confirm actual process restart, beyond restore(new JsonObject) in one JVM.
+        // The economy/session database and whole Paper-process restart are Phase04.
+        for(String checkpoint:new String[]{"BET_POSTED","PENDING_STOP","REPLAY_READY","AT_PENDING"}){
+            HyperDogNormalGame game=new HyperDogNormalGame(3,20261109L,100000);
+            game.bet();
+            switch(checkpoint){
+                case "BET_POSTED" -> {}
+                case "PENDING_STOP" -> game.leverForced(HyperDogNormalGame.Role.WEAK_CHERRY);
+                case "REPLAY_READY" -> {
+                    game.leverForced(HyperDogNormalGame.Role.REPLAY);
+                    game.finish();
+                }
+                case "AT_PENDING" -> {
+                    game.leverForced(HyperDogNormalGame.Role.BAR);
+                    game.finish();
+                }
+                default -> throw new AssertionError(checkpoint);
+            }
+            Path input=Files.createTempFile("hyperdog03-"+checkpoint,".json");
+            Path output=Files.createTempFile("hyperdog03-"+checkpoint+"-after",".json");
+            try{
+                JsonObject saved=game.snapshot();
+                Files.writeString(input,saved.toString());
+                var expected=HyperDogNormalGame.restore(saved);
+                HyperDogRestartProbe.advance(expected,25);
+
+                // Explicit code locations avoid Gradle's isolated worker classpath.
+                var classes=new LinkedHashSet<String>();
+                for(Class<?> type:new Class<?>[]{
+                        HyperDogRestartProbe.class,HyperDogNormalGame.class,
+                        jp.pirijuggler.common.reel.HyperDogReelControl.class,
+                        com.google.gson.JsonObject.class}) {
+                    classes.add(Path.of(type.getProtectionDomain()
+                            .getCodeSource().getLocation().toURI()).toString());
+                }
+                var model=HyperDogNormalGame.class.getClassLoader().getResource("hyperdog/v5.json");
+                assertNotNull(model);
+                classes.add(Path.of(model.toURI()).getParent().getParent().toString());
+                String java=Path.of(System.getProperty("java.home"),"bin",
+                        System.getProperty("os.name").startsWith("Windows")?"java.exe":"java").toString();
+                Process child=new ProcessBuilder(java,"-cp",
+                        String.join(System.getProperty("path.separator"),classes),
+                        HyperDogRestartProbe.class.getName(),input.toString(),output.toString())
+                        .redirectErrorStream(true).start();
+                boolean exited=child.waitFor(30,java.util.concurrent.TimeUnit.SECONDS);
+                if(!exited)child.destroyForcibly();
+                assertTrue(exited,"fresh JVM timed out at "+checkpoint);
+                String outputText=new String(child.getInputStream().readAllBytes(),
+                        java.nio.charset.StandardCharsets.UTF_8);
+                assertEquals(0,child.exitValue(),checkpoint+" fresh JVM error: "+outputText);
+                assertTrue(outputText.contains("HYPER_DOG_PHASE03_FRESH_JVM_RESTART=PASS"));
+                assertEquals(expected.snapshot(),
+                        JsonParser.parseString(Files.readString(output)).getAsJsonObject(),
+                        "RNG, mode, replay/AT state, BET and credit changed after JVM restart at "+checkpoint);
+            }finally{
+                Files.deleteIfExists(input);
+                Files.deleteIfExists(output);
+            }
+        }
+    }
+
     @Test void trueBarPreemptsBothIndependentAndLinkedDrawAndIsUpperTicket() {
         for(int seed=0;seed<256;seed++){
             var g=newGame(seed);g.bet();
