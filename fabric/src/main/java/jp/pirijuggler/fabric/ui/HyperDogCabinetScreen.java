@@ -24,7 +24,12 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
     private static final int REEL_BG=0xff11121d,PANEL=0xff101824,OFF=0xff25242c;
     private static final int GOLD=0xffd9b65c,PURPLE=0xffb78cff,CYAN=0xff5ad8f0;
     private static final int WHITE=0xffeaeffa,STEEL=0xff404454,RED=0xffb8495a;
-    private static final int SYMBOL_SIZE=124;
+    private static final int NORMAL_SYMBOL_SIZE=124;
+    private static final int SPECIAL_SYMBOL_SIZE=166; // Like other cabinets, 7/BAR are bigger than ordinary symbols.
+    static int symbolRenderSize(String path){
+        return path.endsWith("/red7.png")||path.endsWith("/rainbow7.png")||path.endsWith("/bar.png")
+                ? SPECIAL_SYMBOL_SIZE : NORMAL_SYMBOL_SIZE;
+    }
     private static final String[] COUNTERS={"CREDIT","BET","PAY","MEDALS"};
     private static final String[] COUNTER_KEYS={"credit","bet","pay","heldMedals"};
     private static final String[] COLORS={"WHITE","BLUE","GREEN","YELLOW","PURPLE","RED","RAINBOW"};
@@ -166,10 +171,11 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
                         ?reels.texturePath(reel,row)
                         :HyperDogReelImageMapping.texturePath(reel,0,row);
                 Identifier id=Identifier.of("piri","textures/"+symbol);
-                int drawX=x+(270-SYMBOL_SIZE)/2,drawY=300+(row+1)*130+3;
+                int size=symbolRenderSize(symbol);
+                int drawX=x+(270-size)/2,drawY=300+(row+1)*130+(130-size)/2;
                 c.getMatrices().push();
                 c.getMatrices().translate(drawX,drawY,0);
-                c.getMatrices().scale(SYMBOL_SIZE/256f,SYMBOL_SIZE/256f,1f);
+                c.getMatrices().scale(size/256f,size/256f,1f);
                 c.drawTexture(id,0,0,0,0,256,256,256,256);
                 c.getMatrices().pop();
             }
@@ -254,7 +260,11 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
         fitText(c,"MACHINE "+hud.machineId(),38,28,1.45f,310,WHITE,false);
         fitText(c,"DIFF GRAPH",55,57,1.75f,500,WHITE,false);
         var graph=data!=null&&data.has("graph")?data.getAsJsonArray("graph"):new com.google.gson.JsonArray();
-        drawGraph(c,graph,55,87,825,145);
+        // Never invent a second graph: render the actual period series with
+        // SlotScreen's existing LTTB/range/zero-axis/line-width behavior.
+        SlotScreen.drawGraph(c,graph,55,88,825,146,total);
+        fitText(c,"1G",55,241,1.10f,160,WHITE,false);
+        fitText(c,total>0?total+"G":"-",880,241,1.10f,160,WHITE,true);
         fitText(c,"CURRENT G",1060,43,1.55f,220,WHITE,true);
         fitText(c,Long.toString(current),1060,76,2.3f,230,WHITE,true);
         fitText(c,"TOTAL G",1370,43,1.55f,220,WHITE,true);
@@ -294,37 +304,6 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
         return data!=null&&data.has(key)&&!data.get(key).isJsonNull()?data.get(key).getAsLong():0;
     }
     private static String signed(long x){return x>0?"+"+x:Long.toString(x);}
-    private void drawGraph(DrawContext c,com.google.gson.JsonArray graph,int x,int y,int w,int h){
-        c.fill(x,y,x+w,y+h,0xff0b1424);
-        c.drawBorder(x,y,w,h,STEEL);
-        if(graph.size()<2)return;
-        long min=0,max=0,maxGames=0;
-        for(var e:graph){
-            var p=e.getAsJsonObject();
-            if(!p.has("difference")||!p.has("game"))continue;
-            min=Math.min(min,p.get("difference").getAsLong());
-            max=Math.max(max,p.get("difference").getAsLong());
-            maxGames=Math.max(maxGames,p.get("game").getAsLong());
-        }
-        if(maxGames==0)return;
-        double range=Math.max(1,max-min);
-        int previousX=-1,previousY=-1;
-        for(var e:graph){
-            var p=e.getAsJsonObject();
-            if(!p.has("difference")||!p.has("game"))continue;
-            int px=x+(int)Math.round(Math.max(0,Math.min(1,p.get("game").getAsDouble()/maxGames))*(w-12))+6;
-            int py=y+6+(int)Math.round((max-p.get("difference").getAsDouble())/range*(h-12));
-            if(previousX>=0){
-                int steps=Math.max(1,Math.max(Math.abs(px-previousX),Math.abs(py-previousY)));
-                for(int i=0;i<=steps;i++){
-                    int ix=previousX+(px-previousX)*i/steps;
-                    int iy=previousY+(py-previousY)*i/steps;
-                    c.fill(ix,iy,ix+2,iy+2,0xff6fe7b2);
-                }
-            }
-            previousX=px;previousY=py;
-        }
-    }
     private void drawControl(DrawContext c,SlotLayout.Control ctrl,double mx,double my){
         var r=ctrl.rect();
         boolean hover=r.contains(mx,my),down=pressedMouse&&ctrl.name().equals(pressedControl);
