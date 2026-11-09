@@ -39,7 +39,7 @@ public final class HyperDogPhase05Probe {
     private static int sentMask=-1,stops,betClicks,leverClicks,keyboardStops,mouseStops,frames;
     private static int rightOn,rightOff,displayLockFrames,reopenScreens,resizeStage;
     private static boolean assetCheck,acceptanceComplete,screenshotStarted,closed,reopened,legacyPreview;
-    private static long endedAt=-1,resizeAt=-1,closedAt=-1;
+    private static long endedAt=-1,resizeAt=-1,closedAt=-1,baselineAt=-1;
     private static HyperDogCabinetScreen original;
     public static boolean enabled(){
         return "hyperdog05-main".equals(System.getProperty("piri.runtime.scenario",""));
@@ -145,9 +145,7 @@ public final class HyperDogPhase05Probe {
         legacy.receive(Envelope.current(PacketType.PUBLIC_STATE,pub));
         SlotInput harmless=new SlotInput(PiriJugglerClient.session(),packet->{},System::nanoTime);
         client.setScreen(new SlotScreen(legacy,harmless));
-        capture(client,"hyperdog-phase05-existing-slot-screen-comparison.png");
-        client.setScreen(original);
-        legacyPreview=true;
+        baselineAt=System.currentTimeMillis();
     }
     private static void resizeAndScreenshots(MinecraftClient client,HyperDogCabinetScreen screen){
         long now=System.currentTimeMillis();
@@ -177,6 +175,15 @@ public final class HyperDogPhase05Probe {
                 throw new IllegalStateException("Phase05 Fabric timeout at "+rounds.size());
             inspectAssets(client);
             var reels=PiriJugglerClient.hyperDogReels();
+            // Real screenshot MUST follow an actual legacy SlotScreen render.
+            // Taking it immediately after setScreen would snapshot the prior
+            // HYPER_DOG frame and silently invalidate the visual comparison.
+            if(baselineAt>=0&&!legacyPreview&&client.currentScreen instanceof SlotScreen &&
+                    System.currentTimeMillis()-baselineAt>450){
+                capture(client,"hyperdog-phase05-existing-slot-screen-comparison.png");
+                client.setScreen(original);
+                legacyPreview=true;
+            }
             if(client.currentScreen instanceof HyperDogCabinetScreen screen){
                 if(original==null)original=screen;
                 observe(screen);
@@ -230,7 +237,7 @@ public final class HyperDogPhase05Probe {
                     }
                 }
                 if(acceptanceComplete && endedAt<0)endedAt=System.currentTimeMillis();
-                if(acceptanceComplete && resizeStage>=3&&!legacyPreview){
+                if(acceptanceComplete && resizeStage>=3&&!legacyPreview&&baselineAt<0){
                     legacyBaseline(client,screen);
                 }
                 if(acceptanceComplete && legacyPreview && !closed &&
@@ -238,7 +245,7 @@ public final class HyperDogPhase05Probe {
                     closed=physicalKey(screen,PacketType.CLOSE_REQUEST);
                     closedAt=System.currentTimeMillis();
                 }
-                if(closed && !reopened && screen!=original) {
+                if(closed && !reopened && screen!=original && screen.renderedFrames()>3) {
                     reopened=true;reopenScreens++;
                     capture(client,"hyperdog-phase05-after-reseat.png");
                 }
