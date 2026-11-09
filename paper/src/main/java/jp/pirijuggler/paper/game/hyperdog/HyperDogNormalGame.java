@@ -101,6 +101,23 @@ public final class HyperDogNormalGame {
             throw new IllegalArgumentException("corrupt HYPER_DOG normal snapshot");
         return g;
     }
+    /**
+     * Phase04 independent comeback draw. Run only after a completely settled
+     * normal spin while in the 32-paid-game comeback window. Reuses the same
+     * private RNG stream and the exact phase03 saved-entry mode semantics.
+     */
+    boolean extraComebackHit(double probability){
+        if(pending!=null||waitingForAt||postedBet||probability<0||probability>1)
+            throw new IllegalStateException("invalid comeback transition");
+        boolean hit=roll(probability);
+        if(hit){
+            waitingForAt=true;savedHitMode=mode;replayFree=false;
+            streakRole=null;streak=0;
+            replayStreak=grapeStreak=weakStreak=watermelonStreak=0;
+        }
+        return hit;
+    }
+
     public static String parameterSha256(){return MODEL_SHA256;}
     public int setting(){return setting;}
     public Mode mode(){return mode;}
