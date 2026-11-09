@@ -499,7 +499,7 @@ def main():
         full.append(row)
         print("UPPER_AUDIT_SETTING",json.dumps(row,ensure_ascii=False),flush=True)
     out=pathlib.Path(args.output);out.parent.mkdir(parents=True,exist_ok=True)
-    out.write_text(json.dumps({"definition":"UPPER_INITIAL first entry to UPPER_CZ fail; successful upper CZ repeats retained, comeback after CZ failure opens new episode; upper paid stage payout minus effective bet, excludes earlier lower AT and normal games","settings":full},ensure_ascii=False,indent=2)+"\\n")
+    out.write_text(json.dumps({"definition":"UPPER_INITIAL first entry to UPPER_CZ fail; successful upper CZ repeats retained, comeback after CZ failure opens new episode; upper paid stage payout minus effective bet, excludes earlier lower AT and normal games","settings":full},ensure_ascii=False,indent=2)+"\n")
     print("UPPER_AUDIT_COMPLETE",out,flush=True)
 
 if __name__=="__main__":main()
