@@ -61,7 +61,7 @@ def stop_reels(n):
 def start_server():
  global server
  plugins=SERVER/"plugins"; plugins.mkdir(parents=True,exist_ok=True); shutil.copy2(prod["paper"],plugins); shutil.copy2(helper["paper"],plugins)
- (SERVER/"eula.txt").write_text("eula=true\n"); (SERVER/"server.properties").write_text("\n".join(["server-ip=127.0.0.1","server-port=25612","online-mode=false","enforce-secure-profile=false","max-players=4","view-distance=6","simulation-distance=5","spawn-protection=0","generate-structures=false"])+"\n")
+ (SERVER/"eula.txt").write_text("eula=true\n"); (SERVER/"server.properties").write_text("\n".join(["server-ip=127.0.0.1","server-port=25612","online-mode=false","enforce-secure-profile=false","max-players=4","view-distance=6","simulation-distance=5","spawn-protection=0","generate-structures=false","level-type=minecraft:flat"])+"\n")
  h=(OUT/"server.log").open("w",encoding="utf-8"); handles.append(h)
  server=subprocess.Popen([JAVA,"-Xms512M","-Xmx1536M","-Dpiri.runtime.phase=hyperdog07-live",f"-Dpiri.runtime.serverResult={server_result}",f"-Dpiri.runtime.phase07AudioTrigger={OUT / 'audio-trigger.txt'}","-jar",str(PAPER),"nogui"],cwd=SERVER,stdin=subprocess.PIPE,stdout=h,stderr=subprocess.STDOUT,text=True,creationflags=FLAGS)
  wait(lambda:"Done (" in log(OUT/"server.log") and "PIRI_DATABASE_READY" in log(OUT/"server.log"),"Paper ready",300)
@@ -122,8 +122,12 @@ try:
  # Do not let generated-world water drown/respawn the actual observer clients.
  console("gamemode creative PiriRuntimeTest")
  console("gamemode creative PiriRuntimeTest2")
- command(owner,"tp @s 0.5 99 0.5")
- command(spectator,"tp @s 0.5 99 0.5")
+ # A flat, daylight scene and solid platform keep both real viewers in front of
+ # the north-facing virtual cabinets rather than buried in random treetops.
+ console("time set day")
+ console("fill -4 98 -2 5 98 5 minecraft:glass")
+ command(owner,"tp @s 1.5 99 1.5 180 0")
+ command(spectator,"tp @s 1.5 99 1.5 180 0")
  wait(lambda:state().get("ready") is True,"test-only HYPER_DOG fixture created",150)
  hyper=state()["hyperMachine"]; legacy=state()["legacyMachine"]
  check("two actual Minecraft clients coexist with test-only HYPER_DOG and Juggler",
