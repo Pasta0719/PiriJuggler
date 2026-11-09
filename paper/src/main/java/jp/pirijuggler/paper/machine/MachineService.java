@@ -315,7 +315,9 @@ public final class MachineService implements Listener, CommandExecutor {
                 MachineType type=args.length==3?MachineType.valueOf(args[2].toUpperCase(Locale.ROOT)):MachineType.JUGGLER;
                 // HYPER_DOG Phase03 is an isolated Paper engine, not yet a selectable
                 // production game/economy. Never create a broken public machine.
-                if(type==MachineType.HYPER_DOG)throw new DomainException("MACHINE_NOT_RELEASED");
+                if(type==MachineType.HYPER_DOG &&
+                        !Boolean.getBoolean("piri.hyperdog.phase08Preview"))
+                    throw new DomainException("MACHINE_NOT_RELEASED");
                 Machine.Location target = target(sender);
                 submit(sender, null, 0, () -> database.create(target, type, System.currentTimeMillis()), id -> { tell(sender, "MACHINE_CREATED " + id + " type=" + type); remote.machineChanged(id); }); return true;
             }
