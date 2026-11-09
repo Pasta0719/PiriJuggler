@@ -9,6 +9,7 @@ import jp.pirijuggler.paper.database.GameStore;
 import jp.pirijuggler.paper.database.PiriDatabase;
 import jp.pirijuggler.paper.game.hyperdog.HyperDogGameEngine;
 import jp.pirijuggler.paper.game.hyperdog.HyperDogFullGame;
+import jp.pirijuggler.paper.game.hyperdog.HyperDogNormalGame;
 import jp.pirijuggler.paper.game.hyperdog.HyperDogStateStore;
 import jp.pirijuggler.paper.machine.Machine;
 import jp.pirijuggler.paper.machine.MachineType;
@@ -63,6 +64,27 @@ public final class HyperDogPhase08NativeFixture {
         if(rows.size()!=1)throw new IllegalStateException(sql);
         return ((Number)rows.getFirst().values().iterator().next()).longValue();
     }
+    /** Fixed gameplay transport scenario, not an RTP sample or payout calibration.
+     * Find a seed with 30 ordinary rounds so the actual native engine uses
+     * genuine v7 draw logic throughout the 30 physical games without a test-only
+     * role injection. Independent payout holdout uses unrelated predeclared seeds.
+     */
+    private static long pickNormalOnlySeed() {
+        for(long seed=1;seed<=20000;seed++){
+            var normal=new HyperDogNormalGame(1,seed,4050);
+            int games=0;
+            for(;games<30;games++){
+                if(normal.canBet())normal.bet();
+                if(!normal.canLever())break;
+                var prepared=normal.lever();
+                var settled=normal.finish();
+                if(!settled.equals(prepared)||settled.entersAt())break;
+            }
+            if(games==30)return seed;
+        }
+        throw new IllegalStateException("no normal-only transport seed");
+    }
+
     private JsonObject execute(PiriJugglerPlugin prod)throws Exception{
         Map<String,Object> config;
         try(var reader=Files.newBufferedReader(
@@ -82,6 +104,12 @@ public final class HyperDogPhase08NativeFixture {
             db.seat(owner,mid,now+1);
             db.sql("UPDATE player_sessions SET credit=50,held_medals=4000 WHERE player_uuid=?",
                     owner.toString());
+            long transportSeed=pickNormalOnlySeed();
+            JsonObject initial=new JsonObject();
+            initial.addProperty("schema",1);
+            initial.add("hyperDog",new HyperDogFullGame(1,transportSeed,4050).snapshot());
+            db.sql("UPDATE player_sessions SET machine_state_json=? WHERE player_uuid=?",
+                    initial.toString(),owner.toString());
             Session playing=db.state().session(owner);
             Machine cabinet=db.state().machine(mid);
             var adapter=new HyperDogGameEngine();
@@ -139,6 +167,7 @@ public final class HyperDogPhase08NativeFixture {
             report.addProperty("actualMinecraftServer",Bukkit.getMinecraftVersion());
             report.addProperty("machineId",mid);
             report.addProperty("games",spins);
+            report.addProperty("transportSeed",transportSeed);
             report.addProperty("betActions",betActions);
             report.addProperty("acceptedActions",accepted);
             report.addProperty("physicalStops",physicalStops);
