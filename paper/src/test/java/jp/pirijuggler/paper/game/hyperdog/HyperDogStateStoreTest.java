@@ -80,6 +80,17 @@ class HyperDogStateStoreTest {
             assertEquals(0,hist.get("regCount").getAsLong());
             assertEquals(2,hist.getAsJsonArray("history").size());
         }
+        // BAR was one paid normal game: -3 BET, +15 payout, not a BIG bonus.
+        var stats=db.rows("SELECT total_games,current_games,today_difference,today_max_difference "+
+                "FROM machine_period_stats WHERE machine_id=? AND business_period_id=?",
+                machine,db.state().period()).getFirst();
+        assertEquals(1,((Number)stats.get("total_games")).longValue());
+        assertEquals(1,((Number)stats.get("current_games")).longValue());
+        assertEquals(12,((Number)stats.get("today_difference")).longValue());
+        assertEquals(12,((Number)stats.get("today_max_difference")).longValue());
+        assertEquals(0,((Number)db.rows(
+                "SELECT big_count FROM machine_period_stats WHERE machine_id=?",machine)
+                .getFirst().get("big_count")).longValue());
         assertDom("SEQUENCE_OLD",()->store.commit(player,session,machine,2,3,full,null,now+6));
     }
     @Test void trueDatabaseRestartResumesUnfinishedAtAndStopsForeignSeat() throws Exception {

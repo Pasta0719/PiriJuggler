@@ -142,11 +142,51 @@ public final class HyperDogStateStore {
             // Same SQLite transaction as wallet/reel/sequence: no event without an accepted game.
             // Event ID is session+sequence+type and safe against packet retries/restarts.
             HyperDogEventJournal.append(db,owner,prior,game,nextSequence,now);
+            updatePeriodStats(owner,prior,game,now);
             List<Map<String,Object>> rows=db.rows(
                     "SELECT * FROM player_sessions WHERE session_id=?",sessionId.toString());
             if(rows.size()!=1)throw new SQLException("committed session vanished");
             return new Session(rows.getFirst());
         });
+    }
+
+    /**
+     * Paid-game/coin-flow accounting on the very same SQLite transaction as the
+     * owner snapshot. Only the current HYPER_DOG machine row is updated; no BIG/REG
+     * counters or shared Juggler bonus history are ever incremented.
+     */
+    private void updatePeriodStats(Session owner,HyperDogFullGame before,
+                                   HyperDogFullGame after,long now)throws SQLException {
+        if(before==null)return;
+        long spent=Math.subtractExact(after.totalIn(),before.totalIn());
+        long earned=Math.subtractExact(after.totalOut(),before.totalOut());
+        int finishedPaid=0;
+        if(before.at()!=null && before.at().pending()!=null &&
+           before.at().pending().bet()>0 &&
+           (after.at()==null||after.at().pending()==null))finishedPaid=1;
+        else if(before.at()==null&&before.normal().pending()!=null &&
+                before.normal().pending().bet()>0 &&
+                after.normal().pending()==null)finishedPaid=1;
+        boolean atEnded=before.at()!=null&&after.at()==null;
+        if(spent==0&&earned==0&&finishedPaid==0&&!atEnded)return;
+        String period=owner.text("source_business_period_id");
+        var rows=db.rows("SELECT total_games,current_games,today_difference,today_max_difference "+
+                "FROM machine_period_stats WHERE machine_id=? AND business_period_id=?",
+                owner.machine(),period);
+        if(rows.size()!=1)throw new SQLException("Missing HYPER_DOG period stats");
+        var row=rows.getFirst();
+        long games=Math.addExact(((Number)row.get("total_games")).longValue(),finishedPaid);
+        long current=atEnded?0:Math.addExact(((Number)row.get("current_games")).longValue(),finishedPaid);
+        long difference=Math.addExact(Math.subtractExact(
+                ((Number)row.get("today_difference")).longValue(),spent),earned);
+        long maximum=Math.max(((Number)row.get("today_max_difference")).longValue(),difference);
+        int changed=db.sql("UPDATE machine_period_stats SET total_games=?,current_games=?,"+
+                "today_difference=?,today_max_difference=? WHERE machine_id=? AND business_period_id=?",
+                games,current,difference,maximum,owner.machine(),period);
+        if(changed!=1)throw new SQLException("HYPER_DOG period update mismatch");
+        if(finishedPaid!=0||atEnded)db.sql(
+                "INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) "+
+                "VALUES(?,?,?,?,?)",owner.machine(),period,games,difference,now);
     }
 
     private Session requireOwner(UUID player,UUID sessionId,int machineId,boolean active)
