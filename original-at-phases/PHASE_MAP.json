@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "PHASE_04_IN_PROGRESS",
+  "status": "PHASE_04_COMPLETE",
   "scope": "Original AT direct-win machine. Independent from retired standalone GOD and existing NEXT machine.",
   "entrypoint": "original-at-phases/README.md",
   "spec": "original-at-phases/SPEC_LOCK.md",
@@ -39,10 +39,11 @@
       "number": 4,
       "file": "original-at-phases/PHASE_04_AT_CZ_ECONOMY.md",
       "title": "Lower and upper AT / BAR / CZ / comeback / persistence",
-      "status": "IN_PROGRESS",
+      "status": "COMPLETE",
       "requires": [
         "Phase03"
-      ]
+      ],
+      "evidence": "original-at-phases/PHASE_04_RUNTIME_ACCEPTANCE.md"
     },
     {
       "number": 5,
