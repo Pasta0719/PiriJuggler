@@ -306,33 +306,33 @@
     ],
     "announcement_lamps": [
       [
-        612,
-        302,
-        52,
-        50
+        548,
+        310,
+        104,
+        104
       ],
       [
-        1576,
-        302,
-        52,
-        50
+        1588,
+        310,
+        104,
+        104
       ]
     ],
     "state_lamps": [
       [
-        418,
+        388,
         372,
         146,
         36
       ],
       [
-        418,
+        388,
         433,
         146,
         36
       ],
       [
-        418,
+        388,
         494,
         146,
         36
@@ -341,23 +341,27 @@
     "right_lamps": [
       [
         1583,
-        370,
+        454,
         34,
         34
       ],
       [
         1583,
-        439,
+        523,
         34,
         34
       ],
       [
         1583,
-        508,
+        592,
         34,
         34
       ]
     ],
+    "hyperdog_cabinet_rect": [290, 205, 1415, 835],
+    "hyperdog_right_data_rect": [1716, 325, 186, 430],
+    "announcement_inset_pixels": 17,
+    "announcement_style": "ORIGINAL_FIVE_PETAL_TROPICAL_BLOSSOM",
     "add_screen_rect": [
       356,
       575,
