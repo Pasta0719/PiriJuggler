@@ -11,6 +11,11 @@ import net.minecraft.client.gui.screen.Screen;
 public final class MachineScreenFactory {
     private MachineScreenFactory() {}
 
+    /** HYPER_DOG runs a fully isolated screen and never changes SlotScreen or GodScreen. */
+    public static Screen createHyperDog(HyperDogClientReels reels,HyperDogCabinetState cabinet){
+        return new HyperDogCabinetScreen(reels,cabinet);
+    }
+
     public static Screen create(String machineType, SlotViewState view, SlotInput input) {
         String type = machineType == null ? "JUGGLER" : machineType;
         return switch (type) {
