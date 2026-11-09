@@ -205,22 +205,32 @@ public final class HyperDogCabinetState {
             showingUntil=Math.addExact(now,showing.durationMs());
         }
     }
-    /** Immutable UI specification rectangles: never duplicate or shift controls. */
+    /**
+     * HYPER_DOG-only cabinet reflow. The 900px reel layout and top data lamp
+     * are deliberately untouched; larger tropical-flower announcement lamps
+     * live in the reel shoulders, with the right data sidebar moved out.
+     * The shared SlotLayout still governs every other machine family.
+     */
+    public static SlotLayout.Rect cabinetRect(){
+        return new SlotLayout.Rect(290,205,1415,835);
+    }
+    public static SlotLayout.Rect rightDataRect(){
+        return new SlotLayout.Rect(1716,325,186,430);
+    }
     public static SlotLayout.Rect leftStatusRect(int index){
         if(index<0||index>2)throw new IllegalArgumentException("lamp");
-        return new SlotLayout.Rect(418,372+61*index,146,36);
+        return new SlotLayout.Rect(388,372+61*index,146,36);
     }
     public static SlotLayout.Rect announcementRect(int index){
         if(index<0||index>1)throw new IllegalArgumentException("lamp");
-        // Recessed announcement lights live beside the reels, below the
-        // independent top data lamp (bottom y=282). The original y=230
-        // overlapped the top header and hid most of the metal bezel.
-        // x=612..664 / 1576..1628: 6px clear of the reel window.
-        return new SlotLayout.Rect(index==0?612:1576,302,52,50);
+        // 104px floral lenses with an 18px gap from each reel shoulder.
+        // Top data lamp ends y=282; announcement starts y=310 (28px clear).
+        return new SlotLayout.Rect(index==0?548:1588,310,104,104);
     }
     public static SlotLayout.Rect rightLampRect(int index){
         if(index<0||index>2)throw new IllegalArgumentException("lamp");
-        return new SlotLayout.Rect(1583,370+69*index,34,34);
+        // Move three expectation lights below the enlarged right blossom.
+        return new SlotLayout.Rect(1583,454+69*index,34,34);
     }
     public static SlotLayout.Rect lcdRect(){return new SlotLayout.Rect(356,575,272,132);}
 }
