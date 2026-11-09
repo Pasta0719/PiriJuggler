@@ -18,9 +18,9 @@ CASES=[
 ]
 for label,weak,chance,strong in CASES:
     instr='    return b*5,False'
-    patch=(f'    if role==WEAK or role==WM: return min(2000,b*{weak}),False\\n'
-           f'    if role==CHANCE: return min(2000,b*{chance}),False\\n'
-           f'    if role==STRONG or role==SC: return min(2000,b*{strong}),False\\n'
+    patch=(f'    if role==WEAK or role==WM: return min(2000,b*{weak}),False\n'
+           f'    if role==CHANCE: return min(2000,b*{chance}),False\n'
+           f'    if role==STRONG or role==SC: return min(2000,b*{strong}),False\n'
            '    return 0,False')
     source=base.replace(instr,patch)
     assert source!=base
