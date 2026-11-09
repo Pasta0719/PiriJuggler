@@ -20,6 +20,7 @@ public final class PiriJugglerClient implements ClientModInitializer {
     private static final ClientSession SESSION = new ClientSession();
     private static final RemoteMachineRegistry REMOTE = new RemoteMachineRegistry();
     private static final HyperDogClientReels HYPER_DOG_REELS = new HyperDogClientReels(System::currentTimeMillis);
+    private static final HyperDogCabinetState HYPER_DOG_VIEW = new HyperDogCabinetState(System::currentTimeMillis);
     private static net.minecraft.registry.RegistryKey<net.minecraft.world.World> LAST_WORLD;
 
     @Override public void onInitializeClient() {
@@ -31,11 +32,12 @@ public final class PiriJugglerClient implements ClientModInitializer {
             SESSION.reset();
             REMOTE.reset();
             HYPER_DOG_REELS.reset();
+            HYPER_DOG_VIEW.reset();
             HallAudio.reset();
             SlotUi.reset();
             sendHelloWhenChannelAvailable(client);
         }));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> { HANDSHAKE.reset(); SESSION.reset(); REMOTE.reset(); HYPER_DOG_REELS.reset(); HallAudio.reset(); SlotUi.reset(); }));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> { HANDSHAKE.reset(); SESSION.reset(); REMOTE.reset(); HYPER_DOG_REELS.reset(); HYPER_DOG_VIEW.reset(); HallAudio.reset(); SlotUi.reset(); }));
         ClientTickEvents.END_CLIENT_TICK.register(PiriJugglerClient::sendHelloWhenChannelAvailable);
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             var worldKey=client.world==null?null:client.world.getRegistryKey();
@@ -54,13 +56,14 @@ public final class PiriJugglerClient implements ClientModInitializer {
                             && "HYPER_DOG".equals(envelope.payload().get("machineType").getAsString());
                     boolean wasHyper = HYPER_DOG_REELS.opened();
                     if (wasHyper && envelope.packetType()==PacketType.OPEN_MACHINE && !openingHyper) {
-                        HYPER_DOG_REELS.reset(); // Switch back to a legacy machine
+                        HYPER_DOG_REELS.reset(); HYPER_DOG_VIEW.reset(); // Switch back to a legacy machine
                         context.client().setScreen(null);
                     } else if (openingHyper || wasHyper) {
                         HYPER_DOG_REELS.receive(envelope);
+                        HYPER_DOG_VIEW.receive(envelope);
                         if (openingHyper) {
                             SlotUi.reset();
-                            context.client().setScreen(new HyperDogReelPreviewScreen(HYPER_DOG_REELS));
+                            context.client().setScreen(MachineScreenFactory.createHyperDog(HYPER_DOG_REELS,HYPER_DOG_VIEW));
                         } else if (!HYPER_DOG_REELS.opened()) {
                             context.client().setScreen(null);
                         }
@@ -80,7 +83,7 @@ public final class PiriJugglerClient implements ClientModInitializer {
                     SlotUi.receive(envelope, SESSION, outbound);
                 }
             } catch (RuntimeException exception) {
-                HANDSHAKE.reject(); SESSION.reset(); REMOTE.reset(); HYPER_DOG_REELS.reset(); HallAudio.reset();
+                HANDSHAKE.reject(); SESSION.reset(); REMOTE.reset(); HYPER_DOG_REELS.reset(); HYPER_DOG_VIEW.reset(); HallAudio.reset();
                 if (SlotUi.hidesHud() || AdminUi.isOpen()) context.client().setScreen(null);
                 SlotUi.reset();
             }
@@ -105,7 +108,12 @@ public final class PiriJugglerClient implements ClientModInitializer {
         if (!MinecraftClient.getInstance().isOnThread()) throw new IllegalStateException("Client state requires main thread");
         return REMOTE;
     }
-    /** Dedicated Phase02 Fabric reel state; existing slot UI stays unchanged. */
+    /** Dedicated HYPER_DOG Phase05 public cabinet projection; no hidden lottery data. */
+    public static HyperDogCabinetState hyperDogCabinetState(){
+        if(!MinecraftClient.getInstance().isOnThread())throw new IllegalStateException("Client state requires main thread");
+        return HYPER_DOG_VIEW;
+    }
+    /** Dedicated Phase02+ Fabric reel state; existing slot UI stays unchanged. */
     public static HyperDogClientReels hyperDogReels() {
         if (!MinecraftClient.getInstance().isOnThread()) throw new IllegalStateException("Client state requires main thread");
         return HYPER_DOG_REELS;
