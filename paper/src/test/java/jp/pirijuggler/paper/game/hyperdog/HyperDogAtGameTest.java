@@ -180,9 +180,13 @@ class HyperDogAtGameTest {
             if(game.stage()==HyperDogAtGame.Stage.LOWER_INITIAL){
                 found=true;
                 assertEquals(0,game.czTickets());
+                assertEquals(0,game.remaining(),
+                        "negative balance of the previous lower AT cannot reduce the new 150 guarantee");
                 assertFalse(game.replayFree());
                 var next=play(game,HyperDogAtGame.Role.MISS);
                 assertTrue(next.award()>=150);
+                assertEquals(next.award(),game.remaining(),
+                        "CZ-loss restart must not carry debt into a fresh lower initial");
                 assertEquals(HyperDogAtGame.Stage.LOWER_AT,game.stage());
             }
         }
