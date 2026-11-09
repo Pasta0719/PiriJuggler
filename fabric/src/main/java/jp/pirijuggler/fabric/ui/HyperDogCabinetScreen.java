@@ -310,19 +310,28 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
         int fill=down?0xff7a3040:hover?0xffdc7584:RED;
         if(ctrl.name().equals("LEVER")){
             long elapsed=System.currentTimeMillis()-leverPressedMs;
-            int shift=down&&elapsed<350?35:0;
-            c.fill(r.x()+55,r.y()+45+shift,r.x()+75,r.y()+r.h()-25,0xff9796a8);
-            c.fill(r.x()+27,r.y()+6+shift,r.x()+103,r.y()+73+shift,fill);
-            c.drawBorder(r.x()+27,r.y()+6+shift,76,67,STEEL);
+            double shift=down&&elapsed<180?(elapsed<90?18*elapsed/90.0:18*(180-elapsed)/90.0):0;
+            c.fill(r.x()+(r.w()-22)/2,r.y()+35,r.x()+(r.w()+22)/2,r.y()+r.h()-35,STEEL);
+            SlotScreen.rounded(c,r.x()+(r.w()-70)/2f,(float)(r.y()+27+shift),70,70,35,fill);
+            fitText(c,"LEVER",r.x()+r.w()/2f,r.y()+r.h()-25,2f,r.w(),WHITE,true);
+        }else if(ctrl.name().equals("LEFT")||ctrl.name().equals("CENTER")||ctrl.name().equals("RIGHT")){
+            // The established JUGGLER cabinet's round metal stop buttons,
+            // not HYPER_DOG-specific red rectangles.
+            float x=r.x()+(r.w()-88)/2f,y=r.y()+(r.h()-88)/2f;
+            SlotScreen.rounded(c,x,y,88,88,44,0xff9796a8);
+            SlotScreen.rounded(c,x+6,y+6,76,76,38,fill);
+            fitText(c,ctrl.name(),r.x()+r.w()/2f,r.y()+r.h()+12,2f,r.w(),WHITE,true);
         }else{
-            drawPanel(c,r,fill,STEEL);
+            SlotScreen.rounded(c,r.x(),r.y(),r.w(),r.h(),18,STEEL);
+            SlotScreen.rounded(c,r.x()+4,r.y()+4,r.w()-8,r.h()-8,14,fill);
             fitText(c,ctrl.name(),r.x()+r.w()/2f,r.y()+r.h()/2f-8,
                     ctrl.name().length()>7?1.4f:2.0f,r.w()-12,WHITE,true);
         }
     }
     private static void drawPanel(DrawContext c,SlotLayout.Rect r,int fill,int border){
-        c.fill(r.x(),r.y(),r.x()+r.w(),r.y()+r.h(),fill);
-        c.drawBorder(r.x(),r.y(),r.w(),r.h(),border);
+        float radius=Math.min(18f,Math.min(r.w(),r.h())/4f);
+        SlotScreen.rounded(c,r.x(),r.y(),r.w(),r.h(),radius,border);
+        SlotScreen.rounded(c,r.x()+4,r.y()+4,r.w()-8,r.h()-8,Math.max(2f,radius-4f),fill);
     }
     /** Geometry-only fitting, also used by desktop and 4:3/ultrawide tests. */
     public static float fitScale(int glyphPixelWidth,float base,float allowedWidth){
