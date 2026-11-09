@@ -21,12 +21,12 @@ class HyperDogNormalGameTest {
         if(game.waitingForAt())game.resumeAfterAt();
     }
 
-    @Test void v5ModelAndSettingChanceAndRolePayouts() {
-        assertEquals("af1ae6f88e6593116692f987534c406673fbbfa73cb25f52615a7f1674c20ab3",
+    @Test void v6ModelAndSettingChanceAndRolePayouts() {
+        assertEquals("e99ae52bbf431ec76267ce35a0d4de3f13c5e2c55e2d21a2c08011322700b3ac",
                 HyperDogNormalGame.parameterSha256());
         var a=HyperDogNormalGame.Mode.values();
         double[] denom={8192,4096,512,256,96,12};
-        double[] mult={.2476,.2951,.3742,.438,.5007,.762};
+        double[] mult={.1451,.1830,.2423,.2851,.3424,.5346};
         for(int s=1;s<=6;s++){
             var state=new HyperDogNormalGame(s,6789,100000);
             assertEquals(s,state.setting());
@@ -154,7 +154,7 @@ class HyperDogNormalGameTest {
                     classes.add(Path.of(type.getProtectionDomain()
                             .getCodeSource().getLocation().toURI()).toString());
                 }
-                var model=HyperDogNormalGame.class.getClassLoader().getResource("hyperdog/v5.json");
+                var model=HyperDogNormalGame.class.getClassLoader().getResource("hyperdog/v6.json");
                 assertNotNull(model);
                 classes.add(Path.of(model.toURI()).getParent().getParent().toString());
                 String javaExecutable=Path.of(System.getProperty("java.home"),"bin",

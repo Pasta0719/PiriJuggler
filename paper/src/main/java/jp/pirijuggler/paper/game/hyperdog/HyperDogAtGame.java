@@ -18,7 +18,7 @@ public final class HyperDogAtGame {
                         long award, int ticket, boolean premium, boolean czSuccess) {
         public boolean special() { return stage==Stage.LOWER_INITIAL || stage==Stage.UPPER_INITIAL || stage==Stage.UPPER_CZ; }
     }
-    private static final String MODEL_HASH="af1ae6f88e6593116692f987534c406673fbbfa73cb25f52615a7f1674c20ab3";
+    private static final String MODEL_HASH="e99ae52bbf431ec76267ce35a0d4de3f13c5e2c55e2d21a2c08011322700b3ac";
     private static final JsonObject MODEL=loadModel();
     private static final JsonObject FIX=MODEL.getAsJsonObject("fixed_requirements");
     private static final JsonObject COMMON=MODEL.getAsJsonObject("normal_and_at_common_role_draw");
@@ -443,13 +443,13 @@ public final class HyperDogAtGame {
         specialStreakRole=x.specialStreakRole;pending=x.pending;
     }
     private static JsonObject loadModel(){
-        try(InputStream in=HyperDogAtGame.class.getClassLoader().getResourceAsStream("hyperdog/v5.json")){
-            if(in==null)throw new IllegalStateException("v5 model not found");
+        try(InputStream in=HyperDogAtGame.class.getClassLoader().getResourceAsStream("hyperdog/v6.json")){
+            if(in==null)throw new IllegalStateException("v6 model not found");
             String data=new String(in.readAllBytes(),StandardCharsets.UTF_8).replace("\r\n","\n");
             StringBuilder hex=new StringBuilder();
             for(byte b:MessageDigest.getInstance("SHA-256").digest(data.getBytes(StandardCharsets.UTF_8)))
                 hex.append(String.format(Locale.ROOT,"%02x",b&255));
-            if(!MODEL_HASH.equals(hex.toString()))throw new IllegalStateException("v5 hash mismatch");
+            if(!MODEL_HASH.equals(hex.toString()))throw new IllegalStateException("v6 hash mismatch");
             return JsonParser.parseString(data).getAsJsonObject();
         }catch(Exception e){throw new ExceptionInInitializerError(e);}
     }

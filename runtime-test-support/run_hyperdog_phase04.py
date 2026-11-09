@@ -161,12 +161,12 @@ try:
           any(x["stage"]=="UPPER_CZ" and not x["czSuccess"] for x in rounds))
     # Independent fixed-v5 specification audit. This uses the canonical
     # reference JSON, not a copied set of numbers from the Java implementation.
-    model_path=ROOT/"original-at-phases/reference/pirijuggler_new_machine_calibrated_v5.json"
+    model_path=ROOT/"original-at-phases/reference/pirijuggler_new_machine_calibrated_v6.json"
     model_bytes=model_path.read_bytes()
     model=json.loads(model_bytes)
     check("fixed canonical v5 reference SHA256",
           hashlib.sha256(model_bytes).hexdigest()==
-          "af1ae6f88e6593116692f987534c406673fbbfa73cb25f52615a7f1674c20ab3")
+          "e99ae52bbf431ec76267ce35a0d4de3f13c5e2c55e2d21a2c08011322700b3ac")
     paid_profiles={"LOWER_AT","UPPER_AT"}
     role_payout=model["fixed_requirements"]["payout_regular_or_at"]
     check("v5 exact payout table for every actual AT/CZ/initial role",

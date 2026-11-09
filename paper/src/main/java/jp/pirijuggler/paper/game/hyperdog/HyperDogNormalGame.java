@@ -30,7 +30,7 @@ public final class HyperDogNormalGame {
             return HyperDogReelControl.Role.valueOf(role.name());
         }
     }
-    private static final String MODEL_SHA256="af1ae6f88e6593116692f987534c406673fbbfa73cb25f52615a7f1674c20ab3";
+    private static final String MODEL_SHA256="e99ae52bbf431ec76267ce35a0d4de3f13c5e2c55e2d21a2c08011322700b3ac";
     private static final JsonObject MODEL=loadModel();
     private static final JsonObject NORMAL=MODEL.getAsJsonObject("normal_mode");
     private static final JsonObject COMMON=MODEL.getAsJsonObject("normal_and_at_common_role_draw");
@@ -308,8 +308,8 @@ public final class HyperDogNormalGame {
                 j.get("savedEntryMode").isJsonNull()?null:Mode.valueOf(j.get("savedEntryMode").getAsString()));
     }
     private static JsonObject loadModel(){
-        try(InputStream stream=HyperDogNormalGame.class.getClassLoader().getResourceAsStream("hyperdog/v5.json")){
-            if(stream==null)throw new IllegalStateException("HYPER_DOG v5 model not packaged");
+        try(InputStream stream=HyperDogNormalGame.class.getClassLoader().getResourceAsStream("hyperdog/v6.json")){
+            if(stream==null)throw new IllegalStateException("HYPER_DOG v6 model not packaged");
             // Git on Windows can checkout the JSON with CRLF; the approved v5
             // checksum is for canonical LF bytes. Normalize only line endings.
             String canonical=new String(stream.readAllBytes(),StandardCharsets.UTF_8)

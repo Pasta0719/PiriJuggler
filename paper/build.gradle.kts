@@ -30,9 +30,9 @@ tasks.named<Test>("test") {
 }
 
 tasks.processResources {
-    from(rootProject.file("original-at-phases/reference/pirijuggler_new_machine_calibrated_v5.json")) {
+    from(rootProject.file("original-at-phases/reference/pirijuggler_new_machine_calibrated_v6.json")) {
         into("hyperdog")
-        rename { "v5.json" }
+        rename { "v6.json" }
     }
     inputs.property("version", project.version)
     filesMatching("plugin.yml") { expand("version" to project.version) }
