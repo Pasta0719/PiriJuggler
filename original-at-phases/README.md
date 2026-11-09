@@ -1,3 +1,5 @@
+> **2026-11-09 追加承認・最新v7：上位AT平均約4,000枚**。上位有料ATのレア役上乗せを弱チェ/スイカ8倍・チャンス目9倍・強チェ/強チャンス目10倍（単一+2000枚まで）に強化する。上位初期500枚以上、通常CZ50%、実測有料上位純増約12枚/G、小役・BAR・下位ATのゲーム性は維持。設定別機械割のため、通常レア役重複AT抽選に共通0.85倍補正と設定別単独AT倍率再調整を採用（リプレイ/ブドウ4連20%・5連100%は変更なし）。数値と調整理由は[POST_PHASE05_UPPER_4K_V7.md](POST_PHASE05_UPPER_4K_V7.md)。最新数値正本は[calibrated_v7 JSON](reference/pirijuggler_new_machine_calibrated_v7.json)。v6/v5は履歴と回帰のため残す。Phase06–08未開始・未公開。
+
 > **2026-11-09 現行進捗**：HYPER_DOG Phase01～Phase05は**COMPLETE**。Phase03は[通常時実機受入](PHASE_03_RUNTIME_ACCEPTANCE.md)、Phase04は[AT/CZ・SQLite別JVM復帰受入](PHASE_04_RUNTIME_ACCEPTANCE.md)、Phase05は[Fabric筐体・入力・各画面比率の実機受入](PHASE_05_RUNTIME_ACCEPTANCE.md)を参照。Phase06～08はNOT_STARTED。PRはDraft・未マージ、新機種は未公開。
 
 **2026-11-09 追加仕様**：上位AT→上位CZ失敗後の32有料G引き戻しは**虹7手動3停止→上位AT初期5G**へ復帰。設定別単独AT倍率を再調整した[新v6数値・再シミュレーション](POST_PHASE05_UPPER_COMEBACK_V6.md)が今後の正本。Phase06の実リール演出完成は未着手、Draft・未公開を維持。
