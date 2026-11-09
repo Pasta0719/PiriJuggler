@@ -247,24 +247,25 @@ public final class WorldCabinetRenderer {
                     "SKILL_STOP".equals(state.machineType())?"残り "+state.skillRemaining()+"G":"COUNT "+state.bonusCount(),2.0f,UiConstants.color("TEXT_MAIN"));
 
         // Match visible cabinet controls from the real SlotScreen. Decorative only in world view.
-        control(consumers,basis,camera,440,860,150,100,"BET",client.textRenderer);
-        stopButton(consumers,basis,camera,720,865,180,110,"LEFT",client.textRenderer);
-        stopButton(consumers,basis,camera,990,865,180,110,"CENTER",client.textRenderer);
-        stopButton(consumers,basis,camera,1260,865,180,110,"RIGHT",client.textRenderer);
+        int buttonTint=hyperDog?0xffb8495a:UiConstants.color("BUTTON_RED");
+        control(consumers,basis,camera,440,860,150,100,"BET",client.textRenderer,buttonTint);
+        stopButton(consumers,basis,camera,720,865,180,110,"LEFT",client.textRenderer,buttonTint);
+        stopButton(consumers,basis,camera,990,865,180,110,"CENTER",client.textRenderer,buttonTint);
+        stopButton(consumers,basis,camera,1260,865,180,110,"RIGHT",client.textRenderer,buttonTint);
     }
 
     private static void control(VertexConsumerProvider c,CabinetPlacement.Basis b,Vec3d cam,
-                                double x,double y,double w,double h,String label,TextRenderer tr){
+                                double x,double y,double w,double h,String label,TextRenderer tr,int buttonTint){
         rect(c,WHITE,b,cam,x,y,w,h,.0012,UiConstants.color("BUTTON_METAL_DARK"),0,0,1,1);
-        insetRect(c,b,cam,x,y,w,h,5,.0020,UiConstants.color("BUTTON_RED"));
+        insetRect(c,b,cam,x,y,w,h,5,.0020,buttonTint);
         textCentered(c,tr,b,cam,x+w/2,y+h/2-9,label,2.0f,UiConstants.color("TEXT_MAIN"));
     }
 
     private static void stopButton(VertexConsumerProvider c,CabinetPlacement.Basis b,Vec3d cam,
-                                   double x,double y,double w,double h,String label,TextRenderer tr){
+                                   double x,double y,double w,double h,String label,TextRenderer tr,int buttonTint){
         double s=88;
         rect(c,WHITE,b,cam,x+(w-s)/2,y+(h-s)/2,s,s,.0012,UiConstants.color("BUTTON_METAL"),0,0,1,1);
-        rect(c,WHITE,b,cam,x+(w-76)/2,y+(h-76)/2,76,76,.0020,UiConstants.color("BUTTON_RED"),0,0,1,1);
+        rect(c,WHITE,b,cam,x+(w-76)/2,y+(h-76)/2,76,76,.0020,buttonTint,0,0,1,1);
         textCentered(c,tr,b,cam,x+w/2,y+h+12,label,2.0f,UiConstants.color("TEXT_MAIN"));
     }
 
