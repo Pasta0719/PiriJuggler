@@ -1,11 +1,13 @@
 # HYPER_DOG — PHASE 07 Admin, data lamp, remote view, mobile, audio, recovery
 
-Status: **NOT_STARTED — SPEC_LOCKED**
+Status: **IN_PROGRESS — SPEC_LOCKED / 実Minecraft全項目受入前**
 
 **CURRENT_NUMERIC_REFERENCE / HYPER_DOG：唯一の現行数値正本は [pirijuggler_new_machine_calibrated_v7.json](reference/pirijuggler_new_machine_calibrated_v7.json)（v7）。** `PHASE_MAP.json.numeric_reference` と一致させ、抽選・配当・上乗せ・機械割はv7に従う。v5/v6は旧Phase・較正履歴専用。
 
+> Phase06の実機受入46/46 PASSを前提に着手。**現行v7数値・旧機種・保存済み権利を不変**とする。現在HYPER_DOGの通常ホール公開・新規作成は引き続き無効で、総合公開はPhase08の受入まで行わない。独立の履歴・同期・音・復帰の実装を段階的に検証し、全完了条件の証跡が揃うまでCOMPLETEとしない。
+
 ## 実装対象
-- `HYPER_DOG`の設定投入・種類変更・ホール粗利運営、データランプ履歴/AT初当たり/上位・CZ・BAR・引き戻し記録と差枚集計を整合させる。既存のBIG/REGに虚偽集計しない。機種表示名は`HYPER_DOG`だが筐体には文字を置かない。
+- `HYPER_DOG`の設定投入・種類変更・ホール粗利運営、データランプ履歴/AT初当たり/上位・CZ・BAR・引き戻し記録と差枚集計を整合させる。**データランプ上段の主カウンターはB/Rの代わりに「AT初当たり」「上位CZ回数」「上位AT回数（初回突入と継続をどちらも加算）」の3項目**。AT初当たりは通常からのAT開始（32G引き戻しを含む）、上位CZはCZへの挑戦開始1回につき1、上位ATは`UPPER_INITIAL`に入るたび1（CZ成功による再突入も加算）として、1GごとのCZゲーム数とは混同しない。既存のBIG/REGに虚偽集計しない。機種表示名は`HYPER_DOG`だが筐体には文字を置かない。
 - 第二Fabric観覧・遠隔ワールド筐体レンダラ・スマホ遠隔の状態反映。遠隔へ内部モード/次の抽選結果/設定の非公開情報を漏らさない。
 - 新しいOGGは要求しない。**既存`bet/lever/stop/notice/notice_strong/payout/tenpai/bonus_start/bonus_end`を [IMPLEMENTATION_DECISIONS_V1.md](IMPLEMENTATION_DECISIONS_V1.md) 第26項の割当で再利用**。登録済みOGGが欠けている場合その音だけ無音フォールバック、遊技と受入は停止しない。追加BGMなし。
 - リスタート/切断/回線遅延/重複パケット/タイムアウトと復帰、現金メダル/貸出/精算/実出玉率で資産喪失ゼロを実証。

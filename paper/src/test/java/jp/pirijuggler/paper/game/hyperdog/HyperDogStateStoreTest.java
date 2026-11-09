@@ -71,6 +71,15 @@ class HyperDogStateStoreTest {
         assertEquals("RED7_CONFIRM",full.phase());
         var four=store.commit(player,session,machine,3,4,full,null,now+5);
         assertEquals(500-3+15,four.number("credit")+four.number("held_medals"));
+        // AT first-hit / BAR are separate HYPER_DOG events, never BIG/REG.
+        try(var c=java.sql.DriverManager.getConnection("jdbc:sqlite:"+directory.resolve("piri.db"))){
+            var hist=HyperDogEventJournal.read(c,machine,db.state().period());
+            assertEquals(1,hist.get("atFirstHits").getAsLong());
+            assertEquals(1,hist.get("barCount").getAsLong());
+            assertEquals(0,hist.get("bigCount").getAsLong());
+            assertEquals(0,hist.get("regCount").getAsLong());
+            assertEquals(2,hist.getAsJsonArray("history").size());
+        }
         assertDom("SEQUENCE_OLD",()->store.commit(player,session,machine,2,3,full,null,now+6));
     }
     @Test void trueDatabaseRestartResumesUnfinishedAtAndStopsForeignSeat() throws Exception {

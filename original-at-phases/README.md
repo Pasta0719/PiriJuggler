@@ -2,13 +2,13 @@
 
 > **2026-11-09 追加承認・最新v7：上位AT平均約4,000枚**。上位有料ATのレア役上乗せを弱チェ/スイカ8倍・チャンス目9倍・強チェ/強チャンス目10倍（単一+2000枚まで）に強化する。上位初期500枚以上、通常CZ50%、実測有料上位純増約12枚/G、小役・BAR・下位ATのゲーム性は維持。設定別機械割のため、通常レア役重複AT抽選に共通0.85倍補正と設定別単独AT倍率再調整を採用（リプレイ/ブドウ4連20%・5連100%は変更なし）。数値と調整理由は[POST_PHASE05_UPPER_4K_V7.md](POST_PHASE05_UPPER_4K_V7.md)。最新数値正本は[calibrated_v7 JSON](reference/pirijuggler_new_machine_calibrated_v7.json)。v6/v5は履歴と回帰のため残す。Phase06実機受入完了、Phase07–08未開始・機種未公開。
 
-> **2026-11-09 現行進捗**：HYPER_DOG Phase01～Phase05は**COMPLETE**。Phase03は[通常時実機受入](PHASE_03_RUNTIME_ACCEPTANCE.md)、Phase04は[AT/CZ・SQLite別JVM復帰受入](PHASE_04_RUNTIME_ACCEPTANCE.md)、Phase05は[Fabric筐体・入力・各画面比率の実機受入](PHASE_05_RUNTIME_ACCEPTANCE.md)を参照。Phase06は[実機受入済み](PHASE_06_RUNTIME_ACCEPTANCE.md)でCOMPLETE、Phase07～08はNOT_STARTED。PRはDraft・未マージ、新機種は未公開。
+> **2026-11-09 現行進捗**：HYPER_DOG Phase01～Phase05は**COMPLETE**。Phase03は[通常時実機受入](PHASE_03_RUNTIME_ACCEPTANCE.md)、Phase04は[AT/CZ・SQLite別JVM復帰受入](PHASE_04_RUNTIME_ACCEPTANCE.md)、Phase05は[Fabric筐体・入力・各画面比率の実機受入](PHASE_05_RUNTIME_ACCEPTANCE.md)を参照。Phase06は[実機受入済み](PHASE_06_RUNTIME_ACCEPTANCE.md)でCOMPLETE、Phase07はIN_PROGRESS、Phase08はNOT_STARTED。PRはDraft・未マージ、新機種は未公開。
 
 **2026-11-09 追加仕様**：上位AT→上位CZ失敗後の32有料G引き戻しは**虹7手動3停止→上位AT初期5G**へ復帰。設定別単独AT倍率を再調整した[新v6数値・再シミュレーション](POST_PHASE05_UPPER_COMEBACK_V6.md)は当時の履歴。現行正本は上記v7 JSON。Phase06演出初期実装は[実機受入済み](PHASE_06_RUNTIME_ACCEPTANCE.md)。PRはDraft・機種未公開を維持し、後日実プレイでの演出調整を許容する。
 
 # PiriJuggler HYPER_DOG — Phase実装仕様
 
-**実装状態：Phase01～06 COMPLETE、Phase07～08 NOT_STARTED。** 設計作成日 2026-11-07。既存機種の機能・データを保護し、承認された演出仕様を維持する。
+**実装状態：Phase01～06 COMPLETE、Phase07 IN_PROGRESS、Phase08 NOT_STARTED。** 設計作成日 2026-11-07。既存機種の機能・データを保護し、承認された演出仕様を維持する。
 
 このフォルダは既存の `phases/`, `next-machine-phases/`, `skill-stop-phases/` を置き換えない。新しい「AT直撃・下位/上位AT・上位CZ」の専用計画であり、引退した単体GOD機種とは別物。
 
@@ -43,5 +43,5 @@ Phase02は [v2リール実機受入](PHASE_02_V2_RUNTIME_ACCEPTANCE.md)、Phase0
 - 【ユーザー確定】ゲームの構造・枚数・出目・CZ・ランプの色順・4コマ通常と確定引込みは変更不可。
 - 【初期実装値を決定】演出のタイミング/色割合/ランプ位置/重複時の表示順/音/ID/素材契約まで**全件決定**。実機を見て違和感があった部分だけ、ユーザー指示により改訂する。
 - 【数値の実装正本】[pirijuggler_new_machine_calibrated_v7.json](reference/pirijuggler_new_machine_calibrated_v7.json)を現行唯一の基準として固定。v5/v6は履歴。独立シミュレーションの機械割はPaper実装でも再照合する。
-- 【実行待ち】Phase07～08の実装・実Minecraft受入。図柄7点は受領済みで描画を検証済み。Phase01～06は[Phase06証跡](PHASE_06_RUNTIME_ACCEPTANCE.md)を含めCOMPLETE、既存Phaseと`CODEX_START.md`の規範は維持。
+- 【実行中】Phase07の管理・データランプ・遠隔・音・復帰の統合／実Minecraft受入。Phase08は未開始。図柄7点は受領済みで描画を検証済み。Phase01～06は[Phase06証跡](PHASE_06_RUNTIME_ACCEPTANCE.md)を含めCOMPLETE、既存Phaseと`CODEX_START.md`の規範は維持。
 

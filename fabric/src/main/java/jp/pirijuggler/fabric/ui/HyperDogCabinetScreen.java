@@ -249,7 +249,8 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
     private void drawDataLamp(DrawContext c){
         var data=hud.dataLamp();
         long total=value(data,"totalGames"),current=value(data,"currentGames"),diff=value(data,"todayDifference");
-        long max=value(data,"todayMaxDifference"),at=value(data,"atCount");
+        long max=value(data,"todayMaxDifference"),at=value(data,"atFirstHits");
+        long upperCz=value(data,"czAttempts"),upper=value(data,"upperEntries");
         fitText(c,"MACHINE "+hud.machineId(),38,28,1.45f,310,WHITE,false);
         fitText(c,"DIFF GRAPH",55,57,1.75f,500,WHITE,false);
         var graph=data!=null&&data.has("graph")?data.getAsJsonArray("graph"):new com.google.gson.JsonArray();
@@ -260,8 +261,14 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
         fitText(c,Long.toString(total),1370,76,2.3f,230,WHITE,true);
         fitText(c,"MAX DIFF",1680,43,1.55f,220,WHITE,true);
         fitText(c,signed(max),1680,76,2.3f,230,WHITE,true);
-        fitText(c,"AT",1370,153,1.5f,220,GOLD,true);
-        fitText(c,Long.toString(at),1370,186,2.4f,230,GOLD,true);
+        // HYPER_DOG never uses BIG/REG as aliases. Three independently
+        // recorded event counters are the primary data-lamp headline.
+        fitText(c,"AT FIRST",1060,153,1.45f,220,GOLD,true);
+        fitText(c,Long.toString(at),1060,186,2.4f,230,GOLD,true);
+        fitText(c,"UPPER CZ",1370,153,1.45f,220,GOLD,true);
+        fitText(c,Long.toString(upperCz),1370,186,2.4f,230,GOLD,true);
+        fitText(c,"UPPER AT",1680,153,1.45f,220,GOLD,true);
+        fitText(c,Long.toString(upper),1680,186,2.4f,230,GOLD,true);
         fitText(c,"DIFF",42,345,1.7f,240,WHITE,false);
         fitText(c,signed(diff),156,391,2.4f,205,diff>=0?0xff60e6b5:WHITE,true);
         fitText(c,"HISTORY",44,467,1.55f,230,WHITE,false);
@@ -271,13 +278,14 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
             for(int i=0;i<10&&historyOffset+i<history.size();i++){
                 var item=history.get(historyOffset+i).getAsJsonObject();
                 String type=item.has("type")?item.get("type").getAsString():"AT";
-                String games=item.has("games")?item.get("games").getAsString():"";
+                String games=item.has("games")?item.get("games").getAsString()+"G":
+                        ("AT_END".equals(type)&&item.has("medals"))?signed(item.get("medals").getAsLong()):"";
                 fitText(c,type,45,523+i*22,1.15f,120,GOLD,false);
-                fitText(c,games+"G",155,523+i*22,1.15f,115,WHITE,false);
+                fitText(c,games,155,523+i*22,1.15f,115,WHITE,false);
             }
         }
         fitText(c,"ODDS",1673,345,1.5f,215,WHITE,false);
-        fitText(c,"AT ODDS",1673,388,1.25f,215,GOLD,false);
+        fitText(c,"AT FIRST ODDS",1673,388,1.25f,215,GOLD,false);
         fitText(c,at>0?"1/"+Math.max(1L,total/at):"---",1673,424,1.8f,190,WHITE,false);
         fitText(c,"MAX DIFF",1673,490,1.25f,215,GOLD,false);
         fitText(c,signed(max),1673,527,1.85f,190,WHITE,false);

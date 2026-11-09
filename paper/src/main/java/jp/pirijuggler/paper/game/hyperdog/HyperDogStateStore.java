@@ -65,8 +65,9 @@ public final class HyperDogStateStore {
             // mint medals even if it successfully serializes as JSON.
             long previousBalance=Math.addExact(owner.number("credit"),owner.number("held_medals"));
             JsonObject previousState=owner.machineState();
+            HyperDogFullGame prior=null;
             if(previousState!=null&&previousState.has("hyperDog")){
-                HyperDogFullGame prior=HyperDogFullGame.restore(previousState.getAsJsonObject("hyperDog"));
+                prior=HyperDogFullGame.restore(previousState.getAsJsonObject("hyperDog"));
                 if(prior.credit()!=previousBalance||
                         game.totalIn()<prior.totalIn()||game.totalOut()<prior.totalOut())
                     throw new IllegalStateException("HYPER_DOG_PREVIOUS_LEDGER_CORRUPT");
@@ -132,6 +133,9 @@ public final class HyperDogStateStore {
                     state,credit,held,bet,snapshot.toString(),nextSequence,now,sessionId.toString(),
                     player.toString(),machineId,expectedSequence);
             if(changed!=1)throw new DomainException("SEQUENCE_OLD");
+            // Same SQLite transaction as wallet/reel/sequence: no event without an accepted game.
+            // Event ID is session+sequence+type and safe against packet retries/restarts.
+            HyperDogEventJournal.append(db,owner,prior,game,nextSequence,now);
             List<Map<String,Object>> rows=db.rows(
                     "SELECT * FROM player_sessions WHERE session_id=?",sessionId.toString());
             if(rows.size()!=1)throw new SQLException("committed session vanished");
