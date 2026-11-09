@@ -27,6 +27,18 @@ class HyperDogSymbolAssetsTest {
                     "existing reel symbol path must not change");
     }
 
+    @Test void sevenAndBarStayLargerThanNormalArtworkWithoutDistortingTheSourceAspect() {
+        int normal=HyperDogCabinetScreen.symbolRenderSize("gui/original_at/symbols/grape.png");
+        assertEquals(124,normal);
+        for(String name:List.of("red7","bar","rainbow7")){
+            int special=HyperDogCabinetScreen.symbolRenderSize("gui/original_at/symbols/"+name+".png");
+            assertEquals(166,special,name);
+            assertTrue(special>normal,name+" must have the larger cabinet-symbol treatment");
+        }
+        for(String name:List.of("replay","cherry","watermelon"))
+            assertEquals(normal,HyperDogCabinetScreen.symbolRenderSize("gui/original_at/symbols/"+name+".png"));
+    }
+
     @Test void allApprovedSymbolsAreTransparent256PixelPngs() throws IOException {
         List<String> names=List.of("replay","red7","rainbow7","bar","grape","cherry","watermelon");
         for(String name:names) {
