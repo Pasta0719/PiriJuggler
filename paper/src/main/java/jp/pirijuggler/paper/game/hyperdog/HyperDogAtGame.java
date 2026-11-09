@@ -241,7 +241,15 @@ public final class HyperDogAtGame {
             }else if(czGame==5){
                 tickets=0;barGuaranteed=false;upperBarCharges=0;futureRareCharges=0;
                 if(czFromUpper){stage=Stage.COMPLETE;resetPaidBoundary();}
-                else {stage=Stage.LOWER_INITIAL;resetPaidBoundary();}
+                else {
+                    // A lost CZ after LOWER_AT starts a NEW lower initial:
+                    // do not carry the depleted (possibly negative) balance
+                    // into its 150-medal guarantee.
+                    remaining=0;
+                    lowerInitialTotal=0;
+                    stage=Stage.LOWER_INITIAL;
+                    resetPaidBoundary();
+                }
             }
         }else if(source==Stage.LOWER_AT||source==Stage.UPPER_AT){
             replayFree=result.role()==Role.REPLAY;
