@@ -68,8 +68,12 @@ public final class HyperDogStateStore {
             HyperDogFullGame prior=null;
             if(previousState!=null&&previousState.has("hyperDog")){
                 prior=HyperDogFullGame.restore(previousState.getAsJsonObject("hyperDog"));
-                if(prior.credit()!=previousBalance||
-                        game.totalIn()<prior.totalIn()||game.totalOut()<prior.totalOut())
+                // External Vault-backed loan/insert/cashout changes the
+                // authoritative player_sessions wallet without touching game
+                // role RNG or AT winnings. A mismatch is legal only as an
+                // external-wallet reconciliation. The next transition must
+                // still satisfy exact conservation from the database balance.
+                if(game.totalIn()<prior.totalIn()||game.totalOut()<prior.totalOut())
                     throw new IllegalStateException("HYPER_DOG_PREVIOUS_LEDGER_CORRUPT");
                 long deltaOut=Math.subtractExact(game.totalOut(),prior.totalOut());
                 long deltaIn=Math.subtractExact(game.totalIn(),prior.totalIn());
@@ -77,9 +81,13 @@ public final class HyperDogStateStore {
                 if(game.credit()!=expected)
                     throw new IllegalStateException("HYPER_DOG_LEDGER_MISMATCH");
             }else{
-                if(game.totalIn()!=0||game.totalOut()!=0||
+                // First native game may be the same action as its initial
+                // paid 3BET; there is no preceding server-owned snapshot yet.
+                // No prepared or finished spin is allowed before the initial
+                // durable transaction. v7 game RNG remains server-only.
+                if(game.totalIn()>3||game.totalOut()!=0||
                         game.normal().games()!=0||game.at()!=null||
-                        game.credit()!=previousBalance)
+                        game.credit()!=Math.subtractExact(previousBalance,game.totalIn()))
                     throw new IllegalStateException("HYPER_DOG_INITIAL_WALLET_MISMATCH");
             }
             long balance=game.credit();
