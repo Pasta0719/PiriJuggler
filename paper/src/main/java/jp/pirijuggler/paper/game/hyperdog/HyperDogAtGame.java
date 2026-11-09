@@ -84,7 +84,7 @@ public final class HyperDogAtGame {
         if(!waitingForBet()||credit<3)throw new IllegalStateException("BET denied");
         long nextCredit=Math.subtractExact(credit,3);
         long nextIn=Math.addExact(totalIn,3);
-        credit=nextCredit;totalIn=nextIn;postedBet=true;postedBet=3;
+        credit=nextCredit;totalIn=nextIn;betPosted=true;postedBet=3;
     }
     public Round lever(){return leverForced(null);}
     /** Role override for deterministic package-local tests; never expose to a network packet. */
@@ -97,7 +97,7 @@ public final class HyperDogAtGame {
     }
     private Round calculate(Role forced) {
         Stage source=stage;
-        int bet=postedBet?postedBet:0;
+        int bet=betPosted?postedBet:0;
         if(source==Stage.LOWER_AT||source==Stage.UPPER_AT) {
             if(!betPosted&&!replayFree)throw new IllegalStateException("paid bet missing");
         }else if(bet!=0||betPosted||replayFree)throw new IllegalStateException("special stage used BET");
