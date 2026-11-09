@@ -20,6 +20,39 @@ class HyperDogEventJournalTest {
         assertFalse(entries.stream().anyMatch(e->e.medals()!=0));
         assertTrue(HyperDogEventJournal.classify(bet,lever).isEmpty());
     }
+    private static HyperDogFullGame phase(HyperDogFullGame template,HyperDogAtGame.Stage stage){
+        var snapshot=template.snapshot();
+        var at=snapshot.getAsJsonObject("at");
+        at.addProperty("stage",stage.name());
+        at.addProperty("initialIndex",0);
+        return HyperDogFullGame.restore(snapshot);
+    }
+    @Test void upperContinuationsCountEveryCzSuccessWithoutExtraInitialHits(){
+        var initial=new HyperDogFullGame(3,128,100000);
+        initial.bet();
+        initial.leverForcedNormal(HyperDogNormalGame.Role.BAR);
+        initial.finish();
+        assertEquals(HyperDogAtGame.Stage.RED7_CONFIRM,initial.at().stage());
+        var red=phase(initial,HyperDogAtGame.Stage.RED7_CONFIRM);
+        var upperInitial=phase(initial,HyperDogAtGame.Stage.UPPER_INITIAL);
+        var upperAt=phase(initial,HyperDogAtGame.Stage.UPPER_AT);
+        var cz=phase(initial,HyperDogAtGame.Stage.UPPER_CZ);
+        var lowerInitial=phase(initial,HyperDogAtGame.Stage.LOWER_INITIAL);
+        java.util.function.BiFunction<HyperDogFullGame,HyperDogFullGame,
+                List<HyperDogEventJournal.Event>> event=HyperDogEventJournal::classify;
+        assertEquals(List.of(new HyperDogEventJournal.Event(HyperDogEventJournal.Type.UPPER_ENTRY,0)),
+                event.apply(red,upperInitial));
+        assertTrue(event.apply(upperInitial,upperAt).isEmpty(),
+                "entering paid upper AT from free 5G must not double count");
+        assertEquals(List.of(new HyperDogEventJournal.Event(HyperDogEventJournal.Type.CZ_CHALLENGE,0)),
+                event.apply(upperAt,cz),"5G CZ is one attempt, not five");
+        var continued=event.apply(cz,upperInitial);
+        assertEquals(1,continued.stream().filter(e->e.type()==HyperDogEventJournal.Type.UPPER_ENTRY).count());
+        assertEquals(1,continued.stream().filter(e->e.type()==HyperDogEventJournal.Type.CZ_SUCCESS).count());
+        assertFalse(continued.stream().anyMatch(e->e.type()==HyperDogEventJournal.Type.AT_FIRST_HIT));
+        assertEquals(List.of(new HyperDogEventJournal.Event(HyperDogEventJournal.Type.CZ_FAILURE,0)),
+                event.apply(cz,lowerInitial));
+    }
     @Test void historyIsMachineAndPeriodScopedAndHasNoPrivateValues()throws Exception{
         try(var c=DriverManager.getConnection("jdbc:sqlite::memory:")){
             c.createStatement().execute("CREATE TABLE hyper_dog_events(machine_id INTEGER NOT NULL,business_period_id TEXT NOT NULL,event_id TEXT NOT NULL,event_type TEXT NOT NULL,medals INTEGER NOT NULL,occurred_at INTEGER NOT NULL,PRIMARY KEY(machine_id,event_id))");

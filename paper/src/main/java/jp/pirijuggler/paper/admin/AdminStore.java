@@ -80,6 +80,9 @@ public final class AdminStore {
         db.sql("UPDATE machine_period_stats SET total_games=0,big_count=0,reg_count=0,current_games=0,today_difference=0,today_max_difference=0,last_bonus_type=NULL,last_bonus_at=NULL WHERE machine_id=? AND business_period_id=?", machineId, period);
         db.sql("DELETE FROM bonus_history WHERE machine_id=? AND business_period_id=?", machineId, period);
         db.sql("DELETE FROM juggler_god_history WHERE machine_id=? AND business_period_id=?", machineId, period);
+        if(machine.type()==jp.pirijuggler.paper.machine.MachineType.HYPER_DOG &&
+           !db.rows("SELECT name FROM sqlite_master WHERE type='table' AND name='hyper_dog_events'").isEmpty())
+            db.sql("DELETE FROM hyper_dog_events WHERE machine_id=? AND business_period_id=?",machineId,period);
         db.sql("DELETE FROM metadata WHERE key=?", "SIM_CURSOR:"+period+":"+machineId);
         switch(machine.type()){
             case JUGGLER_GOD, JUGGLER_GOD_EXTREME -> {
