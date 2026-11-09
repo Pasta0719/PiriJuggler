@@ -441,7 +441,7 @@ public final class RemoteMachineSync {
     }
 
     private static boolean slotAudioMachine(MachineType type){
-        return type==MachineType.JUGGLER||type==MachineType.JUGGLER_GOD||type==MachineType.JUGGLER_GOD_EXTREME||type==MachineType.SKILL_STOP;
+        return type==MachineType.JUGGLER||type==MachineType.JUGGLER_GOD||type==MachineType.JUGGLER_GOD_EXTREME||type==MachineType.SKILL_STOP||type==MachineType.HYPER_DOG;
     }
 
     private void audio(int machineId,String op,String sound,long delayMs,int count,long spacingMs,JsonObject extra){
