@@ -1,0 +1,62 @@
+name: HYPER_DOG v6 current AT payout distribution audit
+on:
+  push:
+    branches: [plan/original-at-machine-20261107]
+    paths:
+      - '.github/workflows/hyperdog-v6-payout-audit.yml'
+  workflow_dispatch:
+jobs:
+  payout-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install simulator dependencies
+        run: python -m pip install 'numpy>=1.26,<3' 'numba>=0.60,<0.67'
+      - name: Measure AT net payout distribution in v6 across settings and seeds
+        run: |
+          mkdir -p runtime-evidence/HYPER_DOG_V6_AT_PAYOUT_REPORT
+          python -u original-at-phases/reference/piri_simulate_upper_comeback_v6.py \
+            --input original-at-phases/reference/pirijuggler_new_machine_calibrated_v6.json \
+            --paid-per-replicate 20000000 \
+            --replicates 2 \
+            --seed 20261109 \
+            --output runtime-evidence/HYPER_DOG_V6_AT_PAYOUT_REPORT/report.json
+      - name: Print current payout distribution
+        run: |
+          python - <<'PY'
+          import json
+          p='runtime-evidence/HYPER_DOG_V6_AT_PAYOUT_REPORT/report.json'
+          report=json.load(open(p))
+          for s in report['settings']:
+              stats={
+                'setting':s['setting'],'observed_return_percent':s['simulated_return_percent'],
+                'complete_AT_sessions':s['at_completed'],
+                'average_AT_net_medals':s['at_session_net_medals_mean'],
+                'AT_net_percentiles_medals':s['at_session_net_medals_percentiles'],
+                'AT_net_at_least_1000_fraction':s['at_session_net_medals_ge_1000_fraction'],
+                'AT_net_at_least_5000_fraction':s['at_session_net_medals_ge_5000_fraction'],
+                'AT_net_at_least_10000_fraction':s['at_session_net_medals_ge_10000_fraction'],
+                'mean_lower_initial_medals':s['lower_initial_mean_medals'],
+                'mean_upper_initial_medals':s['upper_initial_mean_medals'],
+                'lower_AT_paid_net_per_game':s['paid_stage_mean_net_per_game']['LOWER_AT'],
+                'upper_AT_paid_net_per_game':s['paid_stage_mean_net_per_game']['UPPER_AT'],
+                'upper_initial_entries':s['upper_initial_5g_rounds'],
+                'AT_starts':s['at_initial_entries'],
+                'upper_comeback_hits':s['upper_comeback_returns'],
+                'upper_comeback_windows':s['upper_comeback_windows'],
+                'lower_comeback_hits':s['lower_comeback_returns'],
+                'lower_comeback_windows':s['lower_comeback_windows'],
+                'max_AT_net_medals_seen':s['max_at_net_medals']
+              }
+              print('HYPER_DOG_V6_PAYOUT '+json.dumps(stats,sort_keys=True),flush=True)
+          PY
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hyperdog-v6-at-payout-distribution
+          path: runtime-evidence/HYPER_DOG_V6_AT_PAYOUT_REPORT/**
