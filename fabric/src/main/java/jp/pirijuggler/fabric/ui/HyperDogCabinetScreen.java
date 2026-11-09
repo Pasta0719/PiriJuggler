@@ -1,0 +1,321 @@
+package jp.pirijuggler.fabric.ui;
+
+import jp.pirijuggler.common.protocol.*;
+import jp.pirijuggler.common.reel.*;
+import jp.pirijuggler.fabric.PiriJugglerClient;
+import jp.pirijuggler.fabric.network.PiriPayload;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
+import org.lwjgl.glfw.GLFW;
+import java.util.*;
+
+/**
+ * Production Phase05 full HYPER_DOG cabinet. The Phase02 preview remains a
+ * compatibility base for real Paper/Fabric acceptance input probes; only this
+ * subclass is routed for newly opened HYPER_DOG sessions.
+ *
+ * Layout, physical hitboxes, loans/medal controls and datalamp follow the
+ * existing 1920x1080 SlotLayout. Lottery/stocks never run in Fabric.
+ */
+public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
+    private static final int OUTSIDE=0xff12121a,EDGE=0xff817a95,CABINET=0xff302f41;
+    private static final int REEL_BG=0xff11121d,PANEL=0xff101824,OFF=0xff25242c;
+    private static final int GOLD=0xffd9b65c,PURPLE=0xffb78cff,CYAN=0xff5ad8f0;
+    private static final int WHITE=0xffeaeffa,STEEL=0xff404454,RED=0xffb8495a;
+    private static final int SYMBOL_SIZE=124;
+    private static final String[] COUNTERS={"CREDIT","BET","PAY","MEDALS"};
+    private static final String[] COUNTER_KEYS={"credit","bet","pay","heldMedals"};
+    private static final String[] COLORS={"WHITE","BLUE","GREEN","YELLOW","PURPLE","RED","RAINBOW"};
+    private static final int[] COLORS_ARGB={WHITE,0xff548efa,0xff45d48c,0xffefd757,PURPLE,0xfff14954,0xffe0afff};
+    private final HyperDogClientReels reels;
+    private final HyperDogCabinetState hud;
+    private final Set<Integer> pressedKeys=new HashSet<>();
+    private String pressedControl="";
+    private boolean pressedMouse;
+    private long leverPressedMs;
+
+    public HyperDogCabinetScreen(HyperDogClientReels reels,HyperDogCabinetState hud) {
+        super(reels);
+        this.reels=Objects.requireNonNull(reels);
+        this.hud=Objects.requireNonNull(hud);
+    }
+    public HyperDogCabinetState cabinetState(){return hud;}
+    @Override protected void init(){client.mouse.unlockCursor();}
+    @Override public boolean shouldPause(){return false;}
+    @Override public boolean shouldCloseOnEsc(){return false;}
+    @Override public boolean requestPlay(){
+        if(hud.displayLocked()||hud.closeRequested())return false;
+        return super.requestPlay();
+    }
+    @Override public boolean requestStop(PacketType type){
+        if(hud.closeRequested()||hud.displayLocked())return false;
+        return super.requestStop(type);
+    }
+    public boolean requestControl(String name){
+        for(var control:SlotLayout.CONTROLS)if(control.name().equals(name)){
+            if(name.equals("BET")||name.equals("LEVER"))return requestPlay();
+            return switch(control.action()){
+                case STOP_LEFT,STOP_CENTER,STOP_RIGHT -> requestStop(control.action());
+                default -> sendAction(control.action());
+            };
+        }
+        return false;
+    }
+    private boolean sendAction(PacketType action){
+        if(hud.closeRequested())return false;
+        if(action!=PacketType.CLOSE_REQUEST && hud.displayLocked())return false;
+        var session=PiriJugglerClient.session();
+        if(session.sessionId()==null||session.machineId()!=reels.machineId()||
+                !Objects.equals(session.sessionId(),hud.sessionId()))return false;
+        com.google.gson.JsonObject j=new com.google.gson.JsonObject();
+        j.addProperty("sessionId",session.sessionId().toString());
+        j.addProperty("machineId",session.machineId());
+        j.addProperty("clientSequence",session.takeSequence());
+        ClientPlayNetworking.send(new PiriPayload(EnvelopeCodec.encode(Envelope.current(action,j))));
+        if(action==PacketType.CLOSE_REQUEST)hud.markCloseRequested();
+        return true;
+    }
+    @Override public void close(){sendAction(PacketType.CLOSE_REQUEST);}
+    @Override public boolean keyPressed(int key,int scan,int modifiers){
+        if(key==GLFW.GLFW_KEY_T){
+            client.setScreen(new SlotChatScreen(this));return true;
+        }
+        PacketType action=SlotKeys.action(key,scan);
+        if(action==null)return super.keyPressed(key,scan,modifiers);
+        if(!pressedKeys.add(key))return true;
+        if(action==PacketType.CLOSE_REQUEST){close();return true;}
+        if(action==PacketType.SPACE_ACTION){
+            if(reels.spinning()&&!reels.complete())requestStop(action);
+            else requestPlay();
+        }else if(action==PacketType.STOP_LEFT||action==PacketType.STOP_CENTER||action==PacketType.STOP_RIGHT)
+            requestStop(action);
+        else sendAction(action);
+        return true;
+    }
+    @Override public boolean keyReleased(int key,int scan,int modifiers){
+        pressedKeys.remove(key);return true;
+    }
+    @Override public boolean mouseClicked(double mx,double my,int button){
+        if(button!=0)return false;
+        var v=SlotLayout.Viewport.fit(width,height);
+        double x=v.logicalX(mx),y=v.logicalY(my);
+        for(var control:SlotLayout.CONTROLS)if(control.rect().contains(x,y)){
+            if(requestControl(control.name())){
+                pressedControl=control.name();pressedMouse=true;
+                if(control.name().equals("LEVER"))leverPressedMs=System.currentTimeMillis();
+            }
+            return true;
+        }
+        return false;
+    }
+    @Override public boolean mouseReleased(double mx,double my,int button){
+        if(button!=0)return false;
+        pressedControl="";pressedMouse=false;return true;
+    }
+    @Override public void renderBackground(DrawContext c,int mouseX,int mouseY,float delta){}
+
+    @Override public void render(DrawContext c,int mouseX,int mouseY,float delta){
+        c.fill(0,0,width,height,OUTSIDE);
+        var vp=SlotLayout.Viewport.fit(width,height);
+        c.getMatrices().push();
+        c.getMatrices().translate(vp.x(),vp.y(),0);
+        c.getMatrices().scale((float)vp.scale(),(float)vp.scale(),1f);
+        drawPanel(c,SlotLayout.CABINET,CABINET,EDGE);
+        drawPanel(c,SlotLayout.DATA,PANEL,EDGE);
+        drawPanel(c,SlotLayout.DATA_LEFT,PANEL,STEEL);
+        drawPanel(c,SlotLayout.DATA_RIGHT,PANEL,STEEL);
+        drawDataLamp(c);
+        drawReels(c,vp);
+        drawAnnouncement(c);
+        drawStatusIndicators(c);
+        drawAddScreen(c);
+        drawCounters(c);
+        double lx=vp.logicalX(mouseX),ly=vp.logicalY(mouseY);
+        for(var control:SlotLayout.CONTROLS)drawControl(c,control,lx,ly);
+        if(hud.closeRequested())fitText(c,"離席処理中…",1040,998,2.2f,780,WHITE,true);
+        else if(!hud.error().isEmpty())fitText(c,hud.error(),1040,998,1.8f,820,WHITE,true);
+        c.getMatrices().pop();
+        countRendered(9);
+    }
+    private void drawReels(DrawContext c,SlotLayout.Viewport vp){
+        c.fill(668,297,1572,693,EDGE);
+        for(Reel reel:Reel.values()){
+            int col=reel.ordinal();
+            int x=670+315*col;
+            c.fill(x,300,x+270,690,REEL_BG);
+            var clip=vp.clip(new SlotLayout.Rect(x,300,270,390));
+            c.enableScissor(clip.x(),clip.y(),clip.x()+clip.w(),clip.y()+clip.h());
+            for(int row=-1;row<=1;row++){
+                String symbol=reels.spinning()
+                        ?reels.texturePath(reel,row)
+                        :HyperDogReelImageMapping.texturePath(reel,0,row);
+                Identifier id=Identifier.of("piri","textures/"+symbol);
+                int drawX=x+(270-SYMBOL_SIZE)/2,drawY=300+(row+1)*130+3;
+                c.getMatrices().push();
+                c.getMatrices().translate(drawX,drawY,0);
+                c.getMatrices().scale(SYMBOL_SIZE/256f,SYMBOL_SIZE/256f,1f);
+                c.drawTexture(id,0,0,0,0,256,256,256,256);
+                c.getMatrices().pop();
+            }
+            c.disableScissor();
+            c.drawBorder(x,300,270,390,STEEL);
+            if(reels.spinning()&&reels.stopIndex(reel)>=0)
+                c.fill(x,681,x+270,689,0xff54c8ad);
+        }
+    }
+    private void drawAnnouncement(DrawContext c){
+        for(int i=0;i<2;i++){
+            var r=HyperDogCabinetState.announcementRect(i);
+            drawPanel(c,r,OFF,STEEL);
+            if(hud.announcement()){
+                c.fill(r.x()+7,r.y()+6,r.x()+r.w()-7,r.y()+r.h()-6,0xffffcc6b);
+                c.drawBorder(r.x()+3,r.y()+2,r.w()-6,r.h()-4,0xffffe4a0);
+            }
+        }
+    }
+    private void drawStatusIndicators(DrawContext c){
+        var modes=HyperDogCabinetState.Lamp.values();
+        int[] colors={GOLD,PURPLE,CYAN};
+        for(int i=0;i<3;i++){
+            var r=HyperDogCabinetState.leftStatusRect(i);
+            boolean lit=hud.active(modes[i]);
+            drawPanel(c,r,lit?colors[i]:OFF,STEEL);
+            if(lit)c.fill(r.x()+6,r.y()+7,r.x()+r.w()-6,r.y()+12,0x60ffffff);
+        }
+        int count=hud.rightCount();
+        int tint=OFF;
+        String color=hud.color();
+        if(color!=null){
+            int i=Arrays.asList(COLORS).indexOf(color);
+            if(i>=0)tint=COLORS_ARGB[i];
+        }
+        for(int i=0;i<3;i++){
+            var r=HyperDogCabinetState.rightLampRect(i);
+            c.fill(r.x()-3,r.y()-3,r.x()+r.w()+3,r.y()+r.h()+3,STEEL);
+            c.fill(r.x(),r.y(),r.x()+r.w(),r.y()+r.h(),i<count?tint:OFF);
+        }
+    }
+    private void drawAddScreen(DrawContext c){
+        var r=HyperDogCabinetState.lcdRect();
+        drawPanel(c,r,0xff0a0c16,STEEL);
+        String value=hud.displayText();
+        if(!value.isEmpty()){
+            int color=value.startsWith("+")?0xff81f2c3:value.startsWith("TOTAL")?GOLD:WHITE;
+            fitText(c,value,r.x()+r.w()/2f,r.y()+47,3.2f,r.w()-22,color,true);
+        }
+    }
+    private void drawCounters(DrawContext c){
+        drawPanel(c,SlotLayout.STATUS,PANEL,STEEL);
+        for(int i=0;i<4;i++){
+            float x=690+i*198;
+            fitText(c,COUNTERS[i],x,722,1.65f,182,GOLD,false);
+            fitText(c,hud.value(COUNTER_KEYS[i]),x,755,2.85f,182,WHITE,false);
+        }
+    }
+    private void drawDataLamp(DrawContext c){
+        var data=hud.dataLamp();
+        long total=value(data,"totalGames"),current=value(data,"currentGames"),diff=value(data,"todayDifference");
+        long max=value(data,"todayMaxDifference"),at=value(data,"atCount");
+        fitText(c,"MACHINE "+hud.machineId(),38,28,1.45f,310,WHITE,false);
+        fitText(c,"DIFF GRAPH",55,57,1.75f,500,WHITE,false);
+        var graph=data!=null&&data.has("graph")?data.getAsJsonArray("graph"):new com.google.gson.JsonArray();
+        drawGraph(c,graph,55,87,825,145);
+        fitText(c,"CURRENT G",1060,43,1.55f,220,WHITE,true);
+        fitText(c,Long.toString(current),1060,76,2.3f,230,WHITE,true);
+        fitText(c,"TOTAL G",1370,43,1.55f,220,WHITE,true);
+        fitText(c,Long.toString(total),1370,76,2.3f,230,WHITE,true);
+        fitText(c,"MAX DIFF",1680,43,1.55f,220,WHITE,true);
+        fitText(c,signed(max),1680,76,2.3f,230,WHITE,true);
+        fitText(c,"AT",1370,153,1.5f,220,GOLD,true);
+        fitText(c,Long.toString(at),1370,186,2.4f,230,GOLD,true);
+        fitText(c,"DIFF",42,345,1.7f,240,WHITE,false);
+        fitText(c,signed(diff),156,391,2.4f,205,diff>=0?0xff60e6b5:WHITE,true);
+        fitText(c,"HISTORY",44,467,1.55f,230,WHITE,false);
+        if(data!=null&&data.has("history")&&data.get("history").isJsonArray()){
+            var history=data.getAsJsonArray("history");
+            for(int i=0;i<Math.min(10,history.size());i++){
+                var item=history.get(i).getAsJsonObject();
+                String type=item.has("type")?item.get("type").getAsString():"AT";
+                String games=item.has("games")?item.get("games").getAsString():"";
+                fitText(c,type,45,523+i*22,1.15f,120,GOLD,false);
+                fitText(c,games+"G",155,523+i*22,1.15f,115,WHITE,false);
+            }
+        }
+        fitText(c,"ODDS",1673,345,1.5f,215,WHITE,false);
+        fitText(c,"AT ODDS",1673,388,1.25f,215,GOLD,false);
+        fitText(c,at>0?"1/"+Math.max(1L,total/at):"---",1673,424,1.8f,190,WHITE,false);
+        fitText(c,"MAX DIFF",1673,490,1.25f,215,GOLD,false);
+        fitText(c,signed(max),1673,527,1.85f,190,WHITE,false);
+    }
+    private static long value(com.google.gson.JsonObject data,String key){
+        return data!=null&&data.has(key)&&!data.get(key).isJsonNull()?data.get(key).getAsLong():0;
+    }
+    private static String signed(long x){return x>0?"+"+x:Long.toString(x);}
+    private void drawGraph(DrawContext c,com.google.gson.JsonArray graph,int x,int y,int w,int h){
+        c.fill(x,y,x+w,y+h,0xff0b1424);
+        c.drawBorder(x,y,w,h,STEEL);
+        if(graph.size()<2)return;
+        long min=0,max=0,maxGames=0;
+        for(var e:graph){
+            var p=e.getAsJsonObject();
+            if(!p.has("difference")||!p.has("game"))continue;
+            min=Math.min(min,p.get("difference").getAsLong());
+            max=Math.max(max,p.get("difference").getAsLong());
+            maxGames=Math.max(maxGames,p.get("game").getAsLong());
+        }
+        if(maxGames==0)return;
+        double range=Math.max(1,max-min);
+        int previousX=-1,previousY=-1;
+        for(var e:graph){
+            var p=e.getAsJsonObject();
+            if(!p.has("difference")||!p.has("game"))continue;
+            int px=x+(int)Math.round(Math.max(0,Math.min(1,p.get("game").getAsDouble()/maxGames))*(w-12))+6;
+            int py=y+6+(int)Math.round((max-p.get("difference").getAsDouble())/range*(h-12));
+            if(previousX>=0){
+                int steps=Math.max(1,Math.max(Math.abs(px-previousX),Math.abs(py-previousY)));
+                for(int i=0;i<=steps;i++){
+                    int ix=previousX+(px-previousX)*i/steps;
+                    int iy=previousY+(py-previousY)*i/steps;
+                    c.fill(ix,iy,ix+2,iy+2,0xff6fe7b2);
+                }
+            }
+            previousX=px;previousY=py;
+        }
+    }
+    private void drawControl(DrawContext c,SlotLayout.Control ctrl,double mx,double my){
+        var r=ctrl.rect();
+        boolean hover=r.contains(mx,my),down=pressedMouse&&ctrl.name().equals(pressedControl);
+        int fill=down?0xff7a3040:hover?0xffdc7584:RED;
+        if(ctrl.name().equals("LEVER")){
+            long elapsed=System.currentTimeMillis()-leverPressedMs;
+            int shift=down&&elapsed<350?35:0;
+            c.fill(r.x()+55,r.y()+45+shift,r.x()+75,r.y()+r.h()-25,0xff9796a8);
+            c.fill(r.x()+27,r.y()+6+shift,r.x()+103,r.y()+73+shift,fill);
+            c.drawBorder(r.x()+27,r.y()+6+shift,76,67,STEEL);
+        }else{
+            drawPanel(c,r,fill,STEEL);
+            fitText(c,ctrl.name(),r.x()+r.w()/2f,r.y()+r.h()/2f-8,
+                    ctrl.name().length()>7?1.4f:2.0f,r.w()-12,WHITE,true);
+        }
+    }
+    private static void drawPanel(DrawContext c,SlotLayout.Rect r,int fill,int border){
+        c.fill(r.x(),r.y(),r.x()+r.w(),r.y()+r.h(),fill);
+        c.drawBorder(r.x(),r.y(),r.w(),r.h(),border);
+    }
+    /** Geometry-only fitting, also used by desktop and 4:3/ultrawide tests. */
+    public static float fitScale(int glyphPixelWidth,float base,float allowedWidth){
+        if(glyphPixelWidth<=0||base<=0||allowedWidth<=0)throw new IllegalArgumentException("fit");
+        return Math.min(base,allowedWidth/glyphPixelWidth);
+    }
+    private void fitText(DrawContext c,String text,float x,float y,float base,float maxWidth,int tint,boolean center){
+        if(text==null||text.isEmpty())return;
+        float scale=fitScale(client.textRenderer.getWidth(text),base,maxWidth);
+        c.getMatrices().push();
+        c.getMatrices().translate(center?x-client.textRenderer.getWidth(text)*scale/2:x,y,0);
+        c.getMatrices().scale(scale,scale,1);
+        c.drawTextWithShadow(client.textRenderer,text,0,0,tint);
+        c.getMatrices().pop();
+    }
+}
