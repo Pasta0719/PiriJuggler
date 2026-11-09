@@ -5,7 +5,8 @@ package jp.pirijuggler.fabric.ui;
  * One set of exact geometry is shared by the clickable cabinet GUI and the
  * world-view cabinet; both views keep visible dark margins even while lit.
  *
- * The approved outer rectangles are not moved or resized.
+ * The twin announcement frames use the post-playtest reel-side rectangles;
+ * their data-lamp and reel clearances are verified in geometry tests.
  */
 public final class HyperDogLampGeometry {
     public record Layers(SlotLayout.Rect frame, SlotLayout.Rect gasket,
@@ -13,7 +14,8 @@ public final class HyperDogLampGeometry {
 
     public static Layers announcement(int index) {
         SlotLayout.Rect r = HyperDogCabinetState.announcementRect(index);
-        // 76x64: 3px rim + 4px dark gasket + 6px dark glass around the light.
+        // 52x50 frame: 3px rim, 4px gasket, then 6px dark glass;
+        // a 26x24 emitter retains 13px of dark hardware on every side.
         return new Layers(r, inset(r, 3), inset(r, 7), inset(r, 13));
     }
 
