@@ -1,0 +1,19 @@
+name: HYPER_DOG v7 lower bound role linked sensitivity
+on:
+  push:
+    branches: [plan/original-at-machine-20261107]
+    paths:
+      - 'original-at-phases/reference/piri_explore_v7_role_factor.py'
+      - '.github/workflows/hyperdog-v7-role-floor.yml'
+  workflow_dispatch:
+jobs:
+  role-floor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'numpy>=1.26,<3' 'numba>=0.60,<0.67'
+      - run: python -u original-at-phases/reference/piri_explore_v7_role_factor.py
