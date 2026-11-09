@@ -12,7 +12,7 @@ print("HYPER_DOG_V6_SHA256",hashlib.sha256(PATH.read_bytes()).hexdigest(),flush=
 for setting in range(1,7):
     per=[]
     for rep in range(2):
-        x=simulate(setting,total,935731+setting*13571+rep*97103,p)
+        x=simulate(setting,total,20261110+setting*17993+rep*127037,p)
         i,o=x[0].sum(),x[1].sum()
         per.append({"setting":setting,"replicate":rep,"paid_games":int(x[23]),
           "return_percent":float(o/i*100),"normal_only_games":int(x[28]),

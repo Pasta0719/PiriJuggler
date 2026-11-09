@@ -178,12 +178,12 @@
       "SUPER_HIGH": 12
     },
     "single_hit_probability_multiplier_by_setting": {
-      "1": 0.146,
+      "1": 0.1451,
       "2": 0.183,
-      "3": 0.249,
-      "4": 0.283,
-      "5": 0.343,
-      "6": 0.5314
+      "3": 0.2423,
+      "4": 0.2851,
+      "5": 0.3424,
+      "6": 0.5346
     },
     "single_hit_formula": "p_single=min(0.95, setting_multiplier / base_denominator); each paid NORMAL game, independent of role other than BAR direct override",
     "role_linked_at_hit_percent": {
