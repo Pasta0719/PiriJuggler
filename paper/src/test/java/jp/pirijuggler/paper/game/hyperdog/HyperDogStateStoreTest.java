@@ -204,7 +204,7 @@ class HyperDogStateStoreTest {
             store.commit(player,session,machine,3+i,4+i,full,physical.toJson(),now+5+i);
         }
         long balance=full.credit(), in=full.totalIn(),out=full.totalOut();
-        var saved=physical.toJson(),gameSaved=full.snapshot();
+        JsonObject saved=physical.toJson(),gameSaved=full.snapshot();
         assertEquals(3,full.at().rainbowStopMask());
         db.disconnect(player,now+50,60_000);
         db.shutdown(now+60,60_000);
