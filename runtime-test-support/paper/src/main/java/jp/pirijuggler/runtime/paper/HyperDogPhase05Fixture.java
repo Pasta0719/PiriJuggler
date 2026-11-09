@@ -201,7 +201,7 @@ public final class HyperDogPhase05Fixture {
         // Only third-stop committed public awards enter the display queue.
         // The fifth upper INITIAL grants +N; the first PAID upper game shows
         // its prior five-game TOTAL before that paid game's +N, FIFO.
-        displayEvents.removeAll();
+        while(displayEvents.size()>0)displayEvents.remove(0);
         long id=(completed.size()+1L)*4L;
         if(actual.stage()==HyperDogAtGame.Stage.LOWER_INITIAL){
             addDisplay(id+1,"TOTAL",game.lowerInitialTotal());
