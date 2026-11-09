@@ -2,6 +2,8 @@
 
 Status: **NOT_STARTED — SPEC_LOCKED**
 
+**CURRENT_NUMERIC_REFERENCE / HYPER_DOG：唯一の現行数値正本は [pirijuggler_new_machine_calibrated_v7.json](reference/pirijuggler_new_machine_calibrated_v7.json)（v7）。** `PHASE_MAP.json.numeric_reference` と一致させ、抽選・配当・上乗せ・機械割はv7に従う。v5/v6は旧Phase・較正履歴専用。
+
 ## 実装対象
 - `HYPER_DOG`の設定投入・種類変更・ホール粗利運営、データランプ履歴/AT初当たり/上位・CZ・BAR・引き戻し記録と差枚集計を整合させる。既存のBIG/REGに虚偽集計しない。機種表示名は`HYPER_DOG`だが筐体には文字を置かない。
 - 第二Fabric観覧・遠隔ワールド筐体レンダラ・スマホ遠隔の状態反映。遠隔へ内部モード/次の抽選結果/設定の非公開情報を漏らさない。

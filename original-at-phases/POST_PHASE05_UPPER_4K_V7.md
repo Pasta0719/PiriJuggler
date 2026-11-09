@@ -1,5 +1,7 @@
 # HYPER_DOG 上位平均約4,000枚 / v7承認仕様（v6からの数値変更）
 
+**CURRENT_NUMERIC_REFERENCE / HYPER_DOG：唯一の現行数値正本は [pirijuggler_new_machine_calibrated_v7.json](reference/pirijuggler_new_machine_calibrated_v7.json)（v7）。** `PHASE_MAP.json.numeric_reference` と一致させ、後続Phase・実装・検証ではこのJSONを参照する。v5/v6は監査履歴専用。
+
 **対象** HYPER_DOG専用。v6の履歴と旧実装の受入証拠は保存する。Phase06–08は未開始・未公開。
 
 ## 固定して維持する仕様
@@ -26,7 +28,7 @@
 ## 計測方法と境界
 - [v7非破壊的探索](https://github.com/Pasta0719/PiriJuggler/actions/runs/42562297010)で上位平均約4,000枚を確認。
 - [通常時役重複の下限探索](https://github.com/Pasta0719/PiriJuggler/actions/runs/42562544385)と[設定別独立較正](https://github.com/Pasta0719/PiriJuggler/actions/runs/42563092486)で必要性を確認。
-- [v7独立長期機械割／上位期待枚数検証](https://github.com/Pasta0719/PiriJuggler/actions/runs/42563583430)を通し、確率上のゆらぎと役別分布を別に記録。
+- [v7独立長期機械割／上位期待枚数検証](https://github.com/Pasta0719/PiriJuggler/actions/runs/42564346003)を通し、確率上のゆらぎと役別分布を別に記録。
 - 1上位エピソードは最初の上位初期5Gから、上位CZ失敗まで。上位CZ成功の継続を含み、32G引き戻し以降は別エピソードとして集計。
 - ここでいう期待枚数は有料上位ATの払出－有効BETの合計。通常時投資・上位突入前の下位AT分を含まない。設定別機械割は全有料ゲームの実投入と払出で算出。
 - 本番遊技へは検証・Phase06–08完了前に公開しない。

@@ -2,15 +2,17 @@
 
 Status: **NOT_STARTED — SPEC_LOCKED**
 
+**CURRENT_NUMERIC_REFERENCE / HYPER_DOG：唯一の現行数値正本は [pirijuggler_new_machine_calibrated_v7.json](reference/pirijuggler_new_machine_calibrated_v7.json)（v7）。** `PHASE_MAP.json.numeric_reference` と一致させ、抽選・配当・上乗せ・機械割はv7に従う。v5/v6は旧Phase・較正履歴専用。
+
 ## 実装対象
-- v5数値正本とPaperの全乱数判定・モード遷移・上乗せ・BET/配当・連続役・特別区間の実装を自動照合。
-- 設定1〜6で長期独立シードの機械割検証。以前のv5目標値 97.0/99.3/102.5/104.8/107.4/116.0% と基準の統計的なばらつきを明記し、テスト後の都合の良い設定だけを採らない。
+- 現行v7 JSONとPaperの全乱数判定・モード遷移・上乗せ・BET/配当・連続役・特別区間の実装を自動照合。
+- 設定1〜6で長期独立シードの機械割検証。承認済み目標値 97.0/99.3/102.5/104.8/107.4/116.0% とv7長期実測値の統計的ばらつきを明記（v5は履歴比較専用）し、テスト後の都合の良い設定だけを採らない。
 - リールの全合法停止結果・通常4コマ以内・レア/BAR/赤7/虹7の強制引込み・元役払出後のAT赤7再回転・上位CZ50%・上位初期6G目TOTAL→+N・右ランプ保証・虹2000限定・BAR権利持越しと復帰を通しで実機検証。**設計判断は [IMPLEMENTATION_DECISIONS_V1.md](IMPLEMENTATION_DECISIONS_V1.md) に固定済み**。
 - 既存機種（JUGGLER/JUGGLER_GOD/JUGGLER_GOD_EXTREME/SKILL_STOP）の抽選・操作・DB・経済・管理・ワールド表示・モバイルへの回帰を検証。
 
 ## 完了条件
 1. `./gradlew test`、`./gradlew build`、必要なGitHub Actionsすべて成功。
-2. v5全役確率・6設定の長期シミュレーション結果をレポートし、許容誤差・CI・シード・有料G母数を残す。
+2. v7全役確率・6設定の長期シミュレーション結果をレポートし、許容誤差・CI・シード・有料G母数を残す。
 3. 実Paper＋Fabric本番JARでプレイし、全AT/CZ/エラー/復元/観覧/残枚数/演出の受入PASS、画像・ログ証跡あり。
 4. 既存機種の保護監査と新機種の有効化/作成/設定変更・終了をPASS。
 5. ユーザーの「実機を見て修正」のレビューで受理されるまで暫定承認演出を最終固定としない。未受理ならCOMPLETEを宣言せず修正Phaseを設ける。
