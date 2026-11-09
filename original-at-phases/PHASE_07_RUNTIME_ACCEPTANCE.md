@@ -4,7 +4,7 @@
 
 ## 確認コード・合格したCI
 
-現行受入コード基準：`937278a95aa75e6dd56dc7648336be6cf35bb552`。このコードでPhase07の実Paper再起動・Fabric 2クライアント・認証スマホHTTPの2ジョブがともに **SUCCESS**、実機側20/20 assertions PASS、v7数値正本ガードSUCCESS。製品ビルドは同一コードのCIで別途継続検証。
+現行受入コード基準：`937278a95aa75e6dd56dc7648336be6cf35bb552`。このコードでPhase07の実Paper再起動・Fabric 2クライアント・認証スマホHTTPの2ジョブがともに **SUCCESS**、実機側20/20 assertions PASS、v7数値正本ガードSUCCESS。同一コードの製品ビルドとPhase02〜06の全実Minecraft回帰も **SUCCESS**。
 
 - [Phase07 — 実Paper 2独立JVM再起動、実Fabric 2クライアント＋スマホHTTP：SUCCESS](https://github.com/Pasta0719/PiriJuggler/actions/runs/42584868687)
 - [実行証跡 — Paper再起動・SQLite・台帳](https://github.com/Pasta0719/PiriJuggler/actions/runs/42584868687/artifacts/13658801181)
@@ -19,6 +19,8 @@
 - [**2026-11-09 最新Phase07 2ジョブSUCCESS**](https://github.com/Pasta0719/PiriJuggler/actions/runs/42586575913)
 - [**観覧Minecraft 2名・認証スマホHTTP・実画面PNG**](https://github.com/Pasta0719/PiriJuggler/actions/runs/42586575913/artifacts/13658718605)
 - [**独立Paper JVM 2回起動・SQLite中断復帰**](https://github.com/Pasta0719/PiriJuggler/actions/runs/42586575913/artifacts/13659486830)
+- [製品ビルド・全体テストSUCCESS](https://github.com/Pasta0719/PiriJuggler/actions/runs/42586583412)
+- Phase02 [SUCCESS](https://github.com/Pasta0719/PiriJuggler/actions/runs/42586576087) / Phase03 [SUCCESS](https://github.com/Pasta0719/PiriJuggler/actions/runs/42586575906) / Phase04 [SUCCESS](https://github.com/Pasta0719/PiriJuggler/actions/runs/42586575798) / Phase05 [SUCCESS](https://github.com/Pasta0719/PiriJuggler/actions/runs/42586575852) / Phase06 [SUCCESS](https://github.com/Pasta0719/PiriJuggler/actions/runs/42586575718)
 - [v7数値参照ガードSUCCESS](https://github.com/Pasta0719/PiriJuggler/actions/runs/42586583401)
 - Minecraft実画面の目視監査：観覧側・操作側それぞれのPNGで、カメラが正面を向き**HYPER_DOGと旧JUGGLERの2筐体が実描画される**ことを確認。従来のフレーム外撮影や、同一座標のプレイヤーモデルによる遮蔽を解消。
 - 実Fabric描画指標：プレイヤーFPS **27.43**・筐体描画処理 **1.75ms/frame**、観覧者FPS **27.93**・筐体描画処理 **1.77ms/frame**（CIソフトウェアレンダリング環境での観測値であり、一般端末FPSの保証ではない）。
