@@ -50,6 +50,10 @@ public final class HyperDogFullGame {
         if(at==null)return normal.lever().role().name();
         return at.lever().role().name();
     }
+    String leverForcedNormal(HyperDogNormalGame.Role role){
+        if(at!=null)throw new IllegalStateException("normal only");
+        return normal.leverForced(role).role().name();
+    }
     /** Internal testing seam. No role override is available on client APIs. */
     String leverForced(HyperDogAtGame.Role role){
         if(at==null)throw new IllegalStateException("AT only");
