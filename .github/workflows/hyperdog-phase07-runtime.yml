@@ -60,7 +60,7 @@ jobs:
             --tests 'jp.pirijuggler.fabric.ui.HyperDogAudioTest' \
             --tests 'jp.pirijuggler.fabric.ui.HallAudioTest' \
             --tests 'jp.pirijuggler.fabric.ui.HyperDogCabinetStateTest' \
-            --console=plain
+            :fabric:remapJar --console=plain
       - name: Build isolated real Paper acceptance plugin
         run: |
           ./gradlew --build-cache -PruntimeAcceptance=true \
