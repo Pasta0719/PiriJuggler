@@ -119,29 +119,38 @@ public final class WorldCabinetRenderer {
             localText(consumers,client.textRenderer,basis,camera,.31,dataY-.018,combined,.00285f,UiConstants.color("DISPLAY_WHITE"),true);
         }
 
-        // Cabinet face. JUGGLER_GOD uses layered gold bands instead of a flat color.
+        // HYPER_DOG has a wider right shoulder to house the full-size flower.
+        // The existing machine families retain their unchanged world geometry.
         boolean jugglerGod=isJugglerGod(state.machineType());
-        quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH,CabinetPlacement.HEIGHT,0,
-                hyperDog?hyperEdge:jugglerGod?UiConstants.color("CABINET_EDGE_LIGHT"):UiConstants.color("CABINET_EDGE"),0,0,1,1);
-        if(jugglerGod){
-            double innerW=CabinetPlacement.WIDTH-.015,innerH=CabinetPlacement.HEIGHT-.015;
-            double bandH=innerH/5.0;
-            int[] gold={
-                    UiConstants.color("JUGGLER_GOD_GOLD_TOP"),
-                    UiConstants.color("JUGGLER_GOD_GOLD_MID"),
-                    UiConstants.color("JUGGLER_GOD_GOLD_MID"),
-                    UiConstants.color("JUGGLER_GOD_GOLD_LOW"),
-                    UiConstants.color("JUGGLER_GOD_GOLD_BOTTOM")
-            };
-            for(int i=0;i<5;i++){
-                double cy=innerH/2.0-bandH/2.0-i*bandH;
-                quad(consumers,WHITE,basis,camera,0,cy,innerW,bandH+.001,.0006,gold[i],0,0,1,1);
-            }
-            quad(consumers,WHITE,basis,camera,0,innerH/2.0-.030,innerW-.030,.015,.0008,
-                    UiConstants.color("JUGGLER_GOD_GOLD_HIGHLIGHT"),0,0,1,1);
+        if(hyperDog){
+            SlotLayout.Rect body=jp.pirijuggler.fabric.ui.HyperDogCabinetState.cabinetRect();
+            rect(consumers,WHITE,basis,camera,body.x(),body.y(),body.w(),body.h(),0,
+                    hyperEdge,0,0,1,1);
+            rect(consumers,WHITE,basis,camera,body.x()+4,body.y()+4,body.w()-8,body.h()-8,.0006,
+                    hyperCabinet,0,0,1,1);
         }else{
-            quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.015,CabinetPlacement.HEIGHT-.015,.0006,
-                    hyperDog?hyperCabinet:UiConstants.color("SKILL_STOP".equals(state.machineType())?"SKILL_STOP_CABINET_BG":"CABINET_BG"),0,0,1,1);
+            quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH,CabinetPlacement.HEIGHT,0,
+                    jugglerGod?UiConstants.color("CABINET_EDGE_LIGHT"):UiConstants.color("CABINET_EDGE"),0,0,1,1);
+            if(jugglerGod){
+                double innerW=CabinetPlacement.WIDTH-.015,innerH=CabinetPlacement.HEIGHT-.015;
+                double bandH=innerH/5.0;
+                int[] gold={
+                        UiConstants.color("JUGGLER_GOD_GOLD_TOP"),
+                        UiConstants.color("JUGGLER_GOD_GOLD_MID"),
+                        UiConstants.color("JUGGLER_GOD_GOLD_MID"),
+                        UiConstants.color("JUGGLER_GOD_GOLD_LOW"),
+                        UiConstants.color("JUGGLER_GOD_GOLD_BOTTOM")
+                };
+                for(int i=0;i<5;i++){
+                    double cy=innerH/2.0-bandH/2.0-i*bandH;
+                    quad(consumers,WHITE,basis,camera,0,cy,innerW,bandH+.001,.0006,gold[i],0,0,1,1);
+                }
+                quad(consumers,WHITE,basis,camera,0,innerH/2.0-.030,innerW-.030,.015,.0008,
+                        UiConstants.color("JUGGLER_GOD_GOLD_HIGHLIGHT"),0,0,1,1);
+            }else{
+                quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.015,CabinetPlacement.HEIGHT-.015,.0006,
+                        UiConstants.color("SKILL_STOP".equals(state.machineType())?"SKILL_STOP_CABINET_BG":"CABINET_BG"),0,0,1,1);
+            }
         }
 
         // SlotScreen reel separator: (670,300)-(1570,690), mapped inside CABINET.
@@ -193,9 +202,11 @@ public final class WorldCabinetRenderer {
             // Mirror HYPER_DOG's *two* upper announcement lamps, three left
             // status windows, three right expectation lamps and its dark LCD.
             // World spectators receive public state only, never hidden lottery data.
-            for(int i=0;i<2;i++)
-                drawHyperDogLamp(consumers,basis,camera,
-                        HyperDogLampGeometry.announcement(i),state.lampVisible(now),0xffffcc6b);
+            for(int i=0;i<2;i++){
+                var lamp=HyperDogLampGeometry.announcement(i);
+                drawHyperDogLamp(consumers,basis,camera,lamp,state.lampVisible(now),0xff6b2c49);
+                drawWorldFlower(consumers,basis,camera,lamp.emitter(),state.lampVisible(now));
+            }
             for(int i=0;i<3;i++){
                 drawHyperDogLamp(consumers,basis,camera,
                         HyperDogLampGeometry.left(i),false,hyperOff);
@@ -274,6 +285,35 @@ public final class WorldCabinetRenderer {
             int bottom=Math.min(e.y()+e.h()-1,top+Math.max(1,e.h()/7));
             if(e.w()>pad*2&&bottom>top)
                 rect(c,WHITE,b,cam,e.x()+pad,top,e.w()-pad*2,bottom-top,.0032,0x55ffffff,0,0,1,1);
+        }
+    }
+
+    /** Low-overdraw five-petal flower: same 70px lens and colors as the GUI.
+     *  Ellipses use only seven horizontal strips, avoiding a high-cost mesh. */
+    private static void drawWorldFlower(VertexConsumerProvider c,CabinetPlacement.Basis b,
+                                        Vec3d cam,SlotLayout.Rect lens,boolean lit){
+        double cx=lens.x()+lens.w()/2.0,cy=lens.y()+lens.h()/2.0;
+        int petal=lit?0xffff5b88:0xff4b3041;
+        int glint=lit?0xffffb1c7:0xff594052;
+        for(int i=0;i<5;i++){
+            double a=Math.toRadians(-90+i*72);
+            double px=cx+Math.cos(a)*15, py=cy+Math.sin(a)*15;
+            drawWorldEllipse(c,b,cam,px,py,16,18,.0033,petal);
+            drawWorldEllipse(c,b,cam,px-1,py-2,6,8,.0034,glint);
+        }
+        drawWorldEllipse(c,b,cam,cx,cy,12,12,.0035,lit?0xffffd977:0xff62503b);
+        drawWorldEllipse(c,b,cam,cx,cy,5,5,.0036,lit?0xfffff0bb:0xff80704b);
+    }
+
+    private static void drawWorldEllipse(VertexConsumerProvider c,CabinetPlacement.Basis b,
+                                         Vec3d cam,double cx,double cy,double rx,double ry,
+                                         double depth,int color){
+        // Seven strips are enough for a recognizable blossom at cabinet scale.
+        for(int i=0;i<7;i++){
+            double y0=cy-ry+2*ry*i/7.0,y1=cy-ry+2*ry*(i+1)/7.0;
+            double yn=(y0+y1-2*cy)/(2*ry);
+            double half=rx*Math.sqrt(Math.max(0,1-yn*yn));
+            rect(c,WHITE,b,cam,cx-half,y0,half*2,y1-y0,depth,color,0,0,1,1);
         }
     }
 
