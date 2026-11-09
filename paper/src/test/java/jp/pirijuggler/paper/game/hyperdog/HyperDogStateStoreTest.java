@@ -140,7 +140,9 @@ class HyperDogStateStoreTest {
         assertEquals("SEATED_READY",owned.text("game_state"));
         JsonObject checkpoint=full.snapshot();
 
-        db.disconnect(player,now+3,1000);
+        assertEquals("USER_CLOSE_GRACE",db.closeSession(player,session,machine,3,now+3,1000));
+        assertEquals(Long.MAX_VALUE,db.state().session(player).number("lock_expires_at"),
+                "explicit close must not release a 32G comeback");
         db.expire(now+2000);
         assertTrue(db.state().busy(machine),"grace expiry must not evict comeback rights");
         assertEquals(checkpoint,store.load(player,session,machine).game().snapshot());
