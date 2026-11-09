@@ -157,9 +157,9 @@ class HyperDogNormalGameTest {
                 var model=HyperDogNormalGame.class.getClassLoader().getResource("hyperdog/v5.json");
                 assertNotNull(model);
                 classes.add(Path.of(model.toURI()).getParent().getParent().toString());
-                String java=Path.of(System.getProperty("java.home"),"bin",
+                String javaExecutable=Path.of(System.getProperty("java.home"),"bin",
                         System.getProperty("os.name").startsWith("Windows")?"java.exe":"java").toString();
-                Process child=new ProcessBuilder(java,"-cp",
+                Process child=new ProcessBuilder(javaExecutable,"-cp",
                         String.join(System.getProperty("path.separator"),classes),
                         HyperDogRestartProbe.class.getName(),input.toString(),output.toString())
                         .redirectErrorStream(true).start();
