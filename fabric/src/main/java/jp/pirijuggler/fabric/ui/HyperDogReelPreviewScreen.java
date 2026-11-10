@@ -106,13 +106,13 @@ public class HyperDogReelPreviewScreen extends Screen {
                         ?reels.texturePath(reel,row)
                         :HyperDogReelImageMapping.texturePath(reel,0,row);
                 Identifier id=Identifier.of("piri","textures/"+path);
-                // DrawTexture's region size is SOURCE pixels in 1.21. Render the
-                // entire 256x256 supplied image and scale it to the 126px cell.
-                // Passing SYMBOL as the source region cropped off the long body.
+                // DrawTexture's region size is SOURCE pixels. Read the actual PNG
+                // dimensions to avoid cropping 320px dog artwork at 256px.
+                int texturePixels=HyperDogTextureDimensions.dimension(path);
                 context.getMatrices().push();
                 context.getMatrices().translate(REEL_X[r],ROW_Y[row+1],0);
-                context.getMatrices().scale(SYMBOL/256f,SYMBOL/256f,1f);
-                context.drawTexture(id,0,0,0,0,256,256,256,256);
+                context.getMatrices().scale(SYMBOL/(float)texturePixels,SYMBOL/(float)texturePixels,1f);
+                context.drawTexture(id,0,0,0,0,texturePixels,texturePixels,texturePixels,texturePixels);
                 context.getMatrices().pop();
                 renderedSymbols++;
             }
