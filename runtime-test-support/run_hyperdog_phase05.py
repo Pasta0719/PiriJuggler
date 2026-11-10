@@ -95,7 +95,7 @@ try:
     cl=(OUT/"client.log").open("w",encoding="utf-8");handles.append(cl)
     client=subprocess.Popen(GRADLE+["-PruntimeAcceptance=true",
         "-PruntimeScenario=hyperdog05-main",f"-PruntimeRun={RUN}",
-        "-PruntimeEvidencePhase=HYPER_DOG_PHASE_05",":runtime-test-client:runClient","--console=plain"],
+        "-PruntimeEvidencePhase=HYPER_DOG_PHASE_05",":runtime-test-client:runClient","--console=plain","--no-daemon"],
         cwd=ROOT,stdout=cl,stderr=subprocess.STDOUT,creationflags=FLAGS)
     wait("real Fabric connection",lambda:load(client_result).get("handshake") is True and
          load(server_result).get("ready") is True,150)
