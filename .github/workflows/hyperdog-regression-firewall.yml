@@ -1,0 +1,80 @@
+name: HYPER_DOG regression firewall
+
+on:
+  push:
+    branches:
+      - plan/original-at-machine-20261107
+      - 'proof/hyperdog-regression-*'
+  pull_request:
+    branches:
+      - plan/original-at-machine-20261107
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hyperdog-regression-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cabinet-and-legacy-guard:
+    name: Cabinet geometry, legacy audio and approved art
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prove that modified legacy blobs are detected and current blobs are unchanged
+        run: python original-at-phases/check_hyperdog_regression_contract.py --self-test
+      - name: Check shipping HYPER_DOG symbol-art contract
+        run: python original-at-phases/validate_symbol_assets.py
+      - name: Targeted geometry, world width, sound and symbol regression tests
+        run: |
+          chmod +x gradlew
+          ./gradlew :fabric:test --console=plain \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogLayoutRegressionTest' \
+            --tests 'jp.pirijuggler.fabric.render.CabinetPlacementTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HallAudioTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogAudioTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogSymbolAssetsTest'
+      - name: Upload exact failing/successful test result XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hyperdog-regression-fabric-tests
+          path: fabric/build/test-results/test/**
+          if-no-files-found: warn
+
+  entire-project-regression:
+    name: Test all existing machine families
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Run common, Paper and Fabric existing test suites
+        run: |
+          chmod +x gradlew
+          ./gradlew test --console=plain
+      - name: Upload all JUnit test XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hyperdog-regression-all-modules
+          path: |
+            common/build/test-results/**
+            paper/build/test-results/**
+            fabric/build/test-results/**
+          if-no-files-found: warn
