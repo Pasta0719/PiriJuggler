@@ -33,6 +33,39 @@ class CabinetPlacementTest {
         assertEquals(8.5, up.center().z(), 1e-12);
     }
 
+    @Test void hyperDogExteriorExactlyFitsOneBlockWithFullSizeGuiFlowers(){
+        // Previous exterior mapped a 1415px GUI face onto a 1340px physical
+        // scale: 1.05597 blocks. Every facing must now fit 1.00000 block.
+        for(String facing:new String[]{"NORTH","SOUTH","EAST","WEST","UP","DOWN"}){
+            CabinetPlacement.Basis legacy=CabinetPlacement.basis(12,70,34,facing);
+            CabinetPlacement.Basis fitted=CabinetPlacement.fitWideFaceToBlock(legacy,1415.0,1340.0);
+            assertEquals(1340.0/1415.0,length(fitted.right()),1e-12,facing);
+            // Equivalent to mapping the original (290..1705) GUI rectangle
+            // with CAB_X=290 and CAB_W=1340, before the fitted basis.
+            double left=-.5;
+            double right=1415.0/1340.0-.5;
+            var worldLeft=CabinetPlacement.point(fitted,left,0.0);
+            var worldRight=CabinetPlacement.point(fitted,right,0.0);
+            assertEquals(1.0,length(new CabinetPlacement.Vec(
+                    worldRight.x()-worldLeft.x(),
+                    worldRight.y()-worldLeft.y(),
+                    worldRight.z()-worldLeft.z())),1e-12,facing);
+            var mid=new CabinetPlacement.Vec(
+                    (worldLeft.x()+worldRight.x())/2,
+                    (worldLeft.y()+worldRight.y())/2,
+                    (worldLeft.z()+worldRight.z())/2);
+            assertEquals(0.0,length(new CabinetPlacement.Vec(
+                    mid.x()-legacy.center().x(),
+                    mid.y()-legacy.center().y(),
+                    mid.z()-legacy.center().z())),1e-12,facing);
+            assertEquals(1.0,length(legacy.right()),1e-12,
+                    "ordinary machines must not be resized");
+        }
+        assertThrows(IllegalArgumentException.class,()->
+                CabinetPlacement.fitWideFaceToBlock(
+                        CabinetPlacement.basis(0,64,0,"NORTH"),0,1340));
+    }
+
     private static double length(CabinetPlacement.Vec v) { return Math.sqrt(dot(v,v)); }
     private static double dot(CabinetPlacement.Vec a, CabinetPlacement.Vec b) {
         return a.x()*b.x()+a.y()*b.y()+a.z()*b.z();
