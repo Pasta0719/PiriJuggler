@@ -119,8 +119,13 @@ public final class WorldCabinetRenderer {
             localText(consumers,client.textRenderer,basis,camera,.31,dataY-.018,combined,.00285f,UiConstants.color("DISPLAY_WHITE"),true);
         }
 
-        // HYPER_DOG has a wider right shoulder to house the full-size flower.
-        // The existing machine families retain their unchanged world geometry.
+        // HYPER_DOG keeps the enlarged 104px flower layout in its GUI,
+        // but must not exceed the same physical one-block width as JUGGLER.
+        // Apply the horizontal fit only after drawing the unchanged data lamp.
+        // The outer cabinet and every inner piece use the same fitted basis.
+        if(hyperDog)
+            basis=CabinetPlacement.fitWideFaceToBlock(
+                    basis,jp.pirijuggler.fabric.ui.HyperDogCabinetState.cabinetRect().w(),CAB_W);
         boolean jugglerGod=isJugglerGod(state.machineType());
         if(hyperDog){
             SlotLayout.Rect body=jp.pirijuggler.fabric.ui.HyperDogCabinetState.cabinetRect();
