@@ -1,7 +1,7 @@
 # HYPER_DOG dog symbols — JAR/source synchronization record
 
 This branch tracks the source-side implementation of the mixed-size symbol renderer.
-The latest user-delivered Fabric JAR was patched from an existing compiled JAR, not rebuilt from this branch. **Do not treat this branch as reproducible release source until the four PNG assets below and all preceding JAR-only changes are reconciled.**
+The latest user-delivered Fabric JAR was patched from an existing compiled JAR, not rebuilt from this branch. **The four approved PNG assets are now committed byte-for-byte. Do not treat this branch as a fully reproducible release until the other preceding JAR-only changes are reconciled.**
 
 ## Exact 320x320 RGBA image assets required
 
@@ -22,9 +22,13 @@ The Fabric JAR supplied in the conversation after replay restoration has SHA-256
 - No Paper changes required for the replay symbol replacement.
 - The three other 256px symbols remain unchanged.
 
+## Asset reconciliation completed
+
+- All four exact 320x320 PNGs are committed at the resource paths listed above.
+- `HyperDogSymbolAssetsTest` now expects 320x320 for the four dog symbols and 256x256 for the three unchanged symbols; it also verifies the four PNG SHA-256 hashes.
+- The mixed-size Fabric renderer code was committed in the preceding branch commits.
+
 ## Remaining source reconciliation
 
-1. Add the four exact PNGs listed above to the resource tree.
-2. Update tests that currently assert every HYPER_DOG symbol is 256px.
-3. Reconcile additional JAR-only fixes from earlier ChatGPT sessions against the actual Git source before merging.
-4. Build the Fabric artifact from source and run Minecraft runtime acceptance.
+1. Reconcile additional JAR-only fixes from earlier ChatGPT sessions against the actual Git source before merging.
+2. Build the Fabric artifact from source and run Minecraft runtime acceptance.

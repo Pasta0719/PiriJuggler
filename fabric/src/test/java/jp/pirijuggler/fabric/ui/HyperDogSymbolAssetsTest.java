@@ -6,6 +6,10 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
+import java.util.HexFormat;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Checks that all seven approved symbols ship in the actual Fabric resource set. */
@@ -39,7 +43,12 @@ class HyperDogSymbolAssetsTest {
             assertEquals(normal,HyperDogCabinetScreen.symbolRenderSize("gui/original_at/symbols/"+name+".png"));
     }
 
-    @Test void allApprovedSymbolsAreTransparent256PixelPngs() throws IOException {
+    @Test void allApprovedSymbolsAreTransparentPngsWithExactDogSources() throws IOException, NoSuchAlgorithmException {
+        Map<String,String> expectedHashes=Map.of(
+                "replay","8507303cbeeaf4017a132687aaffc221dd8d886468ad13a6578b1d7820816266",
+                "red7","ccdc512b7300fd5812bbdb1e3d5fbeca21f6d47628324b185c21657b94a5fabf",
+                "rainbow7","0195c47805400a2e715267527f24e30fc788cf2a1d8ac0c1c8bc59c95e734ced",
+                "bar","a8e9d0fb31eaa6b8748fb7f3c3ba1d4dd833faf776be759c173d816ffa0d9ac0");
         List<String> names=List.of("replay","red7","rainbow7","bar","grape","cherry","watermelon");
         for(String name:names) {
             String path="assets/piri/textures/gui/original_at/symbols/"+name+".png";
@@ -47,8 +56,15 @@ class HyperDogSymbolAssetsTest {
             assertNotNull(url,"Missing Fabric symbol asset: "+path);
             BufferedImage png=ImageIO.read(url);
             assertNotNull(png,"Corrupt PNG: "+path);
-            assertEquals(256,png.getWidth(),name);
-            assertEquals(256,png.getHeight(),name);
+            int expectedDimension=expectedHashes.containsKey(name)?320:256;
+            assertEquals(expectedDimension,png.getWidth(),name);
+            assertEquals(expectedDimension,png.getHeight(),name);
+            if(expectedHashes.containsKey(name)){
+                byte[] bytes;
+                try(var stream=url.openStream()){bytes=stream.readAllBytes();}
+                String actual=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
+                assertEquals(expectedHashes.get(name),actual,name+" must be byte-identical to the approved source");
+            }
             assertTrue(png.getColorModel().hasAlpha(),name+" must preserve transparency");
             assertEquals(0,(png.getRGB(0,0)>>>24)&255,name+" must have transparent background");
         }
