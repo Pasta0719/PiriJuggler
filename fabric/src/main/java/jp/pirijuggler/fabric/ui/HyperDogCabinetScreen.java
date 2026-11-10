@@ -175,8 +175,9 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
                 int drawX=x+(270-size)/2,drawY=300+(row+1)*130+(130-size)/2;
                 c.getMatrices().push();
                 c.getMatrices().translate(drawX,drawY,0);
-                c.getMatrices().scale(size/256f,size/256f,1f);
-                c.drawTexture(id,0,0,0,0,256,256,256,256);
+                int texturePixels=HyperDogTextureDimensions.dimension(symbol);
+                c.getMatrices().scale(size/(float)texturePixels,size/(float)texturePixels,1f);
+                c.drawTexture(id,0,0,0,0,texturePixels,texturePixels,texturePixels,texturePixels);
                 c.getMatrices().pop();
             }
             c.disableScissor();
