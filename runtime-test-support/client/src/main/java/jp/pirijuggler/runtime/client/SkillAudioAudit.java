@@ -16,7 +16,7 @@ public final class SkillAudioAudit {
             var event=new JsonObject();
             event.addProperty("sound",sound.getId().toString());
             event.addProperty("category",sound.getCategory().name());
-            event.addProperty("volume",sound.getVolume());
+            // SoundManager.play is intercepted before SoundInstance resolves its Sound.\n            // AbstractSoundInstance.getVolume() dereferences an unset sound here;\n            // reading it would CRASH Minecraft. Test master volume and decoded PCM separately.
             event.addProperty("relative",sound.isRelative());
             hyperDogEvents.add(event);
         }
