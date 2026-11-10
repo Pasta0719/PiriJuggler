@@ -12,6 +12,31 @@ class HallAudioTest {
         assertTrue(HallAudio.withinRadius(0,0,12,HallAudio.BGM_RADIUS));
         assertFalse(HallAudio.withinRadius(0,0,Math.nextUp(12.0),HallAudio.BGM_RADIUS));
     }
+    @Test void everyOriginalSoundActionHasAnAudibleVanillaFallbackWhenBasicOggsAreAbsent(){
+        // The published Fabric artifact contains only seven GOD-specific user
+        // OGGs. Original JUGGLER, SKILL_STOP and HYPER_DOG must never become
+        // completely silent just because their optional OGGs were not shipped.
+        for(String name:java.util.List.of("notice","notice_strong","tenpai",
+                "bet","lever","stop","payout","error","bonus_start","bonus_end",
+                "big_bgm","reg_bgm","god_freeze")){
+            var event=PiriSounds.fallbackSoundId(name);
+            assertNotNull(event,name);
+            assertEquals("minecraft",event.getNamespace(),name);
+        }
+        for(String base:java.util.List.of("notice","notice_strong","tenpai",
+                "bet","lever","stop","payout","error","bonus_start","bonus_end",
+                "big_bgm","reg_bgm","god_freeze",
+                "god_stop_1","god_stop_2","god_stop_3",
+                "god_bonus_start","god_bonus_end","god_big_bgm"))
+            assertNotNull(PiriSounds.fallbackSoundId("juggler_god_"+base),
+                    "missing user OGG must have a sound for "+base);
+        assertEquals("minecraft:block.lever.click",
+                PiriSounds.fallbackSoundId("lever").toString());
+        assertEquals("minecraft:music_disc.cat",
+                PiriSounds.fallbackSoundId("big_bgm").toString());
+        assertNull(PiriSounds.fallbackSoundId("not_a_registered_sound"));
+    }
+
     @Test void perMachineSoundSourcesMatchOwnerResolution() {
         java.util.function.Predicate<String> all=name->true;
         java.util.function.Predicate<String> none=name->false;
