@@ -90,7 +90,7 @@ try:
     CLIENT.mkdir(parents=True,exist_ok=True)
     (CLIENT/"options.txt").write_text(
         "version:3953\nlang:en_us\nrenderDistance:2\nsimulationDistance:5\nmaxFps:30\n"
-        "pauseOnLostFocus:false\nsoundCategory_master:1.0\nskipMultiplayerWarning:true\n"
+        "pauseOnLostFocus:false\nsoundCategory_master:1.0\nsoundCategory_music:0.0\nsoundCategory_record:0.0\nsoundCategory_ambient:0.0\nsoundCategory_weather:0.0\nsoundCategory_block:0.0\nsoundCategory_hostile:0.0\nsoundCategory_neutral:0.0\nsoundCategory_player:0.0\nskipMultiplayerWarning:true\n"
         "onboardAccessibility:false\n",encoding="utf-8")
     cl=(OUT/"client.log").open("w",encoding="utf-8");handles.append(cl)
     client=subprocess.Popen(GRADLE+["-PruntimeAcceptance=true",
@@ -114,6 +114,8 @@ try:
     # calls through the test-only mixin. This proves audio dispatch, NOT speakers.
     check("audio not disabled in Minecraft options",
           "soundCategory_master:1.0" in (CLIENT/"options.txt").read_text())
+    check("ambient Minecraft music is muted while PiriJuggler MASTER effects remain on",
+          "soundCategory_music:0.0" in (CLIENT/"options.txt").read_text())
     audio=c.get("soundManagerPlayCalls",[])
     ids=[e["sound"] for e in audio if e.get("category")=="MASTER"]
     check("actual SoundManager dispatched BET/STOP fallback",
