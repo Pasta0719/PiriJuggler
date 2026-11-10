@@ -117,7 +117,7 @@ jobs:
       - name: Set up isolated real OpenAL/PulseAudio output for Minecraft
         run: |
           sudo apt-get update
-          sudo apt-get install -y pulseaudio pulseaudio-utils ffmpeg libopenal1
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends pulseaudio pulseaudio-utils libopenal1
           pulseaudio --start --exit-idle-time=-1
           pactl load-module module-null-sink sink_name=hyperdog_test format=s16le rate=44100 channels=2
           pactl set-default-sink hyperdog_test
