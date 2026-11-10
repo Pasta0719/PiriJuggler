@@ -280,6 +280,7 @@ public final class HyperDogPhase05Probe {
         j.add("displays",new Gson().toJsonTree(observedDisplays));
         j.add("screenTypes",new Gson().toJsonTree(screenNames));
         j.add("images",new Gson().toJsonTree(screenshots));
+        j.add("soundManagerPlayCalls",SkillAudioAudit.hyperDogEvents());
         j.add("textures",new Gson().toJsonTree(loadedTextures));
         j.add("rounds",rounds);
         j.addProperty("error",error);
