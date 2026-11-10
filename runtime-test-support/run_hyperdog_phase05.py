@@ -90,12 +90,12 @@ try:
     CLIENT.mkdir(parents=True,exist_ok=True)
     (CLIENT/"options.txt").write_text(
         "version:3953\nlang:en_us\nrenderDistance:2\nsimulationDistance:5\nmaxFps:30\n"
-        "pauseOnLostFocus:false\nsoundCategory_master:0.0\nskipMultiplayerWarning:true\n"
+        "pauseOnLostFocus:false\nsoundCategory_master:1.0\nsoundCategory_music:0.0\nsoundCategory_record:0.0\nsoundCategory_ambient:0.0\nsoundCategory_weather:0.0\nsoundCategory_block:0.0\nsoundCategory_hostile:0.0\nsoundCategory_neutral:0.0\nsoundCategory_player:0.0\nskipMultiplayerWarning:true\n"
         "onboardAccessibility:false\n",encoding="utf-8")
     cl=(OUT/"client.log").open("w",encoding="utf-8");handles.append(cl)
     client=subprocess.Popen(GRADLE+["-PruntimeAcceptance=true",
         "-PruntimeScenario=hyperdog05-main",f"-PruntimeRun={RUN}",
-        "-PruntimeEvidencePhase=HYPER_DOG_PHASE_05",":runtime-test-client:runClient","--console=plain"],
+        "-PruntimeEvidencePhase=HYPER_DOG_PHASE_05",":runtime-test-client:runClient","--console=plain","--no-daemon"],
         cwd=ROOT,stdout=cl,stderr=subprocess.STDOUT,creationflags=FLAGS)
     wait("real Fabric connection",lambda:load(client_result).get("handshake") is True and
          load(server_result).get("ready") is True,150)
@@ -109,6 +109,29 @@ try:
     p=load(server_result);c=load(client_result)
     rows=p["rounds"];n=len(rows)
     check("real Paper/Fabric HYPER_DOG 70+ spins",n>=70 and c["completedRounds"]==n)
+    # The former headless test set master volume to 0 and could never establish
+    # that it even requested an audible signal. Observe real SoundManager.play
+    # calls through the test-only mixin. This proves audio dispatch, NOT speakers.
+    check("audio not disabled in Minecraft options",
+          "soundCategory_master:1.0" in (CLIENT/"options.txt").read_text())
+    check("ambient Minecraft music is muted while PiriJuggler MASTER effects remain on",
+          "soundCategory_music:0.0" in (CLIENT/"options.txt").read_text())
+    audio=c.get("soundManagerPlayCalls",[])
+    ids=[e["sound"] for e in audio if e.get("category")=="MASTER"]
+    check("actual SoundManager dispatched BET/STOP fallback",
+          ids.count("minecraft:block.note_block.hat")>=n)
+    check("actual SoundManager dispatched LEVER fallback",
+          ids.count("minecraft:block.lever.click")>=n)
+    manifest["audioDispatch"]={
+        "masterSoundSetting":1.0,
+        "masterEventCount":len(ids),
+        "lever":ids.count("minecraft:block.lever.click"),
+        "betOrStop":ids.count("minecraft:block.note_block.hat"),
+        "notice":ids.count("minecraft:block.note_block.chime"),
+        "noticeStrong":ids.count("minecraft:entity.player.levelup"),
+        "payout":ids.count("minecraft:entity.experience_orb.pickup"),
+        "proofLevel":"SoundManager.play dispatched, not acoustic waveform",
+    }
     check("physical LEVER exactly once per spin",p["acceptedLevers"]==n)
     check("all client BET/LEVER requests acknowledged",
           c["betRequests"]==p["acceptedBets"] and c["leverRequests"]==p["acceptedLevers"])
