@@ -114,8 +114,31 @@ jobs:
       - name: Obtain verified Paper 1.21
         shell: pwsh
         run: ./runtime-test-support/ensure-paper-1.21-130.ps1
-      - name: Actual Minecraft 95-game input and positive-volume SoundManager dispatch
-        run: xvfb-run -a -s "-screen 0 1366x900x24" python runtime-test-support/run_hyperdog_phase05.py
+      - name: Set up isolated real OpenAL/PulseAudio output for Minecraft
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pulseaudio pulseaudio-utils ffmpeg libopenal1
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=hyperdog_test format=s16le rate=44100 channels=2
+          pactl set-default-sink hyperdog_test
+          pactl info
+          pactl list short sinks
+      - name: Actual Minecraft 95-game input and recorded audio waveform acceptance
+        env:
+          ALSOFT_DRIVERS: pulse
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime-evidence/HYPER_DOG_PHASE_05
+          RAW=runtime-evidence/HYPER_DOG_PHASE_05/minecraft-audio-raw.pcm
+          parec --device=hyperdog_test.monitor --format=s16le --rate=44100 --channels=2 --raw > "$RAW" &
+          CAPTURE=$!
+          trap 'kill "$CAPTURE" 2>/dev/null || true' EXIT
+          xvfb-run -a -s "-screen 0 1366x900x24" python runtime-test-support/run_hyperdog_phase05.py
+          kill "$CAPTURE" 2>/dev/null || true
+          wait "$CAPTURE" || true
+          python runtime-test-support/verify_hyperdog_recorded_audio.py "$RAW"
+          rm "$RAW"
       - name: Publish explicit acceptance result
         if: always()
         run: python runtime-test-support/hyperdog_acceptance_diagnostics.py summarize HYPER_DOG_PHASE_05 "$GITHUB_STEP_SUMMARY"
