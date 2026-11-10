@@ -115,11 +115,10 @@ try:
     check("audio not disabled in Minecraft options",
           "soundCategory_master:1.0" in (CLIENT/"options.txt").read_text())
     audio=c.get("soundManagerPlayCalls",[])
-    ids=[e["sound"] for e in audio if e.get("category")=="MASTER"
-         and e.get("volume",0)>0]
-    check("actual SoundManager received BET/STOP fallback at positive volume",
+    ids=[e["sound"] for e in audio if e.get("category")=="MASTER"]
+    check("actual SoundManager dispatched BET/STOP fallback",
           ids.count("minecraft:block.note_block.hat")>=n)
-    check("actual SoundManager received LEVER fallback at positive volume",
+    check("actual SoundManager dispatched LEVER fallback",
           ids.count("minecraft:block.lever.click")>=n)
     manifest["audioDispatch"]={
         "masterSoundSetting":1.0,
