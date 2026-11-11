@@ -33,18 +33,17 @@ class HyperDogCabinetStateTest {
         j.addProperty("rightLampCount",count);
         s.receive(packet(PacketType.PUBLIC_STATE,j));
     }
-    @Test void illuminatedAtLampsKeepTheApprovedOuterFrameAndDarkMargins(){
-        for(int i=0;i<2;i++){
-            var layers=HyperDogLampGeometry.announcement(i);
-            assertEquals(HyperDogCabinetState.announcementRect(i),layers.frame());
-            assertEquals(104,layers.frame().w());
-            assertEquals(104,layers.frame().h());
-            assertEquals(70,layers.emitter().w());
-            assertEquals(70,layers.emitter().h());
-            assertTrue(layers.emitter().x()-layers.frame().x()>=17);
-            assertTrue(layers.emitter().y()-layers.frame().y()>=17);
-            assertInset(layers);
-        }
+    @Test void singleChanceEmblemAndStatusLampsKeepApprovedFramesAndDarkMargins(){
+        var chance=HyperDogLampGeometry.announcement(0);
+        assertEquals(HyperDogCabinetState.announcementRect(0),chance.frame());
+        assertEquals(new SlotLayout.Rect(359,298,266,60),chance.frame());
+        assertEquals(244,chance.emitter().w());
+        assertEquals(38,chance.emitter().h());
+        assertTrue(chance.emitter().x()-chance.frame().x()>=11);
+        assertTrue(chance.emitter().y()-chance.frame().y()>=11);
+        assertInset(chance);
+        assertThrows(IllegalArgumentException.class,()->HyperDogLampGeometry.announcement(1),
+                "the retired second flower lamp must not reappear");
         for(int i=0;i<3;i++){
             var right=HyperDogLampGeometry.right(i);
             assertEquals(HyperDogCabinetState.rightLampRect(i),right.frame());
@@ -58,52 +57,44 @@ class HyperDogCabinetStateTest {
             assertInset(left);
         }
     }
-
-    @Test void announcementLightCannotCollideWithDataLampReelsOrOtherHardware(){
+    @Test void singleChanceEmblemCannotCollideWithDataLampReelsStatusOrControls(){
         SlotLayout.Rect top=SlotLayout.DATA;
         SlotLayout.Rect cabinet=HyperDogCabinetState.cabinetRect();
         SlotLayout.Rect reels=SlotLayout.REELS;
-        SlotLayout.Rect left=HyperDogCabinetState.announcementRect(0);
-        SlotLayout.Rect right=HyperDogCabinetState.announcementRect(1);
-        for(SlotLayout.Rect r:List.of(left,right)){
-            assertTrue(r.y()>=top.y()+top.h()+16,"AT light must clear top datalamp");
-            assertFalse(overlaps(r,top),"data lamp cannot hide any part of AT lamp");
-            assertFalse(overlaps(r,reels),"reel window cannot hide any part of AT lamp");
-            assertFalse(overlaps(r,SlotLayout.DATA_LEFT));
-            assertFalse(overlaps(r,HyperDogCabinetState.rightDataRect()),"odds panel cannot cover the right flower");
-            assertTrue(r.x()>=cabinet.x() && r.y()>=cabinet.y());
-            assertTrue(r.x()+r.w()<=cabinet.x()+cabinet.w());
-            assertTrue(r.y()+r.h()<=cabinet.y()+cabinet.h());
-            for(int i=0;i<3;i++){
-                assertFalse(overlaps(r,HyperDogCabinetState.leftStatusRect(i)));
-                assertFalse(overlaps(r,HyperDogCabinetState.rightLampRect(i)));
-            }
-            assertFalse(overlaps(r,HyperDogCabinetState.lcdRect()));
+        SlotLayout.Rect chance=HyperDogCabinetState.announcementRect(0);
+        SlotLayout.Rect lcd=HyperDogCabinetState.lcdRect();
+        assertEquals(16,chance.y()-(top.y()+top.h()),"CHANCE must clear top datalamp");
+        assertEquals(45,reels.x()-(chance.x()+chance.w()),"CHANCE must clear reels");
+        assertEquals(lcd.x()+lcd.w()/2,chance.x()+chance.w()/2,
+                "single CHANCE is centered above the left LCD");
+        assertEquals(14,HyperDogCabinetState.leftStatusRect(0).y()-
+                (chance.y()+chance.h()),"CHANCE must clear RUSH status lamp");
+        assertFalse(overlaps(chance,top));
+        assertFalse(overlaps(chance,reels));
+        assertFalse(overlaps(chance,SlotLayout.DATA_LEFT));
+        assertFalse(overlaps(chance,HyperDogCabinetState.rightDataRect()));
+        assertFalse(overlaps(chance,lcd));
+        assertFalse(overlaps(chance,SlotLayout.STATUS));
+        assertTrue(chance.x()>=cabinet.x() && chance.y()>=cabinet.y());
+        assertTrue(chance.x()+chance.w()<=cabinet.x()+cabinet.w());
+        assertTrue(chance.y()+chance.h()<=cabinet.y()+cabinet.h());
+        for(int i=0;i<3;i++){
+            assertFalse(overlaps(chance,HyperDogCabinetState.leftStatusRect(i)));
+            assertFalse(overlaps(chance,HyperDogCabinetState.rightLampRect(i)));
         }
-        assertFalse(overlaps(left,right));
-        assertEquals(18,reels.x()-(left.x()+left.w()),"left reel-to-flower clearance");
-        assertEquals(18,right.x()-(reels.x()+reels.w()),"right reel-to-flower clearance");
-        assertEquals(24,HyperDogCabinetState.rightDataRect().x()-(right.x()+right.w()),
-                "right data panel must be reflowed, not painted over");
+        for(SlotLayout.Control ctrl:SlotLayout.CONTROLS)
+            assertFalse(overlaps(chance,ctrl.rect()),"CHANCE vs "+ctrl.name());
         assertEquals(11,HyperDogCabinetState.rightDataRect().x()-
-                (cabinet.x()+cabinet.w()),"cabinet and sidebar must be distinct");
+                (cabinet.x()+cabinet.w()),"cabinet and sidebar must remain separate");
         assertFalse(overlaps(cabinet,HyperDogCabinetState.rightDataRect()));
-        assertFalse(overlaps(left,SlotLayout.STATUS));
-        assertFalse(overlaps(right,SlotLayout.STATUS));
-        for(SlotLayout.Control ctrl:SlotLayout.CONTROLS){
-            assertFalse(overlaps(left,ctrl.rect()));
-            assertFalse(overlaps(right,ctrl.rect()));
-        }
-        // Flower must never hide the adjacent text/data; preserve visible hit-free
-        // clearances even after proportional viewport scaling.
         for(int[] resolution:new int[][]{{1920,1080},{960,540},{1024,768},{3440,1440}}){
             var viewport=SlotLayout.Viewport.fit(resolution[0],resolution[1]);
             assertTrue(viewport.scale()>0);
-            assertTrue(reels.x()-left.x()-left.w()>=18);
-            assertTrue(right.x()-reels.x()-reels.w()>=18);
+            assertTrue((reels.x()-chance.x()-chance.w())*viewport.scale()>0);
+            assertTrue((HyperDogCabinetState.leftStatusRect(0).y()-
+                    chance.y()-chance.h())*viewport.scale()>0);
         }
     }
-
     private static boolean overlaps(SlotLayout.Rect a,SlotLayout.Rect b){
         return a.x()<b.x()+b.w() && a.x()+a.w()>b.x() &&
                 a.y()<b.y()+b.h() && a.y()+a.h()>b.y();
@@ -147,8 +138,10 @@ class HyperDogCabinetStateTest {
                 HyperDogCabinetState.cabinetRect());
         assertEquals(new SlotLayout.Rect(1716,325,186,430),
                 HyperDogCabinetState.rightDataRect());
-        for(int i=0;i<2;i++)assertEquals(new SlotLayout.Rect(i==0?548:1588,310,104,104),
-                HyperDogCabinetState.announcementRect(i));
+        assertEquals(new SlotLayout.Rect(359,298,266,60),
+                HyperDogCabinetState.announcementRect(0));
+        assertThrows(IllegalArgumentException.class,
+                ()->HyperDogCabinetState.announcementRect(1));
         for(int i=0;i<3;i++){
             assertEquals(new SlotLayout.Rect(388,372+61*i,146,36),
                     HyperDogCabinetState.leftStatusRect(i));
