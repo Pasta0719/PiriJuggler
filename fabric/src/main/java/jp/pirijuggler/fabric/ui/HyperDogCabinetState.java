@@ -223,7 +223,7 @@ public final class HyperDogCabinetState {
     /** Single CHANCE emblem, aligned with the left LCD, below the data panel. */
     public static SlotLayout.Rect announcementRect(int index){
         if(index!=0)throw new IllegalArgumentException("only one CHANCE lamp");
-        return new SlotLayout.Rect(360,298,266,60);
+        return new SlotLayout.Rect(359,298,266,60);
     }
     public static SlotLayout.Rect rightLampRect(int index){
         if(index<0||index>2)throw new IllegalArgumentException("lamp");
