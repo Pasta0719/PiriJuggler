@@ -79,13 +79,31 @@ public final class HyperDogRunJournal {
         if(oldStage!=HyperDogAtGame.Stage.UPPER_CZ&&newStage==HyperDogAtGame.Stage.UPPER_CZ)
             entry(db,owner,period,run,sequence,"CZ",now);
 
-        db.sql("UPDATE "+RUNS+" SET medals=?,final=?,updated_at=? WHERE run_id=?",
+        // State 0 = GET (active), 1 = TOTAL (finalized and still visible),
+        // 2 = finalized but hidden after the NEXT completed normal paid game.
+        // Never restore the old TOTAL on later BET/LEVER or after server restart.
+        db.sql("UPDATE "+RUNS+" SET medals=?,final=CASE WHEN final=2 THEN 2 ELSE ? END,updated_at=? WHERE run_id=?",
                 after.shotGain(),after.shotFinal()?1:0,now,run);
+        hideFinishedShotAfterOneNormalGame(db,run,before,after);
         if(after.shotFinal()&&(before==null||!before.shotFinal())){
             // All RUSH/HYPER entries in the chain show the same final one-shot net.
             db.sql("UPDATE "+ENTRIES+" SET medals=? WHERE run_id=? AND event_type IN ('RUSH','HYPER')",
                     after.shotGain(),run);
         }
+    }
+
+    /**
+     * The 32nd comeback game completes a shot but must still show TOTAL.
+     * Only the first separate, completed normal game after that clears the
+     * live panel. The shot and all historical ledger entries remain intact.
+     */
+    private static void hideFinishedShotAfterOneNormalGame(PiriDatabase db,String run,
+            HyperDogFullGame before,HyperDogFullGame after)throws SQLException{
+        if(before!=null&&before.shotFinal()&&after.shotFinal()&&
+                before.shotSerial()==after.shotSerial()&&
+                before.at()==null&&after.at()==null&&
+                after.normal().games()>before.normal().games())
+            db.sql("UPDATE "+RUNS+" SET final=2 WHERE run_id=? AND final=1",run);
     }
 
     private static void entry(PiriDatabase db,Session owner,String period,String run,
@@ -183,7 +201,10 @@ public final class HyperDogRunJournal {
                 p.setInt(1,machineId);
                 try(ResultSet rs=p.executeQuery()){
                     if(rs.next()){
-                        shotExists=true;shotNet=rs.getLong(1);shotFinal=rs.getInt(2)!=0;
+                        shotNet=rs.getLong(1);
+                        int visibility=rs.getInt(2);
+                        shotExists=visibility!=2;
+                        shotFinal=visibility==1;
                     }
                 }
             }
