@@ -107,6 +107,10 @@ public final class HallAudio {
     }
 
     private static void startLoop(int machineId,RemoteMachineViewState machine,String logical){
+        if(!HyperDogOwnerAudioFilter.allowRemoteOneShot(machineId,logical)){
+            stopLoop(machineId);
+            return;
+        }
         if(!inRange(machine,BGM_RADIUS))return;
         String sound=resolve(machine,logical);
         float volume=attenuatedVolume(machine,BGM_VOLUME,BGM_RADIUS);

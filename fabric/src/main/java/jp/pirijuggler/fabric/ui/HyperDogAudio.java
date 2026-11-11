@@ -17,38 +17,42 @@ public final class HyperDogAudio {
     private final Consumer<String> play;
     private final Set<Long> flashed=new HashSet<>();
     private String lastPublicGameState="",lastStage="";
+    private final Set<String> stopped=new HashSet<>();
     public HyperDogAudio(Consumer<String> play){this.play=Objects.requireNonNull(play);}
-    public void reset(){flashed.clear();lastPublicGameState="";lastStage="";}
+    public void reset(){flashed.clear();stopped.clear();lastPublicGameState="";lastStage="";}
     public void receive(Envelope packet) {
         try {
             JsonObject j=packet.payload();
+            Consumer<String> effect=sound->HyperDogResumeAudioGuard.playIfFresh(play,sound,packet);
             switch(packet.packetType()){
                 case ACTION_ACCEPTED -> {
                     if("SPACE_ACTION".equals(string(j,"action"))&&
-                            "SEATED_READY".equals(lastPublicGameState))play.accept("bet");
+                            "SEATED_READY".equals(lastPublicGameState))effect.accept("bet");
                 }
                 case SPIN_START -> {
-                    play.accept("lever");
-                    if("AT_RED7_CONFIRM".equals(string(j,"mode")))play.accept("notice");
+                    stopped.clear();
+                    effect.accept("lever");
+                    if("AT_RED7_CONFIRM".equals(string(j,"mode")))effect.accept("notice");
                 }
                 case REEL_STOP -> {
-                    play.accept("stop");
-                    if(j.has("automatic")&&j.get("automatic").getAsBoolean())play.accept("tenpai");
+                    if(!stopped.add(string(j,"spinId")+":"+string(j,"reel")))return;
+                    effect.accept("stop");
+                    if(j.has("automatic")&&j.get("automatic").getAsBoolean())effect.accept("tenpai");
                 }
-                case TENPAI_SOUND -> play.accept("tenpai");
-                case PAYOUT -> play.accept("payout");
-                case NOTICE -> play.accept("NOTICE_STRONG".equals(string(j,"sound"))?
+                case TENPAI_SOUND -> effect.accept("tenpai");
+                case PAYOUT -> effect.accept("payout");
+                case NOTICE -> effect.accept("NOTICE_STRONG".equals(string(j,"sound"))?
                         "notice_strong":"notice");
                 case PUBLIC_STATE -> {
                     String next=string(j,"atStage");
                     if("UPPER_CZ".equals(lastStage)&&!next.isEmpty()&&!next.equals(lastStage))
-                        play.accept("UPPER_INITIAL".equals(next)?"bonus_start":"bonus_end");
+                        effect.accept("UPPER_INITIAL".equals(next)?"bonus_start":"bonus_end");
                     if(j.has("flashEventId")&&j.has("awardRevealed")&&
                             j.get("awardRevealed").getAsBoolean()){
                         long id=j.get("flashEventId").getAsLong();
                         if(id>0&&flashed.add(id)){
                             long award=j.has("flashAward")?j.get("flashAward").getAsLong():0;
-                            if(award>=10)play.accept(award>=500?"notice_strong":"payout");
+                            if(award>=10)effect.accept(award>=500?"notice_strong":"payout");
                         }
                     }
                     lastStage=next;
