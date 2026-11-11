@@ -54,12 +54,28 @@ tasks.register<Copy>("packagePiriJars") {
         val releaseDir = rootProject.layout.projectDirectory.dir("dist").asFile
         val paperJar = releaseDir.resolve("piri-juggler-paper-${project.version}.jar")
         val fabricJar = releaseDir.resolve("piri-juggler-fabric-${project.version}.jar")
+        // A modified allowlist is not an approved allowlist. Pin its exact SHA-256
+        // independently of the policy JSON to catch accidental loosening.
+        val policyFile = rootProject.file("release-policies/hyperdog-20261111.json")
+        val expectedPolicySha = "2facb1ffee003b78b99c953eaa18369c72af936c511d72aa1a4cf5082d3acc81"
+        val actualPolicySha = try {
+            java.security.MessageDigest.getInstance("SHA-256")
+                .digest(policyFile.readBytes())
+                .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+        } catch (_: Exception) {
+            "UNREADABLE"
+        }
+        if (actualPolicySha != expectedPolicySha) {
+            paperJar.delete()
+            fabricJar.delete()
+            throw GradleException("RELEASE BLOCKED: approved JAR policy was changed or is missing")
+        }
         val command = listOf(
             "python", rootProject.file("scripts/guard_jar_release.py").absolutePath,
             "verify-release",
             "--paper", paperJar.absolutePath,
             "--fabric", fabricJar.absolutePath,
-            "--policy", rootProject.file("release-policies/hyperdog-20261111.json").absolutePath
+            "--policy", policyFile.absolutePath
         )
         val exitCode = try {
             ProcessBuilder(command).directory(rootProject.projectDir).inheritIO().start().waitFor()
