@@ -156,6 +156,24 @@ public final class HyperDogRunJournal {
                 }
             }
         }
+        // Older data already records every HYPER/CZ entry in this canonical
+        // event journal. Use it for these two totals to avoid erasing the
+        // current period's visible history during upgrade. RUSH lacked a
+        // dedicated historic event and is counted only when actually observed.
+        if(exists(c,"hyper_dog_events")){
+            try(PreparedStatement p=c.prepareStatement(
+                    "SELECT event_type,COUNT(*) FROM hyper_dog_events "+
+                    "WHERE machine_id=? AND business_period_id=? "+
+                    "AND event_type IN ('UPPER_ENTRY','CZ_CHALLENGE') GROUP BY event_type")){
+                p.setInt(1,machineId);p.setString(2,period);
+                try(ResultSet rs=p.executeQuery()){
+                    while(rs.next()){
+                        if("UPPER_ENTRY".equals(rs.getString(1)))hyper=rs.getLong(2);
+                        if("CZ_CHALLENGE".equals(rs.getString(1)))cz=rs.getLong(2);
+                    }
+                }
+            }
+        }
         boolean shotExists=false,shotFinal=false;
         long shotNet=0;
         if(exists(c,RUNS)){
