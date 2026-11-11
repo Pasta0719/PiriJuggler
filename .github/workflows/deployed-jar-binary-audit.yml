@@ -16,7 +16,7 @@ jobs:
           java-version: '21'
           cache: gradle
       - name: Build Paper and Fabric without modifying the mandatory release gate
-        run: ./gradlew :paper:jar :fabric:remapJar --console=plain
+        run: bash gradlew :paper:jar :fabric:remapJar --console=plain
       - name: Compare generated JAR contents with currently deployed pair
         run: |
           python scripts/audit_deployed_binary_identity.py \
