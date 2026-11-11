@@ -1,0 +1,154 @@
+name: HYPER_DOG regression firewall
+
+on:
+  push:
+    branches:
+      - plan/original-at-machine-20261107
+      - 'proof/hyperdog-regression-*'
+  pull_request:
+    branches:
+      - plan/original-at-machine-20261107
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hyperdog-regression-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cabinet-and-legacy-guard:
+    name: Cabinet geometry, legacy audio and approved art
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prove that modified legacy blobs are detected and current blobs are unchanged
+        run: python original-at-phases/check_hyperdog_regression_contract.py --self-test
+      - name: Check shipping HYPER_DOG symbol-art contract
+        run: python original-at-phases/validate_symbol_assets.py
+      - name: Targeted geometry, world width, sound and symbol regression tests
+        run: |
+          chmod +x gradlew
+          ./gradlew :fabric:test --console=plain \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogLayoutRegressionTest' \
+            --tests 'jp.pirijuggler.fabric.render.CabinetPlacementTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HallAudioTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogAudioTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogSymbolAssetsTest'
+      - name: Upload exact failing/successful test result XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hyperdog-regression-fabric-tests
+          path: fabric/build/test-results/test/**
+          if-no-files-found: warn
+
+  entire-project-regression:
+    name: Test all existing machine families
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Run common, Paper and Fabric existing test suites
+        run: |
+          chmod +x gradlew
+          ./gradlew test --console=plain
+      - name: Upload all JUnit test XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hyperdog-regression-all-modules
+          path: |
+            common/build/test-results/**
+            paper/build/test-results/**
+            fabric/build/test-results/**
+          if-no-files-found: warn
+
+  real-paper-fabric-audio-and-input:
+    name: Real Paper/Fabric input and sound-dispatch acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Enable real headless Minecraft rendering
+        run: |
+          if ! command -v Xvfb >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
+          fi
+          chmod +x gradlew
+      - name: Build real production Paper and Fabric JARs and real test helpers
+        run: |
+          ./gradlew --parallel --build-cache test :common:jar :paper:jar :fabric:remapJar --console=plain
+          ./gradlew --parallel --build-cache \
+            -PruntimeAcceptance=true -PruntimeScenario=hyperdog05-main \
+            -PruntimeEvidencePhase=HYPER_DOG_PHASE_05 \
+            :runtime-test-paper:jar :runtime-test-client:remapJar --console=plain
+      - uses: actions/cache@v4
+        with:
+          path: runtime-evidence/PHASE_01/work/downloads/paper-1.21-130.jar
+          key: paper-1.21-build-130-ab9bb1afc3cea6978a0c03ce8448aa654fe8a9c4dddf341e7cbda1b0edaa73f5
+      - name: Obtain verified Paper 1.21
+        shell: pwsh
+        run: ./runtime-test-support/ensure-paper-1.21-130.ps1
+      - name: Set up isolated real OpenAL/PulseAudio output for Minecraft
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends pulseaudio pulseaudio-utils libopenal1
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=hyperdog_test format=s16le rate=44100 channels=2
+          pactl set-default-sink hyperdog_test
+          pactl info
+          pactl list short sinks
+      - name: Actual Minecraft 95-game input and recorded audio waveform acceptance
+        env:
+          ALSOFT_DRIVERS: pulse
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime-evidence/HYPER_DOG_PHASE_05
+          RAW=runtime-evidence/HYPER_DOG_PHASE_05/minecraft-audio-raw.pcm
+          parec --device=hyperdog_test.monitor --format=s16le --rate=44100 --channels=2 --raw > "$RAW" &
+          CAPTURE=$!
+          trap 'kill "$CAPTURE" 2>/dev/null || true' EXIT
+          xvfb-run -a -s "-screen 0 1366x900x24" python runtime-test-support/run_hyperdog_phase05.py
+          kill "$CAPTURE" 2>/dev/null || true
+          wait "$CAPTURE" || true
+          python runtime-test-support/verify_hyperdog_recorded_audio.py "$RAW"
+          rm "$RAW"
+      - name: Publish explicit acceptance result
+        if: always()
+        run: python runtime-test-support/hyperdog_acceptance_diagnostics.py summarize HYPER_DOG_PHASE_05 "$GITHUB_STEP_SUMMARY"
+      - name: Archive Paper/Fabric event logs and runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hyperdog-regression-audio-and-95-game-receipt
+          path: |
+            runtime-evidence/HYPER_DOG_PHASE_05/**
+            fabric/build/test-results/**
+            paper/build/test-results/**
+          if-no-files-found: warn

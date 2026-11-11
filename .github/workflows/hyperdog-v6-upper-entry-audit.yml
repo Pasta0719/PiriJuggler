@@ -1,0 +1,29 @@
+name: HYPER_DOG v6 upper entry rate and net expectation audit
+on:
+  push:
+    branches: [plan/original-at-machine-20261107]
+    paths:
+      - 'original-at-phases/reference/audit_upper_entry_v6.py'
+      - '.github/workflows/hyperdog-v6-upper-entry-audit.yml'
+  workflow_dispatch:
+jobs:
+  upper-entry-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Numba simulator dependencies
+        run: python -m pip install 'numpy>=1.26,<3' 'numba>=0.60,<0.67'
+      - name: Measure upper AT episode starts and post-entry net gain
+        run: |
+          python -u original-at-phases/reference/audit_upper_entry_v6.py \
+            --frames 50000000 --replicates 2 --seed 20261109
+      - name: Archive numerical evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hyperdog-v6-upper-entry-expectation-audit
+          path: runtime-evidence/HYPER_DOG_V6_UPPER_ENTRY_AUDIT/**

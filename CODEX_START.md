@@ -2,6 +2,8 @@
 
 ## 最優先: 既存機能保全ルール
 
+HYPER_DOGの音声・再着席・配布JARを扱う前に、必ず `docs/hyperdog/AUDIO_RELEASE_SAFETY.md` を確認し、変更後のFabric/Paperの差分を `scripts/verify_hyperdog_audio_release_delta.py` で拒否式検査する。音ごとの場当たり的な除外や、実機未確認の状態で「完全修正」と断言することは禁止。
+
 作業開始前に **[CHANGE_SAFETY_POLICY.md](CHANGE_SAFETY_POLICY.md)** を必ず読み、その内容を他の通常実装手順より優先する。
 
 - 新機能追加の依頼は、既存機能を変更・削除・弱体化する許可ではない
@@ -13,6 +15,13 @@
 
 `SPEC.md`が既存PiriJuggler製品仕様の正本。Phase12–14のRemote Machine Visual / Hall Audioについては `docs/REMOTE_MACHINE_VISUAL_SPEC.md` を追加の仕様正本として必ず併読する。Phase05完了後のユーザー承認hotfixについては `docs/POST_PHASE05_HOTFIX.md` を必ず併読し、同文書が明示的に変更した範囲ではhotfix内容を最新仕様として扱う。次回SPEC整合更新時に正本へ統合する。
 `AUDIT_REPORT.md`はv3からの修正理由であり、仕様値の正はSPEC.mdと上記承認hotfix。
+
+## HYPER_DOG：CURRENT_NUMERIC_REFERENCE / HYPER_DOG（現行数値参照の最優先規則）
+
+- **唯一の現行数値正本は `original-at-phases/reference/pirijuggler_new_machine_calibrated_v7.json`（v7 JSON）**。`original-at-phases/PHASE_MAP.json` の `numeric_reference` と一致させ、Phase06〜08、実装、テスト、シミュレーション、引き継ぎ時は必ずv7を参照する。
+- 承認変更の理由は `original-at-phases/POST_PHASE05_UPPER_4K_V7.md`。非数値仕様は `SPEC_LOCK.md`、`IMPLEMENTATION_DECISIONS_V1.md`、`REEL_DESIGN_V2.md` 等に従う。
+- **v5/v6のJSON、シミュレーター、Phase01〜05の当時の試験結果は監査・旧状態回帰専用**。現在の単独AT倍率・通常レア役重複率・上位上乗せ倍率に古いバージョンを使わない。旧文書と矛盾した場合、ユーザー承認済みv7変更範囲についてv7を優先する。
+- ユーザーの追加承認なしで数値を再調整しない。既存機種・保存データ・受入証跡は維持する。`python original-at-phases/validate_numeric_reference.py` によって参照の逆戻りを検出する。
 
 ## GOD後続方式の特別ルール — 2026-09-23
 

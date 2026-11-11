@@ -1,0 +1,688 @@
+{
+  "meta": {
+    "version": "calibrated_v6_upper_origin_comeback",
+    "status": "CANDIDATE_AFTER_120M_HELDOUT_AND_LONG_RANGE_RECALIBRATION",
+    "simulation_executed": true,
+    "source": "User-approved behaviors and assistant-proposed numeric trial values",
+    "notes": [
+      "All role probabilities, payouts, CZ guarantees, saved modes and 1/65536 BAR are identical to v5.",
+      "Lower-origin comeback returns to LOWER_INITIAL; upper-origin comeback returns to UPPER_INITIAL without a BAR-only +1000 bonus.",
+      "Upper-origin comeback uses separate RAINBOW7_CONFIRM with 3 manually pressed reel stops; zero additional bets/payouts.",
+      "During 32 paid-game comeback, a replay-triggered 0BET normal game can hit and does not decrement the 32 paid-game counter.",
+      "Only six normal_mode.single_hit_probability_multiplier_by_setting values differ from v5 among numerical lotteries."
+    ],
+    "prior_source": "pirijuggler_new_machine_calibrated_v5.json",
+    "calibration_method": "Preserve v5 1-6 payout targets by changing only setting-specific single AT hit multipliers after upper-origin comeback returns directly to UPPER_INITIAL; paid-game 32G counter."
+  },
+  "fixed_requirements": {
+    "bet_per_paid_game": 3,
+    "replay_next_game_free": true,
+    "payout_regular_or_at": {
+      "MISS": {
+        "NORMAL": 0,
+        "LOWER_AT": 0,
+        "UPPER_AT": 0
+      },
+      "REPLAY": {
+        "NORMAL": 0,
+        "LOWER_AT": 0,
+        "UPPER_AT": 0
+      },
+      "GRAPE": {
+        "NORMAL": 3,
+        "LOWER_AT": 30,
+        "UPPER_AT": 30
+      },
+      "WEAK_CHERRY": {
+        "NORMAL": 1,
+        "LOWER_AT": 1,
+        "UPPER_AT": 1
+      },
+      "STRONG_CHERRY": {
+        "NORMAL": 1,
+        "LOWER_AT": 1,
+        "UPPER_AT": 1
+      },
+      "WATERMELON": {
+        "NORMAL": 5,
+        "LOWER_AT": 5,
+        "UPPER_AT": 5
+      },
+      "CHANCE": {
+        "NORMAL": 5,
+        "LOWER_AT": 5,
+        "UPPER_AT": 5
+      },
+      "STRONG_CHANCE": {
+        "NORMAL": 5,
+        "LOWER_AT": 5,
+        "UPPER_AT": 5
+      },
+      "BAR": {
+        "NORMAL": 15,
+        "LOWER_AT": 15,
+        "UPPER_AT": 15
+      }
+    },
+    "special_stage": {
+      "areas": [
+        "LOWER_INITIAL",
+        "UPPER_INITIAL",
+        "UPPER_CZ"
+      ],
+      "bet": 0,
+      "payout_all_roles": 0,
+      "role_draw_enabled": true,
+      "bar_not_eligible": true,
+      "role_draw_profile": {
+        "LOWER_INITIAL": "NORMAL",
+        "UPPER_INITIAL": "UPPER_AT",
+        "UPPER_CZ": "NORMAL"
+      },
+      "replay_free_bet_does_not_leak_between_special_and_paid_stages": true
+    },
+    "lower_initial_default_medals": 150,
+    "lower_initial_games": 1,
+    "upper_initial_games": 5,
+    "upper_initial_guarantee_medals_per_game": 100,
+    "upper_initial_guarantee_total": 500,
+    "lower_to_upper_cz_at_balance_zero": true,
+    "lower_cz_failure": "NEW_LOWER_INITIAL",
+    "upper_cz_failure": "AT_END",
+    "upper_cz_max_games": 5,
+    "upper_at_end_always_upper_cz": true,
+    "upper_cz_success": "NEW_UPPER_INITIAL",
+    "upper_cz_paid_reels": "OUTER_RAINBOW_7_AUTO_MIDDLE_CENTER_STOP_ONLY",
+    "upper_cz_success_display": "RAINBOW_7_LINE",
+    "bar_normal": "DIRECT_UPPER_NEXT_GAME",
+    "bar_lower": "DIRECT_UPPER_NEXT_GAME_WITH_REMAINING_BALANCE",
+    "bar_upper": "GUARANTEE_NEXT_UPPER_CZ_AND_NEXT_UPPER_INITIAL_ONE_RARE_GAME",
+    "upper_additive_award_scale_from_lower": 5,
+    "upper_cz_ticket_outcomes_are_suppressed": true,
+    "upper_max_single_role_bonus_medals": 2000,
+    "upper_2000_source_roles": [
+      "STRONG_CHERRY",
+      "STRONG_CHANCE"
+    ],
+    "low_streaks_are_role_specific": true,
+    "fifth_replay_or_grape_in_row_guarantees_at_without_new_mode_up": true,
+    "at_has_no_normal_mode_changes": true,
+    "at_exit_rebases_from_saved_hit_mode": true,
+    "target_setting_payout_percent": [
+      97,
+      99.3,
+      102.5,
+      104.8,
+      107.4,
+      116
+    ]
+  },
+  "normal_and_at_common_role_draw": {
+    "exclusive_base_role_probability_per_game": {
+      "REPLAY": 0.136986301369863,
+      "WEAK_CHERRY": 0.008333333333333333,
+      "WATERMELON": 0.00625,
+      "CHANCE": 0.004545454545454545,
+      "STRONG_CHERRY": 0.001,
+      "STRONG_CHANCE": 0.0006666666666666666,
+      "BAR": 0.0000152587890625
+    },
+    "grape_probability_per_game": {
+      "NORMAL": 0.25,
+      "LOWER_AT": 0.284,
+      "UPPER_AT": 0.484
+    },
+    "miss_probability_per_game": {
+      "NORMAL": 0.59220298529562,
+      "LOWER_AT": 0.5582029852956201,
+      "UPPER_AT": 0.35820298529562
+    },
+    "upper_miss_to_rare_role_rewrite": {
+      "conditional_probability_on_miss": 0.03125,
+      "destination_percent": {
+        "WEAK_CHERRY": 50,
+        "WATERMELON": 25,
+        "CHANCE": 15,
+        "STRONG_CHERRY": 7,
+        "STRONG_CHANCE": 3
+      },
+      "applies_only_to_paid_upper_at": true,
+      "grape_is_not_rewritten": true,
+      "already_drafted_rare_is_never_downgraded": true
+    },
+    "role_draw_excludes_bar_in_free_special_stages": true
+  },
+  "normal_mode": {
+    "names": [
+      "LOW_A",
+      "LOW_B",
+      "NORMAL_A",
+      "NORMAL_B",
+      "HIGH",
+      "SUPER_HIGH"
+    ],
+    "startup_initial_mode_weights_percent": {
+      "LOW_A": 10,
+      "LOW_B": 15,
+      "NORMAL_A": 35,
+      "NORMAL_B": 20,
+      "HIGH": 15,
+      "SUPER_HIGH": 5
+    },
+    "base_single_at_hit_denominator_by_mode": {
+      "LOW_A": 8192,
+      "LOW_B": 4096,
+      "NORMAL_A": 512,
+      "NORMAL_B": 256,
+      "HIGH": 96,
+      "SUPER_HIGH": 12
+    },
+    "single_hit_probability_multiplier_by_setting": {
+      "1": 0.1451,
+      "2": 0.183,
+      "3": 0.2423,
+      "4": 0.2851,
+      "5": 0.3424,
+      "6": 0.5346
+    },
+    "single_hit_formula": "p_single=min(0.95, setting_multiplier / base_denominator); each paid NORMAL game, independent of role other than BAR direct override",
+    "role_linked_at_hit_percent": {
+      "REPLAY_STREAK_4": 20,
+      "REPLAY_STREAK_5": 100,
+      "GRAPE_STREAK_4": 20,
+      "GRAPE_STREAK_5": 100,
+      "WEAK_CHERRY_SINGLE": 5,
+      "WEAK_CHERRY_2PLUS_CONSECUTIVE": 60,
+      "WATERMELON_SINGLE": 10,
+      "WATERMELON_2PLUS_CONSECUTIVE": 70,
+      "STRONG_CHERRY": 85,
+      "CHANCE": 15,
+      "STRONG_CHANCE": 70,
+      "BAR": 100,
+      "ALL_OTHER": 0
+    },
+    "mode_up_roll_percent_by_event": {
+      "REPLAY_STREAK_3": 18,
+      "GRAPE_STREAK_3": 12,
+      "REPLAY_STREAK_4": 100,
+      "GRAPE_STREAK_4": 100,
+      "REPLAY_STREAK_5": 0,
+      "GRAPE_STREAK_5": 0,
+      "WEAK_CHERRY_SINGLE": 45,
+      "WEAK_CHERRY_2PLUS_CONSECUTIVE": 100,
+      "WATERMELON_SINGLE": 30,
+      "WATERMELON_2PLUS_CONSECUTIVE": 100,
+      "STRONG_CHERRY": 100,
+      "CHANCE": 100,
+      "STRONG_CHANCE": 100,
+      "BAR": 0,
+      "ALL_OTHER": 0
+    },
+    "mode_up_table_selector": {
+      "REPLAY_STREAK_3": "STANDARD",
+      "GRAPE_STREAK_3": "STANDARD",
+      "REPLAY_STREAK_4": "STANDARD",
+      "GRAPE_STREAK_4": "STANDARD",
+      "WEAK_CHERRY_SINGLE": "STRONG",
+      "WEAK_CHERRY_2PLUS_CONSECUTIVE": "FAVORED",
+      "WATERMELON_SINGLE": "STANDARD",
+      "WATERMELON_2PLUS_CONSECUTIVE": "STANDARD",
+      "STRONG_CHERRY": "VERY_STRONG",
+      "CHANCE": "STANDARD",
+      "STRONG_CHANCE": "VERY_STRONG"
+    },
+    "mode_up_destination_weights_percent_by_tier": {
+      "STANDARD": {
+        "LOW_A": {
+          "LOW_B": 15,
+          "NORMAL_A": 20,
+          "HIGH": 15,
+          "SUPER_HIGH": 50
+        },
+        "LOW_B": {
+          "NORMAL_A": 49,
+          "NORMAL_B": 25,
+          "HIGH": 25,
+          "SUPER_HIGH": 1
+        },
+        "NORMAL_A": {
+          "NORMAL_B": 50,
+          "HIGH": 40,
+          "SUPER_HIGH": 10
+        },
+        "NORMAL_B": {
+          "HIGH": 100
+        },
+        "HIGH": {
+          "SUPER_HIGH": 100
+        },
+        "SUPER_HIGH": {
+          "SUPER_HIGH": 100
+        }
+      },
+      "STRONG": {
+        "LOW_A": {
+          "LOW_B": 5,
+          "NORMAL_A": 15,
+          "HIGH": 20,
+          "SUPER_HIGH": 60
+        },
+        "LOW_B": {
+          "NORMAL_A": 25,
+          "NORMAL_B": 25,
+          "HIGH": 47,
+          "SUPER_HIGH": 3
+        },
+        "NORMAL_A": {
+          "NORMAL_B": 25,
+          "HIGH": 45,
+          "SUPER_HIGH": 30
+        },
+        "NORMAL_B": {
+          "HIGH": 100
+        },
+        "HIGH": {
+          "SUPER_HIGH": 100
+        },
+        "SUPER_HIGH": {
+          "SUPER_HIGH": 100
+        }
+      },
+      "FAVORED": {
+        "LOW_A": {
+          "LOW_B": 5,
+          "NORMAL_A": 10,
+          "HIGH": 20,
+          "SUPER_HIGH": 65
+        },
+        "LOW_B": {
+          "NORMAL_A": 15,
+          "NORMAL_B": 10,
+          "HIGH": 70,
+          "SUPER_HIGH": 5
+        },
+        "NORMAL_A": {
+          "NORMAL_B": 10,
+          "HIGH": 45,
+          "SUPER_HIGH": 45
+        },
+        "NORMAL_B": {
+          "HIGH": 100
+        },
+        "HIGH": {
+          "SUPER_HIGH": 100
+        },
+        "SUPER_HIGH": {
+          "SUPER_HIGH": 100
+        }
+      },
+      "VERY_STRONG": {
+        "LOW_A": {
+          "LOW_B": 2,
+          "NORMAL_A": 4,
+          "HIGH": 19,
+          "SUPER_HIGH": 75
+        },
+        "LOW_B": {
+          "NORMAL_A": 5,
+          "NORMAL_B": 10,
+          "HIGH": 75,
+          "SUPER_HIGH": 10
+        },
+        "NORMAL_A": {
+          "NORMAL_B": 5,
+          "HIGH": 20,
+          "SUPER_HIGH": 75
+        },
+        "NORMAL_B": {
+          "HIGH": 100
+        },
+        "HIGH": {
+          "SUPER_HIGH": 100
+        },
+        "SUPER_HIGH": {
+          "SUPER_HIGH": 100
+        }
+      }
+    },
+    "miss_mode_drop": {
+      "LOW_A": {
+        "probability_on_miss": 0,
+        "destinations": {}
+      },
+      "LOW_B": {
+        "probability_on_miss": 0.0078125,
+        "destinations": {
+          "LOW_A": 100
+        }
+      },
+      "NORMAL_A": {
+        "probability_on_miss": 0.010416666666666666,
+        "destinations": {
+          "LOW_A": 35,
+          "LOW_B": 65
+        }
+      },
+      "NORMAL_B": {
+        "probability_on_miss": 0.010416666666666666,
+        "destinations": {
+          "LOW_B": 25,
+          "NORMAL_A": 75
+        }
+      },
+      "HIGH": {
+        "probability_on_miss": 0.041666666666666664,
+        "destinations": {
+          "LOW_A": 2,
+          "NORMAL_A": 49,
+          "NORMAL_B": 49
+        }
+      },
+      "SUPER_HIGH": {
+        "probability_on_miss": 0.125,
+        "destinations": {
+          "LOW_A": 25,
+          "LOW_B": 25,
+          "NORMAL_A": 25,
+          "HIGH": 25
+        }
+      }
+    },
+    "at_exit_mode_weights_percent_by_saved_at_entry_mode": {
+      "LOW_A": {
+        "LOW_A": 10,
+        "LOW_B": 10,
+        "NORMAL_A": 20,
+        "NORMAL_B": 5,
+        "HIGH": 10,
+        "SUPER_HIGH": 45
+      },
+      "LOW_B": {
+        "LOW_A": 10,
+        "LOW_B": 20,
+        "NORMAL_A": 35,
+        "NORMAL_B": 15,
+        "HIGH": 19,
+        "SUPER_HIGH": 1
+      },
+      "NORMAL_A": {
+        "LOW_A": 15,
+        "LOW_B": 15,
+        "NORMAL_A": 25,
+        "NORMAL_B": 15,
+        "HIGH": 20,
+        "SUPER_HIGH": 10
+      },
+      "NORMAL_B": {
+        "LOW_B": 10,
+        "NORMAL_A": 20,
+        "NORMAL_B": 50,
+        "HIGH": 20
+      },
+      "HIGH": {
+        "LOW_A": 2,
+        "NORMAL_A": 49,
+        "NORMAL_B": 49
+      },
+      "SUPER_HIGH": {
+        "LOW_A": 25,
+        "LOW_B": 25,
+        "NORMAL_A": 25,
+        "HIGH": 25
+      }
+    },
+    "at_hit_and_mode_up_same_game_order": [
+      "DRAW_ROLE",
+      "DRAW_SINGLE_HIT_WITH_MODE_BEFORE_CHANGE",
+      "DRAW_LINKED_HIT",
+      "DRAW_MODE_CHANGE",
+      "IF_HIT_SAVE_MODE_AFTER_THIS_GAME_MODE_CHANGE",
+      "ENTER_AT"
+    ],
+    "consecutive_run_behavior": {
+      "REPLAY_AND_GRAPE": "SEPARATE_COUNTERS_RESET_WHEN_OTHER_ROLE",
+      "WEAK_CHERRY_AND_WATERMELON": "SEPARATE_COUNTERS_RESET_WHEN_OTHER_ROLE",
+      "TWO_OR_MORE_RARE_SAME_ROLE": "2PLUS_RULE_REPLACES_SINGLE_RULE_EACH_CONSECUTIVE_GAME",
+      "GRAPE_REPLAY_AT_HIT_ON_FIFTH": "ALWAYS",
+      "ON_AT_ENTRY": "RESET_ALL_STREAKS"
+    },
+    "combine_independent_and_role_hit": "ONE_AT_START_ONLY_IF_EITHER_SUCCEEDS; p_total=1-(1-p_single)*(1-p_role) conditional on role; never double award"
+  },
+  "lower_at": {
+    "initial": {
+      "base_medals": 150,
+      "games": 1,
+      "role_bonus_medals_weights_percent": {
+        "MISS": {
+          "0": 100
+        },
+        "REPLAY": {
+          "0": 100
+        },
+        "GRAPE": {
+          "0": 100
+        },
+        "WEAK_CHERRY": {
+          "30": 60,
+          "40": 30,
+          "50": 10
+        },
+        "WATERMELON": {
+          "30": 60,
+          "40": 30,
+          "50": 10
+        },
+        "CHANCE": {
+          "50": 60,
+          "100": 40
+        },
+        "STRONG_CHERRY": {
+          "100": 70,
+          "200": 30
+        },
+        "STRONG_CHANCE": {
+          "200": 70,
+          "300": 30
+        }
+      },
+      "independent_extra_medals_weights_percent": {
+        "0": 90,
+        "20": 7,
+        "50": 2.5,
+        "150": 0.5
+      }
+    },
+    "rare_role_addon_weights_percent": {
+      "WEAK_CHERRY": {
+        "10": 55,
+        "20": 30,
+        "30": 15
+      },
+      "WATERMELON": {
+        "10": 50,
+        "20": 35,
+        "30": 15
+      },
+      "WEAK_CHERRY_SECOND_CONSECUTIVE_EXTRA": {
+        "50": 50,
+        "60": 25,
+        "70": 15,
+        "80": 10
+      },
+      "WATERMELON_SECOND_CONSECUTIVE_EXTRA": {
+        "50": 50,
+        "60": 25,
+        "70": 15,
+        "80": 10
+      },
+      "STRONG_CHERRY": {
+        "ordinary": {
+          "probability_percent": 90,
+          "medal_weights": {
+            "50": 35,
+            "100": 40,
+            "150": 25
+          }
+        },
+        "cz_award": {
+          "probability_percent": 10,
+          "medal_weights": {
+            "50": 40,
+            "70": 30,
+            "100": 30
+          }
+        }
+      },
+      "CHANCE": {
+        "ordinary": {
+          "probability_percent": 90,
+          "medal_weights": {
+            "30": 35,
+            "40": 45,
+            "50": 20
+          }
+        },
+        "cz_award": {
+          "probability_percent": 10,
+          "medal_weights": {
+            "50": 50,
+            "80": 30,
+            "100": 20
+          }
+        }
+      },
+      "STRONG_CHANCE": {
+        "100": 40,
+        "150": 40,
+        "200": 20
+      }
+    },
+    "role_streak_bonus_applies_on_second_and_later_consecutive_same_rare": true,
+    "lower_strong_chance_always_awards_upper_cz_ticket": true,
+    "upper_cz_ticket_accrual": {
+      "first": "ONE_CZ_ATTEMPT_AFTER_LOWER_BALANCE_ZERO",
+      "second": "GUARANTEED_CZ_SUCCESS",
+      "third_and_later": "ONE_FORCED_RARE_INITIAL_GAME_EACH",
+      "CZ_TICKETS_ARE_NOT_CONSUMED_DURING_LOWER_AT": true
+    },
+    "role_bonus_addition_to_remaining_medals": "add all medal awards; tickets independent of medal awards",
+    "lower_balance_zero_behavior": {
+      "ticket_count_zero": "FULL_AT_END",
+      "ticket_count_positive": "UPPER_CZ"
+    },
+    "on_failed_cz": "NEW_1_GAME_LOWER_INITIAL; do not enter 32G comeback"
+  },
+  "upper_at": {
+    "initial": {
+      "games": 5,
+      "each_game_guaranteed_medals": 100,
+      "role_bonus": "SAME_UPPER_ROLE_ADDON_TABLE_AS_PAID_UPPER_AT; one forced rare can overwrite each slot",
+      "independent_extra_medal_weights_percent": {
+        "0": 100
+      },
+      "per_game_total_including_guarantee_cap": 2000,
+      "forced_rare_slot_distribution_percent": {
+        "WEAK_CHERRY": 40,
+        "WATERMELON": 30,
+        "CHANCE": 20,
+        "STRONG_CHERRY": 7,
+        "STRONG_CHANCE": 3
+      },
+      "overflow_forced_strong_distribution_percent": {
+        "STRONG_CHERRY": 70,
+        "STRONG_CHANCE": 30
+      },
+      "forced_rare_slots_from_prior_lower_cz_tickets": "max(0, lower_tickets-2) on successful first upper entry",
+      "forced_rare_slots_from_prior_upper_bar": "number_of_bar_hits_in_prior_upper_round",
+      "force_assignment_order": "first 5 eligible slots; if beyond 5, each extra promotes one slot to STRONG_CHERRY or STRONG_CHANCE; cap at 10 awards (5 slots x 2 grades); no added games",
+      "when_original_role_stronger": "do not downgrade (role ranking STRONG_CHANCE>STRONG_CHERRY>CHANCE>WATERMELON>WEAK_CHERRY>REPLAY/GRAPE/MISS)",
+      "bar_is_not_drawn_in_initial_stage": true
+    },
+    "regular_addons": {
+      "ordinary": "EXACTLY_FIVE_TIMES_LOWER_AT_ROLE_BONUS_DRAW_FROM_SAME_BRANCH; DROP_CZ_TICKET_ONLY",
+      "strong_cherry_2000_override_percent": 2,
+      "strong_chance_2000_override_percent": 5,
+      "other_role_2000_override_percent": 0,
+      "override_execution_order": "first premium 2000 roll; if fail, sample lower medal table and multiply by 5; discard linked CZ token"
+    },
+    "bar_behavior": {
+      "payout_paid_role": 15,
+      "immediate_upper_cz_skip": true,
+      "current_upper_at_continues": true,
+      "next_upper_cz_guaranteed": true,
+      "next_upper_initial_forced_rare_plus_games": 1,
+      "bar_hit_can_stack_forced_rare_charges": true
+    },
+    "end_of_upper_at": "ALWAYS_UPPER_CZ; IF_FAIL_FULL_AT_END"
+  },
+  "upper_cz": {
+    "games_max": 5,
+    "total_success_rate_without_guarantee": 0.5,
+    "independent_p_success_each_game": 0.12944943670387588,
+    "roll_is_independent_of_internal_role": true,
+    "stop_on_first_success": true,
+    "on_lower_cz_second_ticket": "GUARANTEE_BY_GAME_5",
+    "on_upper_at_bar": "GUARANTEE_BY_GAME_5",
+    "guaranteed_success_game_weights_percent": {
+      "1": 20,
+      "2": 20,
+      "3": 20,
+      "4": 20,
+      "5": 20
+    },
+    "guaranteed_mode": "perform ordinary 12.9449% checks first; force on predetermined game only if no earlier success",
+    "loss_after_lower": "RESTART_LOWER_AT_WITH_NORMAL_INITIAL",
+    "loss_after_upper": "FULL_AT_END"
+  },
+  "bar_special": {
+    "base_denom": 65536,
+    "normal_direct_upper": {
+      "dedicated_bonus_medals": 1000,
+      "next_game_upper_initial": true,
+      "carry_existing_lower_balance": 0
+    },
+    "lower_direct_upper": {
+      "dedicated_bonus_medals": 1000,
+      "next_game_upper_initial": true,
+      "carry_existing_lower_balance": true,
+      "discard_pending_lower_cz_tickets_on_bar_direct": false,
+      "translate_pending_tickets": "if N>=1 guarantee the next post-upper CZ; excess max(0,N-1) force rare roles in the following upper initial round; none are discarded"
+    },
+    "upper_bar": "AS_DEFINED_IN_UPPER_AT.bar_behavior",
+    "no_bar_in_special_free_games": true
+  },
+  "after_at_comeback": {
+    "duration_paid_games": 32,
+    "extra_cumulative_success_given_no_ordinary_hit": 0.2,
+    "independent_extra_at_hit_probability_each_game": 0.006948979383631482,
+    "normal_role_and_solo_at_draw_active": true,
+    "mode_changes_active": true,
+    "on_extra_or_normal_hit": "NEW_NORMAL_LOWER_INITIAL_1G_UNLESS_BAR_DIRECTS_UPPER",
+    "on_no_hit_by_32": "CONTINUE_ORDINARY_NORMAL_WITH_SAME_CURRENT_MODE",
+    "initial_mode_at_start_of_comeback": "DRAW_AT_EXIT_MODE_FROM_MODE_SAVED_AT_ORIGINAL_ENTRY",
+    "no_comeback_after_failed_lower_cz": true,
+    "comeback_after_failed_upper_cz": true,
+    "return_to_at_by_previous_terminal_origin": {
+      "LOWER_AT_OR_LOWER_FINISH": "NEW_LOWER_INITIAL",
+      "UPPER_AT_AFTER_UPPER_CZ_FAILURE": "NEW_UPPER_INITIAL"
+    },
+    "upper_return_confirmation": "RAINBOW7_CONFIRM_MANUAL_THREE_STOPS",
+    "lower_return_confirmation": "AT_RED7_CONFIRM"
+  },
+  "accounting": {
+    "remaining_delta_rule_paid_AT": "remaining -= (payout - effective_bet); bonus medals add directly to remaining; allow overshoot to settle",
+    "effective_bet": "0 only on first ordinary game following replay or in free special area; otherwise 3",
+    "end_condition": "after atomic game payout and medal bonuses, exit when remaining<=0; decide transition based on tickets or upper state",
+    "no_medal_or_bet_on_free_special": true,
+    "upper_initial_award": "100 base + role bonus on each of five free games, per-game cap 2000; on BAR direct add dedicated 1000 separately and carry former remaining if lower",
+    "max_2000_scope": "single role award in upper paid game or single initial free game including 100 base, not cumulative AT total or BAR dedicated reward plus initial package"
+  },
+  "presentation_constraints": {
+    "role_bonus_reveal": "on third reel stop via compact numeric display",
+    "standard_reel_spin_for_awards": true,
+    "lamps": "color and blinking patterns, visual spec deferred",
+    "cz_reels": "left and right auto stop rainbow7 on center row, then center stop allowed, success aligns 7 otherwise miss",
+    "cz_lock_duration_ms": null,
+    "no_user_approved_specific_colors": true
+  }
+}

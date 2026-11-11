@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "status": "PHASE_08_IN_PROGRESS",
+  "scope": "Original AT direct-win machine. Independent from retired standalone GOD and existing NEXT machine.",
+  "entrypoint": "original-at-phases/README.md",
+  "spec": "original-at-phases/SPEC_LOCK.md",
+  "one_phase_per_run": true,
+  "legacy_phases_unchanged": true,
+  "phases": [
+    {
+      "number": 1,
+      "file": "original-at-phases/PHASE_01_DESIGN_FREEZE.md",
+      "title": "Design lock / v5 parameter import / approvals",
+      "status": "COMPLETE",
+      "evidence": "original-at-phases/PHASE_01_VERIFICATION.md"
+    },
+    {
+      "number": 2,
+      "file": "original-at-phases/PHASE_02_REEL_CONTROL.md",
+      "title": "Dedicated reels and authoritative stop control",
+      "status": "COMPLETE",
+      "requires": [
+        "Phase01"
+      ],
+      "symbol_artwork_required_for_final_fabric_acceptance": true,
+      "evidence": "original-at-phases/PHASE_02_V2_RUNTIME_ACCEPTANCE.md"
+    },
+    {
+      "number": 3,
+      "file": "original-at-phases/PHASE_03_NORMAL_MODE.md",
+      "title": "Machine family / normal game / six-mode lottery",
+      "status": "COMPLETE",
+      "requires": [
+        "Phase02"
+      ],
+      "evidence": "original-at-phases/PHASE_03_RUNTIME_ACCEPTANCE.md"
+    },
+    {
+      "number": 4,
+      "file": "original-at-phases/PHASE_04_AT_CZ_ECONOMY.md",
+      "title": "Lower and upper AT / BAR / CZ / comeback / persistence",
+      "status": "COMPLETE",
+      "requires": [
+        "Phase03"
+      ],
+      "evidence": "original-at-phases/PHASE_04_RUNTIME_ACCEPTANCE.md"
+    },
+    {
+      "number": 5,
+      "file": "original-at-phases/PHASE_05_FABRIC_CABINET.md",
+      "title": "Fabric cabinet and input layout / status displays",
+      "status": "COMPLETE",
+      "requires": [
+        "Phase04"
+      ],
+      "evidence": "original-at-phases/PHASE_05_RUNTIME_ACCEPTANCE.md"
+    },
+    {
+      "number": 6,
+      "file": "original-at-phases/PHASE_06_PRESENTATION.md",
+      "title": "Lamp animation / reel flash / TOTAL / CZ rainbow seven",
+      "status": "COMPLETE",
+      "requires": [
+        "Phase05"
+      ],
+      "evidence": "original-at-phases/PHASE_06_RUNTIME_ACCEPTANCE.md"
+    },
+    {
+      "number": 7,
+      "file": "original-at-phases/PHASE_07_ECOSYSTEM.md",
+      "title": "Admin / data lamp / remote world-mobile / sounds / recovery",
+      "status": "COMPLETE",
+      "requires": [
+        "Phase06"
+      ],
+      "evidence": "original-at-phases/PHASE_07_RUNTIME_ACCEPTANCE.md"
+    },
+    {
+      "number": 8,
+      "file": "original-at-phases/PHASE_08_FINAL_ACCEPTANCE.md",
+      "title": "Economy calibration / full runtime regression / release",
+      "status": "IN_PROGRESS",
+      "requires": [
+        "Phase07"
+      ]
+    }
+  ],
+  "implementation_decisions": "original-at-phases/IMPLEMENTATION_DECISIONS_V1.md",
+  "numeric_reference": "original-at-phases/reference/pirijuggler_new_machine_calibrated_v7.json",
+  "spec_has_open_decisions": false,
+  "machine_type": "HYPER_DOG"
+}

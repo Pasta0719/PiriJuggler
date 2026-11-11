@@ -12,6 +12,8 @@ import org.bukkit.entity.Player;
 import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 
 /** Handles /piri data without requiring physical access to a machine. */
@@ -41,12 +43,19 @@ public final class PublicDataCommand {
             if(ids.isEmpty()){tell(sender,"No playable slot machines.");return true;}
         }
 
+        Set<Integer> hyperMachines=new HashSet<>();
+        for(int id:ids){
+            var machine=plugin.machines().snapshot().machine(id);
+            if(machine!=null&&machine.type()==MachineType.HYPER_DOG)hyperMachines.add(id);
+        }
         var databasePath=plugin.getDataFolder().toPath().resolve("piri.db").toAbsolutePath();
         plugin.executors().readOnly(()->{
             List<JsonObject> snapshots=new ArrayList<>();
             try(var connection=DriverManager.getConnection("jdbc:sqlite:"+databasePath)){
                 try(var pragma=connection.createStatement()){pragma.execute("PRAGMA query_only=ON");pragma.execute("PRAGMA busy_timeout=1000");}
-                for(int id:ids)snapshots.add(DataLampSnapshot.read(connection,id,period));
+                for(int id:ids)snapshots.add(hyperMachines.contains(id)?
+                        HyperDogDataLamp.read(connection,id,period):
+                        DataLampSnapshot.read(connection,id,period));
             }
             return snapshots;
         },(snapshots,error)->{

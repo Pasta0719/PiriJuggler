@@ -1,0 +1,138 @@
+name: HYPER_DOG Phase08 final numeric holdout and full repository verification
+
+on:
+  push:
+    branches: [plan/original-at-machine-20261107]
+    paths:
+      - 'original-at-phases/PHASE_08_FINAL_ACCEPTANCE.md'
+      - 'original-at-phases/PHASE_MAP.json'
+      - 'original-at-phases/reference/pirijuggler_new_machine_calibrated_v7.json'
+      - 'paper/src/main/java/jp/pirijuggler/paper/game/hyperdog/**'
+      - 'paper/src/test/java/jp/pirijuggler/paper/game/hyperdog/HyperDogPhase08V7ParityTest.java'
+      - '.github/workflows/hyperdog-phase08-final.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: hyperdog-phase08-final-acceptance
+  cancel-in-progress: true
+
+jobs:
+  paper-v7-parity-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check canonical v7 reference and historical protection
+        run: |
+          python original-at-phases/validate_numeric_reference.py
+          python original-at-phases/validate_reels.py
+          python original-at-phases/validate_symbol_assets.py
+          sha256sum original-at-phases/reference/pirijuggler_new_machine_calibrated_v7.json
+      - name: All unit and integration tests (all existing machine families)
+        run: |
+          chmod +x gradlew
+          ./gradlew --build-cache test --console=plain
+      - name: All modules build and production JARs
+        run: ./gradlew --build-cache build --console=plain
+      - name: Record receipt for real server-side parity
+        if: always()
+        run: |
+          mkdir -p runtime-evidence/HYPER_DOG_PHASE_08
+          git rev-parse HEAD > runtime-evidence/HYPER_DOG_PHASE_08/commit.txt
+          git status --short >> runtime-evidence/HYPER_DOG_PHASE_08/commit.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hyperdog-phase08-full-tests-and-parity
+          path: |
+            runtime-evidence/HYPER_DOG_PHASE_08/commit.txt
+            paper/build/test-results/**
+            common/build/test-results/**
+            fabric/build/test-results/**
+
+  final-setting-payout-holdout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'numpy>=1.26,<3' 'numba>=0.60,<0.67'
+      - name: Independent final predeclared seed holdout (2 x 120M paid frames per setting)
+        run: |
+          mkdir -p runtime-evidence/HYPER_DOG_PHASE_08
+          python -u original-at-phases/reference/piri_simulate_upper_comeback_v7.py \
+            --paid-per-replicate 120000000 --replicates 2 --seed 20261209 \
+            --output runtime-evidence/HYPER_DOG_PHASE_08/payout.json
+      - name: Validate six setting return targets and report all seeds, including failures
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('runtime-evidence/HYPER_DOG_PHASE_08/payout.json'))
+          print('PREDECLARED_SEED_POLICY',x['seed_policy'])
+          print('PER_REPLICATE_PAID_GAMES',x['paid_games_per_replicate'])
+          print('REPLICATES',x['replicates'])
+          bad=[]
+          for r in x['settings']:
+              print('HYPER_DOG_PHASE08_PAYOUT',json.dumps({
+                  'setting':r['setting'],'target':r['target_percent'],
+                  'actual':r['simulated_return_percent'],'delta_pp':r['difference_pp'],
+                  'rough_halfwidth_pp':r['replicate_rough_halfwidth_pp'],
+                  'replicate_return_percent':r['replicate_return_percent'],
+                  'seeds':[s['seed'] for s in r['replicates']],
+                  'paid_games':r['paid_games'],
+                  'paid_stage_net_medals_per_game':r['paid_stage_mean_net_per_game']
+              }),flush=True)
+              if abs(r['difference_pp'])>1.25:bad.append(r['setting'])
+          assert not bad,'Precommitted +/-1.25 percentage point target guard failed: '+str(bad)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hyperdog-phase08-six-setting-240m-paid-holdout
+          path: runtime-evidence/HYPER_DOG_PHASE_08/payout.json
+
+  final-upper-episode-holdout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'numpy>=1.26,<3' 'numba>=0.60,<0.67'
+      - name: Independent predeclared upper-episode holdout, exclude comeback reentry
+        run: |
+          mkdir -p runtime-evidence/HYPER_DOG_PHASE_08
+          python -u original-at-phases/reference/audit_upper_entry_v7.py \
+            --frames 120000000 --replicates 2 --seed 20261210 \
+            --output runtime-evidence/HYPER_DOG_PHASE_08/upper.json
+      - name: Validate all six upper AT expectations without selected settings
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('runtime-evidence/HYPER_DOG_PHASE_08/upper.json'))
+          for r in x['settings']:
+              print('HYPER_DOG_PHASE08_UPPER',json.dumps({
+                  'setting':r['setting'],'mean_net':r['upper_session_net_expected_medals'],
+                  'median_net':r['upper_session_net_median_medals'],
+                  'upper_entries':r['upper_episode_count'],
+                  'upper_5000_plus_probability':r['upper_session_net_ge_5000']
+              }),flush=True)
+          assert len(x['settings'])==6
+          assert all(3600<=r['upper_session_net_expected_medals']<=4400 for r in x['settings'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hyperdog-phase08-upper-episode-holdout
+          path: runtime-evidence/HYPER_DOG_PHASE_08/upper.json

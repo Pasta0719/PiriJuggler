@@ -1,0 +1,25 @@
+name: HYPER_DOG v7 refined 4k upper and six-setting holdout
+on:
+  push:
+    branches: [plan/original-at-machine-20261107]
+    paths:
+      - 'original-at-phases/reference/piri_refine_v7_4k.py'
+      - '.github/workflows/hyperdog-v7-refine-holdout.yml'
+  workflow_dispatch:
+jobs:
+  refine-holdout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'numpy>=1.26,<3' 'numba>=0.60,<0.67'
+      - name: Model candidate and independent 240M frame validation per setting
+        run: python -u original-at-phases/reference/piri_refine_v7_4k.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hyperdog-v7-refined-upper4k-numeric-proposal
+          path: runtime-evidence/HYPER_DOG_V7_4K_REFINED/**

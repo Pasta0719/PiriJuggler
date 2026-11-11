@@ -77,6 +77,11 @@ public final class RuntimeProbe implements ClientModInitializer {
     }
 
     private static void tick(MinecraftClient client) {
+        if (HyperDogPhase06Probe.enabled()) { HyperDogPhase06Probe.tick(client); return; }
+        if (HyperDogPhase05Probe.enabled()) { HyperDogPhase05Probe.tick(client); return; }
+        if (HyperDogPhase04Probe.enabled()) { HyperDogPhase04Probe.tick(client); return; }
+        if (HyperDogPhase03Probe.enabled()) { HyperDogPhase03Probe.tick(client); return; }
+        if (HyperDogPhase02Probe.enabled()) { HyperDogPhase02Probe.tick(client); return; }
         if (Phase02Probe.enabled()) { Phase02Probe.tick(client); return; }
         long now = System.currentTimeMillis();
         if (result == null && now - initializedAt > 180_000) {

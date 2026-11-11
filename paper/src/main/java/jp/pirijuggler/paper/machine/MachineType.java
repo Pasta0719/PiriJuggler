@@ -13,5 +13,6 @@ public enum MachineType {
     GOD,
     DISC,
     SKILL_STOP,
-    PACHINKO
+    PACHINKO,
+    HYPER_DOG // reserved: public creation/selection is intentionally disabled until Phase04+ integration
 }

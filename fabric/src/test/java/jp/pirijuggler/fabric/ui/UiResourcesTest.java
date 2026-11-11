@@ -76,5 +76,22 @@ class UiResourcesTest {
         assertTrue(ui.contains("juggler_god_god_bonus_end"));
         assertTrue(ui.contains("juggler_god_god_big_bgm"));
     }
+    @Test void hyperDogWorldReelsWrapAcrossAllPhysicalStripSeams() {
+        // WorldCabinetRenderer renders five rows around a fractional position;
+        // this intentionally asks for indices outside [0,20] at both seams.
+        for(var reel:jp.pirijuggler.common.reel.Reel.values()){
+            int r=reel.ordinal();
+            for(int index=-44;index<=65;index++){
+                String expected=jp.pirijuggler.common.reel.HyperDogReelControl
+                        .icon(reel,Math.floorMod(index,21)).name().toLowerCase(Locale.ROOT);
+                assertEquals(expected,UiConstants.symbol("HYPER_DOG",r,index),
+                        "world renderer index="+index+" reel="+reel);
+            }
+        }
+        assertEquals(UiConstants.symbol("HYPER_DOG",0,20),
+                UiConstants.symbol("HYPER_DOG",0,-1));
+        assertEquals(UiConstants.symbol("HYPER_DOG",1,0),
+                UiConstants.symbol("HYPER_DOG",1,21));
+    }
     @Test void sevenSegmentGeometryAndInactiveAlphaContract(){assertEquals(7,SevenSegment.RECTANGLES.length);assertArrayEquals(new int[]{8,32,24,8},SevenSegment.RECTANGLES[6]);for(int n=0;n<10;n++)for(int s=0;s<7;s++)assertEquals(SevenSegment.DIGITS[n].indexOf('A'+s)>=0,SevenSegment.active((char)('0'+n),s));assertTrue(SevenSegment.active('-',6));}
 }

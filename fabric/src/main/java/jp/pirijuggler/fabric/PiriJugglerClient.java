@@ -1,6 +1,7 @@
 package jp.pirijuggler.fabric;
 
 import jp.pirijuggler.common.protocol.EnvelopeCodec;
+import jp.pirijuggler.common.protocol.PacketType;
 import jp.pirijuggler.fabric.network.ClientHandshake;
 import jp.pirijuggler.fabric.network.ClientSession;
 import jp.pirijuggler.fabric.network.PiriPayload;
@@ -18,6 +19,9 @@ public final class PiriJugglerClient implements ClientModInitializer {
     private static final ClientHandshake HANDSHAKE = new ClientHandshake();
     private static final ClientSession SESSION = new ClientSession();
     private static final RemoteMachineRegistry REMOTE = new RemoteMachineRegistry();
+    private static final HyperDogClientReels HYPER_DOG_REELS = new HyperDogClientReels(System::currentTimeMillis);
+    private static final HyperDogCabinetState HYPER_DOG_VIEW = new HyperDogCabinetState(System::currentTimeMillis);
+    private static final HyperDogAudio HYPER_DOG_AUDIO = new HyperDogAudio(PiriSounds::play);
     private static net.minecraft.registry.RegistryKey<net.minecraft.world.World> LAST_WORLD;
 
     @Override public void onInitializeClient() {
@@ -28,11 +32,14 @@ public final class PiriJugglerClient implements ClientModInitializer {
             HANDSHAKE.reset();
             SESSION.reset();
             REMOTE.reset();
+            HYPER_DOG_REELS.reset();
+            HYPER_DOG_VIEW.reset();
+            HYPER_DOG_AUDIO.reset();
             HallAudio.reset();
             SlotUi.reset();
             sendHelloWhenChannelAvailable(client);
         }));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> { HANDSHAKE.reset(); SESSION.reset(); REMOTE.reset(); HallAudio.reset(); SlotUi.reset(); }));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> { HANDSHAKE.reset(); SESSION.reset(); REMOTE.reset(); HYPER_DOG_REELS.reset(); HYPER_DOG_VIEW.reset(); HYPER_DOG_AUDIO.reset(); HallAudio.reset(); SlotUi.reset(); }));
         ClientTickEvents.END_CLIENT_TICK.register(PiriJugglerClient::sendHelloWhenChannelAvailable);
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             var worldKey=client.world==null?null:client.world.getRegistryKey();
@@ -44,6 +51,30 @@ public final class PiriJugglerClient implements ClientModInitializer {
                 var envelope = EnvelopeCodec.decode(payload.bytes());
                 HANDSHAKE.receive(envelope); SESSION.receive(envelope, HANDSHAKE.canUseSlot());
                 if (HANDSHAKE.canUseSlot()) {
+                    // HYPER_DOG uses its own Phase02 reel-only screen; legacy SlotUi must
+                    // never parse its protocol as an existing JUGGLER machine.
+                    boolean openingHyper = envelope.packetType()==PacketType.OPEN_MACHINE
+                            && envelope.payload().has("machineType")
+                            && "HYPER_DOG".equals(envelope.payload().get("machineType").getAsString());
+                    // World-view packets must reach REMOTE even while HYPER_DOG is seated.
+                    // Match the corrected distributed Fabric bytecode.
+                    boolean wasHyper = HYPER_DOG_REELS.opened()
+                            && !RemoteMachineRegistry.isRemote(envelope.packetType());
+                    if (wasHyper && envelope.packetType()==PacketType.OPEN_MACHINE && !openingHyper) {
+                        HYPER_DOG_REELS.reset(); HYPER_DOG_VIEW.reset(); // Switch back to a legacy machine
+                        context.client().setScreen(null);
+                    } else if (openingHyper || wasHyper) {
+                        HYPER_DOG_REELS.receive(envelope);
+                        HYPER_DOG_VIEW.receive(envelope);
+                        HYPER_DOG_AUDIO.receive(envelope);
+                        if (openingHyper) {
+                            SlotUi.reset();
+                            context.client().setScreen(MachineScreenFactory.createHyperDog(HYPER_DOG_REELS,HYPER_DOG_VIEW));
+                        } else if (!HYPER_DOG_REELS.opened()) {
+                            context.client().setScreen(null);
+                        }
+                        return;
+                    }
                     if (RemoteMachineRegistry.isRemote(envelope.packetType())) {
                         REMOTE.receive(envelope);
                         Integer success=REMOTE.pollSkillSuccessSound();
@@ -58,7 +89,7 @@ public final class PiriJugglerClient implements ClientModInitializer {
                     SlotUi.receive(envelope, SESSION, outbound);
                 }
             } catch (RuntimeException exception) {
-                HANDSHAKE.reject(); SESSION.reset(); REMOTE.reset(); HallAudio.reset();
+                HANDSHAKE.reject(); SESSION.reset(); REMOTE.reset(); HYPER_DOG_REELS.reset(); HYPER_DOG_VIEW.reset(); HYPER_DOG_AUDIO.reset(); HallAudio.reset();
                 if (SlotUi.hidesHud() || AdminUi.isOpen()) context.client().setScreen(null);
                 SlotUi.reset();
             }
@@ -82,5 +113,15 @@ public final class PiriJugglerClient implements ClientModInitializer {
     public static RemoteMachineRegistry remoteMachines() {
         if (!MinecraftClient.getInstance().isOnThread()) throw new IllegalStateException("Client state requires main thread");
         return REMOTE;
+    }
+    /** Dedicated HYPER_DOG Phase05 public cabinet projection; no hidden lottery data. */
+    public static HyperDogCabinetState hyperDogCabinetState(){
+        if(!MinecraftClient.getInstance().isOnThread())throw new IllegalStateException("Client state requires main thread");
+        return HYPER_DOG_VIEW;
+    }
+    /** Dedicated Phase02+ Fabric reel state; existing slot UI stays unchanged. */
+    public static HyperDogClientReels hyperDogReels() {
+        if (!MinecraftClient.getInstance().isOnThread()) throw new IllegalStateException("Client state requires main thread");
+        return HYPER_DOG_REELS;
     }
 }

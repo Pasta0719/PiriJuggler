@@ -1,0 +1,90 @@
+name: HYPER_DOG audio regression and production build
+on:
+  push:
+    branches:
+      - main
+      - 'fix/hyperdog-*'
+      - 'feat/hyperdog-*'
+    paths:
+      - 'fabric/src/main/java/jp/pirijuggler/fabric/ui/*Audio*.java'
+      - 'fabric/src/main/java/jp/pirijuggler/fabric/ui/HyperDogResumeAudioGuard.java'
+      - 'fabric/src/test/java/jp/pirijuggler/fabric/ui/*Audio*.java'
+      - 'paper/src/main/java/jp/pirijuggler/paper/game/hyperdog/HyperDogResumePackets.java'
+      - 'scripts/verify_hyperdog_audio_release_delta.py'
+      - '.github/workflows/hyperdog-audio-safety.yml'
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify fail-closed checker rejects unauthorized JAR deltas
+        run: python scripts/verify_hyperdog_audio_release_delta.py --self-test
+      - name: Focused HYPER_DOG audio tests and production build
+        run: |
+          chmod +x gradlew
+          ./gradlew :fabric:test --console=plain \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogAudioTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogResumeAudioRegressionTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogOwnerAudioPolicyRegressionTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HallAudioTest'
+          ./gradlew packagePiriJars -x test --console=plain
+      - name: Check release JAR integrity and mandatory audio guard
+        run: |
+          python - <<'PY'
+          from zipfile import ZipFile
+          for side in ("fabric","paper"):
+              path=f"dist/piri-juggler-{side}-1.0.0.jar"
+              with ZipFile(path) as z:
+                  assert z.testzip() is None,path
+                  if side=="fabric":
+                      for cls in ("HyperDogResumeAudioGuard","HyperDogOwnerAudioFilter","HyperDogAudio"):
+                          assert f"jp/pirijuggler/fabric/ui/{cls}.class" in z.namelist(),cls
+              print("PASS",path)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hyperdog-audio-build-checks
+          path: |
+            dist/piri-juggler-*.jar
+            fabric/build/test-results/**
+            paper/build/test-results/**
+            common/build/test-results/**
+          if-no-files-found: warn
+
+  complete-regression-must-pass:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Full repository regression; do not hide unrelated failures
+        run: |
+          chmod +x gradlew
+          ./gradlew test --continue --console=plain
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hyperdog-full-regression-results
+          path: |
+            fabric/build/test-results/**
+            paper/build/test-results/**
+            common/build/test-results/**
+          if-no-files-found: warn

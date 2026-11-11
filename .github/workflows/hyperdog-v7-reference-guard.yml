@@ -1,0 +1,24 @@
+name: HYPER_DOG v7 numeric reference guard
+on:
+  pull_request:
+    paths:
+      - 'CODEX_START.md'
+      - 'original-at-phases/**'
+      - '.github/workflows/hyperdog-v7-reference-guard.yml'
+  push:
+    branches: [plan/original-at-machine-20261107]
+    paths:
+      - 'CODEX_START.md'
+      - 'original-at-phases/**'
+      - '.github/workflows/hyperdog-v7-reference-guard.yml'
+  workflow_dispatch:
+jobs:
+  reference-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify approved HYPER_DOG numeric reference
+        run: python original-at-phases/validate_numeric_reference.py
