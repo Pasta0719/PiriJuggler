@@ -33,6 +33,41 @@ class HyperDogRunJournalTest {
             assertFalse(s.toString().contains("setting"));
         }
     }
+    @Test void finalizedTotalIsHiddenAfterNextNormalGameAndNeverResurrected()throws Exception{
+        try(var c=DriverManager.getConnection("jdbc:sqlite::memory:")){
+            c.createStatement().execute("CREATE TABLE hyper_dog_runs(run_id TEXT PRIMARY KEY,machine_id INTEGER,business_period_id TEXT,first_games INTEGER,medals INTEGER NOT NULL,final INTEGER NOT NULL,updated_at INTEGER NOT NULL)");
+            c.createStatement().execute("CREATE TABLE hyper_dog_run_entries(machine_id INTEGER,business_period_id TEXT,event_id TEXT,run_id TEXT,event_type TEXT,games INTEGER,medals INTEGER,occurred_at INTEGER,PRIMARY KEY(machine_id,event_id))");
+            c.createStatement().execute("INSERT INTO hyper_dog_runs VALUES('shot-1',7,'today',42,179,1,100)");
+            c.createStatement().execute("INSERT INTO hyper_dog_run_entries VALUES(7,'today','first-hit','shot-1','RUSH',42,179,98)");
+            var finalized=HyperDogRunJournal.read(c,7,"today");
+            assertTrue(finalized.get("shotExists").getAsBoolean());
+            assertTrue(finalized.get("shotFinal").getAsBoolean());
+            assertEquals(179,finalized.get("shotNet").getAsInt());
+
+            // The next completed normal paid spin is the only event that
+            // changes finalized visibility from 1 (TOTAL) to 2 (hidden).
+            c.createStatement().executeUpdate(
+                    "UPDATE hyper_dog_runs SET final=2 WHERE run_id='shot-1' AND final=1");
+            var hidden=HyperDogRunJournal.read(c,7,"today");
+            assertFalse(hidden.get("shotExists").getAsBoolean());
+            assertFalse(hidden.get("shotFinal").getAsBoolean());
+            assertEquals(179,hidden.get("shotNet").getAsInt());
+            assertEquals(1,hidden.getAsJsonArray("history").size());
+            assertEquals(179,hidden.getAsJsonArray("history").get(0)
+                    .getAsJsonObject().get("medals").getAsInt());
+
+            // Later accepted actions and reconnects must never re-show TOTAL.
+            c.createStatement().executeUpdate(
+                    "UPDATE hyper_dog_runs SET medals=179,final=CASE WHEN final=2 THEN 2 ELSE 1 END,updated_at=102 WHERE run_id='shot-1'");
+            assertFalse(HyperDogRunJournal.read(c,7,"today").get("shotExists").getAsBoolean());
+            c.createStatement().execute("INSERT INTO hyper_dog_runs VALUES('shot-2',7,'today',43,0,0,103)");
+            var nextShot=HyperDogRunJournal.read(c,7,"today");
+            assertTrue(nextShot.get("shotExists").getAsBoolean());
+            assertFalse(nextShot.get("shotFinal").getAsBoolean());
+            assertEquals(0,nextShot.get("shotNet").getAsInt());
+        }
+    }
+
     @Test void missingLedgerReturnsEmptyInsteadOfLegacyBigReg()throws Exception{
         try(var c=DriverManager.getConnection("jdbc:sqlite::memory:")){
             var s=HyperDogRunJournal.read(c,7,"today");
