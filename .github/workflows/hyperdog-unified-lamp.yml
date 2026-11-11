@@ -24,6 +24,7 @@ jobs:
           chmod +x gradlew
           ./gradlew :paper:test --console=plain \
             --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogFullGameTest' \
+            --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogOneShotLifecycleTest' \
             --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogStateStoreTest' \
             --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogEventJournalTest' \
             --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogRunJournalTest' \
