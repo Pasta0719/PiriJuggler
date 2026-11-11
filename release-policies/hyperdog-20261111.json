@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "policy": "HYPER_DOG only — 2026-11-11 explicit change set",
+  "jars": {
+    "paper": {
+      "filename": "piri-juggler-paper-1.0.0.jar",
+      "baseline_sha256": "0e4f815bb7faa9c6a53d19fe54f3f267de8af4030104502ed1f745a2d5d65fa2",
+      "baseline_entries": 1034,
+      "protected_entries": 1024,
+      "protected_fingerprint": "3c61134c0005f2c35c5ce5426808ad3e8e16fa29ad1bed8b4c7e240d4d8825cc",
+      "allowed_modified": [
+        "jp/pirijuggler/paper/data/DataLampPublisher.class",
+        "jp/pirijuggler/paper/data/HyperDogDataLamp.class",
+        "jp/pirijuggler/paper/data/PublicDataCommand.class",
+        "jp/pirijuggler/paper/data/PublicDataText.class",
+        "jp/pirijuggler/paper/game/hyperdog/HyperDogEventJournal.class",
+        "jp/pirijuggler/paper/game/hyperdog/HyperDogFullGame.class",
+        "jp/pirijuggler/paper/game/hyperdog/HyperDogStateStore.class",
+        "jp/pirijuggler/paper/machine/RemoteMachineSync.class",
+        "jp/pirijuggler/paper/mobile/MobileRemoteGateway$HttpHandler.class",
+        "jp/pirijuggler/paper/mobile/MobileRemoteGateway.class"
+      ],
+      "allowed_added": [
+        "jp/pirijuggler/paper/game/hyperdog/HyperDogRunJournal.class",
+        "jp/pirijuggler/paper/game/hyperdog/HyperDogShotSupport$Shot.class",
+        "jp/pirijuggler/paper/game/hyperdog/HyperDogShotSupport.class",
+        "jp/pirijuggler/paper/machine/HyperDogRemoteStats$Counts.class",
+        "jp/pirijuggler/paper/machine/HyperDogRemoteStats.class"
+      ],
+      "modified_original_sha256": {
+        "jp/pirijuggler/paper/data/DataLampPublisher.class": "bd5f04c8a61b221676d8f2e85fd53c1fc22f9d88478390926630a41a7d4b2e19",
+        "jp/pirijuggler/paper/data/HyperDogDataLamp.class": "86e3348ff453b80c7fa40439747888eae3718d7da8d97324dbc1e2afe19b813d",
+        "jp/pirijuggler/paper/data/PublicDataCommand.class": "de6e1cd99b905b27280f36541f379e8b5c7458142c2b67b06739d549a2177391",
+        "jp/pirijuggler/paper/data/PublicDataText.class": "c33c937b8a2007cb7af483d975f7ba232022ee482e3d02ed520bc54ba87405b3",
+        "jp/pirijuggler/paper/game/hyperdog/HyperDogEventJournal.class": "418b62cd49b3a5bc3c0ffd03ab421de705ff5d327b2d07645236813395f4188d",
+        "jp/pirijuggler/paper/game/hyperdog/HyperDogFullGame.class": "c74c6eab5957780a65b1e91a76d9d3046fa193b457262e94b638d48dd0d0edd5",
+        "jp/pirijuggler/paper/game/hyperdog/HyperDogStateStore.class": "d13be1c83cfcc62f26ff576f2081255373e3894cb0a303529e97edeef746e226",
+        "jp/pirijuggler/paper/machine/RemoteMachineSync.class": "0698bd46c843322ce429a24d23e97f686d19399cd1d3b59b9293d606ca2c2ac6",
+        "jp/pirijuggler/paper/mobile/MobileRemoteGateway$HttpHandler.class": "afe92d8971b13f19eef898d8f3ae7b4d5c72ef333a8814d1bb901b18d599ac07",
+        "jp/pirijuggler/paper/mobile/MobileRemoteGateway.class": "e1158e1c8ec2350f03afb760abe2552126ae6fbb01887cfeeba85b95f4f2ba51"
+      }
+    },
+    "fabric": {
+      "filename": "piri-juggler-fabric-1.0.0.jar",
+      "baseline_sha256": "8c39034e82e8df39b3c4c486b91c56de2a3b2a9136ab58947ab6abaccd21106c",
+      "baseline_entries": 212,
+      "protected_entries": 209,
+      "protected_fingerprint": "baa239220046031fe679e7a05b8d44722a885bf2b7e1ba8e5bab7896b90b599c",
+      "allowed_modified": [
+        "jp/pirijuggler/fabric/network/RemoteMachineViewState.class",
+        "jp/pirijuggler/fabric/render/WorldCabinetRenderer.class",
+        "jp/pirijuggler/fabric/ui/HyperDogCabinetScreen.class"
+      ],
+      "allowed_added": [
+        "jp/pirijuggler/fabric/network/HyperDogWorldStats.class"
+      ],
+      "modified_original_sha256": {
+        "jp/pirijuggler/fabric/network/RemoteMachineViewState.class": "8ccb00a1a51f77a455f5ad18bebeb7f67457b5527775956dddd5b6925e6a0a08",
+        "jp/pirijuggler/fabric/render/WorldCabinetRenderer.class": "5ee4e80604d45b47d7d9d25a68eb6d3ea04d8a7564c0dd0980be577c13161ce0",
+        "jp/pirijuggler/fabric/ui/HyperDogCabinetScreen.class": "f304d096b19aba41443bab4c82d498298113b3d6a0f3b5493a428f987e2dd031"
+      }
+    }
+  }
+}

@@ -17,6 +17,9 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: gradle
+      - name: Exercise mandatory JAR release safety gate (negative tests included)
+        shell: cmd
+        run: python -m unittest discover -s tests -p test_guard_jar_release.py -v
       - name: Production build and tests
         shell: cmd
         run: gradlew.bat test packagePiriJars --console=plain
@@ -24,7 +27,8 @@ jobs:
         shell: cmd
         run: build-runtime-test-helper.bat --no-pause
 
-      - name: Upload production jars
+      # The Gradle packagePiriJars task blocks and removes unsafe JARs.
+      - name: Upload production jars only after the mandatory gate passes
         uses: actions/upload-artifact@v4
         with:
           name: piri-juggler-production
