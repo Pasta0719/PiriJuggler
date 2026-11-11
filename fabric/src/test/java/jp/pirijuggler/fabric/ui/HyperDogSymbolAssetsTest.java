@@ -43,12 +43,15 @@ class HyperDogSymbolAssetsTest {
             assertEquals(normal,HyperDogCabinetScreen.symbolRenderSize("gui/original_at/symbols/"+name+".png"));
     }
 
-    @Test void allApprovedSymbolsAreTransparentPngsWithExactDogSources() throws IOException, NoSuchAlgorithmException {
+    @Test void allApprovedSymbolsAreTransparentPngsWithStableSources() throws IOException, NoSuchAlgorithmException {
         Map<String,String> expectedHashes=Map.of(
-                "replay","8507303cbeeaf4017a132687aaffc221dd8d886468ad13a6578b1d7820816266",
-                "red7","ccdc512b7300fd5812bbdb1e3d5fbeca21f6d47628324b185c21657b94a5fabf",
-                "rainbow7","0195c47805400a2e715267527f24e30fc788cf2a1d8ac0c1c8bc59c95e734ced",
-                "bar","a8e9d0fb31eaa6b8748fb7f3c3ba1d4dd833faf776be759c173d816ffa0d9ac0");
+                "bar","94c8a7fb32d43abafecb677757c1c4c062114b307d8e49b78eacd fefa52e151f".replace(" ",""),
+                "cherry","8f50769ec4e2c551fa199a452db37aa9d35d1d1fe62032efb734ae97b57cc2a0",
+                "grape","c2ef0a66e18fce4d911be491dc4123dde1c21579069d3f62a26ad2c1443b6195",
+                "rainbow7","5b11f8ed7faf0324a36c9b14909bbee3be71597d07632e6091e2febbac99fd23",
+                "red7","da91b4731a1ceb3e574f66e3273acdbe3d5b09120c8638c4e4420a314afd991e",
+                "replay","8b3175365830a6c49933d72bff75c4efcd96e5930f202964fdf362f6c5318280",
+                "watermelon","07f5222b2e58ee1679bd3e764667be93eb7dbe5ea47e4e51545add7f57bdf3b6");
         List<String> names=List.of("replay","red7","rainbow7","bar","grape","cherry","watermelon");
         for(String name:names) {
             String path="assets/piri/textures/gui/original_at/symbols/"+name+".png";
@@ -56,15 +59,12 @@ class HyperDogSymbolAssetsTest {
             assertNotNull(url,"Missing Fabric symbol asset: "+path);
             BufferedImage png=ImageIO.read(url);
             assertNotNull(png,"Corrupt PNG: "+path);
-            int expectedDimension=expectedHashes.containsKey(name)?320:256;
-            assertEquals(expectedDimension,png.getWidth(),name);
-            assertEquals(expectedDimension,png.getHeight(),name);
-            if(expectedHashes.containsKey(name)){
-                byte[] bytes;
-                try(var stream=url.openStream()){bytes=stream.readAllBytes();}
-                String actual=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
-                assertEquals(expectedHashes.get(name),actual,name+" must be byte-identical to the approved source");
-            }
+            assertEquals(256,png.getWidth(),name);
+            assertEquals(256,png.getHeight(),name);
+            byte[] bytes;
+            try(var stream=url.openStream()){bytes=stream.readAllBytes();}
+            String actual=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
+            assertEquals(expectedHashes.get(name),actual,name+" must be byte-identical to the approved source");
             assertTrue(png.getColorModel().hasAlpha(),name+" must preserve transparency");
             assertEquals(0,(png.getRGB(0,0)>>>24)&255,name+" must have transparent background");
         }

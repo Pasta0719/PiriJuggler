@@ -98,7 +98,7 @@ public class HyperDogReelPreviewScreen extends Screen {
         context.getMatrices().push();
         context.getMatrices().translate(vp.x(),vp.y(),0);
         context.getMatrices().scale((float)vp.scale(),(float)vp.scale(),1f);
-        context.fill(668,287,1572,701,0xff0a0a10);
+        context.fill(668,287,1572,701,HyperDogCabinetScreen.reelBackgroundColor());
         for(Reel reel:Reel.values()){
             int r=reel.ordinal();
             for(int row=-1;row<=1;row++){

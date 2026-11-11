@@ -18,6 +18,10 @@ class HyperDogLayoutRegressionTest {
                 &&r.y()+r.h()<=outer.y()+outer.h(),name+" outside "+outer);
     }
 
+    @Test void reelWindowUsesTheExistingMachineBackgroundColor(){
+        assertEquals(UiConstants.color("REEL_BG"),HyperDogCabinetScreen.reelBackgroundColor());
+    }
+
     @Test void oneChanceEmblemAlignedWithLcdAndClearOfAllOtherPanels(){
         var chance=HyperDogCabinetState.announcementRect(0);
         var body=HyperDogCabinetState.cabinetRect();

@@ -21,11 +21,12 @@ import java.util.*;
  */
 public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
     private static final int OUTSIDE=0xff12121a,EDGE=0xff817a95,CABINET=0xff302f41;
-    private static final int REEL_BG=0xff11121d,PANEL=0xff101824,OFF=0xff25242c;
+    private static final int REEL_BG=0xfff4f1e8,PANEL=0xff101824,OFF=0xff25242c;
     private static final int GOLD=0xffd9b65c,PURPLE=0xffb78cff,CYAN=0xff5ad8f0;
     private static final int WHITE=0xffeaeffa,STEEL=0xff404454,RED=0xffb8495a;
     private static final int NORMAL_SYMBOL_SIZE=124;
     private static final int SPECIAL_SYMBOL_SIZE=166; // Like other cabinets, 7/BAR are bigger than ordinary symbols.
+    static int reelBackgroundColor(){return REEL_BG;}
     static int symbolRenderSize(String path){
         return path.endsWith("/red7.png")||path.endsWith("/rainbow7.png")||path.endsWith("/bar.png")
                 ? SPECIAL_SYMBOL_SIZE : NORMAL_SYMBOL_SIZE;
