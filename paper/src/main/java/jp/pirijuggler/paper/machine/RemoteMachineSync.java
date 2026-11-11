@@ -518,7 +518,11 @@ public final class RemoteMachineSync {
             UUID viewerId = viewer.getUniqueId();
             if (!compatible.test(viewerId)) continue;
             Session own = state.session(viewerId);
-            if (own != null && own.machine() == machineId && own.lifecycle() == Session.Lifecycle.ACTIVE) continue;
+            // The seated HYPER_DOG player also needs live world-view events.
+            // Other machine types retain their established owner exclusion.
+            boolean activeOwner=own != null && own.machine() == machineId
+                    && own.lifecycle() == Session.Lifecycle.ACTIVE;
+            if (HyperDogOwnerView.shouldExcludeOwner(activeOwner,machine)) continue;
             Set<Integer> current = interests.computeIfAbsent(viewerId, ignored -> new HashSet<>());
             if (!current.contains(machineId)) {
                 if (!inRange(viewer, machine)) continue;
