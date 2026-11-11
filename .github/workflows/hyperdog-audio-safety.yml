@@ -32,10 +32,15 @@ jobs:
           python-version: '3.12'
       - name: Verify fail-closed checker rejects unauthorized JAR deltas
         run: python scripts/verify_hyperdog_audio_release_delta.py --self-test
-      - name: Run all existing machine tests and build both real production JARs
+      - name: Focused HYPER_DOG audio tests and production build
         run: |
           chmod +x gradlew
-          ./gradlew test packagePiriJars --console=plain
+          ./gradlew :fabric:test --console=plain \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogAudioTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogResumeAudioRegressionTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogOwnerAudioPolicyRegressionTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HallAudioTest'
+          ./gradlew packagePiriJars -x test --console=plain
       - name: Check release JAR integrity and mandatory audio guard
         run: |
           python - <<'PY'
@@ -55,6 +60,30 @@ jobs:
           name: hyperdog-audio-build-checks
           path: |
             dist/piri-juggler-*.jar
+            fabric/build/test-results/**
+            paper/build/test-results/**
+            common/build/test-results/**
+          if-no-files-found: warn
+
+  complete-regression-must-pass:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Full repository regression; do not hide unrelated failures
+        run: |
+          chmod +x gradlew
+          ./gradlew test --continue --console=plain
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hyperdog-full-regression-results
+          path: |
             fabric/build/test-results/**
             paper/build/test-results/**
             common/build/test-results/**
