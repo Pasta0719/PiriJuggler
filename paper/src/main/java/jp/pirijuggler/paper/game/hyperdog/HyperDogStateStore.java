@@ -163,6 +163,7 @@ public final class HyperDogStateStore {
             // Same SQLite transaction as wallet/reel/sequence: no event without an accepted game.
             // Event ID is session+sequence+type and safe against packet retries/restarts.
             HyperDogEventJournal.append(db,owner,prior,game,nextSequence,now);
+            HyperDogRunJournal.append(db,owner,prior,game,nextSequence,now);
             updatePeriodStats(owner,prior,game,now);
             if(confirmedDisplayStops!=null)
                 db.sql("UPDATE machines SET last_left_stop=?,last_center_stop=?,"+
@@ -189,14 +190,12 @@ public final class HyperDogStateStore {
         long spent=before==null?after.totalIn():Math.subtractExact(after.totalIn(),before.totalIn());
         long earned=before==null?after.totalOut():Math.subtractExact(after.totalOut(),before.totalOut());
         int finishedPaid=0;
-        if(before!=null && before.at()!=null && before.at().pending()!=null &&
-           before.at().pending().bet()>0 &&
-           (after.at()==null||after.at().pending()==null))finishedPaid=1;
-        else if(before!=null && before.at()==null&&before.normal().pending()!=null &&
-                before.normal().pending().bet()>0 &&
-                after.normal().pending()==null)finishedPaid=1;
+        // Only normal-paid third stops advance G. RUSH, HYPER and CZ are excluded.
+        if(before!=null&&before.at()==null&&before.normal().pending()!=null&&
+                before.normal().pending().bet()>0&&after.normal().pending()==null)finishedPaid=1;
+        boolean atStarted=before!=null&&before.at()==null&&after.at()!=null;
         boolean atEnded=before!=null&&before.at()!=null&&after.at()==null;
-        if(spent==0&&earned==0&&finishedPaid==0&&!atEnded)return;
+        if(spent==0&&earned==0&&finishedPaid==0&&!atEnded&&!atStarted)return;
         String period=owner.text("source_business_period_id");
         var rows=db.rows("SELECT total_games,current_games,today_difference,today_max_difference "+
                 "FROM machine_period_stats WHERE machine_id=? AND business_period_id=?",
@@ -204,7 +203,7 @@ public final class HyperDogStateStore {
         if(rows.size()!=1)throw new SQLException("Missing HYPER_DOG period stats");
         var row=rows.getFirst();
         long games=Math.addExact(((Number)row.get("total_games")).longValue(),finishedPaid);
-        long current=atEnded?0:Math.addExact(((Number)row.get("current_games")).longValue(),finishedPaid);
+        long current=atStarted?0:Math.addExact(((Number)row.get("current_games")).longValue(),finishedPaid);
         long difference=Math.addExact(Math.subtractExact(
                 ((Number)row.get("today_difference")).longValue(),spent),earned);
         long maximum=Math.max(((Number)row.get("today_max_difference")).longValue(),difference);
@@ -212,7 +211,7 @@ public final class HyperDogStateStore {
                 "today_difference=?,today_max_difference=? WHERE machine_id=? AND business_period_id=?",
                 games,current,difference,maximum,owner.machine(),period);
         if(changed!=1)throw new SQLException("HYPER_DOG period update mismatch");
-        if(finishedPaid!=0||atEnded)db.sql(
+        if(spent!=0||earned!=0||finishedPaid!=0||atEnded)db.sql(
                 "INSERT INTO graph_points(machine_id,business_period_id,game,difference,occurred_at) "+
                 "VALUES(?,?,?,?,?)",owner.machine(),period,games,difference,now);
     }
