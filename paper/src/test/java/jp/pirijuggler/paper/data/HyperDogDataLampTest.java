@@ -25,7 +25,10 @@ class HyperDogDataLampTest {
             assertEquals(0,j.get("bigCount").getAsInt());
             assertEquals(0,j.get("regCount").getAsInt());
             assertEquals(125,j.get("totalGames").getAsInt());
-            assertEquals(12,j.getAsJsonArray("history").size());
+            assertEquals(0,j.getAsJsonArray("history").size(),
+                    "legacy AT/CZ internals must not leak into new RUSH/CZ/HYPER history");
+            assertEquals(0,j.get("rushCount").getAsInt());
+            assertEquals(0,j.get("hyperCount").getAsInt());
             assertEquals(4,j.get("atCount").getAsInt());
             assertFalse(j.toString().contains("setting"));
             assertFalse(j.toString().contains("rngState"));

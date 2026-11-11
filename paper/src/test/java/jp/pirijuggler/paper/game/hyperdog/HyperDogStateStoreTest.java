@@ -85,7 +85,8 @@ class HyperDogStateStoreTest {
                 "FROM machine_period_stats WHERE machine_id=? AND business_period_id=?",
                 machine,db.state().period()).getFirst();
         assertEquals(1,((Number)stats.get("total_games")).longValue());
-        assertEquals(1,((Number)stats.get("current_games")).longValue());
+        assertEquals(0,((Number)stats.get("current_games")).longValue(),
+                "first-hit entry resets CURRENT G; no AT/CZ games are counted");
         assertEquals(12,((Number)stats.get("today_difference")).longValue());
         assertEquals(12,((Number)stats.get("today_max_difference")).longValue());
         assertEquals(0,((Number)db.rows(
