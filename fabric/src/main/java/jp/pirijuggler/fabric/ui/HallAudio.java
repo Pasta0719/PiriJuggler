@@ -99,7 +99,7 @@ public final class HallAudio {
     }
 
     private static void play(int machineId,RemoteMachineViewState machine,String logical){
-        if(!publicHallSoundAllowed(logical)||!inRange(machine,SE_RADIUS))return;
+        if(!HyperDogOwnerAudioFilter.allowRemoteOneShot(machineId,logical)||!inRange(machine,SE_RADIUS))return;
         String sound=resolve(machine,logical);
         float base=("notice".equals(logical)||"notice_strong".equals(logical)||"tenpai".equals(logical))?NOTICE_VOLUME:NORMAL_VOLUME;
         float volume=attenuatedVolume(machine,base,SE_RADIUS);

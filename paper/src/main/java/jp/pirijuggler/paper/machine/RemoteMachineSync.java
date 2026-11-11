@@ -430,6 +430,7 @@ public final class RemoteMachineSync {
                 body.add("startPhase", phase);
             }
         }
+        HyperDogRemoteSnapshot.correct(machine,session,body);
         send(viewer, PacketType.REMOTE_MACHINE_SNAPSHOT, body);
     }
 
