@@ -19,8 +19,8 @@ public final class HyperDogFullGame {
     private boolean lastExtraComeback;
     private boolean comebackFromUpper;
     // Persisted lifetime of one initial AT and all of its comeback reentries.
-    private long shotSerial,shotCompletedNet;
-    private boolean shotFinal;
+    private long shotSerial,shotCompletedNet,shotAtInBase,shotAtOutBase;
+    private boolean shotFinal,shotLegacyAtNet;
 
     public HyperDogFullGame(int setting,long seed,long credits) {
         normal=new HyperDogNormalGame(setting,seed,credits);
@@ -37,7 +37,14 @@ public final class HyperDogFullGame {
     public long completedAtCount(){return completedAtCount;}
     public long lastAtNet(){return lastAtNet;}
     public long shotSerial(){return shotSerial;}
-    public long shotGain(){return Math.addExact(shotCompletedNet,at==null?0:at.atNet());}
+    public long shotGain(){return Math.addExact(shotCompletedNet,liveAtShotNet());}
+    private long liveAtShotNet(){
+        if(at==null)return 0;
+        if(shotLegacyAtNet)return at.atNet();
+        return Math.subtractExact(
+                Math.subtractExact(at.totalOut(),shotAtOutBase),
+                Math.subtractExact(at.totalIn(),shotAtInBase));
+    }
     public boolean shotFinal(){return shotFinal;}
     public boolean shotExists(){return shotSerial>0;}
     public boolean lastExtraComeback(){return lastExtraComeback;}
@@ -111,6 +118,9 @@ public final class HyperDogFullGame {
             shotCompletedNet=0;
             shotFinal=false;
         }
+        shotAtInBase=normal.totalBet();
+        shotAtOutBase=normal.totalPayout();
+        shotLegacyAtNet=false;
         at=new HyperDogAtGame(setting,seed,normal.credits(),normal.totalBet(),normal.totalPayout(),
                 directUpper,upperComeback);
         comebackPaidLeft=0;comebackFromUpper=false;
@@ -128,7 +138,8 @@ public final class HyperDogFullGame {
         restored.resumeAfterAt();
         long count=Math.addExact(completedAtCount,1);
         long net=at.atNet();
-        shotCompletedNet=Math.addExact(shotCompletedNet,net);
+        shotCompletedNet=Math.addExact(shotCompletedNet,liveAtShotNet());
+        shotLegacyAtNet=false;
         boolean endedUpper=at.completedFromUpper();
         normal=restored;at=null;
         completedAtCount=count;lastAtNet=net;
@@ -186,6 +197,9 @@ public final class HyperDogFullGame {
         j.addProperty("shotSerial",shotSerial);
         j.addProperty("shotCompletedNet",shotCompletedNet);
         j.addProperty("shotFinal",shotFinal);
+        j.addProperty("shotAtInBase",shotAtInBase);
+        j.addProperty("shotAtOutBase",shotAtOutBase);
+        j.addProperty("shotLegacyAtNet",shotLegacyAtNet);
         return j;
     }
     public static HyperDogFullGame restore(JsonObject j){
@@ -205,7 +219,12 @@ public final class HyperDogFullGame {
                 (f.at==null&&f.shotSerial>0?f.lastAtNet:0);
         f.shotFinal=j.has("shotFinal")&&j.get("shotFinal").getAsBoolean();
         if(!j.has("shotFinal")&&f.shotSerial>0&&f.at==null&&f.comebackPaidLeft==0)f.shotFinal=true;
-        if(f.shotSerial<0||f.shotFinal&&(f.at!=null||f.comebackPaidLeft>0)||
+        f.shotAtInBase=j.has("shotAtInBase")?j.get("shotAtInBase").getAsLong():0L;
+        f.shotAtOutBase=j.has("shotAtOutBase")?j.get("shotAtOutBase").getAsLong():0L;
+        f.shotLegacyAtNet=j.has("shotLegacyAtNet")?j.get("shotLegacyAtNet").getAsBoolean():
+                (f.at!=null&&!j.has("shotAtInBase"));
+        if(f.shotSerial<0||f.shotAtInBase<0||f.shotAtOutBase<0||
+           f.shotFinal&&(f.at!=null||f.comebackPaidLeft>0)||
            f.comebackPaidLeft<0||f.comebackPaidLeft>32||f.completedAtCount<0||
            f.comebackFromUpper&&f.comebackPaidLeft==0||
            f.at!=null&&!f.normal.waitingForAt()||
