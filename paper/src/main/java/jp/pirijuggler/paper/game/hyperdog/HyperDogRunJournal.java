@@ -48,6 +48,10 @@ public final class HyperDogRunJournal {
     }
     public static void append(PiriDatabase db,Session owner,HyperDogFullGame before,
                               HyperDogFullGame after,long sequence,long now)throws SQLException{
+        // A restart or new seated session may reset shotSerial even though the
+        // most recent finalized TOTAL still exists in the durable machine ledger.
+        // Check the actual next normal game BEFORE the no-shot early return.
+        hideLatestFinalizedShotAfterNormalGame(db,owner,before,after);
         if(after.shotSerial()<=0)return;
         String period=owner.text("source_business_period_id");
         if(period==null||period.isBlank())throw new SQLException("No HYPER_DOG business period");
@@ -97,6 +101,24 @@ public final class HyperDogRunJournal {
      * Only the first separate, completed normal game after that clears the
      * live panel. The shot and all historical ledger entries remain intact.
      */
+    /**
+     * Clear the displayed finalized TOTAL after the next completed normal
+     * game even if the original session/shotSerial was reset on restart.
+     * Never erase the run row, payout, entry history, or an active GET.
+     */
+    private static void hideLatestFinalizedShotAfterNormalGame(PiriDatabase db,Session owner,
+            HyperDogFullGame before,HyperDogFullGame after)throws SQLException{
+        if(before==null||before.at()!=null||after.at()!=null||
+           before.comebackPaidLeft()!=0||after.comebackPaidLeft()!=0||
+           before.shotSerial()!=after.shotSerial()||
+           after.normal().games()<=before.normal().games())return;
+        ensure(db);
+        db.sql("UPDATE "+RUNS+" SET final=2 WHERE run_id=("+
+                "SELECT run_id FROM "+RUNS+" WHERE machine_id=? "+
+                "ORDER BY updated_at DESC,run_id DESC LIMIT 1) AND final=1",
+                owner.machine());
+    }
+
     private static void hideFinishedShotAfterOneNormalGame(PiriDatabase db,String run,
             HyperDogFullGame before,HyperDogFullGame after)throws SQLException{
         if(before!=null&&before.shotFinal()&&after.shotFinal()&&
