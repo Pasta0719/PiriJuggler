@@ -56,7 +56,10 @@ public final class PiriJugglerClient implements ClientModInitializer {
                     boolean openingHyper = envelope.packetType()==PacketType.OPEN_MACHINE
                             && envelope.payload().has("machineType")
                             && "HYPER_DOG".equals(envelope.payload().get("machineType").getAsString());
-                    boolean wasHyper = HYPER_DOG_REELS.opened();
+                    // World-view packets must reach REMOTE even while HYPER_DOG is seated.
+                    // Match the corrected distributed Fabric bytecode.
+                    boolean wasHyper = HYPER_DOG_REELS.opened()
+                            && !RemoteMachineRegistry.isRemote(envelope.packetType());
                     if (wasHyper && envelope.packetType()==PacketType.OPEN_MACHINE && !openingHyper) {
                         HYPER_DOG_REELS.reset(); HYPER_DOG_VIEW.reset(); // Switch back to a legacy machine
                         context.client().setScreen(null);
