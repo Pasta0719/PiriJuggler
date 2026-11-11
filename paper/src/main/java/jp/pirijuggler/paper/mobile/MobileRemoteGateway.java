@@ -1046,20 +1046,20 @@ function renderPreData(d){
  const hyper=d.machineType==="HYPER_DOG";
  $("dCurrent").textContent=d.currentGames||0;$("dTotal").textContent=d.totalGames||0;
  $("dDiff").textContent=signed(d.todayDifference);$("dMax").textContent=signed(d.todayMaxDifference);
- $("dBigLabel").textContent=hyper?"AT初当たり":"BIG";
- $("dRegLabel").textContent=hyper?"上位CZ回数":"REG";
- $("dBig").textContent=hyper?(d.atFirstHits||0):(d.bigCount||0);
- $("dReg").textContent=hyper?(d.czAttempts||0):(d.regCount||0);
- $("dUpperPanel").classList.toggle("hidden",!hyper);
+ $("dBigLabel").textContent=hyper?"HYPER":"BIG";
+ $("dRegLabel").textContent=hyper?"RUSH":"REG";
+ $("dBig").textContent=hyper?(d.hyperCount||0):(d.bigCount||0);
+ $("dReg").textContent=hyper?(d.rushCount||0):(d.regCount||0);
+ $("dUpperPanel").classList.add("hidden");
  $("dUpper").textContent=hyper?(d.upperEntries||0):0;
- $("preHistoryTitle").textContent=hyper?"AT・CZ HISTORY":"BONUS HISTORY";
+ $("preHistoryTitle").textContent=hyper?"RUSH / CZ / HYPER HISTORY":"BONUS HISTORY";
  drawGraph($("preGraph"),d.graph||[],d.totalGames||0);
  const h=$("preHistory");h.textContent="";
  (d.history||[]).slice(0,20).forEach(function(x){
    const r=document.createElement("div");r.className="histRow";
    const name=document.createElement("b");name.textContent=hyper?hyperEventLabel(x.type):x.type;
    const value=document.createElement("span");
-   value.textContent=hyper?(x.type==="AT_END"?signed(x.medals):""):(x.games+"G");
+   value.textContent=hyper?((x.games===undefined?"":x.games+"G")+(x.medals===undefined?"":(x.games===undefined?"":" ")+signed(x.medals))):(x.games+"G");
    r.append(name,value);h.append(r);
  });
  if(!(d.history||[]).length)h.textContent=hyper?"-- no AT/CZ history yet --":"-- no bonus yet --";
@@ -1447,11 +1447,47 @@ async function pollData(){
  try{currentData=await api("/api/data?id="+currentState.machineId);renderGameData(currentData)}catch(e){}
 }
 function renderGameData(d){
- $("gCurrent").textContent=d.currentGames||0;$("gTotal").textContent=d.totalGames||0;$("gMax").textContent=signed(d.todayMaxDifference);$("gBig").textContent=d.bigCount||0;$("gReg").textContent=d.regCount||0;$("diffValue").textContent=signed(d.todayDifference);
- $("bigOdds").querySelector("b").textContent=odds(d.totalGames,d.bigCount);$("regOdds").querySelector("b").textContent=odds(d.totalGames,d.regCount);$("allOdds").querySelector("b").textContent=odds(d.totalGames,Number(d.bigCount||0)+Number(d.regCount||0));
+ const hyper=d.machineType==="HYPER_DOG";
+ const rush=Number(d.rushCount||0),upper=Number(d.hyperCount||0);
+ $("gCurrent").textContent=d.currentGames||0;$("gTotal").textContent=d.totalGames||0;
+ $("gMax").textContent=signed(d.todayMaxDifference);
+ $("gBig").textContent=hyper?rush:(d.bigCount||0);
+ $("gReg").textContent=hyper?upper:(d.regCount||0);
+ $("diffValue").textContent=signed(d.todayDifference);
+ $("bigBox").querySelector(".t").textContent=hyper?"RUSH":"BIG";
+ $("regBox").querySelector(".t").textContent=hyper?"HYPER":"REG";
+ $("bigOdds").firstChild.textContent=hyper?"RUSH ODDS ":"BIG ODDS ";
+ $("regOdds").firstChild.textContent=hyper?"HYPER ODDS ":"REG ODDS ";
+ $("bigOdds").querySelector("b").textContent=odds(d.totalGames,hyper?rush:d.bigCount);
+ $("regOdds").querySelector("b").textContent=odds(d.totalGames,hyper?upper:d.regCount);
+ $("allOdds").querySelector("b").textContent=odds(d.totalGames,
+   hyper?rush+upper:Number(d.bigCount||0)+Number(d.regCount||0));
  $("graphEnd").textContent=Number(d.totalGames||0)>0?Number(d.totalGames).toLocaleString()+"G":"-";
- const h=$("gameHistory");h.textContent="";(d.history||[]).forEach(function(x){const row=document.createElement("div");row.className="historyItem";let c=x.type==="BIG"?"big":x.type==="REG"?"reg":x.type==="GOD"?"god":"";row.innerHTML='<span class="'+c+'">'+x.type+'</span><span>'+x.games+'G</span>';h.append(row)});
- $("chain").classList.toggle("hidden",!d.piriChain);$("chainCount").textContent="CHAIN x"+Math.max(1,Number(d.piriChainCount||1));
+ $("historyTitle").textContent=hyper?"RUSH / CZ / HYPER HISTORY":"BONUS HISTORY";
+ const h=$("gameHistory");h.textContent="";
+ (d.history||[]).forEach(function(x){
+  const row=document.createElement("div");row.className="historyItem";
+  const name=document.createElement("span");
+  name.className=x.type==="BIG"?"big":x.type==="REG"?"reg":x.type==="GOD"?"god":"";
+  name.textContent=x.type;const detail=document.createElement("span");
+  detail.textContent=hyper?((x.games===undefined?"":x.games+"G")+
+   (x.medals===undefined?"":(x.games===undefined?"":" ")+signed(x.medals))):x.games+"G";
+  row.append(name,detail);h.append(row);
+ });
+ const chain=$("chain"),display=$("chainCount");
+ if(hyper){
+  chain.classList.toggle("hidden",!d.shotExists);
+  chain.firstChild.textContent="";
+  const done=!!d.shotFinal;
+  display.textContent=(done?"TOTAL ":"GET ")+Number(d.shotNet||0).toLocaleString();
+  chain.style.borderColor=done?"#d9b65c":"#58e36a";
+  chain.style.color=done?"#d9b65c":"#58e36a";
+ }else{
+  chain.classList.toggle("hidden",!d.piriChain);
+  chain.firstChild.textContent="PIRI CHAIN";
+  display.textContent="CHAIN x"+Math.max(1,Number(d.piriChainCount||1));
+  chain.style.borderColor="";chain.style.color="";
+ }
  drawGraph($("gameGraph"),d.graph||[],d.totalGames||0);
 }
 function drawGraph(surface,graph,total){
