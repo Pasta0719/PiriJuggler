@@ -34,7 +34,7 @@ def digest(entries: dict[str, str]) -> str:
         h.update(b"\n")
     return h.hexdigest()
 
-def audit(side: str, jar_path: Path, report_dir: Path) -> None:
+def audit(side: str, jar_path: Path, report_dir: Path) -> bool:
     with zipfile.ZipFile(jar_path) as jar:
         members = {item.filename: hashlib.sha256(jar.read(item.filename)).hexdigest() for item in jar.infolist()}
         classes = {key: value for key, value in members.items() if key.endswith(".class")}
@@ -50,7 +50,13 @@ def audit(side: str, jar_path: Path, report_dir: Path) -> None:
     report_dir.mkdir(parents=True, exist_ok=True)
     (report_dir / f"{side}-entries.json").write_text(json.dumps(members, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (report_dir / f"{side}-summary.json").write_text(json.dumps(actual, indent=2) + "\n", encoding="utf-8")
+    return all(actual[key] == REFERENCE[side][key] for key in REFERENCE[side])
 
 if __name__ == "__main__":
-    audit("paper", Path(sys.argv[1]), Path(sys.argv[3]))
-    audit("fabric", Path(sys.argv[2]), Path(sys.argv[3]))
+    if len(sys.argv) != 4:
+        raise SystemExit("usage: audit_deployed_binary_identity.py <paper.jar> <fabric.jar> <report-dir>")
+    paper_ok = audit("paper", Path(sys.argv[1]), Path(sys.argv[3]))
+    fabric_ok = audit("fabric", Path(sys.argv[2]), Path(sys.argv[3]))
+    if not paper_ok or not fabric_ok:
+        raise SystemExit("The supplied JAR pair differs from the owner-approved deployed reference")
+    print("APPROVED: both JARs match the exact owner-deployed SHA256 and content digests")
