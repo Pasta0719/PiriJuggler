@@ -206,10 +206,9 @@ public final class HyperDogCabinetState {
         }
     }
     /**
-     * HYPER_DOG-only cabinet reflow. The 900px reel layout and top data lamp
-     * are deliberately untouched; larger tropical-flower announcement lamps
-     * live in the reel shoulders, with the right data sidebar moved out.
-     * The shared SlotLayout still governs every other machine family.
+     * HYPER_DOG-only arrangement. The original reel, datalamp and world
+     * cabinet sizes remain untouched. One CHANCE emblem sits above the
+     * existing left status lamps; the two former flower lamps are removed.
      */
     public static SlotLayout.Rect cabinetRect(){
         return new SlotLayout.Rect(290,205,1415,835);
@@ -221,15 +220,14 @@ public final class HyperDogCabinetState {
         if(index<0||index>2)throw new IllegalArgumentException("lamp");
         return new SlotLayout.Rect(388,372+61*index,146,36);
     }
+    /** Single CHANCE emblem, aligned with the left LCD, below the data panel. */
     public static SlotLayout.Rect announcementRect(int index){
-        if(index<0||index>1)throw new IllegalArgumentException("lamp");
-        // 104px floral lenses with an 18px gap from each reel shoulder.
-        // Top data lamp ends y=282; announcement starts y=310 (28px clear).
-        return new SlotLayout.Rect(index==0?548:1588,310,104,104);
+        if(index!=0)throw new IllegalArgumentException("only one CHANCE lamp");
+        return new SlotLayout.Rect(360,298,266,60);
     }
     public static SlotLayout.Rect rightLampRect(int index){
         if(index<0||index>2)throw new IllegalArgumentException("lamp");
-        // Move three expectation lights below the enlarged right blossom.
+        // Keep the three existing right-side expectation indicators in place.
         return new SlotLayout.Rect(1583,454+69*index,34,34);
     }
     public static SlotLayout.Rect lcdRect(){return new SlotLayout.Rect(356,575,272,132);}

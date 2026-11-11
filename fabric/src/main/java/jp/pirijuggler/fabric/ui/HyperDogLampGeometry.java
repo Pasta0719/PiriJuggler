@@ -1,12 +1,9 @@
 package jp.pirijuggler.fabric.ui;
 
 /**
- * The HYPER_DOG lamps are recessed illuminated parts, not solid color panels.
- * One set of exact geometry is shared by the clickable cabinet GUI and the
- * world-view cabinet; both views keep visible dark margins even while lit.
- *
- * The twin announcement frames use the post-playtest reel-side rectangles;
- * their data-lamp and reel clearances are verified in geometry tests.
+ * Shared lamp geometry for the seated HYPER_DOG cabinet and world renderer.
+ * The single chamfered CHANCE emblem leaves the status lamps, reel and
+ * data-panel geometries intact.
  */
 public final class HyperDogLampGeometry {
     public record Layers(SlotLayout.Rect frame, SlotLayout.Rect gasket,
@@ -14,9 +11,8 @@ public final class HyperDogLampGeometry {
 
     public static Layers announcement(int index) {
         SlotLayout.Rect r = HyperDogCabinetState.announcementRect(index);
-        // 104x104 frame: 4px metal rim / 6px gasket / 7px dark lens.
-        // The 70x70 light keeps 17px of hardware around every edge.
-        return new Layers(r, inset(r, 4), inset(r, 10), inset(r, 17));
+        // Three tight nested borders maximize the illuminated/logo area.
+        return new Layers(r, inset(r, 3), inset(r, 7), inset(r, 11));
     }
 
     public static Layers right(int index) {

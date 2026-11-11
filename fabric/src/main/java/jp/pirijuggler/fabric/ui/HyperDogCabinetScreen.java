@@ -205,35 +205,45 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
         }
     }
     private void drawAnnouncement(DrawContext c){
-        for(int i=0;i<2;i++){
-            var lamp=HyperDogLampGeometry.announcement(i);
-            drawLamp(c,lamp,hud.announcement(),0xff6b2c49);
-            // Five broad petals, a warm center and a recess: a prominent
-            // original tropical-flower notice, not a flat square indicator.
-            drawFlower(c,lamp.emitter(),hud.announcement());
-        }
+        var lamp=HyperDogLampGeometry.announcement(0);
+        var frame=lamp.frame();
+        boolean lit=hud.announcement();
+        // Beveled eight-sided emblem, not a square light or flower motif.
+        drawChanceBand(c,lamp.frame(),14,0xffaaa6b7);
+        drawChanceBand(c,lamp.gasket(),11,0xff14131f);
+        drawChanceBand(c,lamp.lens(),8,lit?0xfff7ca80:0xff60566f);
+        drawChanceBand(c,lamp.emitter(),4,lit?0xffca7936:0xff251f32);
+        int edge=lit?0xffffdc99:0xff756c88;
+        c.fill(frame.x()+25,frame.y()+10,frame.x()+frame.w()-25,frame.y()+11,edge);
+        c.fill(frame.x()+25,frame.y()+frame.h()-11,frame.x()+frame.w()-25,frame.y()+frame.h()-10,edge);
+        fitText(c,"CHANCE",frame.x()+frame.w()/2f,frame.y()+16,
+                3.25f,frame.w()-42,lit?0xfffff5e5:0xffa9a0ba,true);
     }
 
-    private static void drawFlower(DrawContext c,SlotLayout.Rect lens,boolean lit){
-        int cx=lens.x()+lens.w()/2, cy=lens.y()+lens.h()/2;
-        final int petal=lit?0xffff5b88:0xff4b3041;
-        final int glint=lit?0xffffb1c7:0xff594052;
-        for(int i=0;i<5;i++){
-            double a=Math.toRadians(-90+i*72);
-            int px=cx+(int)Math.round(Math.cos(a)*15);
-            int py=cy+(int)Math.round(Math.sin(a)*15);
-            SlotScreen.rounded(c,px-16,py-18,32,36,16,petal);
-            SlotScreen.rounded(c,px-7,py-10,12,17,6,glint);
+    /** Paint a chamfered polygon as a middle fill and short clipped edge rows. */
+    private static void drawChanceBand(DrawContext c,SlotLayout.Rect r,int cut,int color){
+        int x=r.x(),y=r.y(),w=r.w(),h=r.h();
+        int chamfer=Math.min(cut,Math.min(w/2-1,h/2-1));
+        c.fill(x,y+chamfer,x+w,y+h-chamfer,color);
+        for(int row=0;row<chamfer;row++){
+            int inset=chamfer-row;
+            c.fill(x+inset,y+row,x+w-inset,y+row+1,color);
+            c.fill(x+inset,y+h-row-1,x+w-inset,y+h-row,color);
         }
-        SlotScreen.rounded(c,cx-12,cy-12,24,24,12,lit?0xffffd977:0xff62503b);
-        SlotScreen.rounded(c,cx-5,cy-5,10,10,5,lit?0xfffff0bb:0xff80704b);
     }
 
     private void drawStatusIndicators(DrawContext c){
         var modes=HyperDogCabinetState.Lamp.values();
         int[] colors={GOLD,PURPLE,CYAN};
-        for(int i=0;i<3;i++)
-            drawLamp(c,HyperDogLampGeometry.left(i),hud.active(modes[i]),colors[i]);
+        String[] labels={"RUSH","HYPER","CZ"};
+        for(int i=0;i<3;i++){
+            var lamp=HyperDogLampGeometry.left(i);
+            boolean lit=hud.active(modes[i]);
+            drawLamp(c,lamp,lit,colors[i]);
+            var r=lamp.frame();
+            fitText(c,labels[i],r.x()+r.w()/2f,r.y()+9,1.45f,r.w()-18,
+                    lit?0xfff9f1dc:0xffa29eb1,true);
+        }
         int count=hud.rightCount();
         int tint=OFF;
         String color=hud.color();

@@ -119,7 +119,7 @@ public final class WorldCabinetRenderer {
             localText(consumers,client.textRenderer,basis,camera,.31,dataY-.018,combined,.00285f,UiConstants.color("DISPLAY_WHITE"),true);
         }
 
-        // HYPER_DOG keeps the enlarged 104px flower layout in its GUI,
+        // HYPER_DOG keeps its own cabinet GUI geometry,
         // but must not exceed the same physical one-block width as JUGGLER.
         // Apply the horizontal fit only after drawing the unchanged data lamp.
         // The outer cabinet and every inner piece use the same fitted basis.
@@ -204,17 +204,18 @@ public final class WorldCabinetRenderer {
         }
 
         if(hyperDog){
-            // Mirror HYPER_DOG's *two* upper announcement lamps, three left
-            // status windows, three right expectation lamps and its dark LCD.
-            // World spectators receive public state only, never hidden lottery data.
-            for(int i=0;i<2;i++){
-                var lamp=HyperDogLampGeometry.announcement(i);
-                drawHyperDogLamp(consumers,basis,camera,lamp,state.lampVisible(now),0xff6b2c49);
-                drawWorldFlower(consumers,basis,camera,lamp.emitter(),state.lampVisible(now));
-            }
+            // The spectator view shares the single left CHANCE geometry.
+            // No server-side lottery or hidden state is inferred here.
+            var chance=HyperDogLampGeometry.announcement(0);
+            boolean chanceLit=state.lampVisible(now);
+            drawWorldChance(consumers,basis,camera,chance,chanceLit,client.textRenderer);
+            String[] labels={"RUSH","HYPER","CZ"};
             for(int i=0;i<3;i++){
-                drawHyperDogLamp(consumers,basis,camera,
-                        HyperDogLampGeometry.left(i),false,hyperOff);
+                var left=HyperDogLampGeometry.left(i);
+                drawHyperDogLamp(consumers,basis,camera,left,false,hyperOff);
+                textCentered(consumers,client.textRenderer,basis,camera,
+                        left.frame().x()+left.frame().w()/2.0,left.frame().y()+10,
+                        labels[i],1.45f,0xffa29eb1);
                 drawHyperDogLamp(consumers,basis,camera,
                         HyperDogLampGeometry.right(i),false,hyperOff);
             }
@@ -295,30 +296,31 @@ public final class WorldCabinetRenderer {
 
     /** Low-overdraw five-petal flower: same 70px lens and colors as the GUI.
      *  Ellipses use only seven horizontal strips, avoiding a high-cost mesh. */
-    private static void drawWorldFlower(VertexConsumerProvider c,CabinetPlacement.Basis b,
-                                        Vec3d cam,SlotLayout.Rect lens,boolean lit){
-        double cx=lens.x()+lens.w()/2.0,cy=lens.y()+lens.h()/2.0;
-        int petal=lit?0xffff5b88:0xff4b3041;
-        int glint=lit?0xffffb1c7:0xff594052;
-        for(int i=0;i<5;i++){
-            double a=Math.toRadians(-90+i*72);
-            double px=cx+Math.cos(a)*15, py=cy+Math.sin(a)*15;
-            drawWorldEllipse(c,b,cam,px,py,16,18,.0033,petal);
-            drawWorldEllipse(c,b,cam,px-1,py-2,6,8,.0034,glint);
-        }
-        drawWorldEllipse(c,b,cam,cx,cy,12,12,.0035,lit?0xffffd977:0xff62503b);
-        drawWorldEllipse(c,b,cam,cx,cy,5,5,.0036,lit?0xfffff0bb:0xff80704b);
+    private static void drawWorldChance(VertexConsumerProvider c,CabinetPlacement.Basis b,
+                                        Vec3d cam,HyperDogLampGeometry.Layers l,
+                                        boolean lit,TextRenderer tr){
+        worldChanceBand(c,b,cam,l.frame(),14,.00240,0xffaaa6b7);
+        worldChanceBand(c,b,cam,l.gasket(),11,.00265,0xff14131f);
+        worldChanceBand(c,b,cam,l.lens(),8,.00285,lit?0xfff7ca80:0xff60566f);
+        worldChanceBand(c,b,cam,l.emitter(),4,.00305,lit?0xffca7936:0xff251f32);
+        var r=l.frame();
+        int edge=lit?0xffffdc99:0xff756c88;
+        rect(c,WHITE,b,cam,r.x()+25,r.y()+10,r.w()-50,1,.00320,edge,0,0,1,1);
+        rect(c,WHITE,b,cam,r.x()+25,r.y()+r.h()-11,r.w()-50,1,.00320,edge,0,0,1,1);
+        textCentered(c,tr,b,cam,r.x()+r.w()/2.0,r.y()+16,
+                "CHANCE",3.25f,lit?0xfffff5e5:0xffa9a0ba);
     }
 
-    private static void drawWorldEllipse(VertexConsumerProvider c,CabinetPlacement.Basis b,
-                                         Vec3d cam,double cx,double cy,double rx,double ry,
-                                         double depth,int color){
-        // Seven strips are enough for a recognizable blossom at cabinet scale.
-        for(int i=0;i<7;i++){
-            double y0=cy-ry+2*ry*i/7.0,y1=cy-ry+2*ry*(i+1)/7.0;
-            double yn=(y0+y1-2*cy)/(2*ry);
-            double half=rx*Math.sqrt(Math.max(0,1-yn*yn));
-            rect(c,WHITE,b,cam,cx-half,y0,half*2,y1-y0,depth,color,0,0,1,1);
+    private static void worldChanceBand(VertexConsumerProvider c,CabinetPlacement.Basis b,
+                                        Vec3d cam,SlotLayout.Rect r,int cut,
+                                        double depth,int color){
+        int x=r.x(),y=r.y(),w=r.w(),h=r.h();
+        int chamfer=Math.min(cut,Math.min(w/2-1,h/2-1));
+        rect(c,WHITE,b,cam,x,y+chamfer,w,h-2*chamfer,depth,color,0,0,1,1);
+        for(int row=0;row<chamfer;row++){
+            int inset=chamfer-row;
+            rect(c,WHITE,b,cam,x+inset,y+row,w-2*inset,1,depth,color,0,0,1,1);
+            rect(c,WHITE,b,cam,x+inset,y+h-row-1,w-2*inset,1,depth,color,0,0,1,1);
         }
     }
 
