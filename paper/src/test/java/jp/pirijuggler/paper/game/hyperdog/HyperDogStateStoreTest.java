@@ -92,6 +92,22 @@ class HyperDogStateStoreTest {
         assertEquals(0,((Number)db.rows(
                 "SELECT big_count FROM machine_period_stats WHERE machine_id=?",machine)
                 .getFirst().get("big_count")).longValue());
+        // Real state-store acceptance: the first BAR enters HYPER, preserves its
+        // initial normal hit G, and does not fabricate a completed payout.
+        full.confirmRed7();
+        store.commit(player,session,machine,4,5,full,null,now+6);
+        try(var c=java.sql.DriverManager.getConnection("jdbc:sqlite:"+directory.resolve("piri.db"))){
+            var run=HyperDogRunJournal.read(c,machine,db.state().period());
+            assertEquals(1,run.get("hyperCount").getAsInt());
+            assertEquals(0,run.get("rushCount").getAsInt());
+            assertTrue(run.get("shotExists").getAsBoolean());
+            assertFalse(run.get("shotFinal").getAsBoolean());
+            var history=run.getAsJsonArray("history");
+            assertEquals(1,history.size());
+            assertEquals("HYPER",history.get(0).getAsJsonObject().get("type").getAsString());
+            assertEquals(1,history.get(0).getAsJsonObject().get("games").getAsInt());
+            assertFalse(history.get(0).getAsJsonObject().has("medals"));
+        }
         assertDom("SEQUENCE_OLD",()->store.commit(player,session,machine,2,3,full,null,now+6));
     }
     @Test void trueDatabaseRestartResumesUnfinishedAtAndStopsForeignSeat() throws Exception {
