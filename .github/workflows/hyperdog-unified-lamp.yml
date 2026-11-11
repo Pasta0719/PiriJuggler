@@ -19,6 +19,8 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: gradle
+      - name: Exercise mandatory JAR release guard (including all negative tests)
+        run: python -m unittest discover -s tests -p test_guard_jar_release.py -v
       - name: Run HYPER_DOG accounting and history tests
         run: |
           chmod +x gradlew
@@ -39,13 +41,19 @@ jobs:
             --tests 'jp.pirijuggler.fabric.ui.HyperDogOwnerAudioPolicyRegressionTest'
       - name: Build BOTH production JARs from the same commit
         run: ./gradlew packagePiriJars -x test --console=plain
+      - name: Enforce the immutable user-approved JAR baseline before any publishing
+        run: |
+          python scripts/guard_jar_release.py verify-release \
+            --paper dist/piri-juggler-paper-1.0.0.jar \
+            --fabric dist/piri-juggler-fabric-1.0.0.jar
       - name: Record reproducible source commit and SHA256 for shipping
         run: |
           git rev-parse HEAD > dist/commit.txt
           sha256sum dist/piri-juggler-*.jar > dist/jar-sha256.txt
           cat dist/jar-sha256.txt
+      # Never upload failed or unapproved production JARs.
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: success()
         with:
           name: hyperdog-unified-production-jars-and-tests
           path: |
@@ -54,7 +62,7 @@ jobs:
             dist/jar-sha256.txt
             paper/build/test-results/**
             fabric/build/test-results/**
-          if-no-files-found: warn
+          if-no-files-found: error
 
   complete-existing-regression:
     runs-on: ubuntu-latest
