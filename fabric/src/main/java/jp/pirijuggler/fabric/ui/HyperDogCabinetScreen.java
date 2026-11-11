@@ -297,14 +297,14 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
     }
     private void drawDataLamp(DrawContext c){
         var data=hud.dataLamp();
-        long total=value(data,"totalGames"),current=value(data,"currentGames"),diff=value(data,"todayDifference");
-        long max=value(data,"todayMaxDifference"),at=value(data,"atFirstHits");
-        long upperCz=value(data,"czAttempts"),upper=value(data,"upperEntries");
+        long total=value(data,"totalGames"),current=value(data,"currentGames");
+        long diff=value(data,"todayDifference"),max=value(data,"todayMaxDifference");
+        long rush=value(data,"rushCount"),hyper=value(data,"hyperCount");
         fitText(c,"MACHINE "+hud.machineId(),38,28,1.45f,310,WHITE,false);
         fitText(c,"DIFF GRAPH",55,57,1.75f,500,WHITE,false);
-        var graph=data!=null&&data.has("graph")?data.getAsJsonArray("graph"):new com.google.gson.JsonArray();
-        // Never invent a second graph: render the actual period series with
-        // SlotScreen's existing LTTB/range/zero-axis/line-width behavior.
+        var graph=data!=null&&data.has("graph")?data.getAsJsonArray("graph"):
+                new com.google.gson.JsonArray();
+        // Reuse the existing slot UI's graph presentation without drawing a second graph.
         SlotScreen.drawGraph(c,graph,55,88,825,146,total);
         fitText(c,"1G",55,241,1.10f,160,WHITE,false);
         fitText(c,total>0?total+"G":"-",880,241,1.10f,160,WHITE,true);
@@ -314,14 +314,11 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
         fitText(c,Long.toString(total),1370,76,2.3f,230,WHITE,true);
         fitText(c,"MAX DIFF",1680,43,1.55f,220,WHITE,true);
         fitText(c,signed(max),1680,76,2.3f,230,WHITE,true);
-        // HYPER_DOG never uses BIG/REG as aliases. Three independently
-        // recorded event counters are the primary data-lamp headline.
-        fitText(c,"AT FIRST",1060,153,1.45f,220,GOLD,true);
-        fitText(c,Long.toString(at),1060,186,2.4f,230,GOLD,true);
-        fitText(c,"UPPER CZ",1370,153,1.45f,220,GOLD,true);
-        fitText(c,Long.toString(upperCz),1370,186,2.4f,230,GOLD,true);
-        fitText(c,"UPPER AT",1680,153,1.45f,220,GOLD,true);
-        fitText(c,Long.toString(upper),1680,186,2.4f,230,GOLD,true);
+        // Match the two-counter layout used by existing BIG/REG slot data lamps.
+        fitText(c,"RUSH",1210,145,1.55f,205,GOLD,true);
+        fitText(c,Long.toString(rush),1210,180,2.35f,205,WHITE,true);
+        fitText(c,"HYPER",1540,145,1.55f,205,GOLD,true);
+        fitText(c,Long.toString(hyper),1540,180,2.35f,205,WHITE,true);
         fitText(c,"DIFF",42,345,1.7f,240,WHITE,false);
         fitText(c,signed(diff),156,391,2.4f,205,diff>=0?0xff60e6b5:WHITE,true);
         fitText(c,"HISTORY",44,467,1.55f,230,WHITE,false);
@@ -330,20 +327,32 @@ public final class HyperDogCabinetScreen extends HyperDogReelPreviewScreen {
             historyOffset=Math.max(0,Math.min(historyOffset,Math.max(0,history.size()-10)));
             for(int i=0;i<10&&historyOffset+i<history.size();i++){
                 var item=history.get(historyOffset+i).getAsJsonObject();
-                String type=item.has("type")?item.get("type").getAsString():"AT";
-                String games=item.has("games")?item.get("games").getAsString()+"G":
-                        ("AT_END".equals(type)&&item.has("medals"))?signed(item.get("medals").getAsLong()):"";
-                fitText(c,type,45,523+i*22,1.15f,120,GOLD,false);
-                fitText(c,games,155,523+i*22,1.15f,115,WHITE,false);
+                String type=item.has("type")?item.get("type").getAsString():"";
+                String games=item.has("games")?item.get("games").getAsString()+"G":"";
+                String medals=item.has("medals")?signed(item.get("medals").getAsLong()):"";
+                String detail=games.isEmpty()?medals:medals.isEmpty()?games:games+" "+medals;
+                fitText(c,type,45,523+i*22,1.15f,100,GOLD,false);
+                fitText(c,detail,145,523+i*22,1.10f,130,WHITE,false);
             }
         }
-        // The right sidebar is deliberately moved to x=1716 to free room
-        // for the large right flower without covering any data labels.
+        // Keep the established ODDS panel/CHAIN region, without new overlays.
         fitText(c,"ODDS",1730,345,1.5f,162,WHITE,false);
-        fitText(c,"AT FIRST ODDS",1730,388,1.25f,162,GOLD,false);
-        fitText(c,at>0?"1/"+Math.max(1L,total/at):"---",1730,424,1.8f,162,WHITE,false);
-        fitText(c,"MAX DIFF",1730,490,1.25f,162,GOLD,false);
-        fitText(c,signed(max),1730,527,1.85f,162,WHITE,false);
+        fitText(c,"RUSH ODDS",1730,383,1.22f,162,GOLD,false);
+        fitText(c,odds(total,rush),1730,412,1.70f,162,WHITE,false);
+        fitText(c,"HYPER ODDS",1730,458,1.22f,162,GOLD,false);
+        fitText(c,odds(total,hyper),1730,487,1.70f,162,WHITE,false);
+        fitText(c,"COMBINED",1730,534,1.22f,162,GOLD,false);
+        fitText(c,odds(total,Math.addExact(rush,hyper)),1730,563,1.70f,162,WHITE,false);
+        if(data!=null&&data.has("shotExists")&&data.get("shotExists").getAsBoolean()){
+            boolean complete=data.has("shotFinal")&&data.get("shotFinal").getAsBoolean();
+            long amount=value(data,"shotNet");
+            // Exactly GET n while active and TOTAL n after the last failed comeback.
+            String text=(complete?"TOTAL ":"GET ")+String.format(java.util.Locale.ROOT,"%,d",amount);
+            fitText(c,text,1730,655,1.65f,165,complete?GOLD:0xff60e6b5,false);
+        }
+    }
+    private static String odds(long games,long entries){
+        return games<=0||entries<=0?"---":"1/"+Math.max(1,Math.round(games/(double)entries));
     }
     private static long value(com.google.gson.JsonObject data,String key){
         return data!=null&&data.has(key)&&!data.get(key).isJsonNull()?data.get(key).getAsLong():0;

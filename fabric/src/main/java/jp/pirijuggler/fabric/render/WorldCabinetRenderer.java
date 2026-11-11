@@ -101,13 +101,16 @@ public final class WorldCabinetRenderer {
         quad(consumers,WHITE,basis,camera,.11,dataY,.006,.165,.0020,UiConstants.color("BUTTON_METAL_DARK"),0,0,1,1);
 
         if("HYPER_DOG".equals(state.machineType())){
-            // The world spectator sees exactly the same three public event counters.
-            localText(consumers,client.textRenderer,basis,camera,-.43,dataY+.060,"AT",.0023f,UiConstants.color("DISPLAY_BIG"),false);
-            localText(consumers,client.textRenderer,basis,camera,-.23,dataY+.060,Long.toString(state.atFirstHits()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
-            localText(consumers,client.textRenderer,basis,camera,-.43,dataY-.011,"CZ",.0023f,UiConstants.color("DISPLAY_REG"),false);
-            localText(consumers,client.textRenderer,basis,camera,-.23,dataY-.011,Long.toString(state.czAttempts()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
-            localText(consumers,client.textRenderer,basis,camera,.22,dataY+.050,"UPPER",.0022f,UiConstants.color("DISPLAY_GREEN"),true);
-            localText(consumers,client.textRenderer,basis,camera,.22,dataY-.018,Long.toString(state.upperEntries()),.00285f,UiConstants.color("DISPLAY_WHITE"),true);
+            long rush=state.rushCount(),hyper=state.hyperCount(),all=rush+hyper;
+            String combined=all<=0||state.totalGames()<=0?"1/---":
+                    "1/"+Math.max(1,Math.round(state.totalGames()/(double)all));
+            // Same public counters and odds as owner GUI and Shift+click.
+            localText(consumers,client.textRenderer,basis,camera,-.44,dataY+.052,"RUSH",.0023f,UiConstants.color("DISPLAY_BIG"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.44,dataY-.020,Long.toString(rush),.0029f,UiConstants.color("DISPLAY_WHITE"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.08,dataY+.052,"HYPER",.0022f,UiConstants.color("DISPLAY_REG"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.08,dataY-.020,Long.toString(hyper),.0029f,UiConstants.color("DISPLAY_WHITE"),false);
+            localText(consumers,client.textRenderer,basis,camera,.20,dataY+.052,"合算",.0022f,UiConstants.color("DISPLAY_GREEN"),false);
+            localText(consumers,client.textRenderer,basis,camera,.20,dataY-.020,combined,.00255f,UiConstants.color("DISPLAY_WHITE"),false);
         }else{
             localText(consumers,client.textRenderer,basis,camera,-.45,dataY+.055,"BIG",.00245f,UiConstants.color("DISPLAY_BIG"),false);
             localText(consumers,client.textRenderer,basis,camera,-.23,dataY+.055,Long.toString(state.bigCount()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);

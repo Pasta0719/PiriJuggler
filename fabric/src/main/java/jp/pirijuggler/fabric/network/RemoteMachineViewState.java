@@ -39,6 +39,7 @@ public final class RemoteMachineViewState {
     private long credit, pay, bonusCount;
     private long totalGames, bigCount, regCount;
     private long atFirstHits,czAttempts,upperEntries;
+    private long rushCount,hyperCount;
     private String bonusMode;
     private boolean spinning;
     private UUID spinId;
@@ -95,6 +96,8 @@ public final class RemoteMachineViewState {
             state.atFirstHits=body.get("atFirstHits").getAsLong();
             state.czAttempts=body.get("czAttempts").getAsLong();
             state.upperEntries=body.get("upperEntries").getAsLong();
+            state.rushCount=body.has("rushCount")?body.get("rushCount").getAsLong():0;
+            state.hyperCount=body.has("hyperCount")?body.get("hyperCount").getAsLong():0;
         }
         state.bonusCount = body.get("bonusCount").getAsLong();
         state.bonusMode = body.get("bonusMode").getAsString();
@@ -254,6 +257,8 @@ public final class RemoteMachineViewState {
     public long atFirstHits(){return atFirstHits;}
     public long czAttempts(){return czAttempts;}
     public long upperEntries(){return upperEntries;}
+    public long rushCount(){return rushCount;}
+    public long hyperCount(){return hyperCount;}
     public String bonusMode() { return bonusMode; }
     public boolean spinning() { return spinning; }
     public boolean godFreeze() { return godFreeze; }
