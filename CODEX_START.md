@@ -2,6 +2,8 @@
 
 ## 最優先: 既存機能保全ルール
 
+HYPER_DOGの音声・再着席・配布JARを扱う前に、必ず `docs/hyperdog/AUDIO_RELEASE_SAFETY.md` を確認し、変更後のFabric/Paperの差分を `scripts/verify_hyperdog_audio_release_delta.py` で拒否式検査する。音ごとの場当たり的な除外や、実機未確認の状態で「完全修正」と断言することは禁止。
+
 作業開始前に **[CHANGE_SAFETY_POLICY.md](CHANGE_SAFETY_POLICY.md)** を必ず読み、その内容を他の通常実装手順より優先する。
 
 - 新機能追加の依頼は、既存機能を変更・削除・弱体化する許可ではない
