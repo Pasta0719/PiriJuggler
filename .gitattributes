@@ -1,2 +1,4 @@
 # Keep specification source hashes stable across Windows/Linux checkouts.
 docs/v3-section-121.txt text eol=lf
+# The release policy is independently SHA-256-pinned; Windows checkout must not CRLF-convert it.
+release-policies/hyperdog-20261111.json text eol=lf
