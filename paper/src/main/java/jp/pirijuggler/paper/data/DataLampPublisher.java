@@ -6,6 +6,7 @@ import jp.pirijuggler.common.protocol.PacketType;
 import jp.pirijuggler.common.protocol.Protocol;
 import jp.pirijuggler.paper.PiriJugglerPlugin;
 import jp.pirijuggler.paper.game.hyperdog.HyperDogEventJournal;
+import jp.pirijuggler.paper.game.hyperdog.HyperDogRunJournal;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitTask;
 import java.nio.file.Path;
@@ -83,6 +84,9 @@ public final class DataLampPublisher implements AutoCloseable {
                             data.addProperty("atFirstHits",hyper.get("atFirstHits").getAsLong());
                             data.addProperty("czAttempts",hyper.get("czAttempts").getAsLong());
                             data.addProperty("upperEntries",hyper.get("upperEntries").getAsLong());
+                            var runs=HyperDogRunJournal.read(connection,rs.getInt(1),period);
+                            data.addProperty("rushCount",runs.get("rushCount").getAsLong());
+                            data.addProperty("hyperCount",runs.get("hyperCount").getAsLong());
                         }
                         remotes.put(rs.getInt(1),data);
                     }

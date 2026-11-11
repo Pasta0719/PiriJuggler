@@ -28,7 +28,7 @@ public final class RemoteMachineSync {
     private final Supplier<PiriDatabase.State> stateSupplier;
     private final Predicate<UUID> compatible;
     private final BiFunction<Session, Long, Session> capture;
-    private record DataLamp(long totalGames,long bigCount,long regCount,long atFirstHits,long czAttempts,long upperEntries) {}
+    private record DataLamp(long totalGames,long bigCount,long regCount,long atFirstHits,long czAttempts,long upperEntries,long rushCount,long hyperCount) {}
     private final Map<Integer, DataLamp> dataLamp = new HashMap<>();
     private final Map<UUID, Set<Integer>> interests = new HashMap<>();
     private final Map<Integer,Boolean> godFirstBigAudioActive = new HashMap<>();
@@ -108,7 +108,9 @@ public final class RemoteMachineSync {
         DataLamp next = new DataLamp(totalGames,bigCount,regCount,
                 hyper?nonNegative(snapshot,"atFirstHits"):0,
                 hyper?nonNegative(snapshot,"czAttempts"):0,
-                hyper?nonNegative(snapshot,"upperEntries"):0);
+                hyper?nonNegative(snapshot,"upperEntries"):0,
+                hyper?nonNegative(snapshot,"rushCount"):0,
+                hyper?nonNegative(snapshot,"hyperCount"):0);
         DataLamp previous = dataLamp.put(machineId, next);
         if (!next.equals(previous)) broadcastSnapshot(machineId);
     }
@@ -347,7 +349,7 @@ public final class RemoteMachineSync {
                 .findFirst().orElse(null);
 
         JsonObject body = placement(machine);
-        DataLamp stats = dataLamp.getOrDefault(machine.id(), new DataLamp(0, 0, 0, 0, 0, 0));
+        DataLamp stats = dataLamp.getOrDefault(machine.id(), new DataLamp(0, 0, 0, 0, 0, 0, 0, 0));
         body.addProperty("totalGames", stats.totalGames());
         body.addProperty("bigCount", stats.bigCount());
         body.addProperty("regCount", stats.regCount());
@@ -355,6 +357,8 @@ public final class RemoteMachineSync {
             body.addProperty("atFirstHits",stats.atFirstHits());
             body.addProperty("czAttempts",stats.czAttempts());
             body.addProperty("upperEntries",stats.upperEntries());
+            body.addProperty("rushCount",stats.rushCount());
+            body.addProperty("hyperCount",stats.hyperCount());
         }
         body.addProperty("enabled", machine.enabled());
         body.addProperty("occupied", state.busy(machine.id()));
