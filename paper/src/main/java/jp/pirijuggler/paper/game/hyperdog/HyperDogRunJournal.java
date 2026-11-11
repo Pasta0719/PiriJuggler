@@ -72,7 +72,7 @@ public final class HyperDogRunJournal {
 
         HyperDogAtGame.Stage oldStage=before==null||before.at()==null?null:before.at().stage();
         HyperDogAtGame.Stage newStage=after.at()==null?null:after.at().stage();
-        if(oldStage!=HyperDogAtGame.Stage.LOWER_AT&&newStage==HyperDogAtGame.Stage.LOWER_AT)
+        if(oldStage!=HyperDogAtGame.Stage.LOWER_INITIAL&&newStage==HyperDogAtGame.Stage.LOWER_INITIAL)
             entry(db,owner,period,run,sequence,"RUSH",now);
         if(oldStage!=HyperDogAtGame.Stage.UPPER_INITIAL&&newStage==HyperDogAtGame.Stage.UPPER_INITIAL)
             entry(db,owner,period,run,sequence,"HYPER",now);
