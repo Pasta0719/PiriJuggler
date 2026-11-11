@@ -69,7 +69,7 @@ public final class HyperDogReelControl {
         Objects.requireNonNull(role);Objects.requireNonNull(history);Objects.requireNonNull(reel);
         if (pressedIndex<0||pressedIndex>=LENGTH||(history.mask()&reel.bit())!=0)
             throw new IllegalArgumentException("stopping conditions");
-        int maxSlip=maxSlip(role),i=reel.ordinal();
+        int maxSlip=maxSlip(role,reel),i=reel.ordinal();
         int[] stops=history.stops();
         for (int slip=0;slip<=maxSlip;slip++) {
             int target=Math.floorMod(pressedIndex-slip,LENGTH);
@@ -81,7 +81,17 @@ public final class HyperDogReelControl {
     }
     public static int maxSlip(Role role) {
         Objects.requireNonNull(role);
-        return role==Role.MISS||role==Role.GRAPE||role==Role.REPLAY?4:20;
+        return role==Role.MISS||role==Role.GRAPE||role==Role.REPLAY?6:20;
+    }
+    /**
+     * Ordinary roles may use six symbols so every LEFT press can avoid showing
+     * either CHERRY or WATERMELON anywhere in its three-symbol window and the
+     * remaining reels can still complete REPLAY/GRAPE from every input.
+     */
+    public static int maxSlip(Role role,Reel reel) {
+        Objects.requireNonNull(role);Objects.requireNonNull(reel);
+        if(role==Role.MISS||role==Role.GRAPE||role==Role.REPLAY)return 6;
+        return 20;
     }
     private boolean safeFromAnyFutureInput(Role role,int[] stops) {
         int key=role.ordinal()*10648+(stops[0]+1)*484+(stops[1]+1)*22+stops[2]+1;
@@ -91,12 +101,12 @@ public final class HyperDogReelControl {
         for(int s:stops)if(s<0)unstopped++;
         if(unstopped==0) return LEGAL.get(role).get(id(stops));
         boolean safe=true;
-        int max=maxSlip(role);
         for(int reel=0;reel<3&&safe;reel++) {
             if(stops[reel]>=0)continue;
             for(int pressed=0;pressed<LENGTH&&safe;pressed++) {
                 boolean possible=false;
-                for(int slip=0;slip<=max;slip++) {
+                int reelMax=maxSlip(role,Reel.values()[reel]);
+                for(int slip=0;slip<=reelMax;slip++) {
                     stops[reel]=Math.floorMod(pressed-slip,LENGTH);
                     if(safeFromAnyFutureInput(role,stops)) { possible=true;break; }
                 }
@@ -170,10 +180,31 @@ public final class HyperDogReelControl {
         if(middle(s,Icon.RED7,Icon.RED7,Icon.RED7))flags|=AT_ENTRY_RED7;
         return flags;
     }
+    /**
+     * CHERRY/WATERMELON are left-reel role triggers during ordinary play.
+     * Do not show an unearned trigger anywhere in the LEFT three-symbol
+     * window. Premium/confirmation roles keep their fixed presentation stops.
+     */
+    private static boolean ordinaryLeftTriggersAllowed(Role role,int[] s) {
+        boolean ordinary=switch(role) {
+            case MISS, REPLAY, GRAPE, WATERMELON, WEAK_CHERRY, STRONG_CHERRY -> true;
+            default -> false;
+        };
+        if(!ordinary)return true;
+        boolean cherryEarned=role==Role.WEAK_CHERRY||role==Role.STRONG_CHERRY;
+        boolean watermelonEarned=role==Role.WATERMELON;
+        for(int offset=-1;offset<=1;offset++) {
+            Icon icon=STRIPS[0][Math.floorMod(s[0]+offset,LENGTH)];
+            if(!cherryEarned&&icon==Icon.CHERRY)return false;
+            if(!watermelonEarned&&icon==Icon.WATERMELON)return false;
+        }
+        return true;
+    }
     private static boolean legal(Role role,int[] s,int flags) {
         // BAR is the only result permitting a LEFT middle-row cherry; the BAR
         // itself may align on ANY valid payline, including bottom/diagonals.
         if(role!=Role.BAR && STRIPS[0][s[0]]==Icon.CHERRY)return false;
+        if(!ordinaryLeftTriggersAllowed(role,s))return false;
         if(!premiumLineAllowed(role,s))return false;
         return switch(role) {
             case MISS -> flags==0;

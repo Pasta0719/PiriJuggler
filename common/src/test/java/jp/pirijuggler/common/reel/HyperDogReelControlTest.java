@@ -130,4 +130,41 @@ class HyperDogReelControlTest {
         assertThrows(IllegalArgumentException.class,()->
                 control.choose(HyperDogReelControl.Role.GRAPE,stopped,Reel.LEFT,1));
     }
+
+    @Test void ordinaryLeftReelNeverShowsAnUnearnedCherryOrWatermelon() {
+        var noTriggerRoles=java.util.EnumSet.of(
+                HyperDogReelControl.Role.MISS,
+                HyperDogReelControl.Role.REPLAY,
+                HyperDogReelControl.Role.GRAPE);
+        for(var role:new HyperDogReelControl.Role[]{
+                HyperDogReelControl.Role.MISS,
+                HyperDogReelControl.Role.REPLAY,
+                HyperDogReelControl.Role.GRAPE,
+                HyperDogReelControl.Role.WATERMELON,
+                HyperDogReelControl.Role.WEAK_CHERRY,
+                HyperDogReelControl.Role.STRONG_CHERRY}) {
+            for(int l=0;l<21;l++)for(int m=0;m<21;m++)for(int r=0;r<21;r++) {
+                int[] stops={l,m,r};
+                if(!HyperDogReelControl.legalFinal(role,stops))continue;
+                for(int offset=-1;offset<=1;offset++) {
+                    var icon=HyperDogReelControl.visible(Reel.LEFT,l,offset);
+                    if(noTriggerRoles.contains(role)) {
+                        assertNotEquals(HyperDogReelControl.Icon.CHERRY,icon,
+                                role+" left window "+java.util.Arrays.toString(stops));
+                        assertNotEquals(HyperDogReelControl.Icon.WATERMELON,icon,
+                                role+" left window "+java.util.Arrays.toString(stops));
+                    } else if(role==HyperDogReelControl.Role.WATERMELON) {
+                        assertNotEquals(HyperDogReelControl.Icon.CHERRY,icon,
+                                role+" left window "+java.util.Arrays.toString(stops));
+                    } else {
+                        assertNotEquals(HyperDogReelControl.Icon.WATERMELON,icon,
+                                role+" left window "+java.util.Arrays.toString(stops));
+                    }
+                }
+            }
+        }
+        assertEquals(6,HyperDogReelControl.maxSlip(HyperDogReelControl.Role.MISS,Reel.LEFT));
+        assertEquals(6,HyperDogReelControl.maxSlip(HyperDogReelControl.Role.MISS,Reel.CENTER));
+        assertEquals(6,HyperDogReelControl.maxSlip(HyperDogReelControl.Role.MISS,Reel.RIGHT));
+    }
 }

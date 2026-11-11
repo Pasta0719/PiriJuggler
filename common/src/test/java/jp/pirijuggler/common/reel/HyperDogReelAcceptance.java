@@ -9,7 +9,7 @@ public final class HyperDogReelAcceptance {
         {Reel.CENTER,Reel.LEFT,Reel.RIGHT}, {Reel.CENTER,Reel.RIGHT,Reel.LEFT},
         {Reel.RIGHT,Reel.LEFT,Reel.CENTER}, {Reel.RIGHT,Reel.CENTER,Reel.LEFT}
     };
-    private static final int[] COUNTS = {5716,706,780,119,195,99,1,1,5,1,1,18,1};
+    private static final int[] COUNTS = {975,192,84,119,195,99,1,1,5,1,1,18,1};
     public static void main(String[] args) {run();}
     public static void run() {
         var solver=new HyperDogReelControl();long histories=0;
@@ -40,7 +40,7 @@ public final class HyperDogReelAcceptance {
     }
     private static SkillStopHistory stop(HyperDogReelControl solver,HyperDogReelControl.Role role,SkillStopHistory history,Reel reel,int pressed) {
         var choice=solver.choose(role,history,reel,pressed);
-        if(choice.slip()<0 || choice.slip()>HyperDogReelControl.maxSlip(role))
+        if(choice.slip()<0 || choice.slip()>HyperDogReelControl.maxSlip(role,reel))
             throw new AssertionError("slip "+role+" "+choice.slip());
         if(choice.slip()!=ReelMotion.slip(choice.stopIndex(),pressed))throw new AssertionError("reel direction");
         return history.append(reel,pressed,choice.stopIndex());
