@@ -148,7 +148,7 @@ public final class HyperDogGameEngine implements GameEngine {
 
     private static HyperDogStopSession beginPhysical(Session session,long now,HyperDogReelControl.Role role){
         return new HyperDogStopSession(session.id(),session.machine(),UUID.randomUUID(),
-                role,now,new double[]{0,7,14});
+                role,now,HyperDogReelStartPhase.fromSession(session));
     }
     private static void scheduleAutomatic(HyperDogStopSession session,
                                            List<GameTransition.Scheduled> scheduled){
@@ -194,7 +194,7 @@ public final class HyperDogGameEngine implements GameEngine {
         out.add(Envelope.current(PacketType.PUBLIC_STATE,publicState(session,game)));
         if(stored.has("reel")){
             var physical=HyperDogStopSession.fromJson(stored.getAsJsonObject("reel"));
-            out.addAll(physical.replayOnReconnect());
+            out.addAll(HyperDogResumePackets.replay(physical));
             if(!physical.complete()){
                 for(var e:physical.tick(now))
                     if(e.packetType()==PacketType.REEL_STOP)out.add(e);

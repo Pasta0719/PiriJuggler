@@ -308,7 +308,10 @@ public final class RemoteMachineSync {
         Session localSession=state.session(player.getUniqueId());
         for (Machine machine : state.machines()) {
             boolean localMachine=localSession!=null&&localSession.machine()==machine.id()&&localSession.lifecycle()==Session.Lifecycle.ACTIVE;
-            if (!machine.deleted() && !localMachine && inRange(player, machine, current.contains(machine.id()))) desired.add(machine.id());
+            if (!machine.deleted()
+                    && !HyperDogOwnerView.shouldExcludeOwner(localMachine,machine)
+                    && inRange(player, machine, current.contains(machine.id())))
+                desired.add(machine.id());
         }
         for (int id : new HashSet<>(current)) {
             if (!desired.contains(id)) {
