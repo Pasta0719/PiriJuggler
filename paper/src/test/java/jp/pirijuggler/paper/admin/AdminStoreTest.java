@@ -80,15 +80,29 @@ class AdminStoreTest {
         store.setAuto(db.state(),id,true,NOW+11);
         assertTrue(db.state().machine(id).autoSetting());
         db.sql("CREATE TABLE IF NOT EXISTS hyper_dog_events(machine_id INTEGER NOT NULL,business_period_id TEXT NOT NULL,event_id TEXT NOT NULL,event_type TEXT NOT NULL,medals INTEGER NOT NULL,occurred_at INTEGER NOT NULL,PRIMARY KEY(machine_id,event_id))");
+        db.sql("CREATE TABLE IF NOT EXISTS hyper_dog_runs(run_id TEXT PRIMARY KEY,machine_id INTEGER NOT NULL,business_period_id TEXT NOT NULL,first_games INTEGER,medals INTEGER NOT NULL,final INTEGER NOT NULL,updated_at INTEGER NOT NULL)");
+        db.sql("CREATE TABLE IF NOT EXISTS hyper_dog_run_entries(machine_id INTEGER NOT NULL,business_period_id TEXT NOT NULL,event_id TEXT NOT NULL,run_id TEXT NOT NULL,event_type TEXT NOT NULL,games INTEGER,medals INTEGER,occurred_at INTEGER NOT NULL,PRIMARY KEY(machine_id,event_id))");
         int legacy=db.create(new Machine.Location(UUID.randomUUID(),"world",44,64,0,"NORTH"),
                 MachineType.JUGGLER,NOW);
         db.sql("INSERT INTO hyper_dog_events VALUES(?,?,?,?,?,?)",id,original.period(),"first","AT_FIRST_HIT",0,NOW);
         db.sql("INSERT INTO hyper_dog_events VALUES(?,?,?,?,?,?)",legacy,original.period(),"legacy-row","AT_FIRST_HIT",0,NOW);
+        db.sql("INSERT INTO hyper_dog_runs VALUES(?,?,?,?,?,?,?)","current",id,original.period(),50,150,1,NOW);
+        db.sql("INSERT INTO hyper_dog_runs VALUES(?,?,?,?,?,?,?)","previous",id,"previous-period",25,75,1,NOW-1);
+        db.sql("INSERT INTO hyper_dog_runs VALUES(?,?,?,?,?,?,?)","other",legacy,original.period(),10,30,1,NOW);
+        db.sql("INSERT INTO hyper_dog_run_entries VALUES(?,?,?,?,?,?,?,?)",id,original.period(),"current-entry","current","RUSH",50,150,NOW);
+        db.sql("INSERT INTO hyper_dog_run_entries VALUES(?,?,?,?,?,?,?,?)",id,"previous-period","previous-entry","previous","RUSH",25,75,NOW-1);
+        db.sql("INSERT INTO hyper_dog_run_entries VALUES(?,?,?,?,?,?,?,?)",legacy,original.period(),"other-entry","other","RUSH",10,30,NOW);
         db.sql("UPDATE machine_period_stats SET total_games=50,today_difference=150 WHERE machine_id=? AND business_period_id=?",id,original.period());
         store.resetDaily(db.state(),id,NOW+12);
-        assertEquals(0,scalar("SELECT count(*) FROM hyper_dog_events WHERE machine_id=?",id));
+        assertEquals(0,scalar("SELECT count(*) FROM hyper_dog_events WHERE machine_id=? AND business_period_id=?",id,original.period()));
+        assertEquals(0,scalar("SELECT count(*) FROM hyper_dog_runs WHERE machine_id=? AND business_period_id=?",id,original.period()));
+        assertEquals(0,scalar("SELECT count(*) FROM hyper_dog_run_entries WHERE machine_id=? AND business_period_id=?",id,original.period()));
+        assertEquals(1,scalar("SELECT count(*) FROM hyper_dog_runs WHERE machine_id=? AND business_period_id='previous-period'",id));
+        assertEquals(1,scalar("SELECT count(*) FROM hyper_dog_run_entries WHERE machine_id=? AND business_period_id='previous-period'",id));
         assertEquals(1,scalar("SELECT count(*) FROM hyper_dog_events WHERE machine_id=?",legacy),
                 "daily reset must not clear another machine's counters");
+        assertEquals(1,scalar("SELECT count(*) FROM hyper_dog_runs WHERE machine_id=?",legacy));
+        assertEquals(1,scalar("SELECT count(*) FROM hyper_dog_run_entries WHERE machine_id=?",legacy));
         assertEquals(0,scalar("SELECT total_games FROM machine_period_stats WHERE machine_id=?",id));
         assertEquals(0,scalar("SELECT today_difference FROM machine_period_stats WHERE machine_id=?",id));
         assertEquals(5,scalar("SELECT count(*) FROM setting_history WHERE machine_id=?",id));

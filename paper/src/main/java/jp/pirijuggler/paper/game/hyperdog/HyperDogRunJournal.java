@@ -197,8 +197,9 @@ public final class HyperDogRunJournal {
         if(exists(c,RUNS)){
             try(PreparedStatement p=c.prepareStatement(
                     "SELECT medals,final FROM "+RUNS+
-                    " WHERE machine_id=? ORDER BY updated_at DESC,run_id DESC LIMIT 1")){
-                p.setInt(1,machineId);
+                    " WHERE machine_id=? AND business_period_id=? "+
+                    "ORDER BY updated_at DESC,run_id DESC LIMIT 1")){
+                p.setInt(1,machineId);p.setString(2,period);
                 try(ResultSet rs=p.executeQuery()){
                     if(rs.next()){
                         shotNet=rs.getLong(1);

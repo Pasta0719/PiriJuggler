@@ -10,6 +10,7 @@ class HyperDogRunJournalTest {
             c.createStatement().execute("CREATE TABLE hyper_dog_runs(run_id TEXT PRIMARY KEY,machine_id INTEGER,business_period_id TEXT,first_games INTEGER,medals INTEGER NOT NULL,final INTEGER NOT NULL,updated_at INTEGER NOT NULL)");
             c.createStatement().execute("CREATE TABLE hyper_dog_run_entries(machine_id INTEGER,business_period_id TEXT,event_id TEXT,run_id TEXT,event_type TEXT,games INTEGER,medals INTEGER,occurred_at INTEGER,PRIMARY KEY(machine_id,event_id))");
             c.createStatement().execute("INSERT INTO hyper_dog_runs VALUES('shot',7,'today',86,4280,1,900)");
+            c.createStatement().execute("INSERT INTO hyper_dog_runs VALUES('old-shot',7,'yesterday',2,9999,1,999)");
             c.createStatement().execute("INSERT INTO hyper_dog_run_entries VALUES(7,'today','a','shot','RUSH',86,4280,100)");
             c.createStatement().execute("INSERT INTO hyper_dog_run_entries VALUES(7,'today','b','shot','CZ',NULL,NULL,200)");
             c.createStatement().execute("INSERT INTO hyper_dog_run_entries VALUES(7,'today','c','shot','HYPER',NULL,4280,300)");
