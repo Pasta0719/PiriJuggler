@@ -72,8 +72,17 @@ public final class PiriDatabase implements AutoCloseable {
                     for (Session session : sessions()) if (session.ownsLock()) {
                         if(!session.ready()&&!preserveSkill(session)) recovery.settle(session,now);
                     }
-                    sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE lifecycle IN ('ACTIVE','SUSPENDED_GRACE') AND session_id NOT IN (SELECT s.session_id FROM player_sessions s JOIN machines m ON s.machine_id=m.machine_id WHERE m.machine_type='SKILL_STOP' AND s.game_state<>'SEATED_READY')");
-                    sql("UPDATE player_sessions SET lifecycle='SUSPENDED_GRACE',lock_expires_at=? WHERE session_id IN (SELECT s.session_id FROM player_sessions s JOIN machines m ON s.machine_id=m.machine_id WHERE m.machine_type='SKILL_STOP' AND s.game_state<>'SEATED_READY')",Long.MAX_VALUE);
+                    // Apply the same entitlement-aware predicate during restart, idle,
+                    // expiry and reseat. A 32G comeback has game_state=SEATED_READY
+                    // between spins but is still an unresolved machine entitlement.
+                    for (Session owned : sessions()) if (owned.ownsLock()) {
+                        if (preserveSkill(owned))
+                            sql("UPDATE player_sessions SET lifecycle='SUSPENDED_GRACE',lock_expires_at=? WHERE session_id=?",
+                                    Long.MAX_VALUE,owned.id().toString());
+                        else
+                            sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL WHERE session_id=?",
+                                    owned.id().toString());
+                    }
                     // A true JVM restart ends only ordinary HIGH/ULTRA anticipation and
                     // small-role streaks. Preserve HEAVEN, GOD_CHAIN, confirmed stocks,
                     // saved bonuses and coin balances. Recovery settlement above runs first.
@@ -183,6 +192,7 @@ public final class PiriDatabase implements AutoCloseable {
                 case GOD -> GodMachineRuntime.fromJson(machine.runtimeJson()).gameplay().toJsonString();
                 case JUGGLER_GOD, JUGGLER_GOD_EXTREME -> JugglerGodSettingHint.preserve(machine.runtimeJson(),JugglerGodRuntime.fromJson(machine.runtimeJson()).toJson());
                 case SKILL_STOP -> existing!=null&&existing.machine()==id?existing.text("machine_state_json"):null;
+                case HYPER_DOG -> existing!=null&&existing.machine()==id?existing.text("machine_state_json"):null;
                 case PACHINKO -> existing!=null&&existing.machine()==id
                         ? PachinkoRuntime.fromJson(existing.text("machine_state_json")).toJsonString()
                         : PachinkoRuntime.fromJson(machine.runtimeJson()).toJsonString();
@@ -231,13 +241,22 @@ public final class PiriDatabase implements AutoCloseable {
             if (sequence <= session.sequence()) throw new DomainException("SEQUENCE_OLD");
             if(motion!=null)new GameStore(this).saveMotion(motion);
             boolean cashout = !rows("SELECT transaction_id FROM cashout_transactions WHERE player_uuid=? AND status<>'COMPLETED'", player.toString()).isEmpty();
-            if (session.ready() && session.number("credit") == 0 && session.number("held_medals") == 0 && !cashout) {
+            // SEATED_READY may still own a 32 paid-game HYPER_DOG comeback.
+            // Explicit CLOSE must not release the machine or delete the player
+            // snapshot while that reward is pending. Legacy types are unchanged.
+            boolean protectedComeback=session.ready() &&
+                    requireMachine(machine).type()==MachineType.HYPER_DOG &&
+                    preserveSkill(session);
+            if (session.ready() && !protectedComeback &&
+                    session.number("credit") == 0 && session.number("held_medals") == 0 && !cashout) {
                 sql("DELETE FROM player_sessions WHERE player_uuid=?", player.toString()); return "SESSION_END";
             }
-            String lifecycle = session.ready() ? "SUSPENDED_SAFE" : "SUSPENDED_GRACE";
+            boolean closeSafe=session.ready()&&!protectedComeback;
+            String lifecycle=closeSafe?"SUSPENDED_SAFE":"SUSPENDED_GRACE";
+            Long expires=closeSafe?null:protectedComeback?Long.MAX_VALUE:Math.addExact(now,graceMs);
             sql("UPDATE player_sessions SET lifecycle=?,lock_expires_at=?,last_activity=?,last_client_sequence=? WHERE player_uuid=?",
-                    lifecycle, session.ready() ? null : now + graceMs, now, sequence, player.toString());
-            return session.ready() ? "USER_CLOSE_SAFE" : "USER_CLOSE_GRACE";
+                    lifecycle, expires, now, sequence, player.toString());
+            return closeSafe?"USER_CLOSE_SAFE":"USER_CLOSE_GRACE";
         });
     }
     public void disconnect(UUID player, long now, long graceMs) throws Exception {
@@ -261,6 +280,10 @@ public final class PiriDatabase implements AutoCloseable {
             List<UUID> affected=new ArrayList<>();
             for(Session session:sessions()){
                 if(session.machine()!=machineId||!session.ownsLock())continue;
+                // An unfinished HYPER_DOG game or comeback is a financial right.
+                // No administrative simulator path may silently release its lock.
+                if(requireMachine(machineId).type()==MachineType.HYPER_DOG && preserveSkill(session))
+                    throw new jp.pirijuggler.paper.machine.DomainException("RECOVERY_REQUIRED");
                 if(!session.ready())recovery.settleRemoteLogin(session,now);
                 sql("UPDATE player_sessions SET lifecycle='SUSPENDED_SAFE',lock_expires_at=NULL,last_activity=? WHERE session_id=?",
                         now,session.id().toString());
@@ -434,7 +457,18 @@ public final class PiriDatabase implements AutoCloseable {
     private boolean tableExists(String name) throws SQLException { return !rows("SELECT name FROM sqlite_master WHERE type='table' AND name=?", name).isEmpty(); }
     private String metadata(String key) throws SQLException { var rows = rows("SELECT value FROM metadata WHERE key=?", key); return rows.isEmpty() ? null : (String) rows.getFirst().get("value"); }
     private void metadata(String key, String value) throws SQLException { sql("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", key, value); }
-    private boolean preserveSkill(Session session) throws SQLException {return !session.ready()&&requireMachine(session.machine()).type()==MachineType.SKILL_STOP;}
+    private boolean preserveSkill(Session session) throws SQLException {
+        MachineType type=requireMachine(session.machine()).type();
+        if(type==MachineType.SKILL_STOP)return !session.ready();
+        if(type!=MachineType.HYPER_DOG)return false;
+        if(!session.ready())return true;
+        // READY does not imply that the 32 paid-game comeback privilege expired.
+        JsonObject machineState=session.machineState();
+        if(machineState==null||!machineState.has("hyperDog"))return false;
+        var game=jp.pirijuggler.paper.game.hyperdog.HyperDogFullGame
+                .restore(machineState.getAsJsonObject("hyperDog"));
+        return game.at()!=null||game.comebackPaidLeft()>0||game.normal().waitingForAt();
+    }
     private RecoveryStore recovery(){if(recoveryConfig==null||recoverySolver==null)throw new IllegalStateException("Recovery not configured");return new RecoveryStore(this,recoveryConfig,recoverySolver);}
     public int sql(String sql, Object... values) throws SQLException {
         checkThread(); try (PreparedStatement statement = connection.prepareStatement(sql)) {

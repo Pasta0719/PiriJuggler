@@ -52,6 +52,33 @@ public final class RuntimeObserver extends JavaPlugin {
         if(pachinkoCommand==null)throw new IllegalStateException("piripachinko command missing");
         pachinkoCommand.setExecutor(new PachinkoFixtureCommand(this));
 
+        if("hyperdog08-native".equals(System.getProperty("piri.runtime.phase"))){
+            new HyperDogPhase08NativeFixture(this);
+            getLogger().info("HYPER_DOG_PHASE08_NATIVE_PRODUCTION_ADAPTER_FIXTURE");
+            return;
+        }
+        if("hyperdog07-live".equals(System.getProperty("piri.runtime.phase"))){
+            new HyperDogPhase07LiveFixture(this);
+            getLogger().info("HYPER_DOG_PHASE07_LIVE_ACCEPTANCE_FIXTURE");
+            return;
+        }
+        String phase07Boot=System.getProperty("piri.runtime.phase","");
+        if("hyperdog07-save".equals(phase07Boot)||"hyperdog07-restore".equals(phase07Boot)){
+            new HyperDogPhase07RestartFixture(this,phase07Boot);
+            getLogger().info("HYPER_DOG_PHASE07_TWO_JVM_FIXTURE "+phase07Boot);
+            return;
+        }
+        String phase04Boot=System.getProperty("piri.runtime.phase","");
+        if ("hyperdog04-save".equals(phase04Boot) || "hyperdog04-restore".equals(phase04Boot)){
+            new HyperDogPhase04RestartFixture(this,phase04Boot);
+            getLogger().info("HYPER_DOG_PHASE04_REAL_JVM_RESTART_FIXTURE "+phase04Boot);
+            return;
+        }
+        if ("hyperdog06".equals(System.getProperty("piri.runtime.phase"))) {new HyperDogPhase06Fixture(this);getLogger().info("HYPER_DOG_PHASE06_FIXTURE_READY");return;}
+        if ("hyperdog05".equals(System.getProperty("piri.runtime.phase"))) {new HyperDogPhase05Fixture(this);getLogger().info("HYPER_DOG_PHASE05_FIXTURE_READY");return;}
+        if ("hyperdog04".equals(System.getProperty("piri.runtime.phase"))) {new HyperDogPhase04Fixture(this);getLogger().info("HYPER_DOG_PHASE04_FIXTURE_READY");return;}
+        if ("hyperdog03".equals(System.getProperty("piri.runtime.phase"))) {new HyperDogPhase03Fixture(this);getLogger().info("HYPER_DOG_PHASE03_FIXTURE_READY");return;}
+        if ("hyperdog02".equals(System.getProperty("piri.runtime.phase"))) {new HyperDogPhase02Fixture(this);getLogger().info("HYPER_DOG_PHASE02_FIXTURE_READY");return;}
         if ("pachinko10".equals(System.getProperty("piri.runtime.phase"))) {new Phase02Observer(this);getLogger().info("PIRI_RUNTIME_OBSERVER_READY Pachinko10");return;}
         if ("phase12".equals(System.getProperty("piri.runtime.phase")) || "phase13".equals(System.getProperty("piri.runtime.phase"))) {new Phase02Observer(this);getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase12/13");return;}
         if ("phase05".equals(System.getProperty("piri.runtime.phase"))) {new Phase02Observer(this);new Phase05Fixture(this);getLogger().info("PIRI_RUNTIME_OBSERVER_READY Phase05");return;}

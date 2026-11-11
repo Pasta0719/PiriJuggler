@@ -1,0 +1,19 @@
+name: HYPER_DOG v7 award strength feasibility exploration
+on:
+  push:
+    branches: [plan/original-at-machine-20261107]
+    paths:
+      - 'original-at-phases/reference/piri_explore_upper_v7.py'
+      - '.github/workflows/hyperdog-v7-award-explore.yml'
+  workflow_dispatch:
+jobs:
+  explore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'numpy>=1.26,<3' 'numba>=0.60,<0.67'
+      - run: python -u original-at-phases/reference/piri_explore_upper_v7.py

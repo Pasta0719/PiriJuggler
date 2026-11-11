@@ -261,7 +261,7 @@ public final class RemoteMachineRegistry {
             throw new IllegalArgumentException("facing");
         if (!body.has("machineType")) body.addProperty("machineType", "JUGGLER");
         requireString(body, "machineType");
-        if (!Set.of("JUGGLER","JUGGLER_GOD","JUGGLER_GOD_EXTREME","OKIDOKI","GOD","DISC","SKILL_STOP","PACHINKO").contains(body.get("machineType").getAsString()))
+        if (!Set.of("JUGGLER","JUGGLER_GOD","JUGGLER_GOD_EXTREME","OKIDOKI","GOD","DISC","SKILL_STOP","PACHINKO","HYPER_DOG").contains(body.get("machineType").getAsString()))
             throw new IllegalArgumentException("machineType");
         if("SKILL_STOP".equals(body.get("machineType").getAsString()))SkillStopPresentation.read(body);
         requireBoolean(body, "enabled"); requireBoolean(body, "occupied");
@@ -281,6 +281,12 @@ public final class RemoteMachineRegistry {
         requireNumber(body, "totalGames"); requireNumber(body, "bigCount"); requireNumber(body, "regCount");
         if (body.get("totalGames").getAsLong() < 0 || body.get("bigCount").getAsLong() < 0 || body.get("regCount").getAsLong() < 0)
             throw new IllegalArgumentException("dataLamp");
+        if("HYPER_DOG".equals(body.get("machineType").getAsString())){
+            for(String field:List.of("atFirstHits","czAttempts","upperEntries")){
+                requireNumber(body,field);
+                if(body.get(field).getAsLong()<0)throw new IllegalArgumentException("hyperDogDataLamp");
+            }
+        }
         requireString(body, "bonusMode");
         if (!Set.of("NONE","BIG","REG").contains(body.get("bonusMode").getAsString()))
             throw new IllegalArgumentException("bonusMode");

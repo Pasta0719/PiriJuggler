@@ -1,0 +1,454 @@
+{
+  "schema_version": 1,
+  "status": "SPEC_LOCKED",
+  "identity": {
+    "machine_type": "HYPER_DOG",
+    "manager_display": "HYPER_DOG",
+    "cabinet_logo": false
+  },
+  "color_rank": [
+    "WHITE",
+    "BLUE",
+    "GREEN",
+    "YELLOW",
+    "PURPLE",
+    "RED",
+    "RAINBOW"
+  ],
+  "color_hex": {
+    "WHITE": "#EAEFFA",
+    "BLUE": "#548EFA",
+    "GREEN": "#45D48C",
+    "YELLOW": "#EFD757",
+    "PURPLE": "#B78CFF",
+    "RED": "#F14954",
+    "RAINBOW": "HORIZONTAL_ANIMATED_RGB_GRADIENT"
+  },
+  "single_award_minimum_medals": {
+    "WHITE": 10,
+    "BLUE": 20,
+    "GREEN": 30,
+    "YELLOW": 50,
+    "PURPLE": 100,
+    "RED": 500,
+    "RAINBOW": 2000
+  },
+  "rainbow_requires_exact_single_award": 2000,
+  "right_lamp_active_only_if_new_award_positive": true,
+  "normal_game_without_new_award": "ALL_RIGHT_LAMPS_OFF",
+  "reward_color_distribution_percent": [
+    {
+      "min": 10,
+      "max": 19,
+      "values": [
+        100,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "min": 20,
+      "max": 29,
+      "values": [
+        70,
+        30,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "min": 30,
+      "max": 49,
+      "values": [
+        55,
+        35,
+        10,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "min": 50,
+      "max": 99,
+      "values": [
+        25,
+        35,
+        30,
+        10,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "min": 100,
+      "max": 199,
+      "values": [
+        10,
+        15,
+        25,
+        40,
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "min": 200,
+      "max": 499,
+      "values": [
+        5,
+        10,
+        15,
+        40,
+        30,
+        0,
+        0
+      ]
+    },
+    {
+      "min": 500,
+      "max": 1999,
+      "values": [
+        2,
+        3,
+        10,
+        20,
+        35,
+        30,
+        0
+      ]
+    },
+    {
+      "min": 2000,
+      "max": 2000,
+      "values": [
+        0,
+        0,
+        0,
+        0,
+        5,
+        85,
+        10
+      ]
+    },
+    {
+      "min": 2001,
+      "max": null,
+      "values": [
+        2,
+        3,
+        10,
+        20,
+        35,
+        30,
+        0
+      ]
+    }
+  ],
+  "reward_lamp_count_distribution_percent": [
+    {
+      "min": 10,
+      "max": 49,
+      "weights_percent": {
+        "one": 45,
+        "two": 40,
+        "three": 15
+      }
+    },
+    {
+      "min": 50,
+      "max": 199,
+      "weights_percent": {
+        "one": 30,
+        "two": 45,
+        "three": 25
+      }
+    },
+    {
+      "min": 200,
+      "max": 499,
+      "weights_percent": {
+        "one": 25,
+        "two": 40,
+        "three": 35
+      }
+    },
+    {
+      "min": 500,
+      "max": null,
+      "weights_percent": {
+        "one": 15,
+        "two": 35,
+        "three": 50
+      }
+    }
+  ],
+  "count_progression": {
+    "start_count": 1,
+    "final_count_one": [
+      1,
+      1,
+      1
+    ],
+    "final_count_two": {
+      "on_first_stop": [
+        1,
+        2,
+        2
+      ],
+      "on_second_stop": [
+        1,
+        1,
+        2
+      ],
+      "probability_each": 0.5
+    },
+    "final_count_three": [
+      1,
+      2,
+      3
+    ],
+    "stage_names": [
+      "LEVER_ON",
+      "STOP_1",
+      "STOP_2"
+    ],
+    "advance_only": true
+  },
+  "color_progression": {
+    "target_reveal_stage_percent": {
+      "LEVER_ON": 20,
+      "STOP_1": 40,
+      "STOP_2": 40
+    },
+    "before_target_color": "WHITE",
+    "never_decrease": true
+  },
+  "flash": {
+    "trigger": "THIRD_STOP_NEW_AWARD_ONLY",
+    "same_final_color_probability": 0.8,
+    "attempt_promote_probability": 0.2,
+    "promote_to": "UNIFORM_OVER_ALL_HIGHER_ELIGIBLE_COLORS",
+    "on_no_higher_eligible": "KEEP_SAME",
+    "total_reel_overlay": true,
+    "on_ms": 80,
+    "off_ms": 70,
+    "cycles": 4,
+    "alpha_percent": {
+      "WHITE": 26,
+      "BLUE": 28,
+      "GREEN": 30,
+      "YELLOW": 33,
+      "PURPLE": 38,
+      "RED": 42,
+      "RAINBOW": 35
+    },
+    "rainbow": "HORIZONTAL_MOVING_GRADIENT"
+  },
+  "hud": {
+    "logical_pixels": [
+      1920,
+      1080
+    ],
+    "reel_rect": [
+      670,
+      300,
+      900,
+      390
+    ],
+    "status_rect": [
+      670,
+      710,
+      900,
+      95
+    ],
+    "lever_rect": [
+      300,
+      780,
+      130,
+      260
+    ],
+    "bet_rect": [
+      440,
+      860,
+      150,
+      100
+    ],
+    "stop_rects": [
+      [
+        720,
+        865,
+        180,
+        110
+      ],
+      [
+        990,
+        865,
+        180,
+        110
+      ],
+      [
+        1260,
+        865,
+        180,
+        110
+      ]
+    ],
+    "announcement_lamps": [
+      [
+        548,
+        310,
+        104,
+        104
+      ],
+      [
+        1588,
+        310,
+        104,
+        104
+      ]
+    ],
+    "state_lamps": [
+      [
+        388,
+        372,
+        146,
+        36
+      ],
+      [
+        388,
+        433,
+        146,
+        36
+      ],
+      [
+        388,
+        494,
+        146,
+        36
+      ]
+    ],
+    "right_lamps": [
+      [
+        1583,
+        454,
+        34,
+        34
+      ],
+      [
+        1583,
+        523,
+        34,
+        34
+      ],
+      [
+        1583,
+        592,
+        34,
+        34
+      ]
+    ],
+    "hyperdog_cabinet_rect": [290, 205, 1415, 835],
+    "hyperdog_right_data_rect": [1716, 325, 186, 430],
+    "announcement_inset_pixels": 17,
+    "announcement_style": "ORIGINAL_FIVE_PETAL_TROPICAL_BLOSSOM",
+    "add_screen_rect": [
+      356,
+      575,
+      272,
+      132
+    ]
+  },
+  "left_lamp_modes": {
+    "LOWER": {
+      "color": "#D9B65C",
+      "state": "SOLID"
+    },
+    "UPPER": {
+      "color": "#B78CFF",
+      "state": "SOLID"
+    },
+    "CZ": {
+      "color": "#5AD8F0",
+      "state": "SOLID"
+    },
+    "LOWER_HAS_CZ_TICKET": {
+      "lamp": "CZ",
+      "on_ms": 450,
+      "off_ms": 1550
+    },
+    "COMEBACK_32_PAID_G": {
+      "lamp": "LOWER",
+      "pulse_ms": [
+        200,
+        200,
+        200,
+        1400
+      ]
+    }
+  },
+  "results": {
+    "lower_initial_game": 1,
+    "lower_initial_third_stop": "TOTAL_INITIAL_GRANTED",
+    "upper_initial_free_games": 5,
+    "upper_initial_each_third_stop": "PLUS_NEW_GRANT",
+    "upper_first_paid_game": 6,
+    "upper_sixth_game_third_stop": "TOTAL_FIRST_5_ONLY",
+    "upper_total_duration_ms": 1400,
+    "lower_total_duration_ms": 1400,
+    "plus_duration_ms": 1200,
+    "upper_sixth_new_bonus_queue": [
+      "INITIAL_5_TOTAL",
+      "PAID_GAME_NEW_ADDON",
+      "LIVE_REMAINING"
+    ],
+    "bar_and_carry_not_in_upper_total": true,
+    "lever_locked_during_results_queue": true
+  },
+  "forced_stop_events": {
+    "AT_RED7_CONFIRM": {
+      "after": "ORIGINAL_ROLE_THIRD_STOP_AND_PAYOUT",
+      "bet": 0,
+      "payout": 0,
+      "count_game": false,
+      "reel_auto_rotation_ms": 720,
+      "static_show_ms": 320,
+      "center_row": [
+        "RED7",
+        "RED7",
+        "RED7"
+      ]
+    },
+    "CZ": {
+      "left_auto_stop_ms": 500,
+      "right_auto_stop_ms": 700,
+      "center_stop_unlock_ms": 900,
+      "other_stops": "DISABLED",
+      "bet": 0,
+      "payout": 0
+    }
+  },
+  "sounds": {
+    "BET": "bet",
+    "LEVER": "lever",
+    "STOP": "stop",
+    "AT_RED7": "notice",
+    "BAR": "notice_strong",
+    "SMALL_ADD": "payout",
+    "LARGE_ADD": "notice_strong",
+    "CZ_OUTER_AUTO": "tenpai",
+    "CZ_SUCCESS": "bonus_start",
+    "CZ_FAIL": "bonus_end",
+    "on_missing_resource": "SILENT_ONLY_THAT_CUE"
+  }
+}

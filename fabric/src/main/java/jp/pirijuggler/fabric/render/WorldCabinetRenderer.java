@@ -4,6 +4,8 @@ import jp.pirijuggler.fabric.PiriJugglerClient;
 import jp.pirijuggler.fabric.network.RemoteMachineViewState;
 import jp.pirijuggler.fabric.ui.UiConstants;
 import jp.pirijuggler.fabric.ui.JugglerGodAssets;
+import jp.pirijuggler.fabric.ui.HyperDogLampGeometry;
+import jp.pirijuggler.fabric.ui.SlotLayout;
 import jp.pirijuggler.fabric.ui.SettingHintTexture;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
@@ -86,56 +88,87 @@ public final class WorldCabinetRenderer {
                              CabinetPlacement.Basis basis,Vec3d camera,long now,MinecraftClient client){
         var consumers=context.consumers();
         if("PACHINKO".equals(state.machineType())){drawPachinko(consumers,state,basis,camera,client);return;}
+        // The world-facing HYPER_DOG must match its dedicated Fabric GUI,
+        // not fall through to JUGGLER's burgundy cabinet / cream reels.
+        boolean hyperDog="HYPER_DOG".equals(state.machineType());
+        final int hyperEdge=0xff817a95,hyperCabinet=0xff302f41;
+        final int hyperReel=0xff11121d,hyperPanel=0xff101824,hyperOff=0xff25242c;
 
         // Compact public data lamp above the cabinet.
         double dataY=CabinetPlacement.HEIGHT/2.0+.125;
-        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH,.20,.0010,UiConstants.color("CABINET_EDGE"),0,0,1,1);
-        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH-.015,.185,.0016,UiConstants.color("DISPLAY_BG"),0,0,1,1);
+        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH,.20,.0010,hyperDog?hyperEdge:UiConstants.color("CABINET_EDGE"),0,0,1,1);
+        quad(consumers,WHITE,basis,camera,0,dataY,CabinetPlacement.WIDTH-.015,.185,.0016,hyperDog?hyperPanel:UiConstants.color("DISPLAY_BG"),0,0,1,1);
         quad(consumers,WHITE,basis,camera,.11,dataY,.006,.165,.0020,UiConstants.color("BUTTON_METAL_DARK"),0,0,1,1);
 
-        localText(consumers,client.textRenderer,basis,camera,-.45,dataY+.055,"BIG",.00245f,UiConstants.color("DISPLAY_BIG"),false);
-        localText(consumers,client.textRenderer,basis,camera,-.23,dataY+.055,Long.toString(state.bigCount()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
-        localText(consumers,client.textRenderer,basis,camera,-.45,dataY-.015,"REG",.00245f,UiConstants.color("DISPLAY_REG"),false);
-        localText(consumers,client.textRenderer,basis,camera,-.23,dataY-.015,Long.toString(state.regCount()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
-
-        long bonusTotal=state.bigCount()+state.regCount();
-        String combined=bonusTotal==0?"1/---":String.format(Locale.ROOT,"1/%.1f",state.totalGames()/(double)bonusTotal);
-        localText(consumers,client.textRenderer,basis,camera,.31,dataY+.050,"合算",.00205f,UiConstants.color("DISPLAY_GREEN"),true);
-        localText(consumers,client.textRenderer,basis,camera,.31,dataY-.018,combined,.00285f,UiConstants.color("DISPLAY_WHITE"),true);
-
-        // Cabinet face. JUGGLER_GOD uses layered gold bands instead of a flat color.
-        boolean jugglerGod=isJugglerGod(state.machineType());
-        quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH,CabinetPlacement.HEIGHT,0,
-                jugglerGod?UiConstants.color("CABINET_EDGE_LIGHT"):UiConstants.color("CABINET_EDGE"),0,0,1,1);
-        if(jugglerGod){
-            double innerW=CabinetPlacement.WIDTH-.015,innerH=CabinetPlacement.HEIGHT-.015;
-            double bandH=innerH/5.0;
-            int[] gold={
-                    UiConstants.color("JUGGLER_GOD_GOLD_TOP"),
-                    UiConstants.color("JUGGLER_GOD_GOLD_MID"),
-                    UiConstants.color("JUGGLER_GOD_GOLD_MID"),
-                    UiConstants.color("JUGGLER_GOD_GOLD_LOW"),
-                    UiConstants.color("JUGGLER_GOD_GOLD_BOTTOM")
-            };
-            for(int i=0;i<5;i++){
-                double cy=innerH/2.0-bandH/2.0-i*bandH;
-                quad(consumers,WHITE,basis,camera,0,cy,innerW,bandH+.001,.0006,gold[i],0,0,1,1);
-            }
-            quad(consumers,WHITE,basis,camera,0,innerH/2.0-.030,innerW-.030,.015,.0008,
-                    UiConstants.color("JUGGLER_GOD_GOLD_HIGHLIGHT"),0,0,1,1);
+        if("HYPER_DOG".equals(state.machineType())){
+            long rush=state.rushCount(),hyper=state.hyperCount(),all=rush+hyper;
+            String combined=all<=0||state.totalGames()<=0?"1/---":
+                    "1/"+Math.max(1,Math.round(state.totalGames()/(double)all));
+            // Same public counters and odds as owner GUI and Shift+click.
+            localText(consumers,client.textRenderer,basis,camera,-.44,dataY+.052,"RUSH",.0023f,UiConstants.color("DISPLAY_BIG"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.44,dataY-.020,Long.toString(rush),.0029f,UiConstants.color("DISPLAY_WHITE"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.08,dataY+.052,"HYPER",.0022f,UiConstants.color("DISPLAY_REG"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.08,dataY-.020,Long.toString(hyper),.0029f,UiConstants.color("DISPLAY_WHITE"),false);
+            localText(consumers,client.textRenderer,basis,camera,.20,dataY+.052,"合算",.0022f,UiConstants.color("DISPLAY_GREEN"),false);
+            localText(consumers,client.textRenderer,basis,camera,.20,dataY-.020,combined,.00255f,UiConstants.color("DISPLAY_WHITE"),false);
         }else{
-            quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.015,CabinetPlacement.HEIGHT-.015,.0006,
-                    UiConstants.color("SKILL_STOP".equals(state.machineType())?"SKILL_STOP_CABINET_BG":"CABINET_BG"),0,0,1,1);
+            localText(consumers,client.textRenderer,basis,camera,-.45,dataY+.055,"BIG",.00245f,UiConstants.color("DISPLAY_BIG"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.23,dataY+.055,Long.toString(state.bigCount()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.45,dataY-.015,"REG",.00245f,UiConstants.color("DISPLAY_REG"),false);
+            localText(consumers,client.textRenderer,basis,camera,-.23,dataY-.015,Long.toString(state.regCount()),.00285f,UiConstants.color("DISPLAY_WHITE"),false);
+            long bonusTotal=state.bigCount()+state.regCount();
+            String combined=bonusTotal==0?"1/---":String.format(Locale.ROOT,"1/%.1f",state.totalGames()/(double)bonusTotal);
+            localText(consumers,client.textRenderer,basis,camera,.31,dataY+.050,"合算",.00205f,UiConstants.color("DISPLAY_GREEN"),true);
+            localText(consumers,client.textRenderer,basis,camera,.31,dataY-.018,combined,.00285f,UiConstants.color("DISPLAY_WHITE"),true);
+        }
+
+        // HYPER_DOG keeps its own cabinet GUI geometry,
+        // but must not exceed the same physical one-block width as JUGGLER.
+        // Apply the horizontal fit only after drawing the unchanged data lamp.
+        // The outer cabinet and every inner piece use the same fitted basis.
+        if(hyperDog)
+            basis=CabinetPlacement.fitWideFaceToBlock(
+                    basis,jp.pirijuggler.fabric.ui.HyperDogCabinetState.cabinetRect().w(),CAB_W);
+        boolean jugglerGod=isJugglerGod(state.machineType());
+        if(hyperDog){
+            SlotLayout.Rect body=jp.pirijuggler.fabric.ui.HyperDogCabinetState.cabinetRect();
+            rect(consumers,WHITE,basis,camera,body.x(),body.y(),body.w(),body.h(),0,
+                    hyperEdge,0,0,1,1);
+            rect(consumers,WHITE,basis,camera,body.x()+4,body.y()+4,body.w()-8,body.h()-8,.0006,
+                    hyperCabinet,0,0,1,1);
+        }else{
+            quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH,CabinetPlacement.HEIGHT,0,
+                    jugglerGod?UiConstants.color("CABINET_EDGE_LIGHT"):UiConstants.color("CABINET_EDGE"),0,0,1,1);
+            if(jugglerGod){
+                double innerW=CabinetPlacement.WIDTH-.015,innerH=CabinetPlacement.HEIGHT-.015;
+                double bandH=innerH/5.0;
+                int[] gold={
+                        UiConstants.color("JUGGLER_GOD_GOLD_TOP"),
+                        UiConstants.color("JUGGLER_GOD_GOLD_MID"),
+                        UiConstants.color("JUGGLER_GOD_GOLD_MID"),
+                        UiConstants.color("JUGGLER_GOD_GOLD_LOW"),
+                        UiConstants.color("JUGGLER_GOD_GOLD_BOTTOM")
+                };
+                for(int i=0;i<5;i++){
+                    double cy=innerH/2.0-bandH/2.0-i*bandH;
+                    quad(consumers,WHITE,basis,camera,0,cy,innerW,bandH+.001,.0006,gold[i],0,0,1,1);
+                }
+                quad(consumers,WHITE,basis,camera,0,innerH/2.0-.030,innerW-.030,.015,.0008,
+                        UiConstants.color("JUGGLER_GOD_GOLD_HIGHLIGHT"),0,0,1,1);
+            }else{
+                quad(consumers,WHITE,basis,camera,0,0,CabinetPlacement.WIDTH-.015,CabinetPlacement.HEIGHT-.015,.0006,
+                        UiConstants.color("SKILL_STOP".equals(state.machineType())?"SKILL_STOP_CABINET_BG":"CABINET_BG"),0,0,1,1);
+            }
         }
 
         // SlotScreen reel separator: (670,300)-(1570,690), mapped inside CABINET.
         boolean godBlackout=state.godFreeze();
         rect(consumers,WHITE,basis,camera,670,300,900,390,.0010,
-                godBlackout?0xff111111:UiConstants.color("REEL_SEPARATOR"),0,0,1,1);
+                godBlackout?0xff111111:hyperDog?hyperEdge:UiConstants.color("REEL_SEPARATOR"),0,0,1,1);
 
         for(int reel=0;reel<3;reel++){
             int x=670+315*reel;
-            int reelBg=isJugglerGod(state.machineType())
+            int reelBg=hyperDog?hyperReel:isJugglerGod(state.machineType())
                     ?UiConstants.color("JUGGLER_GOD_REEL_BG")
                     :UiConstants.color("REEL_BG");
             rect(consumers,WHITE,basis,camera,x,300,270,390,.0015,
@@ -149,11 +182,12 @@ public final class WorldCabinetRenderer {
                 boolean wide=symbol.equals("seven")||symbol.equals("bar");
                 boolean godMachine=isJugglerGod(state.machineType());
                 boolean godLarge=symbol.equals("seven")||symbol.equals("grape")||symbol.equals("replay");
-                double boxW=godMachine?(symbol.equals("bar")?230:godLarge?230:130):(wide?230:130);
-                double boxH=godMachine?(symbol.equals("bar")?150:godLarge?150:130):(symbol.equals("bar")?150:130);
+                boolean hyperSpecial=hyperDog&&(symbol.equals("red7")||symbol.equals("rainbow7")||symbol.equals("bar"));
+                double boxW=hyperDog?(hyperSpecial?166:130):godMachine?(symbol.equals("bar")?230:godLarge?230:130):(wide?230:130);
+                double boxH=hyperDog?(hyperSpecial?166:130):godMachine?(symbol.equals("bar")?150:godLarge?150:130):(symbol.equals("bar")?150:130);
                 double sy=430+(row-fraction)*130-(boxH-130)/2.0;
                 double sw=boxW,sh=boxH;
-                if(godMachine){
+                if(godMachine||hyperDog){
                     var size=JugglerGodAssets.textureSize(state.machineType(),"symbols/"+symbol+".png");
                     double fit=Math.min(boxW/size.width(),boxH/size.height());
                     sw=size.width()*fit;sh=size.height()*fit;
@@ -172,18 +206,37 @@ public final class WorldCabinetRenderer {
             }
         }
 
-        // Exact SlotScreen lamp placement: (350,390,300,170).
-        Identifier lamp=state.lampVisible(now)
-                ?JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_on.png")
-                :JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_off.png");
-        if(isJugglerGod(state.machineType())){
-            double boxW=300,boxH=170;
-            var size=JugglerGodAssets.textureSize(state.machineType(),"lamp/piri_chance_"+(state.lampVisible(now)?"on":"off")+".png");
-            double fit=Math.min(boxW/size.width(),boxH/size.height());
-            double lw=size.width()*fit,lh=size.height()*fit;
-            rect(consumers,lamp,basis,camera,350+(boxW-lw)/2.0,390+(boxH-lh)/2.0,lw,lh,.0025,0xffffffff,0,0,1,1);
+        if(hyperDog){
+            // The spectator view shares the single left CHANCE geometry.
+            // No server-side lottery or hidden state is inferred here.
+            var chance=HyperDogLampGeometry.announcement(0);
+            boolean chanceLit=state.lampVisible(now);
+            drawWorldChance(consumers,basis,camera,chance,chanceLit,client.textRenderer);
+            String[] labels={"RUSH","HYPER","CZ"};
+            for(int i=0;i<3;i++){
+                var left=HyperDogLampGeometry.left(i);
+                drawHyperDogLamp(consumers,basis,camera,left,false,hyperOff);
+                textCentered(consumers,client.textRenderer,basis,camera,
+                        left.frame().x()+left.frame().w()/2.0,left.frame().y()+10,
+                        labels[i],1.45f,0xffa29eb1);
+                drawHyperDogLamp(consumers,basis,camera,
+                        HyperDogLampGeometry.right(i),false,hyperOff);
+            }
+            rect(consumers,WHITE,basis,camera,356,575,272,132,.0025,0xff0a0c16,0,0,1,1);
         }else{
-            rect(consumers,lamp,basis,camera,350,390,300,170,.0025,0xffffffff,0,0,1,1);
+            // Existing machine appearances remain unchanged.
+            Identifier lamp=state.lampVisible(now)
+                    ?JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_on.png")
+                    :JugglerGodAssets.texture(state.machineType(),"lamp/piri_chance_off.png");
+            if(isJugglerGod(state.machineType())){
+                double boxW=300,boxH=170;
+                var size=JugglerGodAssets.textureSize(state.machineType(),"lamp/piri_chance_"+(state.lampVisible(now)?"on":"off")+".png");
+                double fit=Math.min(boxW/size.width(),boxH/size.height());
+                double lw=size.width()*fit,lh=size.height()*fit;
+                rect(consumers,lamp,basis,camera,350+(boxW-lw)/2.0,390+(boxH-lh)/2.0,lw,lh,.0025,0xffffffff,0,0,1,1);
+            }else{
+                rect(consumers,lamp,basis,camera,350,390,300,170,.0025,0xffffffff,0,0,1,1);
+            }
         }
 
         if(isJugglerGod(state.machineType())){
@@ -202,7 +255,7 @@ public final class WorldCabinetRenderer {
                     box.x()+(box.w()-w)/2,box.y()+(box.h()-h)/2,w,h,.0025,0xffffffff,0,0,1,1);
         }
         // Exact status panel: (670,710,900,95), but only public remote fields.
-        rect(consumers,WHITE,basis,camera,670,710,900,95,.0012,UiConstants.color("DISPLAY_BG"),0,0,1,1);
+        rect(consumers,WHITE,basis,camera,670,710,900,95,.0012,hyperDog?hyperPanel:UiConstants.color("DISPLAY_BG"),0,0,1,1);
         text(consumers,client.textRenderer,basis,camera,690,725,"CREDIT",2.0f,UiConstants.color("TEXT_MAIN"));
         text(consumers,client.textRenderer,basis,camera,690,758,Long.toString(state.credit()),3.0f,UiConstants.color("TEXT_MAIN"));
         text(consumers,client.textRenderer,basis,camera,1086,725,"PAY",2.0f,UiConstants.color("TEXT_MAIN"));
@@ -215,24 +268,82 @@ public final class WorldCabinetRenderer {
                     "SKILL_STOP".equals(state.machineType())?"残り "+state.skillRemaining()+"G":"COUNT "+state.bonusCount(),2.0f,UiConstants.color("TEXT_MAIN"));
 
         // Match visible cabinet controls from the real SlotScreen. Decorative only in world view.
-        control(consumers,basis,camera,440,860,150,100,"BET",client.textRenderer);
-        stopButton(consumers,basis,camera,720,865,180,110,"LEFT",client.textRenderer);
-        stopButton(consumers,basis,camera,990,865,180,110,"CENTER",client.textRenderer);
-        stopButton(consumers,basis,camera,1260,865,180,110,"RIGHT",client.textRenderer);
+        int buttonTint=hyperDog?0xffb8495a:UiConstants.color("BUTTON_RED");
+        control(consumers,basis,camera,440,860,150,100,"BET",client.textRenderer,buttonTint);
+        stopButton(consumers,basis,camera,720,865,180,110,"LEFT",client.textRenderer,buttonTint);
+        stopButton(consumers,basis,camera,990,865,180,110,"CENTER",client.textRenderer,buttonTint);
+        stopButton(consumers,basis,camera,1260,865,180,110,"RIGHT",client.textRenderer,buttonTint);
+    }
+
+    /**
+     * Match the exact GUI lamp dimensions. The lens and light sit inside two
+     * successive dark borders, so ON and OFF both retain visible negative space.
+     * The world plane uses four progressively front-facing layers.
+     */
+    private static void drawHyperDogLamp(VertexConsumerProvider c,CabinetPlacement.Basis b,
+                                         Vec3d cam,HyperDogLampGeometry.Layers l,
+                                         boolean lit,int lightColor){
+        drawLampRect(c,b,cam,l.frame(),.00240,0xff404454);
+        drawLampRect(c,b,cam,l.gasket(),.00265,0xff0b0e18);
+        drawLampRect(c,b,cam,l.lens(),.00285,0xff34303b);
+        drawLampRect(c,b,cam,l.emitter(),.00305,lit?lightColor:0xff29242c);
+        if(lit){
+            SlotLayout.Rect e=l.emitter();
+            int pad=Math.max(2,e.w()/10);
+            int top=e.y()+Math.max(1,e.h()/8);
+            int bottom=Math.min(e.y()+e.h()-1,top+Math.max(1,e.h()/7));
+            if(e.w()>pad*2&&bottom>top)
+                rect(c,WHITE,b,cam,e.x()+pad,top,e.w()-pad*2,bottom-top,.0032,0x55ffffff,0,0,1,1);
+        }
+    }
+
+    /** Low-overdraw five-petal flower: same 70px lens and colors as the GUI.
+     *  Ellipses use only seven horizontal strips, avoiding a high-cost mesh. */
+    private static void drawWorldChance(VertexConsumerProvider c,CabinetPlacement.Basis b,
+                                        Vec3d cam,HyperDogLampGeometry.Layers l,
+                                        boolean lit,TextRenderer tr){
+        worldChanceBand(c,b,cam,l.frame(),14,.00240,0xffaaa6b7);
+        worldChanceBand(c,b,cam,l.gasket(),11,.00265,0xff14131f);
+        worldChanceBand(c,b,cam,l.lens(),8,.00285,lit?0xfff7ca80:0xff60566f);
+        worldChanceBand(c,b,cam,l.emitter(),4,.00305,lit?0xffca7936:0xff251f32);
+        var r=l.frame();
+        int edge=lit?0xffffdc99:0xff756c88;
+        rect(c,WHITE,b,cam,r.x()+25,r.y()+10,r.w()-50,1,.00320,edge,0,0,1,1);
+        rect(c,WHITE,b,cam,r.x()+25,r.y()+r.h()-11,r.w()-50,1,.00320,edge,0,0,1,1);
+        textCentered(c,tr,b,cam,r.x()+r.w()/2.0,r.y()+16,
+                "CHANCE",3.25f,lit?0xfffff5e5:0xffa9a0ba);
+    }
+
+    private static void worldChanceBand(VertexConsumerProvider c,CabinetPlacement.Basis b,
+                                        Vec3d cam,SlotLayout.Rect r,int cut,
+                                        double depth,int color){
+        int x=r.x(),y=r.y(),w=r.w(),h=r.h();
+        int chamfer=Math.min(cut,Math.min(w/2-1,h/2-1));
+        rect(c,WHITE,b,cam,x,y+chamfer,w,h-2*chamfer,depth,color,0,0,1,1);
+        for(int row=0;row<chamfer;row++){
+            int inset=chamfer-row;
+            rect(c,WHITE,b,cam,x+inset,y+row,w-2*inset,1,depth,color,0,0,1,1);
+            rect(c,WHITE,b,cam,x+inset,y+h-row-1,w-2*inset,1,depth,color,0,0,1,1);
+        }
+    }
+
+    private static void drawLampRect(VertexConsumerProvider c,CabinetPlacement.Basis b,
+                                     Vec3d cam,SlotLayout.Rect r,double depth,int color){
+        rect(c,WHITE,b,cam,r.x(),r.y(),r.w(),r.h(),depth,color,0,0,1,1);
     }
 
     private static void control(VertexConsumerProvider c,CabinetPlacement.Basis b,Vec3d cam,
-                                double x,double y,double w,double h,String label,TextRenderer tr){
+                                double x,double y,double w,double h,String label,TextRenderer tr,int buttonTint){
         rect(c,WHITE,b,cam,x,y,w,h,.0012,UiConstants.color("BUTTON_METAL_DARK"),0,0,1,1);
-        insetRect(c,b,cam,x,y,w,h,5,.0020,UiConstants.color("BUTTON_RED"));
+        insetRect(c,b,cam,x,y,w,h,5,.0020,buttonTint);
         textCentered(c,tr,b,cam,x+w/2,y+h/2-9,label,2.0f,UiConstants.color("TEXT_MAIN"));
     }
 
     private static void stopButton(VertexConsumerProvider c,CabinetPlacement.Basis b,Vec3d cam,
-                                   double x,double y,double w,double h,String label,TextRenderer tr){
+                                   double x,double y,double w,double h,String label,TextRenderer tr,int buttonTint){
         double s=88;
         rect(c,WHITE,b,cam,x+(w-s)/2,y+(h-s)/2,s,s,.0012,UiConstants.color("BUTTON_METAL"),0,0,1,1);
-        rect(c,WHITE,b,cam,x+(w-76)/2,y+(h-76)/2,76,76,.0020,UiConstants.color("BUTTON_RED"),0,0,1,1);
+        rect(c,WHITE,b,cam,x+(w-76)/2,y+(h-76)/2,76,76,.0020,buttonTint,0,0,1,1);
         textCentered(c,tr,b,cam,x+w/2,y+h+12,label,2.0f,UiConstants.color("TEXT_MAIN"));
     }
 

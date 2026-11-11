@@ -256,7 +256,8 @@ public final class SlotScreen extends Screen {
         if(games<=0||hits<=0)return "---";
         return "1/"+Math.max(1,Math.round(games/(double)hits));
     }
-    private void drawGraph(DrawContext c,JsonArray graph,float x,float y,float w,float h,long totalGames){
+    // Shared by HYPER_DOG: one canonical graph renderer for all slot families.
+    static void drawGraph(DrawContext c,JsonArray graph,float x,float y,float w,float h,long totalGames){
         if(graph.isEmpty()||totalGames<1)return;
         long min=Long.MAX_VALUE,max=Long.MIN_VALUE;
         for(JsonElement element:graph){JsonObject p=element.getAsJsonObject();long px=p.get("game").getAsLong();if(px<1||px>totalGames)continue;long py=p.get("difference").getAsLong();min=Math.min(min,py);max=Math.max(max,py);}
@@ -353,7 +354,8 @@ public final class SlotScreen extends Screen {
         int ba=b>>>24&255,br=b>>>16&255,bg=b>>>8&255,bb=b&255;
         return ((int)(aa+(ba-aa)*t)<<24)|((int)(ar+(br-ar)*t)<<16)|((int)(ag+(bg-ag)*t)<<8)|(int)(ab+(bb-ab)*t);
     }
-    private static void rounded(DrawContext c,float x,float y,float w,float h,float radius,int tint){
+    // Shared presentation primitive for dedicated HYPER_DOG controls and panels.
+    static void rounded(DrawContext c,float x,float y,float w,float h,float radius,int tint){
         c.draw();RenderSystem.enableBlend();RenderSystem.defaultBlendFunc();RenderSystem.disableCull();RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         var b=Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_FAN,VertexFormats.POSITION_COLOR);var matrix=c.getMatrices().peek().getPositionMatrix();
         b.vertex(matrix,x+w/2,y+h/2,0).color(tint);

@@ -65,6 +65,36 @@ class AdminStoreTest {
         assertEquals(0,scalar("SELECT count(*) FROM metadata WHERE key=?","SIM_CURSOR:"+state.period()+":"+id));
     }
 
+    @Test void hyperDogSixSettingsAndDailyResetKeepDedicatedCountsConsistent()throws Exception{
+        UUID actor=UUID.randomUUID();
+        int id=db.create(new Machine.Location(UUID.randomUUID(),"world",43,64,0,"NORTH"),
+                MachineType.HYPER_DOG,NOW);
+        var original=db.state();
+        for(int setting=1;setting<=6;setting++){
+            assertEquals(setting,store.setSetting(db.state(),id,setting,actor,NOW+setting));
+            assertEquals(setting,db.state().machine(id).setting());
+        }
+        assertEquals(5,scalar("SELECT count(*) FROM setting_history WHERE machine_id=?",id));
+        store.setAuto(db.state(),id,false,NOW+10);
+        assertFalse(db.state().machine(id).autoSetting());
+        store.setAuto(db.state(),id,true,NOW+11);
+        assertTrue(db.state().machine(id).autoSetting());
+        db.sql("CREATE TABLE IF NOT EXISTS hyper_dog_events(machine_id INTEGER NOT NULL,business_period_id TEXT NOT NULL,event_id TEXT NOT NULL,event_type TEXT NOT NULL,medals INTEGER NOT NULL,occurred_at INTEGER NOT NULL,PRIMARY KEY(machine_id,event_id))");
+        int legacy=db.create(new Machine.Location(UUID.randomUUID(),"world",44,64,0,"NORTH"),
+                MachineType.JUGGLER,NOW);
+        db.sql("INSERT INTO hyper_dog_events VALUES(?,?,?,?,?,?)",id,original.period(),"first","AT_FIRST_HIT",0,NOW);
+        db.sql("INSERT INTO hyper_dog_events VALUES(?,?,?,?,?,?)",legacy,original.period(),"legacy-row","AT_FIRST_HIT",0,NOW);
+        db.sql("UPDATE machine_period_stats SET total_games=50,today_difference=150 WHERE machine_id=? AND business_period_id=?",id,original.period());
+        store.resetDaily(db.state(),id,NOW+12);
+        assertEquals(0,scalar("SELECT count(*) FROM hyper_dog_events WHERE machine_id=?",id));
+        assertEquals(1,scalar("SELECT count(*) FROM hyper_dog_events WHERE machine_id=?",legacy),
+                "daily reset must not clear another machine's counters");
+        assertEquals(0,scalar("SELECT total_games FROM machine_period_stats WHERE machine_id=?",id));
+        assertEquals(0,scalar("SELECT today_difference FROM machine_period_stats WHERE machine_id=?",id));
+        assertEquals(5,scalar("SELECT count(*) FROM setting_history WHERE machine_id=?",id));
+        assertEquals(6,db.state().machine(id).setting());
+    }
+
     @Test void dailyResetClearsAllJugglerGodRuntimeBenefits() throws Exception {
         var location=new Machine.Location(UUID.randomUUID(),"world",9,64,0,"NORTH");
         int id=db.create(location,MachineType.JUGGLER_GOD,NOW);

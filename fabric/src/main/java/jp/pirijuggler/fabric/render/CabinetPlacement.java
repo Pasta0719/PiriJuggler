@@ -45,6 +45,24 @@ public final class CabinetPlacement {
         return new Basis(center, front, right, up);
     }
 
+    /**
+     * Fit a wide HYPER_DOG GUI face to the exact physical width of the existing
+     * one-block cabinet. This changes only the projected horizontal basis:
+     * the center and both outer edges stay aligned to the original block.
+     * Non-HYPER_DOG render paths must continue using the original basis.
+     */
+    public static Basis fitWideFaceToBlock(Basis basis,double faceWidthPx,double legacyWidthPx) {
+        if(basis==null||!Double.isFinite(faceWidthPx)||!Double.isFinite(legacyWidthPx)
+                ||faceWidthPx<=0||legacyWidthPx<=0)
+            throw new IllegalArgumentException("cabinet width");
+        double shrink=legacyWidthPx/faceWidthPx;
+        // The original GUI map anchors at the left edge of the legacy face,
+        // so the widened rectangle's center is displaced by half the overflow.
+        double centerShift=(faceWidthPx-legacyWidthPx)/(2.0*faceWidthPx);
+        return new Basis(basis.center().add(basis.right().scale(-centerShift)),
+                basis.front(),basis.right().scale(shrink),basis.up());
+    }
+
     public static Vec point(Basis basis, double localX, double localY) {
         return basis.center
                 .add(basis.right.scale(localX))

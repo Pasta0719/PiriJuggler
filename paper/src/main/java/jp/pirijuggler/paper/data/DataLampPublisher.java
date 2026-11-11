@@ -5,6 +5,8 @@ import jp.pirijuggler.common.protocol.EnvelopeCodec;
 import jp.pirijuggler.common.protocol.PacketType;
 import jp.pirijuggler.common.protocol.Protocol;
 import jp.pirijuggler.paper.PiriJugglerPlugin;
+import jp.pirijuggler.paper.game.hyperdog.HyperDogEventJournal;
+import jp.pirijuggler.paper.game.hyperdog.HyperDogRunJournal;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitTask;
 import java.nio.file.Path;
@@ -62,7 +64,7 @@ public final class DataLampPublisher implements AutoCloseable {
             if(period==null||period.isBlank())return new SnapshotBatch(owners,remotes);
 
             try(var ps=connection.prepareStatement("""
-                    SELECT s.machine_id,s.total_games,s.big_count,s.reg_count
+                    SELECT s.machine_id,s.total_games,s.big_count,s.reg_count,m.machine_type
                     FROM machine_period_stats s
                     JOIN machines m ON m.machine_id=s.machine_id
                     WHERE s.business_period_id=? AND m.deleted=0
@@ -76,17 +78,36 @@ public final class DataLampPublisher implements AutoCloseable {
                         data.addProperty("totalGames",rs.getLong(2));
                         data.addProperty("bigCount",rs.getLong(3));
                         data.addProperty("regCount",rs.getLong(4));
+                        if("HYPER_DOG".equals(rs.getString(5))){
+                            var hyper=HyperDogEventJournal.read(connection,rs.getInt(1),period);
+                            data.addProperty("bigCount",0);data.addProperty("regCount",0);
+                            data.addProperty("atFirstHits",hyper.get("atFirstHits").getAsLong());
+                            data.addProperty("czAttempts",hyper.get("czAttempts").getAsLong());
+                            data.addProperty("upperEntries",hyper.get("upperEntries").getAsLong());
+                            var runs=HyperDogRunJournal.read(connection,rs.getInt(1),period);
+                            data.addProperty("rushCount",runs.get("rushCount").getAsLong());
+                            data.addProperty("hyperCount",runs.get("hyperCount").getAsLong());
+                        }
                         remotes.put(rs.getInt(1),data);
                     }
                 }
             }
 
-            try(var ps=connection.prepareStatement("SELECT player_uuid,machine_id FROM player_sessions WHERE lifecycle='ACTIVE' ORDER BY machine_id");var rs=ps.executeQuery()){
+            try(var ps=connection.prepareStatement("""
+                    SELECT s.player_uuid,s.machine_id,m.machine_type
+                    FROM player_sessions s JOIN machines m ON m.machine_id=s.machine_id
+                    WHERE s.lifecycle='ACTIVE' ORDER BY s.machine_id
+                    """);var rs=ps.executeQuery()){
                 var byMachine=new LinkedHashMap<Integer,com.google.gson.JsonObject>();
                 while(rs.next()){
                     UUID player=UUID.fromString(rs.getString(1));int machine=rs.getInt(2);
                     com.google.gson.JsonObject snapshot=byMachine.get(machine);
-                    if(snapshot==null){snapshot=DataLampSnapshot.read(connection,machine,period);byMachine.put(machine,snapshot);}
+                    if(snapshot==null){
+                        snapshot="HYPER_DOG".equals(rs.getString(3))
+                                ?HyperDogDataLamp.read(connection,machine,period)
+                                :DataLampSnapshot.read(connection,machine,period);
+                        byMachine.put(machine,snapshot);
+                    }
                     owners.put(player,snapshot.deepCopy());
                 }
             }

@@ -28,7 +28,7 @@ public final class RemoteMachineSync {
     private final Supplier<PiriDatabase.State> stateSupplier;
     private final Predicate<UUID> compatible;
     private final BiFunction<Session, Long, Session> capture;
-    private record DataLamp(long totalGames,long bigCount,long regCount) {}
+    private record DataLamp(long totalGames,long bigCount,long regCount,long atFirstHits,long czAttempts,long upperEntries,long rushCount,long hyperCount) {}
     private final Map<Integer, DataLamp> dataLamp = new HashMap<>();
     private final Map<UUID, Set<Integer>> interests = new HashMap<>();
     private final Map<Integer,Boolean> godFirstBigAudioActive = new HashMap<>();
@@ -103,7 +103,14 @@ public final class RemoteMachineSync {
         long totalGames = nonNegative(snapshot, "totalGames");
         long bigCount = nonNegative(snapshot, "bigCount");
         long regCount = nonNegative(snapshot, "regCount");
-        DataLamp next = new DataLamp(totalGames, bigCount, regCount);
+        Machine machine=currentMachine(machineId);
+        boolean hyper=machine!=null&&machine.type()==MachineType.HYPER_DOG;
+        DataLamp next = new DataLamp(totalGames,bigCount,regCount,
+                hyper?nonNegative(snapshot,"atFirstHits"):0,
+                hyper?nonNegative(snapshot,"czAttempts"):0,
+                hyper?nonNegative(snapshot,"upperEntries"):0,
+                hyper?nonNegative(snapshot,"rushCount"):0,
+                hyper?nonNegative(snapshot,"hyperCount"):0);
         DataLamp previous = dataLamp.put(machineId, next);
         if (!next.equals(previous)) broadcastSnapshot(machineId);
     }
@@ -303,7 +310,10 @@ public final class RemoteMachineSync {
         Session localSession=state.session(player.getUniqueId());
         for (Machine machine : state.machines()) {
             boolean localMachine=localSession!=null&&localSession.machine()==machine.id()&&localSession.lifecycle()==Session.Lifecycle.ACTIVE;
-            if (!machine.deleted() && !localMachine && inRange(player, machine, current.contains(machine.id()))) desired.add(machine.id());
+            if (!machine.deleted()
+                    && !HyperDogOwnerView.shouldExcludeOwner(localMachine,machine)
+                    && inRange(player, machine, current.contains(machine.id())))
+                desired.add(machine.id());
         }
         for (int id : new HashSet<>(current)) {
             if (!desired.contains(id)) {
@@ -339,10 +349,17 @@ public final class RemoteMachineSync {
                 .findFirst().orElse(null);
 
         JsonObject body = placement(machine);
-        DataLamp stats = dataLamp.getOrDefault(machine.id(), new DataLamp(0, 0, 0));
+        DataLamp stats = dataLamp.getOrDefault(machine.id(), new DataLamp(0, 0, 0, 0, 0, 0, 0, 0));
         body.addProperty("totalGames", stats.totalGames());
         body.addProperty("bigCount", stats.bigCount());
         body.addProperty("regCount", stats.regCount());
+        if(machine.type()==MachineType.HYPER_DOG){
+            body.addProperty("atFirstHits",stats.atFirstHits());
+            body.addProperty("czAttempts",stats.czAttempts());
+            body.addProperty("upperEntries",stats.upperEntries());
+            body.addProperty("rushCount",stats.rushCount());
+            body.addProperty("hyperCount",stats.hyperCount());
+        }
         body.addProperty("enabled", machine.enabled());
         body.addProperty("occupied", state.busy(machine.id()));
 
@@ -417,6 +434,7 @@ public final class RemoteMachineSync {
                 body.add("startPhase", phase);
             }
         }
+        HyperDogRemoteSnapshot.correct(machine,session,body);
         send(viewer, PacketType.REMOTE_MACHINE_SNAPSHOT, body);
     }
 
@@ -431,7 +449,7 @@ public final class RemoteMachineSync {
     }
 
     private static boolean slotAudioMachine(MachineType type){
-        return type==MachineType.JUGGLER||type==MachineType.JUGGLER_GOD||type==MachineType.JUGGLER_GOD_EXTREME||type==MachineType.SKILL_STOP;
+        return type==MachineType.JUGGLER||type==MachineType.JUGGLER_GOD||type==MachineType.JUGGLER_GOD_EXTREME||type==MachineType.SKILL_STOP||type==MachineType.HYPER_DOG;
     }
 
     private void audio(int machineId,String op,String sound,long delayMs,int count,long spacingMs,JsonObject extra){
@@ -505,7 +523,11 @@ public final class RemoteMachineSync {
             UUID viewerId = viewer.getUniqueId();
             if (!compatible.test(viewerId)) continue;
             Session own = state.session(viewerId);
-            if (own != null && own.machine() == machineId && own.lifecycle() == Session.Lifecycle.ACTIVE) continue;
+            // The seated HYPER_DOG player also needs live world-view events.
+            // Other machine types retain their established owner exclusion.
+            boolean activeOwner=own != null && own.machine() == machineId
+                    && own.lifecycle() == Session.Lifecycle.ACTIVE;
+            if (HyperDogOwnerView.shouldExcludeOwner(activeOwner,machine)) continue;
             Set<Integer> current = interests.computeIfAbsent(viewerId, ignored -> new HashSet<>());
             if (!current.contains(machineId)) {
                 if (!inRange(viewer, machine)) continue;

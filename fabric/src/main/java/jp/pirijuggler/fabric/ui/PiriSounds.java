@@ -51,6 +51,48 @@ public final class PiriSounds {
     public static void queueAfter(String name,int count,long spacingNanos,long delayNanos){if(!EVENTS.containsKey(name))throw new IllegalArgumentException(name);long now=System.nanoTime()+Math.max(0L,delayNanos);for(int i=0;i<count;i++)QUEUE.add(new Pending(name,now+spacingNanos*i));}
     public static void tick(){long now=System.nanoTime();while(!QUEUE.isEmpty()&&QUEUE.peek().at<=now)play(QUEUE.remove().name);}
     public static boolean available(String name){return NAMES.contains(name)&&MinecraftClient.getInstance().getResourceManager().getResource(Identifier.of("piri","sounds/"+name+".ogg")).isPresent();}
+
+    /**
+     * The production CI build has no user-provided basic OGGs. Without an
+     * explicit fallback, every machine loses BET, lever, stop, announcement and
+     * payout sound because play() silently returns when the OGG is missing.
+     *
+     * An actual user OGG ALWAYS has priority; only missing sound files use
+     * Minecraft's own registered sound events. The fallback is deliberately
+     * available to all machine types, not just HYPER_DOG.
+     */
+    static Identifier fallbackSoundId(String name){
+        if(name==null)return null;
+        String base=name.startsWith("juggler_god_")
+                ?name.substring("juggler_god_".length()):name;
+        String builtin=switch(base){
+            case "bet" -> "block.note_block.hat";
+            case "lever" -> "block.lever.click";
+            case "stop","god_stop_1","god_stop_2","god_stop_3" -> "block.note_block.hat";
+            case "tenpai" -> "block.note_block.pling";
+            case "payout" -> "entity.experience_orb.pickup";
+            case "notice" -> "block.note_block.chime";
+            case "notice_strong" -> "entity.player.levelup";
+            case "error" -> "block.note_block.bass";
+            case "bonus_start","god_bonus_start" -> "entity.player.levelup";
+            case "bonus_end","god_bonus_end" -> "block.note_block.bass";
+            case "god_freeze" -> "entity.ender_dragon.growl";
+            case "big_bgm","god_big_bgm" -> "music_disc.cat";
+            case "reg_bgm" -> "music_disc.chirp";
+            default -> null;
+        };
+        return builtin==null?null:Identifier.of("minecraft",builtin);
+    }
+
+    private static SoundEvent playableEvent(String name){
+        if(!EVENTS.containsKey(name))return null;
+        if(available(name))return EVENTS.get(name);
+        Identifier builtin=fallbackSoundId(name);
+        // Never register or replace a vanilla event. Retrieve the built-in
+        // asset from Minecraft's own sound registry instead.
+        return builtin!=null&&Registries.SOUND_EVENT.containsId(builtin)
+                ?Registries.SOUND_EVENT.get(builtin):null;
+    }
     public static String forMachine(String machineType,String base){return resolveForMachine(machineType,base,PiriSounds::available);}
     static String resolveForMachine(String machineType,String base,Predicate<String> available){
         if("JUGGLER_GOD".equals(machineType)||"JUGGLER_GOD_EXTREME".equals(machineType)){
@@ -60,32 +102,40 @@ public final class PiriSounds {
         return base;
     }
     public static void play(String name){
-        if(!available(name))return;
-        SoundInstance sound=PositionedSoundInstance.master(EVENTS.get(name),1);
+        SoundEvent event=playableEvent(name);
+        if(event==null)return;
+        SoundInstance sound=PositionedSoundInstance.master(event,1);
         ONE_SHOTS.add(sound);
         MinecraftClient.getInstance().getSoundManager().play(sound);
     }
     public static void playAt(String name,double x,double y,double z){playAt(name,x,y,z,0.35f);}
     public static void playAt(String name,double x,double y,double z,float volume){
-        if(!available(name))return;
-        SoundInstance sound=new PositionedSoundInstance(EVENTS.get(name),SoundCategory.MASTER,volume,1,SoundInstance.createRandom(),x,y,z);
+        SoundEvent event=playableEvent(name);
+        if(event==null)return;
+        SoundInstance sound=new PositionedSoundInstance(event,SoundCategory.MASTER,volume,1,SoundInstance.createRandom(),x,y,z);
         ONE_SHOTS.add(sound);MinecraftClient.getInstance().getSoundManager().play(sound);
     }
     public static void playRemoteAt(int machineId,String name,double x,double y,double z,float volume){
-        if(!remotePublicSoundAllowed(name)||!available(name)||volume<=0f)return;
-        SoundInstance sound=new PositionalOneShotSound(EVENTS.get(name),x,y,z,volume);
+        if(!remotePublicSoundAllowed(name)||volume<=0f)return;
+        SoundEvent event=playableEvent(name);
+        if(event==null)return;
+        SoundInstance sound=new PositionalOneShotSound(event,x,y,z,volume);
         REMOTE_ONE_SHOTS.computeIfAbsent(machineId,ignored->new ArrayList<>()).add(sound);
         MinecraftClient.getInstance().getSoundManager().play(sound);
     }
     public static void startLoop(String name){
         if(!name.equals("big_bgm")&&!name.equals("reg_bgm")&&!name.equals("juggler_god_big_bgm")&&!name.equals("juggler_god_reg_bgm")&&!name.equals("juggler_god_god_big_bgm"))throw new IllegalArgumentException(name);if(name.equals(loopName)&&loop!=null)return;stopLoop();
-        if(!available(name))return;loopName=name;loop=new LoopSound(EVENTS.get(name));MinecraftClient.getInstance().getSoundManager().play(loop);
+        SoundEvent event=playableEvent(name);
+        if(event==null)return;
+        loopName=name;loop=new LoopSound(event);MinecraftClient.getInstance().getSoundManager().play(loop);
     }
     public static void stopLoop(){if(loop!=null)MinecraftClient.getInstance().getSoundManager().stop(loop);loop=null;loopName=null;}
     public static void startRemoteLoop(int machineId,String name,double x,double y,double z){startRemoteLoop(machineId,name,x,y,z,0.18f);}
     public static void startRemoteLoop(int machineId,String name,double x,double y,double z,float volume){
-        stopRemoteLoop(machineId);if(!available(name))return;
-        PositionalLoopSound sound=new PositionalLoopSound(EVENTS.get(name),x,y,z,volume);REMOTE_LOOPS.put(machineId,sound);MinecraftClient.getInstance().getSoundManager().play(sound);
+        stopRemoteLoop(machineId);
+        SoundEvent event=playableEvent(name);
+        if(event==null)return;
+        PositionalLoopSound sound=new PositionalLoopSound(event,x,y,z,volume);REMOTE_LOOPS.put(machineId,sound);MinecraftClient.getInstance().getSoundManager().play(sound);
     }
     public static void updateRemoteLoopVolume(int machineId,float volume){PositionalLoopSound sound=REMOTE_LOOPS.get(machineId);if(sound!=null)sound.volume(volume);}
     public static void stopRemoteLoop(int machineId){SoundInstance sound=REMOTE_LOOPS.remove(machineId);if(sound!=null)MinecraftClient.getInstance().getSoundManager().stop(sound);}

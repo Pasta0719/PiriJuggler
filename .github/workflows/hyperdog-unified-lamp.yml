@@ -1,0 +1,89 @@
+name: HYPER_DOG unified data lamp and one-shot verification
+on:
+  push:
+    branches: ['feat/hyperdog-unified-data-lamp-and-shot-*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  targeted-and-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Exercise mandatory JAR release guard (including all negative tests)
+        run: python -m unittest discover -s tests -p test_guard_jar_release.py -v
+      - name: Run HYPER_DOG accounting and history tests
+        run: |
+          chmod +x gradlew
+          ./gradlew :paper:test --console=plain \
+            --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogFullGameTest' \
+            --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogOneShotLifecycleTest' \
+            --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogStateStoreTest' \
+            --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogEventJournalTest' \
+            --tests 'jp.pirijuggler.paper.game.hyperdog.HyperDogRunJournalTest' \
+            --tests 'jp.pirijuggler.paper.data.HyperDogDataLampTest' \
+            --tests 'jp.pirijuggler.paper.data.PublicDataTextTest'
+      - name: Check HYPER_DOG Fabric data lamp + legacy audio regression
+        run: |
+          ./gradlew :fabric:test --console=plain \
+            --tests 'jp.pirijuggler.fabric.network.RemoteMachineViewStateTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogAudioTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogResumeAudioRegressionTest' \
+            --tests 'jp.pirijuggler.fabric.ui.HyperDogOwnerAudioPolicyRegressionTest'
+      - name: Build BOTH production JARs from the same commit
+        run: ./gradlew packagePiriJars -x test --console=plain
+      - name: Enforce the immutable user-approved JAR baseline before any publishing
+        run: |
+          python scripts/guard_jar_release.py verify-release \
+            --paper dist/piri-juggler-paper-1.0.0.jar \
+            --fabric dist/piri-juggler-fabric-1.0.0.jar
+      - name: Record reproducible source commit and SHA256 for shipping
+        run: |
+          git rev-parse HEAD > dist/commit.txt
+          sha256sum dist/piri-juggler-*.jar > dist/jar-sha256.txt
+          cat dist/jar-sha256.txt
+      # Never upload failed or unapproved production JARs.
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: hyperdog-unified-production-jars-and-tests
+          path: |
+            dist/piri-juggler-*.jar
+            dist/commit.txt
+            dist/jar-sha256.txt
+            paper/build/test-results/**
+            fabric/build/test-results/**
+          if-no-files-found: error
+
+  complete-existing-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Preserve and execute ALL prior machine and layout tests
+        run: |
+          chmod +x gradlew
+          ./gradlew test --continue --console=plain
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hyperdog-unified-complete-regression
+          path: |
+            paper/build/test-results/**
+            fabric/build/test-results/**
+            common/build/test-results/**
+          if-no-files-found: warn
